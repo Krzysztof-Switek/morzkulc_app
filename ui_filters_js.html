@@ -1,0 +1,19 @@
+<script>
+window.UI = window.UI || {};
+
+UI.Filters = {
+
+  setFilter(filter) {
+    window.currentFilter = filter;
+
+    document.getElementById('filter-all').classList.toggle('active', filter === 'all');
+    document.getElementById('filter-available').classList.toggle('active', filter === 'available');
+
+    UI.List.renderKayaks();
+  },
+
+  reloadList() {
+    UI.List.loadKayaks();
+  }
+};
+</script>
