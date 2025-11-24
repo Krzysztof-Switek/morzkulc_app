@@ -49,25 +49,29 @@ function rentItem(type, id, user, start, end) {
   }
 
   var items = getItemsByType(type);
-  var item = items.find(function (i) { return i.id === id; });
+  var item = items.find(i => i.id === id);
 
-  if (!item) {
-    return { error: 'Nie znaleziono elementu typu ' + type + ' o ID: ' + id };
+  if (!item) return { error: 'Nie znaleziono elementu o ID: ' + id };
+
+  // ❗ NIESPRAWNY = BLOKADA
+  if (item.sprawny === false) {
+    return { error: 'Sprzęt jest niesprawny i nie może być wypożyczony.' };
   }
 
-  // Wspólne zasady:
-  // 1. Prywatny + niedostępny do wypożyczeń → blokada
+  // ❗ PRYWATNY BEZ ZGODY
   if (item.prywatny && item.privateAvailable === false) {
     return { error: 'Sprzęt prywatny nie jest dostępny do wypożyczenia.' };
   }
 
-  // 2. Już wypożyczony
+  // ❗ JUŻ WYPOŻYCZONY
   if (item.dostepny === false) {
     return { error: 'Sprzęt jest już wypożyczony.' };
   }
 
-  // TODO: tu w przyszłości możemy dodać sprawdzenie "godzinek"
-  // np. validateUserCredits(user, type, plannedDuration)
+  // ❗ ZAREZERWOWANY PRZEZ KOGOŚ INNEGO
+  if (item.rezerwacjaAktywna && item.rezerwujacy !== user) {
+    return { error: 'Sprzęt jest zarezerwowany przez innego użytkownika.' };
+  }
 
   var nowIso = new Date().toISOString();
   var startEffective = start && start.trim() !== '' ? start : nowIso;
@@ -81,23 +85,88 @@ function rentItem(type, id, user, start, end) {
     aktualnyUzytkownik: user,
     od: startEffective,
     do: endEffective,
+
+    // ❗ Jeżeli sprzęt był zarezerwowany — wypożyczenie usuwa rezerwację
+    rezerwacjaAktywna: false,
+    rezerwujacy: '',
+    rezerwacjaOd: null,
+    rezerwacjaDo: null,
   };
 
-  var updated = firestorePatchDocument(
-    docPath,
-    data,
-    ['dostepny', 'aktualnyUzytkownik', 'od', 'do']
-  );
+  var updated = firestorePatchDocument(docPath, data, [
+    'dostepny',
+    'aktualnyUzytkownik',
+    'od',
+    'do',
+    'rezerwacjaAktywna',
+    'rezerwujacy',
+    'rezerwacjaOd',
+    'rezerwacjaDo',
+  ]);
 
   return {
     ok: true,
-    type: type,
-    id: id,
+    id,
     start: startEffective,
     end: endEffective,
     firestore: updated,
   };
 }
+
+function reserveItem(type, id, user, start, end) {
+  if (!type || !id || !user) {
+    return { error: 'Brak parametrów type, id, user.' };
+  }
+
+  var items = getItemsByType(type);
+  var item = items.find(i => i.id === id);
+
+  if (!item) return { error: 'Nie znaleziono elementu o ID: ' + id };
+
+  // ❗ NIESPRAWNY = BLOKADA
+  if (item.sprawny === false) {
+    return { error: 'Sprzęt jest niesprawny — nie można go rezerwować.' };
+  }
+
+  // ❗ PRYWATNY BEZ ZGODY
+  if (item.prywatny && item.privateAvailable === false) {
+    return { error: 'Sprzęt prywatny nie jest dostępny do rezerwacji.' };
+  }
+
+  // ❗ JUŻ WYPOŻYCZONY
+  if (!item.dostepny) {
+    return { error: 'Sprzęt jest wypożyczony i nie można go zarezerwować.' };
+  }
+
+  // ❗ JUŻ ZAREZERWOWANY
+  if (item.rezerwacjaAktywna) {
+    return { error: 'Sprzęt jest już zarezerwowany.' };
+  }
+
+  var collection = COLLECTION_BY_TYPE[type];
+  var docPath = collection + '/' + encodeURIComponent(id);
+
+  var data = {
+    rezerwacjaAktywna: true,
+    rezerwujacy: user,
+    rezerwacjaOd: start,
+    rezerwacjaDo: end,
+  };
+
+  var updated = firestorePatchDocument(docPath, data, [
+    'rezerwacjaAktywna',
+    'rezerwujacy',
+    'rezerwacjaOd',
+    'rezerwacjaDo',
+  ]);
+
+  return {
+    ok: true,
+    id,
+    firestore: updated,
+  };
+}
+
 
 /**
  * Wspólna logika zwrotu sprzętu.
@@ -134,3 +203,14 @@ function returnItem(type, id) {
     firestore: updated,
   };
 }
+
+/**
+ * TEST WYPOŻYCZENIA NIESPRAWNEGO KAJAKA NR 2 (KOLUMNA B) MUSI BYĆ USTAWIONY JAKO NIESPRAWNY.
+ */
+
+function testRentItemBroken() {
+  const result = rentItem('kayak', '2', 'TestUser', '', '');
+  Logger.log(JSON.stringify(result, null, 2));
+}
+
+
