@@ -3,15 +3,18 @@
  * Obsługujemy:
  *  - kayak
  *  - paddle (wiosła)
+ *  - lifejacket
+ *  - helmet
+ *  - throwbag
+ *  - sprayskirt
  */
 var COLLECTION_BY_TYPE = {
-  kayak: KAYAKS_COLLECTION,   
+  kayak: KAYAKS_COLLECTION,
   paddle: PADDLES_COLLECTION,
   lifejacket: LIFEJACKETS_COLLECTION,
   helmet: HELMETS_COLLECTION,
   throwbag: THROWBAGS_COLLECTION,
   sprayskirt: SPRAYSKIRTS_COLLECTION,
- 
 };
 
 /**
@@ -28,27 +31,27 @@ function getItemsByType(type) {
   var docs = raw.documents || [];
 
   if (type === 'kayak') {
-    return docs.map(doc => mapKayakDocument(doc));
+    return docs.map(function (doc) { return mapKayakDocument(doc); });
   }
 
   if (type === 'paddle') {
-    return docs.map(doc => mapPaddleDocument(doc));
+    return docs.map(function (doc) { return mapPaddleDocument(doc); });
   }
 
   if (type === 'lifejacket') {
-    return docs.map(doc => mapLifejacketDocument(doc));
+    return docs.map(function (doc) { return mapLifejacketDocument(doc); });
   }
 
   if (type === 'helmet') {
-    return docs.map(doc => mapHelmetDocument(doc));
+    return docs.map(function (doc) { return mapHelmetDocument(doc); });
   }
 
   if (type === 'throwbag') {
-    return docs.map(doc => mapThrowbagDocument(doc));
+    return docs.map(function (doc) { return mapThrowbagDocument(doc); });
   }
 
   if (type === 'sprayskirt') {
-    return docs.map(doc => mapSprayskirtDocument(doc));
+    return docs.map(function (doc) { return mapSprayskirtDocument(doc); });
   }
 
   throw new Error('Brak mapowania dokumentów dla typu: ' + type);
@@ -56,14 +59,48 @@ function getItemsByType(type) {
 
 /**
  * Wspólna logika wypożyczenia sprzętu.
+ *
+ * type  – np. "kayak", "paddle", ...
+ * id    – ID dokumentu w Firestore
+ * user  – identyfikator użytkownika (email); jeśli pusty, getUserContext() spróbuje użyć Session.getActiveUser()
+ * start – ISO string daty startu (opcjonalnie)
+ * end   – ISO string daty końca (opcjonalnie)
  */
 function rentItem(type, id, user, start, end) {
-  if (!type || !id || !user) {
-    return { error: 'Brak wymaganych parametrów: type, id lub user.' };
+  if (!type || !id) {
+    return { error: 'Brak wymaganych parametrów: type, id.' };
+  }
+
+  // Kontekst użytkownika (email + rola + limity) – logika ról
+  var userCtx = getUserContext(user);
+
+  if (userCtx.role === 'no_access') {
+    return { error: 'Brak dostępu. Skontaktuj się z zarządem SKK Morzkulc.' };
+  }
+
+  if (userCtx.role === 'gosc') {
+    return { error: 'Tryb podglądu — zaloguj się jako członek klubu, aby wypożyczać sprzęt.' };
+  }
+
+  if (!userCtx.limits || userCtx.limits.maxItems <= 0) {
+    return { error: 'Twoja rola nie pozwala na wypożyczanie sprzętu.' };
+  }
+
+  // Limity liczby aktywnych wypożyczeń
+  // Uwaga: na razie liczymy "na sztuki", a nie "komplety".
+  var activeRentals = countActiveRentalsForUser(userCtx.email);
+
+  // Zarząd – brak limitu liczby sztuk (ale nadal mogą obowiązywać inne zasady)
+  if (userCtx.role !== 'zarzad' && activeRentals >= userCtx.limits.maxItems) {
+    return {
+      error: 'Przekroczono limit aktywnych wypożyczeń (' +
+        userCtx.limits.maxItems +
+        ') dla Twojej roli.'
+    };
   }
 
   var items = getItemsByType(type);
-  var item = items.find(i => i.id === id);
+  var item = items.find(function (i) { return i.id === id; });
 
   if (!item) return { error: 'Nie znaleziono elementu o ID: ' + id };
 
@@ -71,29 +108,29 @@ function rentItem(type, id, user, start, end) {
     return { error: 'Sprzęt jest niesprawny i nie może być wypożyczony.' };
   }
 
-  // sprzęt prywatny = blokujemy wypożyczenie
-  if (item.prywatny === true) {
-    return { error: 'Sprzęt prywatny nie jest dostępny do wypożyczenia.' };
+  // sprzęt prywatny = blokujemy wypożyczenie, chyba że rola ma uprawnienia
+  if (item.prywatny === true && !userCtx.limits.canRentPrivate) {
+    return { error: 'Sprzęt prywatny nie jest dostępny do wypożyczenia dla Twojej roli.' };
   }
 
   if (item.dostepny === false) {
     return { error: 'Sprzęt jest już wypożyczony.' };
   }
 
-  if (item.rezerwacjaAktywna && item.rezerwujacy !== user) {
+  if (item.rezerwacjaAktywna && item.rezerwujacy !== userCtx.email) {
     return { error: 'Sprzęt jest zarezerwowany przez innego użytkownika.' };
   }
 
   var nowIso = new Date().toISOString();
-  var startEffective = start && start.trim() !== '' ? start : nowIso;
-  var endEffective = end && end.trim() !== '' ? end : null;
+  var startEffective = (start && String(start).trim() !== '') ? start : nowIso;
+  var endEffective = (end && String(end).trim() !== '') ? end : null;
 
   var collection = COLLECTION_BY_TYPE[type];
   var docPath = collection + '/' + encodeURIComponent(id);
 
   var data = {
     dostepny: false,
-    aktualnyUzytkownik: user,
+    aktualnyUzytkownik: userCtx.email,
     od: startEffective,
     do: endEffective,
 
@@ -116,9 +153,11 @@ function rentItem(type, id, user, start, end) {
 
   return {
     ok: true,
-    id,
+    id: id,
     start: startEffective,
     end: endEffective,
+    userEmail: userCtx.email,
+    role: userCtx.role,
     firestore: updated,
   };
 }
@@ -127,12 +166,26 @@ function rentItem(type, id, user, start, end) {
  * Rezerwacja sprzętu
  */
 function reserveItem(type, id, user, start, end) {
-  if (!type || !id || !user) {
-    return { error: 'Brak parametrów type, id, user.' };
+  if (!type || !id) {
+    return { error: 'Brak parametrów type lub id.' };
+  }
+
+  var userCtx = getUserContext(user);
+
+  if (userCtx.role === 'no_access') {
+    return { error: 'Brak dostępu. Skontaktuj się z zarządem SKK Morzkulc.' };
+  }
+
+  if (userCtx.role === 'gosc') {
+    return { error: 'Tryb podglądu — nie możesz rezerwować sprzętu.' };
+  }
+
+  if (!userCtx.limits || userCtx.limits.maxItems <= 0) {
+    return { error: 'Twoja rola nie pozwala na rezerwacje sprzętu.' };
   }
 
   var items = getItemsByType(type);
-  var item = items.find(i => i.id === id);
+  var item = items.find(function (i) { return i.id === id; });
 
   if (!item) return { error: 'Nie znaleziono elementu o ID: ' + id };
 
@@ -140,8 +193,8 @@ function reserveItem(type, id, user, start, end) {
     return { error: 'Sprzęt jest niesprawny — nie można go zarezerwować.' };
   }
 
-  if (item.prywatny === true) {
-    return { error: 'Sprzęt prywatny nie może być rezerwowany.' };
+  if (item.prywatny === true && !userCtx.limits.canRentPrivate) {
+    return { error: 'Sprzęt prywatny nie może być rezerwowany dla Twojej roli.' };
   }
 
   if (!item.dostepny) {
@@ -152,12 +205,30 @@ function reserveItem(type, id, user, start, end) {
     return { error: 'Sprzęt jest już zarezerwowany.' };
   }
 
+  // LIMIT: ile łącznie (wypożyczenia + rezerwacje) może mieć użytkownik
+  var activeTotal = countActiveReservationsAndRentalsForUser(userCtx.email);
+
+  // Zarząd – brak limitu liczby sztuk
+  if (userCtx.role !== 'zarzad' && activeTotal >= userCtx.limits.maxItems) {
+    return {
+      error: 'Przekroczono limit aktywnych rezerwacji/wypożyczeń (' +
+        userCtx.limits.maxItems +
+        ') dla Twojej roli.'
+    };
+  }
+
+  // LIMIT: jak daleko w przód można rezerwować (tygodnie)
+  var horizonError = validateReservationHorizon(start, end, userCtx.limits.maxTimeWeeks);
+  if (horizonError) {
+    return { error: horizonError };
+  }
+
   var collection = COLLECTION_BY_TYPE[type];
   var docPath = collection + '/' + encodeURIComponent(id);
 
   var data = {
     rezerwacjaAktywna: true,
-    rezerwujacy: user,
+    rezerwujacy: userCtx.email,
     rezerwacjaOd: start,
     rezerwacjaDo: end,
   };
@@ -171,7 +242,9 @@ function reserveItem(type, id, user, start, end) {
 
   return {
     ok: true,
-    id,
+    id: id,
+    userEmail: userCtx.email,
+    role: userCtx.role,
     firestore: updated,
   };
 }
@@ -207,13 +280,115 @@ function returnItem(type, id) {
 
   return {
     ok: true,
-    type,
-    id,
+    type: type,
+    id: id,
     firestore: updated,
   };
 }
 
+/**
+ * Liczy, ile sztuk sprzętu jest aktualnie wypożyczonych przez danego usera.
+ *
+ * Uwaga: bazujemy na polach Firestore (raw documents), a nie na zmapowanych obiektach.
+ */
+function countActiveRentalsForUser(email) {
+  if (!email) return 0;
+
+  var total = 0;
+
+  Object.keys(COLLECTION_BY_TYPE).forEach(function (type) {
+    var collection = COLLECTION_BY_TYPE[type];
+    var raw = firestoreGetCollection(collection);
+    var docs = raw.documents || [];
+
+    docs.forEach(function (doc) {
+      var f = doc.fields || {};
+      var dostepny = f.dostepny ? !!f.dostepny.booleanValue : true;
+      var userField = f.aktualnyUzytkownik
+        ? (f.aktualnyUzytkownik.stringValue || '')
+        : '';
+
+      if (!dostepny && userField === email) {
+        total += 1;
+      }
+    });
+  });
+
+  return total;
+}
+
+/**
+ * Liczy łącznie rezerwacje + wypożyczenia dla danego usera.
+ */
+function countActiveReservationsAndRentalsForUser(email) {
+  if (!email) return 0;
+
+  var total = 0;
+
+  Object.keys(COLLECTION_BY_TYPE).forEach(function (type) {
+    var collection = COLLECTION_BY_TYPE[type];
+    var raw = firestoreGetCollection(collection);
+    var docs = raw.documents || [];
+
+    docs.forEach(function (doc) {
+      var f = doc.fields || {};
+
+      var dostepny = f.dostepny ? !!f.dostepny.booleanValue : true;
+      var userField = f.aktualnyUzytkownik
+        ? (f.aktualnyUzytkownik.stringValue || '')
+        : '';
+
+      var rezAktywna = f.rezerwacjaAktywna
+        ? !!f.rezerwacjaAktywna.booleanValue
+        : false;
+      var rezerwujacy = f.rezerwujacy
+        ? (f.rezerwujacy.stringValue || '')
+        : '';
+
+      if ((!dostepny && userField === email) ||
+          (rezAktywna && rezerwujacy === email)) {
+        total += 1;
+      }
+    });
+  });
+
+  return total;
+}
+
+/**
+ * Sprawdza, czy rezerwacja mieści się w dopuszczalnym horyzoncie czasowym (tygodnie).
+ */
+function validateReservationHorizon(start, end, maxTimeWeeks) {
+  if (!maxTimeWeeks || maxTimeWeeks <= 0) {
+    // brak limitu – rola z nielimitowanym horyzontem (na razie nie używamy)
+    return null;
+  }
+
+  var now = new Date();
+  var startDate = start ? new Date(start) : now;
+  var endDate = end ? new Date(end) : startDate;
+
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+    return 'Nieprawidłowa data rezerwacji.';
+  }
+
+  // jak daleko w przód od TERAZ jest początek rezerwacji
+  var msFromNowToStart = startDate.getTime() - now.getTime();
+  var daysFromNowToStart = msFromNowToStart / (1000 * 60 * 60 * 24);
+
+  if (daysFromNowToStart > maxTimeWeeks * 7) {
+    return 'Przekroczono maksymalny horyzont rezerwacji dla Twojej roli (' +
+      maxTimeWeeks + ' tygodni).';
+  }
+
+  return null;
+}
+
+/**
+ * PROSTY TEST — do szybkiej weryfikacji w logach.
+ * Uwaga: email będzie pobierany z getUserContext() na podstawie aktualnie zalogowanego.
+ */
 function testRentItemBroken() {
-  const result = rentItem('kayak', '2', 'TestUser', '', '');
+  var result = rentItem('kayak', '2', '', '', '');
   Logger.log(JSON.stringify(result, null, 2));
 }

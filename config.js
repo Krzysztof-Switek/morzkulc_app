@@ -4,8 +4,12 @@
  *  00_config.gs
  ***************************************************/
 
-/** ID głównego arkusza Google Sheets */
+/** ID arkusza sprzętowego w Google Sheets */
 const SPREADSHEET_ID = '1eUjW_hyhHBlv4lRTNYS3wcltUarV5G6FiH_b5kujgRI';
+
+/** ID arkusza z członkami i składkami */
+const MEMBERS_SPREADSHEET_ID = '1dJpaV3OdFHo1ugD_NzSaysXbQyp_HkQe2EVpCiBVDac';
+const MEMBERS_SHEET_NAME = 'członkowie_klubu';
 
 /** ID projektu GCP / Firebase */
 const PROJECT_ID = 'sprzet-skk-morzkulc';
