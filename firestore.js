@@ -153,6 +153,7 @@ function mapPaddleDocument(doc) {
     numer:     str('numer'),
     producent: str('producent'),
     model:     str('model'),
+    kolor:     str('kolor'),
     rodzaj:    str('rodzaj'),
     dlugosc:   str('dlugosc'),
     skladane:  bool('skladane', false),
@@ -173,6 +174,166 @@ function mapPaddleDocument(doc) {
     rezerwacjaDo:       str('rezerwacjaDo'),
   };
 }
+
+function mapLifejacketDocument(doc) {
+  var f = doc.fields || {};
+  var id = doc.name.split('/').pop();
+
+  function str(fieldName) {
+    return f[fieldName] ? f[fieldName].stringValue || '' : '';
+  }
+  function bool(fieldName, def) {
+    if (!f[fieldName]) return def;
+    if (typeof f[fieldName].booleanValue === 'boolean') {
+      return f[fieldName].booleanValue;
+    }
+    return def;
+  }
+
+  return {
+    id: id,
+
+    numer:     str('numer'),
+    producent: str('producent'),
+    model:     str('model'),
+    kolor:     str('kolor'),
+    typ:       str('typ'),
+    rozmiar:   str('rozmiar'),
+    basen:     bool('basen', false),
+    uwagi:     str('uwagi'),
+
+    sprawny:            bool('sprawny', true),
+    prywatny:           bool('prywatny', false),
+    dostepny:           bool('dostepny', true),
+    aktualnyUzytkownik: str('aktualnyUzytkownik'),
+    od:                 str('od'),
+    do:                 str('do'),
+
+    rezerwacjaAktywna:  bool('rezerwacjaAktywna', false),
+    rezerwujacy:        str('rezerwujacy'),
+    rezerwacjaOd:       str('rezerwacjaOd'),
+    rezerwacjaDo:       str('rezerwacjaDo'),
+  };
+}
+
+function mapHelmetDocument(doc) {
+  var f = doc.fields || {};
+  var id = doc.name.split('/').pop();
+
+  function str(fieldName) {
+    return f[fieldName] ? f[fieldName].stringValue || '' : '';
+  }
+  function bool(fieldName, def) {
+    if (!f[fieldName]) return def;
+    if (typeof f[fieldName].booleanValue === 'boolean') {
+      return f[fieldName].booleanValue;
+    }
+    return def;
+  }
+
+  return {
+    id: id,
+
+    numer:     str('numer'),
+    producent: str('producent'),
+    model:     str('model'),
+    kolor:     str('kolor'),
+    rozmiar:   str('rozmiar'),
+    basen:     bool('basen', false),
+    uwagi:     str('uwagi'),
+
+    sprawny:            bool('sprawny', true),
+    prywatny:           bool('prywatny', false),
+    dostepny:           bool('dostepny', true),
+    aktualnyUzytkownik: str('aktualnyUzytkownik'),
+    od:                 str('od'),
+    do:                 str('do'),
+
+    rezerwacjaAktywna:  bool('rezerwacjaAktywna', false),
+    rezerwujacy:        str('rezerwujacy'),
+    rezerwacjaOd:       str('rezerwacjaOd'),
+    rezerwacjaDo:       str('rezerwacjaDo'),
+  };
+}
+
+function mapThrowbagDocument(doc) {
+  var f = doc.fields || {};
+  var id = doc.name.split('/').pop();
+
+  function str(fieldName) {
+    return f[fieldName] ? f[fieldName].stringValue || '' : '';
+  }
+  function bool(fieldName, def) {
+    if (!f[fieldName]) return def;
+    if (typeof f[fieldName].booleanValue === 'boolean') {
+      return f[fieldName].booleanValue;
+    }
+    return def;
+  }
+
+  return {
+    id: id,
+
+    numer:     str('numer'),
+    producent: str('producent'),
+    uwagi:     str('uwagi'),
+
+    sprawny:            bool('sprawny', true),
+    prywatny:           bool('prywatny', false),
+    dostepny:           bool('dostepny', true),
+    aktualnyUzytkownik: str('aktualnyUzytkownik'),
+    od:                 str('od'),
+    do:                 str('do'),
+
+    rezerwacjaAktywna:  bool('rezerwacjaAktywna', false),
+    rezerwujacy:        str('rezerwujacy'),
+    rezerwacjaOd:       str('rezerwacjaOd'),
+    rezerwacjaDo:       str('rezerwacjaDo'),
+  };
+}
+
+function mapSprayskirtDocument(doc) {
+  var f = doc.fields || {};
+  var id = doc.name.split('/').pop();
+
+  function str(fieldName) {
+    return f[fieldName] ? f[fieldName].stringValue || '' : '';
+  }
+  function bool(fieldName, def) {
+    if (!f[fieldName]) return def;
+    if (typeof f[fieldName].booleanValue === 'boolean') {
+      return f[fieldName].booleanValue;
+    }
+    return def;
+  }
+
+  return {
+    id: id,
+
+    numer:         str('numer'),
+    producent:     str('producent'),
+    model:         str('model'), // UWAGA: brak modelu → zostanie pusty, to OK
+    material:      str('material'),
+    rozmiar:       str('rozmiar'),
+    rozmiarKomina: str('rozmiarKomina'),
+    basen:         bool('basen', false),
+    niziny:        bool('niziny', false),
+    uwagi:         str('uwagi'),
+
+    sprawny:            bool('sprawny', true),
+    prywatny:           bool('prywatny', false),
+    dostepny:           bool('dostepny', true),
+    aktualnyUzytkownik: str('aktualnyUzytkownik'),
+    od:                 str('od'),
+    do:                 str('do'),
+
+    rezerwacjaAktywna:  bool('rezerwacjaAktywna', false),
+    rezerwujacy:        str('rezerwujacy'),
+    rezerwacjaOd:       str('rezerwacjaOd'),
+    rezerwacjaDo:       str('rezerwacjaDo'),
+  };
+}
+
 
 /**
  * Sprawdza, czy dokument Firestore istnieje.

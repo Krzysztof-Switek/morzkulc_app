@@ -5,15 +5,18 @@
  *  - paddle (wiosła)
  */
 var COLLECTION_BY_TYPE = {
-  kayak: KAYAKS_COLLECTION,   // z config.gs
-  paddle: PADDLES_COLLECTION, // NOWOŚĆ
+  kayak: KAYAKS_COLLECTION,   
+  paddle: PADDLES_COLLECTION,
+  lifejacket: LIFEJACKETS_COLLECTION,
+  helmet: HELMETS_COLLECTION,
+  throwbag: THROWBAGS_COLLECTION,
+  sprayskirt: SPRAYSKIRTS_COLLECTION,
+ 
 };
 
 /**
  * Pobiera listę elementów danego typu z Firestore
  * i mapuje dokumenty na obiekty JS.
- *
- * type: "kayak", "paddle"
  */
 function getItemsByType(type) {
   var collection = COLLECTION_BY_TYPE[type];
@@ -30,6 +33,22 @@ function getItemsByType(type) {
 
   if (type === 'paddle') {
     return docs.map(doc => mapPaddleDocument(doc));
+  }
+
+  if (type === 'lifejacket') {
+    return docs.map(doc => mapLifejacketDocument(doc));
+  }
+
+  if (type === 'helmet') {
+    return docs.map(doc => mapHelmetDocument(doc));
+  }
+
+  if (type === 'throwbag') {
+    return docs.map(doc => mapThrowbagDocument(doc));
+  }
+
+  if (type === 'sprayskirt') {
+    return docs.map(doc => mapSprayskirtDocument(doc));
   }
 
   throw new Error('Brak mapowania dokumentów dla typu: ' + type);

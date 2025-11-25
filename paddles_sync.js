@@ -31,6 +31,7 @@ function syncPaddles() {
       numer: p.numer,
       producent: p.producent,
       model: p.model,
+      kolor: p.kolor,          
       rodzaj: p.rodzaj,
       dlugosc: p.dlugosc,
       skladane: p.skladane,

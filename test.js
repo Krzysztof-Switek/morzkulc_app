@@ -261,5 +261,372 @@ function testPaddlesAll() {
   Logger.log("=== TEST WIOSEŁ END ===");
 }
 
+/**
+ * TEST KOMPLETNEJ OBSŁUGI KAMIZELEK
+ * Jedno kliknięcie sprawdza:
+ * - odczyt arkusza
+ * - mapowanie rowToLifejacketObject
+ * - sync → Firestore
+ * - mapLifejacketDocument
+ * - rental_core (list/rent/return)
+ */
+function testLifejacketsFull() {
+  Logger.log("=== TEST LIFEJACKETS START ===");
+
+  // 1. ODCZYT ARKUSZA
+  Logger.log("1) Pobieram dane z arkusza...");
+  const cfg = getLifejacketsConfig();
+  if (!cfg || cfg.length === 0) {
+    throw new Error("Brak danych w zakładce 'kamizelki'.");
+  }
+  Logger.log("OK – " + cfg.length + " rekordów z arkusza.");
+
+  // test kilku pól
+  const first = cfg[0];
+  ["id", "numer", "producent", "model", "kolor", "typ", "rozmiar", "basen", "uwagi"].forEach(k => {
+    if (first[k] === undefined) throw new Error("Brak pola " + k + " w obiekcie z arkusza.");
+  });
+  Logger.log("OK – pola z arkusza poprawne.");
+
+  // 2. SYNC DO FIRESTORE
+  Logger.log("2) Sync do Firestore...");
+  syncLifejackets();
+
+  // sprawdzenie czy dokument istnieje
+  const firstId = first.firestoreId;
+  const docPath = LIFEJACKETS_COLLECTION + "/" + encodeURIComponent(firstId);
+
+  if (!firestoreDocumentExists(docPath)) {
+    throw new Error("Dokument kamizelki " + firstId + " nie powstał w Firestore.");
+  }
+  Logger.log("OK – dokument istnieje w Firestore.");
+
+  // 3. POBRANIE Z FIRESTORE → MAPOWANIE
+  Logger.log("3) Pobieram kolekcję lifejackets z Firestore...");
+  const raw = firestoreGetCollection(LIFEJACKETS_COLLECTION);
+  const docs = raw.documents || [];
+
+  if (docs.length === 0) throw new Error("Brak dokumentów w Firestore po syncu!");
+
+  const mapped = docs.map(d => mapLifejacketDocument(d));
+
+  const m0 = mapped.find(m => m.id === String(firstId));
+  if (!m0) throw new Error("mapLifejacketDocument nie zwrócił oczekiwanego ID.");
+
+  ["numer", "producent", "model", "kolor", "typ", "rozmiar", "basen", "uwagi"].forEach(k => {
+    if (m0[k] === undefined) throw new Error("Brak pola " + k + " w mapLifejacketDocument.");
+  });
+
+  Logger.log("OK – mapowanie Firestore → JS poprawne.");
+
+  // 4. GET ITEMS BY TYPE
+  Logger.log("4) Sprawdzam getItemsByType('lifejacket')...");
+  const items = getItemsByType("lifejacket");
+  if (!items || items.length === 0) throw new Error("getItemsByType(lifejacket) zwrócił pustą listę.");
+
+  const it0 = items[0];
+  if (it0.id === undefined || it0.kolor === undefined) throw new Error("Brak pól w obiekcie z getItemsByType().");
+
+  Logger.log("OK – getItemsByType działa.");
+
+  // 5. RENT → RETURN (pełny test wypożyczenia)
+  Logger.log("5) Test wypożyczenia / zwrotu...");
+  const testUser = "TestUser";
+
+  const rent = rentItem("lifejacket", it0.id, testUser, "", "");
+  if (rent.error) throw new Error("rentItem zwrócił błąd: " + rent.error);
+  Logger.log("OK – wypożyczenie działa.");
+
+  const afterRent = getItemsByType("lifejacket").find(i => i.id === it0.id);
+  if (afterRent.dostepny !== false || afterRent.aktualnyUzytkownik !== testUser) {
+    throw new Error("Stan po wypożyczeniu nie został zaktualizowany w Firestore.");
+  }
+
+  const ret = returnItem("lifejacket", it0.id);
+  if (ret.error) throw new Error("returnItem zwrócił błąd: " + ret.error);
+  Logger.log("OK – zwrot działa.");
+
+  const afterReturn = getItemsByType("lifejacket").find(i => i.id === it0.id);
+  if (afterReturn.dostepny !== true || afterReturn.aktualnyUzytkownik !== "") {
+    throw new Error("Stan po zwrocie nie został zaktualizowany.");
+  }
+
+  Logger.log("=== TEST LIFEJACKETS – WSZYSTKO OK ✔ ===");
+}
+
+
+/**
+ * TEST KOMPLETNEJ OBSŁUGI KASKÓW (HELMETS)
+ * Sprawdza jednym kliknięciem:
+ * 1) odczyt arkusza
+ * 2) rowToHelmetObject
+ * 3) sync → Firestore
+ * 4) mapHelmetDocument
+ * 5) getItemsByType("helmet")
+ * 6) rentItem / returnItem
+ */
+function testHelmetsFull() {
+  Logger.log("=== TEST HELMETS START ===");
+
+  // 1. ODCZYT ARKUSZA
+  Logger.log("1) Pobieram dane z arkusza 'kaski'...");
+  const cfg = getHelmetsConfig();
+  if (!cfg || cfg.length === 0) {
+    throw new Error("Brak danych w zakładce 'kaski'.");
+  }
+  Logger.log("OK – " + cfg.length + " rekordów z arkusza.");
+
+  const first = cfg[0];
+
+  ["id", "numer", "producent", "model", "kolor", "rozmiar", "basen", "uwagi"].forEach(k => {
+    if (first[k] === undefined) {
+      throw new Error("Brak pola " + k + " w obiekcie z arkusza (rowToHelmetObject).");
+    }
+  });
+  Logger.log("OK – rowToHelmetObject poprawne.");
+
+  // 2. SYNC DO FIRESTORE
+  Logger.log("2) Sync do Firestore...");
+  syncHelmets();
+
+  const firstId = first.id;
+  const docPath = HELMETS_COLLECTION + "/" + encodeURIComponent(firstId);
+
+  if (!firestoreDocumentExists(docPath)) {
+    throw new Error("Dokument kasku " + firstId + " nie powstał w Firestore.");
+  }
+
+  Logger.log("OK – dokument istnieje w Firestore.");
+
+  // 3. POBRANIE Z FIRESTORE → MAPOWANIE
+  Logger.log("3) Pobieram kolekcję helmets z Firestore...");
+  const raw = firestoreGetCollection(HELMETS_COLLECTION);
+  const docs = raw.documents || [];
+
+  if (docs.length === 0) {
+    throw new Error("Brak dokumentów w Firestore po syncu!");
+  }
+
+  const mapped = docs.map(d => mapHelmetDocument(d));
+
+  const m0 = mapped.find(m => m.id === String(firstId));
+  if (!m0) throw new Error("mapHelmetDocument nie zwrócił dokumentu o ID " + firstId);
+
+  ["numer", "producent", "model", "kolor", "rozmiar", "basen", "uwagi"].forEach(k => {
+    if (m0[k] === undefined) {
+      throw new Error("Brak pola " + k + " w mapHelmetDocument.");
+    }
+  });
+
+  Logger.log("OK – mapowanie Firestore → JS poprawne.");
+
+  // 4. GET ITEMS BY TYPE ("helmet")
+  Logger.log("4) Test getItemsByType('helmet')...");
+  const items = getItemsByType("helmet");
+  if (!items || items.length === 0) {
+    throw new Error("getItemsByType('helmet') zwrócił pustą listę.");
+  }
+
+  const it0 = items[0];
+
+  if (it0.id === undefined || it0.kolor === undefined) {
+    throw new Error("Brak wymaganych pól w obiekcie getItemsByType('helmet').");
+  }
+
+  Logger.log("OK – getItemsByType działa.");
+
+  // 5. RENT → VERIFY → RETURN → VERIFY
+  Logger.log("5) Test wypożyczenie / zwrot...");
+  const testUser = "TestUser";
+
+  // RENT
+  const rent = rentItem("helmet", it0.id, testUser, "", "");
+  if (rent.error) {
+    throw new Error("rentItem zwrócił błąd: " + rent.error);
+  }
+
+  const afterRent = getItemsByType("helmet").find(i => i.id === it0.id);
+  if (afterRent.dostepny !== false || afterRent.aktualnyUzytkownik !== testUser) {
+    throw new Error("Po wypożyczeniu stan dokumentu jest niepoprawny.");
+  }
+
+  Logger.log("OK – wypożyczenie działa.");
+
+  // RETURN
+  const ret = returnItem("helmet", it0.id);
+  if (ret.error) {
+    throw new Error("returnItem zwrócił błąd: " + ret.error);
+  }
+
+  const afterReturn = getItemsByType("helmet").find(i => i.id === it0.id);
+  if (afterReturn.dostepny !== true || afterReturn.aktualnyUzytkownik !== "") {
+    throw new Error("Po zwrocie stan dokumentu jest niepoprawny.");
+  }
+
+  Logger.log("OK – zwrot działa.");
+
+  Logger.log("=== TEST HELMETS – WSZYSTKO OK ✔ ===");
+}
+
+function testThrowbagsFull() {
+  Logger.log("=== TEST THROWBAGS START ===");
+
+  // 1. ODCZYT ARKUSZA
+  Logger.log("1) Pobieram dane z arkusza 'rzutki'...");
+  const cfg = getThrowbagsConfig();
+  if (!cfg || cfg.length === 0) {
+    throw new Error("Brak danych w zakładce 'rzutki'.");
+  }
+  Logger.log("OK – " + cfg.length + " rekordów z arkusza.");
+
+  const first = cfg[0];
+
+  ["id", "numer", "producent", "uwagi"].forEach(k => {
+    if (first[k] === undefined) {
+      throw new Error("Brak pola " + k + " w obiekcie z arkusza (rowToThrowbagObject).");
+    }
+  });
+  Logger.log("OK – rowToThrowbagObject poprawne.");
+
+  // 2. SYNC DO FIRESTORE
+  Logger.log("2) Sync do Firestore...");
+  syncThrowbags();
+
+  const firstId = first.id;
+  const docPath = THROWBAGS_COLLECTION + "/" + encodeURIComponent(firstId);
+
+  if (!firestoreDocumentExists(docPath)) {
+    throw new Error("Dokument rzutki " + firstId + " nie powstał w Firestore.");
+  }
+
+  Logger.log("OK – dokument istnieje w Firestore.");
+
+  // 3. POBRANIE Z FIRESTORE → MAPOWANIE
+  Logger.log("3) Pobieram kolekcję throwbags z Firestore...");
+  const raw = firestoreGetCollection(THROWBAGS_COLLECTION);
+  const docs = raw.documents || [];
+
+  if (docs.length === 0) {
+    throw new Error("Brak dokumentów w Firestore po syncu!");
+  }
+
+  const mapped = docs.map(d => mapThrowbagDocument(d));
+
+  const m0 = mapped.find(m => m.id === String(firstId));
+  if (!m0) throw new Error("mapThrowbagDocument nie zwrócił dokumentu o ID " + firstId);
+
+  ["numer", "producent", "uwagi"].forEach(k => {
+    if (m0[k] === undefined) {
+      throw new Error("Brak pola " + k + " w mapThrowbagDocument.");
+    }
+  });
+
+  Logger.log("OK – mapowanie Firestore → JS poprawne.");
+
+  // 4. GET ITEMS BY TYPE ("throwbag")
+  Logger.log("4) Test getItemsByType('throwbag')...");
+  const items = getItemsByType("throwbag");
+  if (!items || items.length === 0) {
+    throw new Error("getItemsByType('throwbag') zwrócił pustą listę.");
+  }
+
+  const it0 = items[0];
+
+  if (it0.id === undefined || it0.numer === undefined) {
+    throw new Error("Brak wymaganych pól w obiekcie z getItemsByType('throwbag').");
+  }
+
+  Logger.log("OK – getItemsByType działa.");
+
+  // 5. RENT → VERIFY → RETURN → VERIFY
+  Logger.log("5) Test wypożyczenie / zwrot...");
+  const testUser = "TestUser";
+
+  // RENT
+  const rent = rentItem("throwbag", it0.id, testUser, "", "");
+  if (rent.error) {
+    throw new Error("rentItem zwrócił błąd: " + rent.error);
+  }
+
+  const afterRent = getItemsByType("throwbag").find(i => i.id === it0.id);
+  if (afterRent.dostepny !== false || afterRent.aktualnyUzytkownik !== testUser) {
+    throw new Error("Po wypożyczeniu stan dokumentu jest niepoprawny.");
+  }
+
+  Logger.log("OK – wypożyczenie działa.");
+
+  // RETURN
+  const ret = returnItem("throwbag", it0.id);
+  if (ret.error) {
+    throw new Error("returnItem zwrócił błąd: " + ret.error);
+  }
+
+  const afterReturn = getItemsByType("throwbag").find(i => i.id === it0.id);
+  if (afterReturn.dostepny !== true || afterReturn.aktualnyUzytkownik !== "") {
+    throw new Error("Po zwrocie stan dokumentu jest niepoprawny.");
+  }
+
+  Logger.log("OK – zwrot działa.");
+
+  Logger.log("=== TEST THROWBAGS – WSZYSTKO OK ✔ ===");
+}
+
+function testSprayskirtsFull() {
+  Logger.log("=== TEST SPRAYSKIRTS START ===");
+
+  // 1. arkusz
+  const cfg = getSprayskirtsConfig();
+  if (!cfg || cfg.length === 0) throw new Error("Brak danych w zakładce fartuchy.");
+
+  const first = cfg[0];
+  ["id","numer","producent","material","rozmiar","rozmiarKomina","basen","niziny","uwagi"].forEach(k=>{
+    if (first[k] === undefined) throw new Error("Brak pola "+k+" w rowToSprayskirtObject.");
+  });
+
+  Logger.log("OK – odczyt arkusza.");
+
+  // 2. sync
+  syncSprayskirts();
+
+  const firstId = first.id;
+  const docPath = SPRAYSKIRTS_COLLECTION + "/" + encodeURIComponent(firstId);
+
+  if (!firestoreDocumentExists(docPath)) throw new Error("Dokument fartucha nie powstał");
+  Logger.log("OK – Firestore zapisany.");
+
+  // 3. mapping
+  const raw = firestoreGetCollection(SPRAYSKIRTS_COLLECTION);
+  const mapped = raw.documents.map(d=>mapSprayskirtDocument(d));
+  const m0 = mapped.find(m=>m.id===String(firstId));
+  if (!m0) throw new Error("mapSprayskirtDocument nie zwrócił itemu.");
+
+  Logger.log("OK – mapping Firestore → JS działa.");
+
+  // 4. getItemsByType
+  const items = getItemsByType("sprayskirt");
+  if (!items.length) throw new Error("getItemsByType('sprayskirt') pusty.");
+
+  Logger.log("OK – getItemsByType działa.");
+
+  // 5. rental
+  const it0 = items[0];
+  const user = "TestUser";
+
+  const rent = rentItem("sprayskirt", it0.id, user, "", "");
+  if (rent.error) throw new Error("rentItem: "+rent.error);
+
+  const afterRent = getItemsByType("sprayskirt").find(i=>i.id===it0.id);
+  if (afterRent.dostepny !== false) throw new Error("Po wypożyczeniu dostepny ≠ false");
+
+  const ret = returnItem("sprayskirt", it0.id);
+  if (ret.error) throw new Error("returnItem: "+ret.error);
+
+  const afterReturn = getItemsByType("sprayskirt").find(i=>i.id===it0.id);
+  if (afterReturn.dostepny !== true) throw new Error("Po zwrocie dostepny ≠ true");
+
+  Logger.log("=== TEST SPRAYSKIRTS – OK ✔ ===");
+}
+
+
 
 

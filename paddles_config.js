@@ -8,7 +8,7 @@ function getPaddlesConfig() {
   if (!sheet) throw new Error('Nie znaleziono zakładki: ' + PADDLES_SHEET_NAME);
 
   const lastRow = sheet.getLastRow();
-  const rows = sheet.getRange(2, 1, lastRow - 1, 9).getValues();
+  const rows = sheet.getRange(2, 1, lastRow - 1, 10).getValues();
 
   const paddles = rows
     .filter(r => Boolean(r[PADDLES_COLUMNS.ID - 1]))
@@ -30,6 +30,7 @@ function rowToPaddleObject(row) {
     numer:     row[PADDLES_COLUMNS.NUMER - 1] || "",
     producent: row[PADDLES_COLUMNS.PRODUCENT - 1] || "",
     model:     row[PADDLES_COLUMNS.MODEL - 1] || "",
+    kolor:     row[PADDLES_COLUMNS.KOLOR - 1] || "",        
     rodzaj:    row[PADDLES_COLUMNS.RODZAJ - 1] || "",
     dlugosc:   row[PADDLES_COLUMNS.DLUGOSC - 1] || "",
     skladane:  row[PADDLES_COLUMNS.SKLADANE - 1] === true,
