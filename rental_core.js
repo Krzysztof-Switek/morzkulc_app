@@ -1,20 +1,19 @@
 /**
  * MAPA typ → kolekcja Firestore.
- * Na razie obsługujemy tylko "kayak".
- * W przyszłości dodamy: helmet, paddle, skirt, itd.
+ * Obsługujemy:
+ *  - kayak
+ *  - paddle (wiosła)
  */
 var COLLECTION_BY_TYPE = {
-  kayak: KAYAKS_COLLECTION,    // z config.gs
-  // helmet: HELMETS_COLLECTION,
-  // paddle: PADDLES_COLLECTION,
-  // ...
+  kayak: KAYAKS_COLLECTION,   // z config.gs
+  paddle: PADDLES_COLLECTION, // NOWOŚĆ
 };
 
 /**
  * Pobiera listę elementów danego typu z Firestore
  * i mapuje dokumenty na obiekty JS.
  *
- * type: np. "kayak"
+ * type: "kayak", "paddle"
  */
 function getItemsByType(type) {
   var collection = COLLECTION_BY_TYPE[type];
@@ -25,23 +24,19 @@ function getItemsByType(type) {
   var raw = firestoreGetCollection(collection);
   var docs = raw.documents || [];
 
-  // Na razie korzystamy z mapKayakDocument tylko dla typu "kayak"
   if (type === 'kayak') {
-    return docs.map(function (doc) { return mapKayakDocument(doc); });
+    return docs.map(doc => mapKayakDocument(doc));
   }
 
-  // TODO: gdy dodamy inne typy, dodamy ich mapowanie
+  if (type === 'paddle') {
+    return docs.map(doc => mapPaddleDocument(doc));
+  }
+
   throw new Error('Brak mapowania dokumentów dla typu: ' + type);
 }
 
 /**
  * Wspólna logika wypożyczenia sprzętu.
- *
- * type  – np. "kayak"
- * id    – ID dokumentu w kolekcji Firestore (docId)
- * user  – nazwa/email wypożyczającego
- * start – string z czasem startu (opcjonalny, jeśli pusty → nowIso)
- * end   – string z czasem końca (opcjonalny)
  */
 function rentItem(type, id, user, start, end) {
   if (!type || !id || !user) {
@@ -53,22 +48,19 @@ function rentItem(type, id, user, start, end) {
 
   if (!item) return { error: 'Nie znaleziono elementu o ID: ' + id };
 
-  // ❗ NIESPRAWNY = BLOKADA
   if (item.sprawny === false) {
     return { error: 'Sprzęt jest niesprawny i nie może być wypożyczony.' };
   }
 
-  // ❗ PRYWATNY BEZ ZGODY
-  if (item.prywatny && item.privateAvailable === false) {
+  // sprzęt prywatny = blokujemy wypożyczenie
+  if (item.prywatny === true) {
     return { error: 'Sprzęt prywatny nie jest dostępny do wypożyczenia.' };
   }
 
-  // ❗ JUŻ WYPOŻYCZONY
   if (item.dostepny === false) {
     return { error: 'Sprzęt jest już wypożyczony.' };
   }
 
-  // ❗ ZAREZERWOWANY PRZEZ KOGOŚ INNEGO
   if (item.rezerwacjaAktywna && item.rezerwujacy !== user) {
     return { error: 'Sprzęt jest zarezerwowany przez innego użytkownika.' };
   }
@@ -86,7 +78,6 @@ function rentItem(type, id, user, start, end) {
     od: startEffective,
     do: endEffective,
 
-    // ❗ Jeżeli sprzęt był zarezerwowany — wypożyczenie usuwa rezerwację
     rezerwacjaAktywna: false,
     rezerwujacy: '',
     rezerwacjaOd: null,
@@ -113,6 +104,9 @@ function rentItem(type, id, user, start, end) {
   };
 }
 
+/**
+ * Rezerwacja sprzętu
+ */
 function reserveItem(type, id, user, start, end) {
   if (!type || !id || !user) {
     return { error: 'Brak parametrów type, id, user.' };
@@ -123,22 +117,18 @@ function reserveItem(type, id, user, start, end) {
 
   if (!item) return { error: 'Nie znaleziono elementu o ID: ' + id };
 
-  // ❗ NIESPRAWNY = BLOKADA
   if (item.sprawny === false) {
-    return { error: 'Sprzęt jest niesprawny — nie można go rezerwować.' };
+    return { error: 'Sprzęt jest niesprawny — nie można go zarezerwować.' };
   }
 
-  // ❗ PRYWATNY BEZ ZGODY
-  if (item.prywatny && item.privateAvailable === false) {
-    return { error: 'Sprzęt prywatny nie jest dostępny do rezerwacji.' };
+  if (item.prywatny === true) {
+    return { error: 'Sprzęt prywatny nie może być rezerwowany.' };
   }
 
-  // ❗ JUŻ WYPOŻYCZONY
   if (!item.dostepny) {
-    return { error: 'Sprzęt jest wypożyczony i nie można go zarezerwować.' };
+    return { error: 'Sprzęt jest wypożyczony — nie można go zarezerwować.' };
   }
 
-  // ❗ JUŻ ZAREZERWOWANY
   if (item.rezerwacjaAktywna) {
     return { error: 'Sprzęt jest już zarezerwowany.' };
   }
@@ -167,9 +157,8 @@ function reserveItem(type, id, user, start, end) {
   };
 }
 
-
 /**
- * Wspólna logika zwrotu sprzętu.
+ * Zwrot sprzętu
  */
 function returnItem(type, id) {
   if (!type || !id) {
@@ -190,27 +179,22 @@ function returnItem(type, id) {
     do: null,
   };
 
-  var updated = firestorePatchDocument(
-    docPath,
-    data,
-    ['dostepny', 'aktualnyUzytkownik', 'od', 'do']
-  );
+  var updated = firestorePatchDocument(docPath, data, [
+    'dostepny',
+    'aktualnyUzytkownik',
+    'od',
+    'do',
+  ]);
 
   return {
     ok: true,
-    type: type,
-    id: id,
+    type,
+    id,
     firestore: updated,
   };
 }
-
-/**
- * TEST WYPOŻYCZENIA NIESPRAWNEGO KAJAKA NR 2 (KOLUMNA B) MUSI BYĆ USTAWIONY JAKO NIESPRAWNY.
- */
 
 function testRentItemBroken() {
   const result = rentItem('kayak', '2', 'TestUser', '', '');
   Logger.log(JSON.stringify(result, null, 2));
 }
-
-

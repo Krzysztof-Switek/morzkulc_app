@@ -131,6 +131,49 @@ function mapKayakDocument(doc) {
   };
 }
 
+function mapPaddleDocument(doc) {
+  var f = doc.fields || {};
+  var id = doc.name.split('/').pop();
+
+  function str(fieldName) {
+    return f[fieldName] ? f[fieldName].stringValue || '' : '';
+  }
+  function bool(fieldName, def) {
+    if (!f[fieldName]) return def;
+    if (typeof f[fieldName].booleanValue === 'boolean') {
+      return f[fieldName].booleanValue;
+    }
+    return def;
+  }
+
+  return {
+    id: id,
+
+    // statyczne pola z arkusza "wiosla"
+    numer:     str('numer'),
+    producent: str('producent'),
+    model:     str('model'),
+    rodzaj:    str('rodzaj'),
+    dlugosc:   str('dlugosc'),
+    skladane:  bool('skladane', false),
+    basen:     bool('basen', false),
+    uwagi:     str('uwagi'),
+
+    // pola techniczne / stanowe – tak, żeby działało rental_core
+    sprawny:            bool('sprawny', true),   // brak pola = traktujemy jako sprawny
+    prywatny:           bool('prywatny', false),
+    dostepny:           bool('dostepny', true),
+    aktualnyUzytkownik: str('aktualnyUzytkownik'),
+    od:                 str('od'),
+    do:                 str('do'),
+
+    rezerwacjaAktywna:  bool('rezerwacjaAktywna', false),
+    rezerwujacy:        str('rezerwujacy'),
+    rezerwacjaOd:       str('rezerwacjaOd'),
+    rezerwacjaDo:       str('rezerwacjaDo'),
+  };
+}
+
 /**
  * Sprawdza, czy dokument Firestore istnieje.
  * Zwraca true / false na podstawie kodu HTTP:
@@ -188,3 +231,73 @@ function mapSetupDocument(doc) {
 
   return { name: id, value: value };
 }
+
+/**
+ * Usuwa dokument Firestore.
+ * docPath np. "kayaks/60"
+ */
+function firestoreDeleteDocument(docPath) {
+  var url = FIRESTORE_BASE_URL + '/' + docPath;
+
+  var options = {
+    method: 'delete',
+    headers: getAuthHeaders(),
+    muteHttpExceptions: true,
+  };
+
+  var response = UrlFetchApp.fetch(url, options);
+  var code = response.getResponseCode();
+
+  if (code !== 200 && code !== 204) {
+    Logger.log(
+      'firestoreDeleteDocument: nieoczekiwany kod HTTP ' +
+      code +
+      ' dla ' + docPath +
+      ', body=' + response.getContentText()
+    );
+  }
+}
+
+/**
+ * Zwraca tablicę ID dokumentów w podanej kolekcji.
+ * Np. ["1","2","3","P11","P60"]
+ */
+function firestoreListDocumentIds(collectionPath) {
+  var raw = firestoreGetCollection(collectionPath);
+  var docs = raw.documents || [];
+  return docs.map(function (doc) {
+    return doc.name.split('/').pop();
+  });
+}
+
+/**
+ * Usuwa z podanej kolekcji wszystkie dokumenty,
+ * których ID NIE występuje w tablicy validIds.
+ *
+ * Używamy tego po syncu dowolnej kategorii sprzętu.
+ */
+function firestoreCleanupOrphans(collectionPath, validIds) {
+  var validSet = {};
+  validIds.forEach(function (id) {
+    if (id !== null && id !== undefined && String(id).trim() !== '') {
+      validSet[String(id)] = true;
+    }
+  });
+
+  var firestoreIds = firestoreListDocumentIds(collectionPath);
+
+  var orphans = firestoreIds.filter(function (id) {
+    return !validSet[id];
+  });
+
+  Logger.log(
+    'firestoreCleanupOrphans: nadmiarowe dokumenty w ' +
+    collectionPath + ': ' + JSON.stringify(orphans)
+  );
+
+  orphans.forEach(function (id) {
+    var docPath = collectionPath + '/' + encodeURIComponent(id);
+    firestoreDeleteDocument(docPath);
+  });
+}
+

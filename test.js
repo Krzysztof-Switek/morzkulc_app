@@ -124,3 +124,142 @@ function rowToKayakObject(row) {
     uwagi: row[KAYAKS_COLUMNS.UWAGI - 1] || "",
   };
 }
+
+function debugListFirestoreKayaks() {
+  // używamy gotowej funkcji, która ma prawidłowe nagłówki OAuth
+  const json = firestoreGetCollection(KAYAKS_COLLECTION);
+
+  // Firestore zwraca tablicę dokumentów w json.documents
+  const docs = json.documents || [];
+
+  Logger.log("FIRESTORE KAJAK COUNT = " + docs.length);
+
+  docs.forEach(doc => {
+    Logger.log(doc.name);
+  });
+}
+
+/**
+ * Porównuje ID kajaków z Google Sheets i Firestore
+ * i wypisuje różnice.
+ */
+function debugCompareSheetVsFirestore() {
+  Logger.log("=== START PORÓWNANIA ===");
+
+  // --- 1. Pobieramy ID z arkusza ---
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(KAYAKS_SHEET_NAME);
+  const rows = sheet.getDataRange().getValues();
+
+  const header = rows.shift();
+  const idxId = header.indexOf("ID");
+
+  const sheetIds = rows
+    .map(r => String(r[idxId]).trim())
+    .filter(id => id !== "");
+
+  Logger.log("Sheet IDs (" + sheetIds.length + "): " + JSON.stringify(sheetIds));
+
+
+  // --- 2. Pobieramy ID z Firestore ---
+  const fs = firestoreGetCollection(KAYAKS_COLLECTION);
+  const docs = fs.documents || [];
+
+  const fsIds = docs.map(d => d.name.split("/").pop());
+  Logger.log("Firestore IDs (" + fsIds.length + "): " + JSON.stringify(fsIds));
+
+
+  // --- 3. Szukamy nadmiarowych dokumentów ---
+  const extra = fsIds.filter(id => !sheetIds.includes(id));
+
+  // --- 4. Szukamy brakujących dokumentów ---
+  const missing = sheetIds.filter(id => !fsIds.includes(id));
+
+  Logger.log("=== WYNIK ===");
+  Logger.log("Nadmiarowe dokumenty w Firestore (nie występują w arkuszu): " + JSON.stringify(extra));
+  Logger.log("Brakujące dokumenty w Firestore (są w arkuszu, brak w Firestore): " + JSON.stringify(missing));
+}
+
+
+/**
+ * TESTY WIOSEŁ — URUCHAMIA WSZYSTKIE TESTY JEDNYM KLIKNIĘCIEM
+ * ---------------------------------------------------------
+ * Testy obejmują:
+ * 1. Pobieranie listy
+ * 2. Wypożyczenie
+ * 3. Blokadę wypożyczenia
+ * 4. Zwrot
+ * 5. Rezerwację
+ * 6. Blokadę rezerwacji wypożyczonego sprzętu
+ */
+
+function testPaddlesAll() {
+  Logger.log("=== TEST WIOSEŁ START ===");
+
+  // ---------------------------------------------------------
+  // 1. Pobieranie listy wioseł
+  // ---------------------------------------------------------
+  try {
+    const items = getItemsByType('paddle');
+    Logger.log("TEST 1: Pobieranie → OK, liczba: " + items.length);
+  } catch (e) {
+    Logger.log("TEST 1: ERROR → " + e);
+  }
+
+  // ---------------------------------------------------------
+  // 2. Test wypożyczenia wiosła (ID = 1)
+  // ---------------------------------------------------------
+  try {
+    const rent = rentItem('paddle', '1', 'TestUserA', '', '');
+    Logger.log("TEST 2: Wypożyczenie → " + JSON.stringify(rent));
+  } catch (e) {
+    Logger.log("TEST 2: ERROR → " + e);
+  }
+
+  // ---------------------------------------------------------
+  // 3. Próba wypożyczenia zajętego wiosła
+  // ---------------------------------------------------------
+  try {
+    const rent2 = rentItem('paddle', '1', 'TestUserB', '', '');
+    Logger.log("TEST 3: Oczekiwany błąd wypożyczenia → " + JSON.stringify(rent2));
+  } catch (e) {
+    Logger.log("TEST 3: ERROR → " + e);
+  }
+
+  // ---------------------------------------------------------
+  // 4. Zwrot wiosła
+  // ---------------------------------------------------------
+  try {
+    const ret = returnItem('paddle', '1');
+    Logger.log("TEST 4: Zwrot → " + JSON.stringify(ret));
+  } catch (e) {
+    Logger.log("TEST 4: ERROR → " + e);
+  }
+
+  // ---------------------------------------------------------
+  // 5. Rezerwacja wiosła (ID = 2)
+  // ---------------------------------------------------------
+  try {
+    const res = reserveItem('paddle', '2', 'UserReserveA', '2025-01-01', '2025-01-02');
+    Logger.log("TEST 5: Rezerwacja → " + JSON.stringify(res));
+  } catch (e) {
+    Logger.log("TEST 5: ERROR → " + e);
+  }
+
+  // ---------------------------------------------------------
+  // 6. Blokada rezerwacji wypożyczonego wiosła (ID = 3)
+  // ---------------------------------------------------------
+  try {
+    rentItem('paddle', '3', 'UserX', '', '');
+    const res2 = reserveItem('paddle', '3', 'UserY', '', '');
+    Logger.log("TEST 6: Oczekiwany błąd rezerwacji → " + JSON.stringify(res2));
+  } catch (e) {
+    Logger.log("TEST 6: ERROR → " + e);
+  }
+
+  // ---------------------------------------------------------
+  Logger.log("=== TEST WIOSEŁ END ===");
+}
+
+
+

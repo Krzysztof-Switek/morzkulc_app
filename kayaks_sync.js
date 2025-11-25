@@ -36,13 +36,28 @@ function syncKayaks() {
   Logger.log('=== SYNC START ===');
 
   const kayaks = getKayaksConfig(); // już zawiera firestoreId
-  Logger.log('Liczba kajaków do synchronizacji: ' + kayaks.length);
+  Logger.log('Liczba kajaków do synchronizacji (z arkusza): ' + kayaks.length);
+
+  // Lista ID, które SĄ w arkuszu – posłuży do czyszczenia sierot.
+  const validDocIds = [];
 
   kayaks.forEach(k => {
 
-    // NOWOŚĆ → JEDNOZNACZNE ID DOKUMENTU
-    const docId = encodeURIComponent(k.firestoreId);
-    const docPath = KAYAKS_COLLECTION + '/' + docId;
+    // TWARDY WARUNEK: brak ID → błąd + pominięcie wiersza.
+    if (!k.firestoreId || String(k.firestoreId).trim() === '') {
+      Logger.log(
+        'BŁĄD SYNC: brak firestoreId dla wiersza z ID=' +
+        k.id +
+        ' (numerKajaka=' + (k.numerKajaka || '') + '). ' +
+        'Wiersz pominięty – uzupełnij ID w arkuszu.'
+      );
+      return; // NIE tworzymy żadnego dokumentu dla tego wiersza.
+    }
+
+    const docId = String(k.firestoreId);
+    validDocIds.push(docId); // zapamiętujemy jako „dozwolone” ID
+
+    const docPath = KAYAKS_COLLECTION + '/' + encodeURIComponent(docId);
 
     const exists = firestoreDocumentExists(docPath);
 
@@ -68,6 +83,7 @@ function syncKayaks() {
     let updateMask = KAYAK_STATIC_FIELDS.slice();
 
     if (!exists) {
+      // Pierwsze utworzenie dokumentu → inicjalizacja pól dynamicznych.
       data.dostepny = true;
       data.aktualnyUzytkownik = '';
       data.od = null;
@@ -83,10 +99,15 @@ function syncKayaks() {
     const updated = firestorePatchDocument(docPath, data, updateMask);
 
     Logger.log(
-      'SYNC → ' + decodeURIComponent(docId) + ' (exists=' + exists + ') : ' +
+      'SYNC → ' + docId + ' (exists=' + exists + ') : ' +
       JSON.stringify(updated)
     );
   });
+
+  // GLOBALNA ZASADA:
+  // Firestore NIE może mieć więcej kajaków niż arkusz.
+  // Usuwamy wszystko, czego nie ma w validDocIds.
+  firestoreCleanupOrphans(KAYAKS_COLLECTION, validDocIds);
 
   Logger.log('=== SYNC END ===');
 }

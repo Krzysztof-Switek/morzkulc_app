@@ -65,23 +65,26 @@ UI.List = {
     const isWorking = k.sprawny === true;
     const isPrivate = k.prywatny === true;
 
-    let statusClass = 'status-free';
-    let statusLabel = 'Dostępny';
+    // ============================================
+    //  NOWOŚĆ: TRZY TYPY KOLORÓW OBWÓDKI
+    //  - niesprawny → czerwony
+    //  - sprawny + wolny → zielony
+    //  - sprawny + wypożyczony → pomarańczowy
+    // ============================================
+    let cardClass = "gear-card";
 
     if (!isWorking) {
-      statusClass = 'status-broken';
-      statusLabel = 'Niesprawny';
+      cardClass += " gear-card-broken";       // czerwony
     } else if (!isAvailable) {
-      statusClass = 'status-busy';
-      statusLabel = 'Wypożyczony';
+      cardClass += " gear-card-rented";       // 🟧 pomarańczowy
+    } else {
+      cardClass += " gear-card-ok";           // zielony
     }
 
-    const canRent =
-      isAvailable && isWorking && (!isPrivate || k.privateAvailable === true);
-
-    const rentLabel = isPrivate
-      ? (k.privateAvailable ? 'Wypożycz (prywatny)' : 'Tylko za zgodą właściciela')
-      : 'Wypożycz';
+    // --- prywatny zamiast statusu ---
+    const privateBadge = isPrivate
+      ? `<div class="status-chip status-private"><span>Prywatny</span></div>`
+      : ``;
 
     const ownerInfo =
       isPrivate && k.privateOwnerEmail
@@ -89,46 +92,61 @@ UI.List = {
         : '';
 
     const userInfo =
-      !isAvailable && k.aktualnyUzytkownik
-        ? 'Aktualnie: ' + UI.Helpers.escapeHtml(k.aktualnyUzytkownik)
-        : (isAvailable ? 'Kajak wolny' : 'Wypożyczony');
+      !isWorking
+        ? 'Do naprawy'
+        : (
+            isAvailable
+              ? 'Dostępny'
+              : (
+                  k.aktualnyUzytkownik
+                    ? 'Aktualnie: ' + UI.Helpers.escapeHtml(k.aktualnyUzytkownik)
+                    : 'Wypożyczony'
+                )
+          );
+
+    const typeBadge = k.typ
+      ? `<span class="badge type-badge">${UI.Helpers.escapeHtml(k.typ)}</span>`
+      : '';
 
     return `
-      <article class="gear-card">
+      <article class="${cardClass}">
         <div class="gear-main">
+
           <div class="gear-title-block">
-            <div class="gear-name">${UI.Helpers.escapeHtml(k.producent)} ${UI.Helpers.escapeHtml(k.model)}</div>
-            <div class="gear-subtitle">
-              <span>#${UI.Helpers.escapeHtml(k.numerKajaka || '–')}</span>
-              <span>${UI.Helpers.escapeHtml(k.typ || '')}</span>
+            <div class="gear-name">
+              ${UI.Helpers.escapeHtml(k.producent)} ${UI.Helpers.escapeHtml(k.model)}
+              <span class="gear-number">nr. ${UI.Helpers.escapeHtml(k.numerKajaka || '–')}</span>
             </div>
+            <div class="gear-type">${typeBadge}</div>
           </div>
 
-          <div class="status-chip ${statusClass}">
-            <span class="status-dot"></span>
-            <span>${statusLabel}</span>
-          </div>
+          ${privateBadge}
+
         </div>
 
         <div class="gear-meta" style="margin-top:6px;">
-          ${isPrivate ? `<span class="badge private">Prywatny</span>` : `<span class="badge">Klubowy</span>`}
-          ${k.basen ? `<span class="badge basen">Basen</span>` : ''}
           ${ownerInfo ? `<span class="meta-chip">${ownerInfo}</span>` : ''}
         </div>
 
         <div class="card-footer">
           <div class="user-info">${userInfo}</div>
 
-          ${isAvailable
-            ? `<button class="btn btn-primary" onclick="UI.Actions.rent('${UI.Helpers.encodeId(k.id)}')" ${canRent ? '' : 'disabled'}>
-                 <span class="icon">➕</span>${rentLabel}
-               </button>`
-            : `<button class="btn btn-outline" onclick="UI.Actions.return('${UI.Helpers.encodeId(k.id)}')" ${isWorking ? '' : 'disabled'}>
-                 <span class="icon">↩</span>Zwróć
-               </button>`}
+          ${
+            (!isWorking)
+              ? ''
+              : (isAvailable
+                  ? `<button class="btn btn-primary" onclick="UI.Actions.rent('${UI.Helpers.encodeId(k.id)}')">
+                       <span class="icon">➕</span>Wypożycz
+                     </button>`
+                  : `<button class="btn btn-outline" onclick="UI.Actions.return('${UI.Helpers.encodeId(k.id)}')">
+                       <span class="icon">↩</span>Zwróć
+                     </button>`
+                )
+          }
         </div>
       </article>
     `;
   }
+
 };
 </script>

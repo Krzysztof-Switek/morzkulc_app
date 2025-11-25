@@ -432,6 +432,54 @@
         transform: rotate(360deg);
       }
     }
+
+    
+    /* czerwona ramka dla niesprawnego kajaka */
+    .gear-card-broken {
+      border: 1px solid #c62828 !important;
+    }
+
+    /* zielona ramka – kajak sprawny */
+    .gear-card-ok {
+      border: 1px solid #22c55e !important;
+    }
+
+    /* pomarańczowa ramka – wypożyczony */
+    .gear-card-rented {
+      border: 1px solid #f59e0b !important; /* amber-500 */
+    }
+
+
+    /* badge typu kajaka */
+    .type-badge {
+      padding: 2px 8px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 8px;
+      font-size: 10px;
+      opacity: 0.9;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* badge PRYWATNY jako status */
+    .status-private {
+      background: rgba(255, 180, 0, 0.15);
+      border: 1px solid rgba(255, 180, 0, 0.4);
+      color: #ffb400 !important;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      margin-top: 4px;
+      align-self: flex-start;
+    }
+
+    /* numer kajaka */
+    .gear-number {
+      opacity: 0.8;
+      font-weight: 500;
+      margin-left: 4px;
+    }
+
   </style>
 </head>
 

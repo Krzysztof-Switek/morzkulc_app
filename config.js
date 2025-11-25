@@ -1,3 +1,9 @@
+/***************************************************
+ *  GLOBALNY CONFIG — ŁADOWANY JAKO PIERWSZY
+ *  Ten plik musi być najwcześniej alphabetically, np:
+ *  00_config.gs
+ ***************************************************/
+
 /** ID głównego arkusza Google Sheets */
 const SPREADSHEET_ID = '1eUjW_hyhHBlv4lRTNYS3wcltUarV5G6FiH_b5kujgRI';
 
@@ -10,6 +16,11 @@ const FIRESTORE_BASE_URL =
   PROJECT_ID +
   '/databases/(default)/documents';
 
+
+/***************************************************
+ *  KAJAKI — KONFIGURACJA
+ ***************************************************/
+
 /** Nazwa kolekcji z kajakami w Firestore */
 const KAYAKS_COLLECTION = 'kayaks';
 
@@ -17,24 +28,8 @@ const KAYAKS_COLLECTION = 'kayaks';
 const KAYAKS_SHEET_NAME = 'kajaki';
 
 /**
- * Mapowanie kolumn arkusza (1-based, jak w Apps Script).
- * Nowy układ kolumn:
- * A: ID
- * B: Numer kajaka
- * C: Producent
- * D: Model
- * E: Zdjęcie URL
- * F: Kolor
- * G: Typ
- * H: Litrów
- * I: Zakres wag
- * J: Kokpit
- * K: Sprawny?
- * L: Basen?
- * M: Prywatny?
- * N: Prywatny do wypożyczenia?
- * O: Kontakt do właściciela
- * P: Uwagi
+ * Mapowanie kolumn arkusza (1-based)
+ * (A–P zgodnie z aktualnym układem)
  */
 const KAYAKS_COLUMNS = {
   ID:                 1,
@@ -52,13 +47,12 @@ const KAYAKS_COLUMNS = {
   PRYWATNY:           13,
   PRYWATNY_DO_WYPOZ:  14,
   KONTAKT_WLASCICIEL: 15,
-  UWAGI:              16
+  UWAGI:              16,
 };
 
 /**
- * Lista pól statycznych.
- * Sync NADPISUJE tylko te dane z arkusza.
- * Pola dynamiczne (dostepny, od, do, aktualnyUzytkownik) są nietykalne.
+ * Pola, które sync kajaków ma prawo nadpisywać.
+ * (Dane dynamiczne NIGDY nie są nadpisywane.)
  */
 const KAYAK_STATIC_FIELDS = [
   'id',
@@ -76,5 +70,47 @@ const KAYAK_STATIC_FIELDS = [
   'prywatny',
   'privateAvailable',
   'privateOwnerEmail',
+  'uwagi',
+];
+
+
+/***************************************************
+ *  WIOSŁA (PADDLES) — KONFIGURACJA
+ ***************************************************/
+
+/** Kolekcja w Firestore */
+const PADDLES_COLLECTION = 'paddles';
+
+/** Nazwa zakładki arkusza */
+const PADDLES_SHEET_NAME = 'wiosła';
+
+/**
+ * Mapowanie kolumn arkusza (A–I)
+ */
+const PADDLES_COLUMNS = {
+  ID:        1,
+  NUMER:     2,
+  PRODUCENT: 3,
+  MODEL:     4,
+  RODZAJ:    5,
+  DLUGOSC:   6,
+  SKLADANE:  7,
+  BASEN:     8,
+  UWAGI:     9,
+};
+
+/**
+ * Pola statyczne dla wioseł — sync nadpisuje tylko to.
+ * (Spójnie z kajakami: pola stanu NIE są ruszane.)
+ */
+const PADDLE_STATIC_FIELDS = [
+  'id',
+  'numer',
+  'producent',
+  'model',
+  'rodzaj',
+  'dlugosc',
+  'skladane',
+  'basen',
   'uwagi',
 ];
