@@ -1,3 +1,7 @@
+/**
+ * SYNC KAMIZELEK → Firestore
+ */
+
 function syncLifejackets() {
   Logger.log("=== SYNC LIFEJACKETS START ===");
 
@@ -12,7 +16,6 @@ function syncLifejackets() {
     const docPath = LIFEJACKETS_COLLECTION + '/' + encodeURIComponent(docId);
     const exists = firestoreDocumentExists(docPath);
 
-    // --- DANE STATYCZNE ---
     const data = {
       id: p.id,
       numer: p.numer,
@@ -25,8 +28,12 @@ function syncLifejackets() {
       uwagi: p.uwagi,
     };
 
-    // --- DANE DYNAMICZNE ---
+    let updateMask = Object.keys(data);
+
     if (!exists) {
+      data.version = 1;
+      updateMask.push("version");
+
       data.sprawny = true;
       data.prywatny = false;
 
@@ -39,12 +46,12 @@ function syncLifejackets() {
       data.rezerwujacy = "";
       data.rezerwacjaOd = "";
       data.rezerwacjaDo = "";
+
+      updateMask = Object.keys(data);
     }
 
-    const updateMask = Object.keys(data);
     firestorePatchDocument(docPath, data, updateMask);
 
-    Logger.log("PATCH " + (index + 1) + "/" + items.length + " → " + docId);
     Utilities.sleep(100);
   });
 

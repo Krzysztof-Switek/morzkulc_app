@@ -1,3 +1,7 @@
+/**
+ * SYNC RZUTEK → Firestore
+ */
+
 function syncThrowbags() {
   Logger.log("=== SYNC THROWBAGS START ===");
 
@@ -12,7 +16,6 @@ function syncThrowbags() {
     const docPath = THROWBAGS_COLLECTION + '/' + encodeURIComponent(docId);
     const exists = firestoreDocumentExists(docPath);
 
-    // --- dane statyczne ---
     const data = {
       id: p.id,
       numer: p.numer,
@@ -20,8 +23,12 @@ function syncThrowbags() {
       uwagi: p.uwagi,
     };
 
-    // --- dane dynamiczne ---
+    let updateMask = Object.keys(data);
+
     if (!exists) {
+      data.version = 1;
+      updateMask.push("version");
+
       data.sprawny = true;
       data.prywatny = false;
 
@@ -34,12 +41,12 @@ function syncThrowbags() {
       data.rezerwujacy = "";
       data.rezerwacjaOd = "";
       data.rezerwacjaDo = "";
+
+      updateMask = Object.keys(data);
     }
 
-    const updateMask = Object.keys(data);
     firestorePatchDocument(docPath, data, updateMask);
 
-    Logger.log("PATCH " + (index + 1) + "/" + items.length + " → " + docId);
     Utilities.sleep(100);
   });
 

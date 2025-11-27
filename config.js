@@ -1,7 +1,5 @@
 /***************************************************
- *  GLOBALNY CONFIG — ŁADOWANY JAKO PIERWSZY
- *  Ten plik musi być najwcześniej alphabetically, np:
- *  00_config.gs
+ *  GLOBALNE ID — DEFINIOWANE NAJPIERW
  ***************************************************/
 
 /** ID arkusza sprzętowego w Google Sheets */
@@ -24,17 +22,9 @@ const FIRESTORE_BASE_URL =
 /***************************************************
  *  KAJAKI — KONFIGURACJA
  ***************************************************/
-
-/** Nazwa kolekcji z kajakami w Firestore */
 const KAYAKS_COLLECTION = 'kayaks';
-
-/** Nazwa zakładki z kajakami w arkuszu */
 const KAYAKS_SHEET_NAME = 'kajaki';
 
-/**
- * Mapowanie kolumn arkusza (1-based)
- * (A–P zgodnie z aktualnym układem)
- */
 const KAYAKS_COLUMNS = {
   ID:                 1,
   NUMER_KAJAKA:       2,
@@ -54,10 +44,6 @@ const KAYAKS_COLUMNS = {
   UWAGI:              16,
 };
 
-/**
- * Pola, które sync kajaków ma prawo nadpisywać.
- * (Dane dynamiczne NIGDY nie są nadpisywane.)
- */
 const KAYAK_STATIC_FIELDS = [
   'id',
   'numerKajaka',
@@ -79,35 +65,24 @@ const KAYAK_STATIC_FIELDS = [
 
 
 /***************************************************
- *  WIOSŁA (PADDLES) — KONFIGURACJA
+ *  WIOSŁA — KONFIGURACJA
  ***************************************************/
-
-/** Kolekcja w Firestore */
 const PADDLES_COLLECTION = 'paddles';
-
-/** Nazwa zakładki arkusza */
 const PADDLES_SHEET_NAME = 'wiosła';
 
-/**
- * Mapowanie kolumn arkusza (A–J)
- */
 const PADDLES_COLUMNS = {
-  ID:        1,  // A
-  NUMER:     2,  // B
-  PRODUCENT: 3,  // C
-  MODEL:     4,  // D
-  KOLOR:     5,  // E 
-  RODZAJ:    6,  // F
-  DLUGOSC:   7,  // G
-  SKLADANE:  8,  // H
-  BASEN:     9,  // I
-  UWAGI:     10, // J
+  ID:        1,
+  NUMER:     2,
+  PRODUCENT: 3,
+  MODEL:     4,
+  KOLOR:     5,
+  RODZAJ:    6,
+  DLUGOSC:   7,
+  SKLADANE:  8,
+  BASEN:     9,
+  UWAGI:     10,
 };
 
-/**
- * Pola statyczne dla wioseł — sync nadpisuje tylko to.
- * (Spójnie z kajakami: pola stanu NIE są ruszane.)
- */
 const PADDLE_STATIC_FIELDS = [
   'id',
   'numer',
@@ -121,34 +96,25 @@ const PADDLE_STATIC_FIELDS = [
   'uwagi',
 ];
 
+
 /***************************************************
- *  KAMIZELKI (LIFEJACKETS) — KONFIGURACJA
+ *  KAMIZELKI — KONFIGURACJA
  ***************************************************/
-
-/** Kolekcja w Firestore */
 const LIFEJACKETS_COLLECTION = 'lifejackets';
-
-/** Nazwa zakładki w arkuszu */
 const LIFEJACKETS_SHEET_NAME = 'kamizelki';
 
-/**
- * Mapowanie kolumn arkusza (A–I)
- */
 const LIFEJACKETS_COLUMNS = {
-  ID:        1,  // A
-  NUMER:     2,  // B
-  PRODUCENT: 3,  // C
-  MODEL:     4,  // D
-  KOLOR:     5,  // E
-  TYP:       6,  // F
-  ROZMIAR:   7,  // G
-  BASEN:     8,  // H
-  UWAGI:     9,  // I
+  ID:        1,
+  NUMER:     2,
+  PRODUCENT: 3,
+  MODEL:     4,
+  KOLOR:     5,
+  TYP:       6,
+  ROZMIAR:   7,
+  BASEN:     8,
+  UWAGI:     9,
 };
 
-/**
- * Pola statyczne — sync może nadpisywać tylko je.
- */
 const LIFEJACKET_STATIC_FIELDS = [
   'id',
   'numer',
@@ -161,33 +127,24 @@ const LIFEJACKET_STATIC_FIELDS = [
   'uwagi',
 ];
 
+
 /***************************************************
- *  KASKI (HELMETS) — KONFIGURACJA
+ *  KASKI — KONFIGURACJA
  ***************************************************/
-
-/** Kolekcja w Firestore */
 const HELMETS_COLLECTION = 'helmets';
-
-/** Nazwa zakładki w arkuszu */
 const HELMETS_SHEET_NAME = 'kaski';
 
-/**
- * Mapowanie kolumn arkusza (A–H)
- */
 const HELMETS_COLUMNS = {
-  ID:        1, // A
-  NUMER:     2, // B
-  PRODUCENT: 3, // C
-  MODEL:     4, // D
-  KOLOR:     5, // E
-  ROZMIAR:   6, // F
-  BASEN:     7, // G
-  UWAGI:     8, // H
+  ID:        1,
+  NUMER:     2,
+  PRODUCENT: 3,
+  MODEL:     4,
+  KOLOR:     5,
+  ROZMIAR:   6,
+  BASEN:     7,
+  UWAGI:     8,
 };
 
-/**
- * Pola statyczne — sync nadpisuje tylko je
- */
 const HELMET_STATIC_FIELDS = [
   'id',
   'numer',
@@ -199,29 +156,20 @@ const HELMET_STATIC_FIELDS = [
   'uwagi',
 ];
 
+
 /***************************************************
- *  RZUTKI (THROWBAGS) — KONFIGURACJA
+ *  RZUTKI — KONFIGURACJA
  ***************************************************/
-
-/** Kolekcja w Firestore */
 const THROWBAGS_COLLECTION = 'throwbags';
-
-/** Nazwa zakładki w arkuszu */
 const THROWBAGS_SHEET_NAME = 'rzutki';
 
-/**
- * Mapowanie kolumn arkusza (A–D)
- */
 const THROWBAGS_COLUMNS = {
-  ID:        1, // A
-  NUMER:     2, // B
-  PRODUCENT: 3, // C
-  UWAGI:     4, // D
+  ID:        1,
+  NUMER:     2,
+  PRODUCENT: 3,
+  UWAGI:     4,
 };
 
-/**
- * Pola statyczne — sync nadpisuje tylko je
- */
 const THROWBAG_STATIC_FIELDS = [
   'id',
   'numer',
@@ -229,34 +177,25 @@ const THROWBAG_STATIC_FIELDS = [
   'uwagi',
 ];
 
+
 /***************************************************
- *  FARTUCHY (SPRAYSKIRTS) — KONFIGURACJA
+ *  FARTUCHY — KONFIGURACJA
  ***************************************************/
-
-/** Kolekcja w Firestore */
 const SPRAYSKIRTS_COLLECTION = 'sprayskirts';
-
-/** Nazwa zakładki w arkuszu */
 const SPRAYSKIRTS_SHEET_NAME = 'fartuchy';
 
-/**
- * Mapowanie kolumn arkusza (A–I)
- */
 const SPRAYSKIRTS_COLUMNS = {
-  ID:            1, // A
-  NUMER:         2, // B
-  PRODUCENT:     3, // C
-  MATERIAL:      4, // D
-  ROZMIAR:       5, // E
-  ROZMIAR_KOMINA:6, // F
-  BASEN:         7, // G
-  NIZINY:        8, // H
-  UWAGI:         9, // I
+  ID:             1,
+  NUMER:          2,
+  PRODUCENT:      3,
+  MATERIAL:       4,
+  ROZMIAR:        5,
+  ROZMIAR_KOMINA: 6,
+  BASEN:          7,
+  NIZINY:         8,
+  UWAGI:          9,
 };
 
-/**
- * Pola statyczne — sync może nadpisywać tylko je
- */
 const SPRAYSKIRT_STATIC_FIELDS = [
   'id',
   'numer',
@@ -269,3 +208,14 @@ const SPRAYSKIRT_STATIC_FIELDS = [
   'uwagi',
 ];
 
+
+/***************************************************
+ *  GLOBALNY CONFIG — NA SAMYM KOŃCU
+ ***************************************************/
+const CONFIG = {
+  SPREADSHEET_ID,
+  MEMBERS_SPREADSHEET_ID,
+  MEMBERS_SHEET_NAME,
+  PROJECT_ID,
+  FIRESTORE_BASE_URL,
+};

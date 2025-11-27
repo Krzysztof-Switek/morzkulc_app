@@ -1,6 +1,5 @@
 /***************************************************
- * TESTY – część 1: sprzęt (kayaks, paddles, kamizelki,
- * kaski, rzuty, farty) + helpery sprzętowe
+ * TESTY – część 1: sprzęt + helpery sprzętowe
  ***************************************************/
 
 /***************************************************
@@ -58,7 +57,7 @@ function findFirstAvailableItem_(type) {
 }
 
 /***************************************************
- * TESTY SPRZĘTU — PADDLES
+ * TESTY SPRZĘTU — WIOSŁA
  ***************************************************/
 function testPaddlesAll() {
   Logger.log("=== TEST WIOSEŁ START ===");
@@ -103,7 +102,6 @@ function testLifejacketsFull() {
     if (!cfg.length) throw "Brak danych w arkuszu";
 
     const first = cfg[0];
-    syncLifejackets();
 
     const docPath = LIFEJACKETS_COLLECTION + "/" + first.firestoreId;
     if (!firestoreDocumentExists(docPath))
@@ -137,8 +135,6 @@ function testHelmetsFull() {
     const cfg = getHelmetsConfig();
     if (!cfg.length) throw "Brak danych";
 
-    syncHelmets();
-
     const docPath = HELMETS_COLLECTION + "/" + cfg[0].id;
     if (!firestoreDocumentExists(docPath))
       throw "Dokument nie istnieje w FS";
@@ -167,8 +163,6 @@ function testThrowbagsFull() {
     const cfg = getThrowbagsConfig();
     if (!cfg.length) throw "Brak danych";
 
-    syncThrowbags();
-
     const docPath = THROWBAGS_COLLECTION + "/" + cfg[0].id;
     if (!firestoreDocumentExists(docPath))
       throw "Dokument nie istnieje";
@@ -196,8 +190,6 @@ function testSprayskirtsFull() {
   try {
     const cfg = getSprayskirtsConfig();
     if (!cfg.length) throw "Brak danych";
-
-    syncSprayskirts();
 
     const items = getItemsByType("sprayskirt");
     const it0 = items[0];

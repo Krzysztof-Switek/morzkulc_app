@@ -60,6 +60,8 @@ function rowToKayakObject(row) {
 
   return {
     id: id || null,
+    firestoreId: String(id),        // ← DODANE – WYMAGANE DO FIRESTORE
+
     numerKajaka: numerKajaka ? String(numerKajaka) : null,
 
     producent: row[KAYAKS_COLUMNS.PRODUCENT - 1] || "",
@@ -101,6 +103,7 @@ function testMinimalKayakRead() {
   kayaks.forEach(k => {
     Logger.log(
       "ID=" + k.id +
+      " | firestoreId=" + k.firestoreId +
       " | numerKajaka=" + (k.numerKajaka ?? "BRAK") +
       " | producent=" + k.producent
     );
@@ -123,13 +126,11 @@ function testPrivateKayaks() {
   }
 
   privateKayaks.forEach(k => {
-    const firestoreId = k.numerKajaka ? k.numerKajaka : k.id;
-
     Logger.log(
       "\n--- PRYWATNY KAJAK ---" +
       "\nID (kol A): " + k.id +
+      "\nfirestoreId: " + k.firestoreId +
       "\nnumerKajaka: " + (k.numerKajaka || "BRAK") +
-      "\nFirestore docID: " + firestoreId +
       "\nwypożyczalny = " + k.privateAvailable +
       "\nwłaściciel = " + k.privateOwnerEmail +
       "\nproducent: " + k.producent +

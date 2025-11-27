@@ -1,21 +1,19 @@
 /**
- * SYNC WIOSŁA (paddles) → Firestore
- * - pełna inicjalizacja przy pierwszym syncu
- * - logowanie progresu
- * - throttle (Utilities.sleep), żeby nie zabić Firestore
+ * SYNC WIOSŁA → Firestore
  */
+
 function syncPaddles() {
   Logger.log("=== SYNC PADDLES START ===");
 
   const paddles = getPaddlesConfig();
-  Logger.log("Wiosła (paddles) z arkusza: " + paddles.length);
+  Logger.log("Wiosła z arkusza: " + paddles.length);
 
   const validDocIds = [];
 
   paddles.forEach((p, index) => {
 
     if (!p.firestoreId || p.firestoreId.trim() === "") {
-      Logger.log("ERROR: brak ID w wierszu dla wiosła ID=" + p.id);
+      Logger.log("ERROR: brak firestoreId w wierszu ID=" + p.id);
       return;
     }
 
@@ -25,22 +23,25 @@ function syncPaddles() {
     const docPath = PADDLES_COLLECTION + '/' + encodeURIComponent(docId);
     const exists = firestoreDocumentExists(docPath);
 
-    // --- DANE STATYCZNE ---
     const data = {
       id: p.id,
       numer: p.numer,
       producent: p.producent,
       model: p.model,
-      kolor: p.kolor,          
+      kolor: p.kolor,
       rodzaj: p.rodzaj,
       dlugosc: p.dlugosc,
       skladane: p.skladane,
       basen: p.basen,
-      uwagi: p.uwagi
+      uwagi: p.uwagi,
     };
 
-    // --- DANE DYNAMICZNE (tylko jeśli dokument pierwszy raz tworzony) ---
+    let updateMask = Object.keys(data);
+
     if (!exists) {
+      data.version = 1;
+      updateMask.push("version");
+
       data.sprawny = true;
       data.prywatny = false;
 
@@ -53,24 +54,15 @@ function syncPaddles() {
       data.rezerwujacy = "";
       data.rezerwacjaOd = "";
       data.rezerwacjaDo = "";
+
+      updateMask = Object.keys(data);
     }
 
-    const updateMask = Object.keys(data);
-
-    // PATCH + minimalny log
     firestorePatchDocument(docPath, data, updateMask);
-    Logger.log("PATCH " + (index + 1) + "/" + paddles.length + " → " + docId);
 
-    // THROTTLE – unikamy limitów Firestore
     Utilities.sleep(100);
   });
 
-  // Usuwamy sieroty
   firestoreCleanupOrphans(PADDLES_COLLECTION, validDocIds);
-
   Logger.log("=== SYNC PADDLES END ===");
-}
-
-function testSyncPaddles() {
-  syncPaddles();
 }

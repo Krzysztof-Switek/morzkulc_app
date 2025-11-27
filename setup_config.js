@@ -3,11 +3,14 @@ function testSetupRead() {
   Logger.log(JSON.stringify(setup, null, 2));
 }
 
-
 /**
  * ZWRACA SŁOWNIK WSZYSTKICH ZMIENNYCH Z ZAKŁADKI "setup"
- * w formacie:
- * { zmienna_nazwa: wartość_liczbowa_lub_tekstowa }
+ * Format:
+ * {
+ *    zmienna: wartość,
+ *    offset_rezerwacji: 1,
+ *    ...
+ * }
  *
  * używa CacheService aby nie czytać arkusza przy każdym wywołaniu
  */
@@ -30,63 +33,61 @@ function getSetup() {
   return setup;
 }
 
-
 /**
  * CZYTA ARKUSZ "setup" I ZWRACA MAPĘ KLUCZ → WARTOŚĆ
+ * używane na co dzień (z walidacją dat)
  */
 function loadSetup() {
   const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
   const sheet = ss.getSheetByName("setup");
 
-  const data = sheet.getDataRange().getValues(); // cała tabelka
-  const headers = data.shift(); // A1:D1
+  const data = sheet.getDataRange().getValues(); 
+  const headers = data.shift(); 
 
-  // indeksy kolumn
-  const idxName = headers.indexOf("Zmienna_nazwa");
+  const idxName  = headers.indexOf("Zmienna_nazwa");
   const idxValue = headers.indexOf("Wartość_zmiennej");
 
   const setup = {};
 
   data.forEach(row => {
-  const key = row[idxName];
-  const rawValue = row[idxValue];
+    const key = row[idxName];
+    const rawValue = row[idxValue];
 
-  if (!key || key === "") return;
+    if (!key || key === "") return;
 
-  let v = rawValue;
+    let v = rawValue;
 
-  // >>> NOWOŚĆ: obsługa dat (np. 01.01 – Google Sheets zamienia na Date)
-  if (rawValue instanceof Date) {
-    const mm = String(rawValue.getMonth() + 1).padStart(2, '0');
-    const dd = String(rawValue.getDate()).padStart(2, '0');
-    setup[key] = `${mm}-${dd}`;
-    return;
-  }
+    // DATY
+    if (rawValue instanceof Date) {
+      const mm = String(rawValue.getMonth() + 1).padStart(2, '0');
+      const dd = String(rawValue.getDate()).padStart(2, '0');
+      setup[key] = `${mm}-${dd}`;
+      return;
+    }
 
-  // automatyczna konwersja liczby zapisanej jako tekst
-  if (typeof rawValue === "string" && rawValue.match(/^\d+$/)) {
-    v = Number(rawValue);
-  }
+    // LICZBY zapisane jako tekst
+    if (typeof rawValue === "string" && rawValue.match(/^\d+$/)) {
+      v = Number(rawValue);
+    }
 
-  setup[key] = v;
-});
-
+    setup[key] = v;
+  });
 
   return setup;
 }
 
 /**
  * SUROWE DANE Z ARKUSZA (bez cache!)
- * używane tylko do syncSetup()
+ * używane tylko przez syncSetup()
  */
 function loadSetupRaw() {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);  // ← NAPRAWIONE
   const sheet = ss.getSheetByName("setup");
 
   const data = sheet.getDataRange().getValues();
   const headers = data.shift();
 
-  const idxName = headers.indexOf("Zmienna_nazwa");
+  const idxName  = headers.indexOf("Zmienna_nazwa");
   const idxValue = headers.indexOf("Wartość_zmiennej");
 
   const result = {};
@@ -98,7 +99,7 @@ function loadSetupRaw() {
 
     let v = raw;
 
-    // konwersja liczb
+    // Zamiana tekstowych liczb na number
     if (typeof raw === "string" && raw.match(/^\d+$/)) {
       v = Number(raw);
     }
@@ -108,4 +109,3 @@ function loadSetupRaw() {
 
   return result;
 }
-

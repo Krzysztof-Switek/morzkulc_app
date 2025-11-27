@@ -1,3 +1,7 @@
+/**
+ * SYNC FARTUCHÓW → Firestore
+ */
+
 function syncSprayskirts() {
   Logger.log("=== SYNC SPRAYSKIRTS START ===");
 
@@ -12,7 +16,6 @@ function syncSprayskirts() {
     const docPath = SPRAYSKIRTS_COLLECTION + '/' + encodeURIComponent(docId);
     const exists = firestoreDocumentExists(docPath);
 
-    // --- dane statyczne ---
     const data = {
       id: p.id,
       numer: p.numer,
@@ -25,8 +28,12 @@ function syncSprayskirts() {
       uwagi: p.uwagi,
     };
 
-    // --- dane dynamiczne ---
+    let updateMask = Object.keys(data);
+
     if (!exists) {
+      data.version = 1;
+      updateMask.push("version");
+
       data.sprawny = true;
       data.prywatny = false;
 
@@ -39,12 +46,12 @@ function syncSprayskirts() {
       data.rezerwujacy = "";
       data.rezerwacjaOd = "";
       data.rezerwacjaDo = "";
+
+      updateMask = Object.keys(data);
     }
 
-    const updateMask = Object.keys(data);
     firestorePatchDocument(docPath, data, updateMask);
 
-    Logger.log("PATCH " + (index + 1) + "/" + items.length + " → " + docId);
     Utilities.sleep(100);
   });
 
