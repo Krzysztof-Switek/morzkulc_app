@@ -1,4 +1,57 @@
 /************************************************************
+ * WARSTWA KOMPATYBILNOŚCI Z PODZIELONYM RENTAL_CORE
+ ************************************************************/
+
+// rental_equipment_rules zapewnia:
+if (typeof COLLECTION_BY_TYPE === 'undefined') {
+  throw new Error("BŁĄD: Brak COLLECTION_BY_TYPE – upewnij się, że rental_equipment_rules.gs ładuje się PRZED testami.");
+}
+
+if (typeof getReservationPaddingDays_ === 'undefined') {
+  throw new Error("BŁĄD: Brak getReservationPaddingDays_ – upewnij się, że rental_equipment_rules.gs ładuje się PRZED testami.");
+}
+
+if (typeof addDays_ === 'undefined') {
+  throw new Error("BŁĄD: Brak addDays_ – upewnij się, że rental_equipment_rules.gs jest ładowany.");
+}
+
+if (typeof toIsoString_ === 'undefined') {
+  throw new Error("BŁĄD: Brak toIsoString_ – upewnij się, że rental_equipment_rules.gs jest ładowany.");
+}
+
+// rental_user_rules zapewnia:
+if (typeof validateReservationHorizon === 'undefined') {
+  throw new Error("BŁĄD: Brak validateReservationHorizon – upewnij się, że rental_user_rules.gs jest ładowany.");
+}
+
+if (typeof countActiveRentalsForUser === 'undefined') {
+  throw new Error("BŁĄD: Brak countActiveRentalsForUser – upewnij się, że rental_user_rules.gs jest ładowany.");
+}
+
+if (typeof countActiveReservationsAndRentalsForUser === 'undefined') {
+  throw new Error("BŁĄD: countActiveReservationsAndRentalsForUser – rental_user_rules.gs musi być ładowany.");
+}
+
+// rental_core (orchestrator) powinien zapewniać:
+if (typeof rentItem === 'undefined') {
+  throw new Error("BŁĄD: rentItem nie jest dostępny – rental_core.gs musi być ładowany PRZED testami.");
+}
+
+if (typeof reserveItem === 'undefined') {
+  throw new Error("BŁĄD: reserveItem nie jest dostępny – rental_core.gs musi być ładowany PRZED testami.");
+}
+
+if (typeof returnItem === 'undefined') {
+  throw new Error("BŁĄD: returnItem nie jest dostępny – rental_core.gs musi być ładowany PRZED testami.");
+}
+
+if (typeof getItemsByType === 'undefined') {
+  throw new Error("BŁĄD: getItemsByType nie jest dostępne – rental_core.gs musi być ładowany PRZED testami.");
+}
+
+
+
+/************************************************************
  * TESTY_4 – ZESTAW ROZSZERZONYCH TESTÓW BACKENDU (BEZ UI)
  ************************************************************/
 
