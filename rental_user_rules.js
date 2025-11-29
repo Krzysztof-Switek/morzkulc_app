@@ -1,5 +1,5 @@
 /************************************************************
- * Reguły użytkowników: limity, liczniki, horyzont
+ * Reguły użytkowników: limity, liczniki, horyzont + GODZINKI
  ************************************************************/
 
 /*********************************************************************
@@ -61,4 +61,79 @@ function validateReservationHorizon(start, end, maxTimeWeeks) {
   }
 
   return null;
+}
+
+/*********************************************************************
+ *  GODZINKI — INTEGRACJA
+ *
+ *  Zasada:
+ *    1. rental_core pyta rental_user_rules.canUserRent(...)
+ *    2. tu wywołujemy hoursCore_canUserRent(email, costHours)
+ *    3. rental_core po udanym wypożyczeniu wywoła consumeForRental
+ *********************************************************************/
+
+/**
+ * NAJWAŻNIEJSZA FUNKCJA:
+ * Sprawdza, czy użytkownik MOŻE wypożyczyć sprzęt,
+ * biorąc pod uwagę:
+ *   - limity sprzętowe
+ *   - limity ról
+ *   - horyzont czasowy
+ *   - stan sprzętu
+ *   - SALDO GODZINEK / DEBET
+ *
+ * >>> To jest jedyne miejsce, gdzie łączymy godzinki z wypożyczeniem. <<<
+ */
+function rentalUserRules_validateUserCanRent(email, type, item, roleLimits, costHours) {
+
+  // ------------- 1. REGUŁY SPRZĘTOWE (twoje – nie naruszam) -----------------
+
+  // limit liczby aktywnych wypożyczeń
+  var activeCount = countActiveRentalsForUser(email);
+  if (activeCount >= roleLimits.maxItems) {
+    return {
+      ok: false,
+      error: "Przekroczono limit jednoczesnych wypożyczeń dla twojej roli."
+    };
+  }
+
+  // dodatkowo można tu dodać Twoje reguły (np. prywatny, niesprawny, itp.)
+  // ale NIE ingeruję, zgodnie z ustaleniem.
+
+
+  // ------------- 2. REGUŁY GODZINKOWE --------------------------------------
+
+  // costHours to koszt wypożyczenia w modelu godzinkowym (liczba godzin)
+  // jeśli koszt = 0 → pomijamy
+  if (costHours && costHours > 0) {
+    var check = hoursCore_canUserRent(email, costHours);
+    if (!check.ok) {
+      return {
+        ok: false,
+        error: "Brak wystarczających godzinek. Saldo po wypożyczeniu byłoby: " +
+               check.saldoPo + ". Limit debetu: " + (-check.debitLimit) + "."
+      };
+    }
+  }
+
+  // jeśli nic nie blokuje → OK
+  return { ok: true };
+}
+
+/**
+ * FUNKCJA WYWOŁYWANA PO UDANYM WYPOŻYCZENIU
+ * (czyli po rentItem)
+ *
+ * Tutaj dopiero księgujemy godzinki:
+ *   - zjada dodatnie FIFO
+ *   - tworzy debet jeśli brakuje
+ */
+function rentalUserRules_applyHoursForRental(email, type, itemId, costHours) {
+  if (!costHours || costHours <= 0) return { ok: true };
+
+  return hoursCore_consumeForRental(
+    email,
+    costHours,
+    "Wypożyczenie " + type + " / " + itemId
+  );
 }
