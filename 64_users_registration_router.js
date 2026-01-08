@@ -18,13 +18,13 @@
  ********************************************************************/
 
 function registration_ui_submit(data) {
-  const res = registration_core(data);
-  if (!res || !res.ok) throw new Error("Rejestracja nieudana");
+  const user = registration_core(data);
+  if (!user) throw new Error("Rejestracja nieudana");
 
   // Zwracamy obiekt usera, zgodnie z oczekiwaniami klienta
   return {
     ok: true,
-    user: user_getUser(res.email)
+    user: user,
   };
 }
 
@@ -104,7 +104,7 @@ function registration_core(data) {
   // 7) Zapis flagi "tylko raz" do arkusza (Pole dodatkowe)
   _usersSheet_markOpeningBalanceChecked_(email, ob.matchType, ob.docId || "");
 
-  return { ok: true, email: email };
+  return user;
 }
 
 /********************************************************************
