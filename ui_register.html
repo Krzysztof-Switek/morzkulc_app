@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Rejestracja – SKK Morzkulc</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    <?!= HtmlService.createHtmlOutputFromFile('ui_theme').getContent(); ?>
+  </style>
+</head>
+
+<body data-view="register">
+  <div class="wrap wrap-md">
+    <div class="card">
+      <h2>Rejestracja w SKK Morzkulc</h2>
+
+      <p class="muted" id="msg"></p>
+
+      <label>Imię <input id="imie" autocomplete="given-name" /></label>
+      <label>Nazwisko <input id="nazwisko" autocomplete="family-name" /></label>
+      <label>Ksywa <input id="ksywa" /></label>
+      <label>Telefon <input id="telefon" autocomplete="tel" /></label>
+
+      <label>E-mail (z Google)
+        <input id="email" value="<?= prefillEmail || '' ?>" readonly />
+      </label>
+
+      <label style="display:flex;gap:10px;align-items:flex-start;margin-top:10px">
+        <input type="checkbox" id="zgoda" style="margin-top:4px" />
+        <span>Wyrażam zgodę na przetwarzanie danych osobowych</span>
+      </label>
+
+      <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="submitRegister()">
+          Zarejestruj konto
+        </button>
+        <button class="btn" onclick="changeAccount()">
+          Zmień konto
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const MSG = document.getElementById("msg");
+
+    function getToken() {
+      try { 
+        return sessionStorage.getItem("morzkulc_id_token") || ""; 
+      } catch(e) { 
+        return ""; 
+      }
+    }
+
+    function setMsg(t) { 
+      MSG.textContent = t || ""; 
+    }
+
+    function writeHtml(html) {
+      document.open();
+      document.write(html);
+      document.close();
+    }
+
+    function changeAccount() {
+      try { 
+        sessionStorage.removeItem("morzkulc_id_token"); 
+      } catch(e) {}
+      location.href = "<?= ScriptApp.getService().getUrl() ?>";
+    }
+
+    function submitRegister() {
+      try {
+        const token = getToken();
+        if (!token) {
+          setMsg("Brak tokena logowania. Kliknij „Zmień konto” i zaloguj się ponownie.");
+          return;
+        }
+
+        const data = {
+          idToken: token,
+          imie: imie.value.trim(),
+          nazwisko: nazwisko.value.trim(),
+          ksywa: ksywa.value.trim(),
+          telefon: telefon.value.trim(),
+          zgodaRodo: zgoda.checked
+        };
+
+        setMsg("Rejestruję…");
+
+        google.script.run
+          .withSuccessHandler(html => {
+            writeHtml(html);
+          })
+          .withFailureHandler(err => {
+            setMsg("Błąd backendu: " + (err && err.message ? err.message : err));
+          })
+          .registration_ui_submit(data);
+
+      } catch (e) {
+        setMsg("Błąd JS (submit): " + (e && e.message ? e.message : e));
+      }
+    }
+
+    // 🔴 GLOBALNY BEZPIECZNIK – koniec z „klik i nic”
+    window.addEventListener("error", function (e) {
+      try {
+        const msg = e && e.message ? e.message : String(e);
+        setMsg("Błąd JS: " + msg);
+      } catch (_) {}
+    });
+  </script>
+</body>
+</html>

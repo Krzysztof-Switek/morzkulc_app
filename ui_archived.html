@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Konto zarchiwizowane – SKK Morzkulc</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    <?!= HtmlService.createHtmlOutputFromFile('ui_theme').getContent(); ?>
+  </style>
+</head>
+
+<body data-view="archived">
+  <div class="wrap wrap-sm">
+    <div class="card">
+      <h1 class="status-danger">Konto zarchiwizowane</h1>
+
+      <p>
+        Konto powiązane z tym adresem e-mail zostało przeniesione do archiwum
+        i nie ma już dostępu do systemu klubowego.
+      </p>
+
+      <? if (email) { ?>
+        <div class="email-box"><?= email ?></div>
+      <? } ?>
+
+      <p style="margin-top:10px">
+        <?= reason ?>
+      </p>
+
+      <p style="font-size:11px">
+        Jeśli uważasz, że to błąd, skontaktuj się z Zarządem SKK Morzkulc.
+      </p>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Panel użytkownika – SKK Morzkulc</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    <?!= HtmlService.createHtmlOutputFromFile('ui_theme').getContent(); ?>
+  </style>
+</head>
+
+<body data-view="home">
+  <div class="wrap wrap-lg">
+    <header style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div>
+        <h2 style="margin:0">Witaj,
+          <? if (imie || ksywa) { ?>
+            <?= (ksywa || imie) ?>
+          <? } else { ?>
+            użytkowniku
+          <? } ?>
+        </h2>
+        <div class="muted" style="margin-top:4px">Panel użytkownika</div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="btn" onclick="changeAccount()">Zmień konto</button>
+      </div>
+    </header>
+
+    <div class="card">
+      <p>
+        To jest Twój panel w systemie SKK Morzkulc.
+        Stopniowo będziemy tu udostępniać kolejne moduły.
+      </p>
+
+      <section style="margin-top:14px">
+        <h3>Dane podstawowe</h3>
+
+        <p><strong>E-mail:</strong></p>
+        <div class="email-box"><?= email ?></div>
+
+        <div style="margin-top:10px" class="grid-2">
+          <div><strong>Imię:</strong> <?= imie ?></div>
+          <div><strong>Nazwisko:</strong> <?= nazwisko ?></div>
+          <div><strong>Ksywa:</strong> <?= ksywa ?></div>
+          <div><strong>Telefon:</strong> <?= telefon ?></div>
+          <div><strong>Rola:</strong> <?= rola ?></div>
+          <div><strong>Status:</strong> <?= status ?></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    function changeAccount() {
+      try { sessionStorage.removeItem("morzkulc_id_token"); } catch(e) {}
+      try {
+        if (window.google && google.accounts && google.accounts.id) {
+          google.accounts.id.disableAutoSelect();
+        }
+      } catch(e) {}
+      location.href = "<?= ScriptApp.getService().getUrl() ?>";
+    }
+  </script>
+</body>
+</html>

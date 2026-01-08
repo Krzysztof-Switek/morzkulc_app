@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>SKK Morzkulc – System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    <?!= HtmlService.createHtmlOutputFromFile('ui_theme').getContent(); ?>
+  </style>
+
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+
+<body data-view="app_shell">
+  <div class="wrap wrap-md">
+    <div class="card">
+      <h2>Logowanie</h2>
+      <p id="status" class="muted">Ładowanie…</p>
+
+      <div id="googleBtn" style="margin-top:10px"></div>
+
+      <div style="margin-top:12px">
+        <button class="btn" onclick="forceRelogin()">Zmień konto</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const CLIENT_ID = "<?= clientId ?>";
+    const STATUS = document.getElementById("status");
+    const BTN = document.getElementById("googleBtn");
+
+    function setStatus(msg) {
+      STATUS.textContent = msg;
+    }
+
+    function writeHtml(html) {
+      document.open();
+      document.write(html);
+      document.close();
+    }
+
+    function clearToken() {
+      try { sessionStorage.removeItem("morzkulc_id_token"); } catch(e) {}
+    }
+
+    function storeToken(tok) {
+      try { sessionStorage.setItem("morzkulc_id_token", tok); } catch(e) {}
+    }
+
+    function getToken() {
+      try { return sessionStorage.getItem("morzkulc_id_token") || ""; }
+      catch(e) { return ""; }
+    }
+
+    function resolveView(idToken) {
+      setStatus("Weryfikuję konto…");
+      google.script.run
+        .withSuccessHandler(html => {
+          writeHtml(html);
+        })
+        .withFailureHandler(err => {
+          setStatus("Błąd logowania: " + (err && err.message ? err.message : err));
+        })
+        .resolve_view_from_token(idToken);
+    }
+
+    function onCredentialResponse(resp) {
+      const token = resp && resp.credential ? resp.credential : "";
+      if (!token) {
+        setStatus("Brak tokena Google.");
+        return;
+      }
+      storeToken(token);
+      resolveView(token);
+    }
+
+    function initGIS() {
+      if (!window.google || !google.accounts || !google.accounts.id) {
+        setStatus("Ładowanie usług Google…");
+        setTimeout(initGIS, 200);
+        return;
+      }
+
+      google.accounts.id.initialize({
+        client_id: CLIENT_ID,
+        callback: onCredentialResponse,
+        auto_select: true,
+        cancel_on_tap_outside: false
+      });
+
+      // Przycisk jako fallback (gdy prompt nie wyskoczy automatycznie)
+      google.accounts.id.renderButton(BTN, {
+        theme: "outline",
+        size: "large",
+        width: "100%"
+      });
+
+      // Jeśli mamy token z poprzedniej sesji — spróbuj od razu.
+      const cached = getToken();
+      if (cached) {
+        resolveView(cached);
+        return;
+      }
+
+      setStatus("Zaloguj się kontem Google…");
+      google.accounts.id.prompt();
+    }
+
+    function forceRelogin() {
+      clearToken();
+      if (window.google && google.accounts && google.accounts.id) {
+        try { google.accounts.id.disableAutoSelect(); } catch(e) {}
+      }
+      location.reload();
+    }
+
+    initGIS();
+  </script>
+</body>
+</html>

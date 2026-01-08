@@ -1,26 +1,13 @@
-/***************************************************
- *  GLOBALNE ID — DEFINIOWANE NAJPIERW
- ***************************************************/
+/************************************************************
+ * CONFIG SPRZĘTU 
+ ************************************************************/
 
-/** ID arkusza sprzętowego w Google Sheets */
-const SPREADSHEET_ID = '1eUjW_hyhHBlv4lRTNYS3wcltUarV5G6FiH_b5kujgRI';
-
-/** ID arkusza z członkami i składkami */
-const MEMBERS_SPREADSHEET_ID = '1dJpaV3OdFHo1ugD_NzSaysXbQyp_HkQe2EVpCiBVDac';
-const MEMBERS_SHEET_NAME = 'członkowie_klubu';
-
-/** ID projektu GCP / Firebase */
-const PROJECT_ID = 'sprzet-skk-morzkulc';
-
-/** Podstawowy URL Firestore REST API */
-const FIRESTORE_BASE_URL =
-  'https://firestore.googleapis.com/v1/projects/' +
-  PROJECT_ID +
-  '/databases/(default)/documents';
-
+/** ID arkusza sprzętowego */
+const EQUIPMENT_SPREADSHEET_ID =
+  '1eUjW_hyhHBlv4lRTNYS3wcltUarV5G6FiH_b5kujgRI';
 
 /***************************************************
- *  KAJAKI — KONFIGURACJA
+ * KAJAKI
  ***************************************************/
 const KAYAKS_COLLECTION = 'kayaks';
 const KAYAKS_SHEET_NAME = 'kajaki';
@@ -63,9 +50,8 @@ const KAYAK_STATIC_FIELDS = [
   'uwagi',
 ];
 
-
 /***************************************************
- *  WIOSŁA — KONFIGURACJA
+ * WIOSŁA
  ***************************************************/
 const PADDLES_COLLECTION = 'paddles';
 const PADDLES_SHEET_NAME = 'wiosła';
@@ -96,9 +82,8 @@ const PADDLE_STATIC_FIELDS = [
   'uwagi',
 ];
 
-
 /***************************************************
- *  KAMIZELKI — KONFIGURACJA
+ * KAMIZELKI
  ***************************************************/
 const LIFEJACKETS_COLLECTION = 'lifejackets';
 const LIFEJACKETS_SHEET_NAME = 'kamizelki';
@@ -127,9 +112,8 @@ const LIFEJACKET_STATIC_FIELDS = [
   'uwagi',
 ];
 
-
 /***************************************************
- *  KASKI — KONFIGURACJA
+ * KASKI
  ***************************************************/
 const HELMETS_COLLECTION = 'helmets';
 const HELMETS_SHEET_NAME = 'kaski';
@@ -156,9 +140,8 @@ const HELMET_STATIC_FIELDS = [
   'uwagi',
 ];
 
-
 /***************************************************
- *  RZUTKI — KONFIGURACJA
+ * RZUTKI
  ***************************************************/
 const THROWBAGS_COLLECTION = 'throwbags';
 const THROWBAGS_SHEET_NAME = 'rzutki';
@@ -177,9 +160,8 @@ const THROWBAG_STATIC_FIELDS = [
   'uwagi',
 ];
 
-
 /***************************************************
- *  FARTUCHY — KONFIGURACJA
+ * FARTUCHY
  ***************************************************/
 const SPRAYSKIRTS_COLLECTION = 'sprayskirts';
 const SPRAYSKIRTS_SHEET_NAME = 'fartuchy';
@@ -207,15 +189,3 @@ const SPRAYSKIRT_STATIC_FIELDS = [
   'niziny',
   'uwagi',
 ];
-
-
-/***************************************************
- *  GLOBALNY CONFIG — NA SAMYM KOŃCU
- ***************************************************/
-const CONFIG = {
-  SPREADSHEET_ID,
-  MEMBERS_SPREADSHEET_ID,
-  MEMBERS_SHEET_NAME,
-  PROJECT_ID,
-  FIRESTORE_BASE_URL,
-};

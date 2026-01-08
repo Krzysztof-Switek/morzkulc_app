@@ -12,16 +12,48 @@ function getAuthHeaders() {
 /**
  * GET kolekcji Firestore
  */
+/********************************************************************
+ * firestoreGetCollection – WERSJA Z PAGINACJĄ (100% stabilna)
+ * Pobiera CAŁĄ kolekcję, niezależnie od rozmiaru.
+ ********************************************************************/
 function firestoreGetCollection(collectionPath) {
-  var url = FIRESTORE_BASE_URL + '/' + collectionPath;
-  var options = {
-    method: 'get',
-    headers: getAuthHeaders(),
-    muteHttpExceptions: true,
-  };
-  var response = UrlFetchApp.fetch(url, options);
-  return JSON.parse(response.getContentText());
+  const PAGE_SIZE = 100;
+  let url = FIRESTORE_BASE_URL + "/" + collectionPath;
+  let allDocs = [];
+  let pageToken = null;
+
+  do {
+    let finalUrl = url + "?pageSize=" + PAGE_SIZE;
+    if (pageToken) {
+      finalUrl += "&pageToken=" + encodeURIComponent(pageToken);
+    }
+
+    const response = UrlFetchApp.fetch(finalUrl, {
+      method: "get",
+      headers: getAuthHeaders(),
+      muteHttpExceptions: true
+    });
+
+    const code = response.getResponseCode();
+    const text = response.getContentText();
+    let body = null;
+    try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }
+
+    if (code !== 200) {
+      throw new Error("Firestore ERROR " + code + ": " + text);
+    }
+
+    if (body && body.documents) {
+      allDocs = allDocs.concat(body.documents);
+    }
+
+    pageToken = (body && body.nextPageToken) ? body.nextPageToken : null;
+
+  } while (pageToken);
+
+  return { documents: allDocs };
 }
+
 
 /**
  * GET pojedynczego dokumentu Firestore
@@ -60,6 +92,7 @@ function firestoreGetDocument(docPath) {
 
 /**
  * PATCH bez precondition (do sync'ów)
+ * WAŻNE: sprawdza HTTP code i rzuca błędem gdy zapis się nie udał
  */
 function firestorePatchDocument(docPath, dataObj, updateMaskFields) {
   var url = FIRESTORE_BASE_URL + '/' + docPath;
@@ -81,7 +114,18 @@ function firestorePatchDocument(docPath, dataObj, updateMaskFields) {
     muteHttpExceptions: true,
   });
 
-  return JSON.parse(response.getContentText());
+  var code = response.getResponseCode();
+  var text = response.getContentText();
+
+  // Firestore zwraca 200 przy PATCH create/update
+  if (code === 200) {
+    return text ? JSON.parse(text) : null;
+  }
+
+  // Jeśli nie 200 — log i fail-fast
+  Logger.log("firestorePatchDocument FAILED: HTTP=" + code + " PATH=" + docPath);
+  Logger.log("firestorePatchDocument BODY: " + text);
+  throw new Error("Firestore PATCH ERROR " + code + ": " + text);
 }
 
 /**
@@ -140,8 +184,12 @@ function firestoreDeleteDocument(docPath) {
   });
 
   var code = response.getResponseCode();
+  var text = response.getContentText();
+
   if (code !== 200 && code !== 204) {
     Logger.log("firestoreDeleteDocument: HTTP " + code + " path=" + docPath);
+    if (text) Logger.log("firestoreDeleteDocument BODY: " + text);
+    throw new Error("Firestore DELETE ERROR " + code + ": " + text);
   }
 }
 

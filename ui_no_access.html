@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Brak dostępu – SKK Morzkulc</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root {
+      --bg: #05070a;
+      --bg-card: #121822;
+      --text: #f5f7fb;
+      --text-muted: #a3afc6;
+      --accent: #ffb02e;
+      --border: #3b2c1a;
+      --radius-lg: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, #231b0f 0, #05070a 55%, #020308 100%);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: 460px;
+      padding: 16px;
+    }
+
+    .card {
+      background: linear-gradient(140deg, rgba(255,255,255,0.02), rgba(0,0,0,0.8));
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      box-shadow: 0 22px 50px rgba(0,0,0,0.7);
+      padding: 20px 18px 18px;
+      backdrop-filter: blur(14px);
+    }
+
+    .icon {
+      font-size: 26px;
+      margin-bottom: 6px;
+    }
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: 18px;
+    }
+
+    p {
+      margin: 6px 0;
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .email {
+      margin-top: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,176,46,0.09);
+      border: 1px solid rgba(255,176,46,0.5);
+      font-size: 12px;
+      word-break: break-all;
+      color: #ffe3b0;
+    }
+
+    .reason-box {
+      margin-top: 10px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(10,6,0,0.9);
+      border: 1px dashed rgba(255,176,46,0.6);
+      font-size: 12px;
+      color: #ffe3b0;
+    }
+
+    .hint {
+      margin-top: 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="icon">⚠️</div>
+      <h1>Brak dostępu</h1>
+
+      <p>
+        Aktualnie to konto nie ma uprawnień do korzystania z systemu SKK Morzkulc.
+      </p>
+
+      <? if (email) { ?>
+        <div class="email"><?= email ?></div>
+      <? } ?>
+
+      <div class="reason-box">
+        <?= reason ?>
+      </div>
+
+      <p class="hint">
+        Jeśli jesteś członkiem lub kandydatem i uważasz, że powinieneś mieć dostęp,
+        napisz do Zarządu – status i rola są nadawane i zmieniane w arkuszach
+        „członkowie i sympatycy”, a backend synchronizuje je z systemem.
+      </p>
+    </div>
+  </div>
+</body>
+</html>

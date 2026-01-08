@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Rejestracja zakończona – SKK Morzkulc</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    <?!= HtmlService.createHtmlOutputFromFile('ui_theme').getContent(); ?>
+  </style>
+</head>
+
+<body data-view="register_success">
+  <div class="wrap wrap-sm">
+    <div class="card" style="text-align:center">
+      <h1>Rejestracja zakończona</h1>
+      <p>Twoje konto zostało poprawnie zarejestrowane.</p>
+      <p>Zalogowany adres e-mail:</p>
+
+      <div class="email-box"><?= email ?></div>
+
+      <div style="margin-top:16px">
+        <button class="btn btn-primary" onclick="goHome()">
+          Przejdź do panelu
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function goHome() {
+      google.script.run
+        .withSuccessHandler(html => {
+          document.open();
+          document.write(html);
+          document.close();
+        })
+        .render_home_from_ui();
+    }
+  </script>
+</body>
+</html>

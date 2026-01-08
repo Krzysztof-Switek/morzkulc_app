@@ -1,18 +1,18 @@
 /**
  * Orchestrator wypożyczania / rezerwacji – łączy logikę sprzętu i użytkowników.
- * Szczegółowe reguły: rental_equipment_rules.gs, rental_user_rules.gs
  */
 
-/*********************************************************************
- * Rent API (retry)
- *********************************************************************/
 function rentItem(type, id, user, start, end) {
 
   if (!type || !id) return { error: "Brak parametrów: type, id." };
 
   var userCtx = getUserContext(user);
 
-  if (userCtx.role === "no_access") return { error: "Brak dostępu." };
+  // ===== PATCH 5: poprawiony komunikat dla no_access =====
+  if (userCtx.role === "no_access") {
+    return { error: "Brak dostępu do systemu Morzkulc – skontaktuj się z zarządem." };
+  }
+
   if (userCtx.role === "gosc") return { error: "Tryb podglądu — nie można wypożyczać." };
   if (!userCtx.limits || userCtx.limits.maxItems <= 0) {
     return { error: "Twoja rola nie pozwala na wypożyczanie sprzętu." };
@@ -31,17 +31,17 @@ function rentItem(type, id, user, start, end) {
   return { error: "Sprzęt zmieniony przez innego użytkownika. Spróbuj ponownie." };
 }
 
-/*********************************************************************
- * Reserve API (retry)
- *********************************************************************/
 function reserveItem(type, id, user, start, end) {
 
-  if (!type || !id) return { error: "Brak parametrów." };
   var userCtx = getUserContext(user);
 
-  if (userCtx.role === "no_access") return { error: "Brak dostępu." };
+  if (userCtx.role === "no_access") {
+    return { error: "Brak dostępu do systemu Morzkulc – skontaktuj się z zarządem." };
+  }
   if (userCtx.role === "gosc") return { error: "Tryb podglądu." };
-  if (!userCtx.limits || userCtx.limits.maxItems <= 0) return { error: "Rola nie pozwala na rezerwacje." };
+  if (!userCtx.limits || userCtx.limits.maxItems <= 0) {
+    return { error: "Rola nie pozwala na rezerwacje." };
+  }
 
   const MAX_RETRIES = 3;
   for (var i = 0; i < MAX_RETRIES; i++) {
@@ -56,9 +56,6 @@ function reserveItem(type, id, user, start, end) {
   return { error: "Sprzęt zmieniony przez innego użytkownika. Spróbuj ponownie." };
 }
 
-/*********************************************************************
- * Return API (retry)
- *********************************************************************/
 function returnItem(type, id) {
 
   const MAX_RETRIES = 3;
@@ -72,12 +69,4 @@ function returnItem(type, id) {
   }
 
   return { error: "Sprzęt zmieniony przez innego użytkownika." };
-}
-
-/*********************************************************************
- * TEST
- *********************************************************************/
-function testRentItemBroken() {
-  var r = rentItem("kayak", "2", "", "", "");
-  Logger.log(JSON.stringify(r, null, 2));
 }
