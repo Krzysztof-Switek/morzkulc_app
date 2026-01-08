@@ -17,26 +17,15 @@
  *   oraz technicznie w arkuszu w kolumnie "Pole dodatkowe".
  ********************************************************************/
 
-/********************************************************************
- * SHEETS — kompatybilność: jeśli nie ma upsert, użyj addUser
- ********************************************************************/
-function usersSheet_upsertUser(user) {
-  if (typeof usersSheet_addUser === "function") return usersSheet_addUser(user);
-  throw new Error("Brak usersSheet_addUser w projekcie");
-}
-
 function registration_ui_submit(data) {
   const res = registration_core(data);
   if (!res || !res.ok) throw new Error("Rejestracja nieudana");
 
-  // Po rejestracji od razu zwracamy HOME (bez parametrów URL / bez Session)
-  const homeData = users_getHomeData(res.email);
-  if (homeData && homeData.ok) {
-    return render_home(homeData).getContent();
-  }
-
-  // Fallback
-  return render_register({ ok: true, email: res.email }).getContent();
+  // Zwracamy obiekt usera, zgodnie z oczekiwaniami klienta
+  return {
+    ok: true,
+    user: user_getUser(res.email)
+  };
 }
 
 /**
@@ -274,7 +263,7 @@ function _openingBalance26_decideRoleStatus_(match) {
   }
 
   // brak rekordu
-  return { rola: USER_ROLES.SYMPATYK, status: "pending" };
+  return { rola: USER_ROLES.SYMPATYK, status: USER_STATUSES.AKTYWNY };
 }
 
 /********************************************************************
