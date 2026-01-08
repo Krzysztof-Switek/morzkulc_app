@@ -124,7 +124,7 @@ function api_decideRoleStatus_(match) {
     if (match.isMember === true) return { rola: "Członek", status: "Aktywny" };
     return { rola: "Członek", status: "Zawieszony" };
   }
-  return { rola: "Sympatyk", status: "pending" };
+  return { rola: "Sympatyk", status: "Aktywny" };
 }
 
 function api_register_from_firebase(e) {
