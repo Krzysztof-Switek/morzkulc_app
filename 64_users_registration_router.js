@@ -17,6 +17,14 @@
  *   oraz technicznie w arkuszu w kolumnie "Pole dodatkowe".
  ********************************************************************/
 
+/********************************************************************
+ * SHEETS — kompatybilność: jeśli nie ma upsert, użyj addUser
+ ********************************************************************/
+function usersSheet_upsertUser(user) {
+  if (typeof usersSheet_addUser === "function") return usersSheet_addUser(user);
+  throw new Error("Brak usersSheet_addUser w projekcie");
+}
+
 function registration_ui_submit(data) {
   const user = registration_core(data);
   if (!user) throw new Error("Rejestracja nieudana");
