@@ -2,9 +2,18 @@
  * 70_api_router.js
  * Public API for Firebase-hosted frontend (web.app)
  *
- * FIX:
- * - rola zawsze w 100% zgodna z listą z arkusza: Zarząd, KR, Członek, Kandydat, Sympatyk
- * - błąd walidacji Sheets nie blokuje całej rejestracji (żeby Firestore w hostingu się zapisał)
+ * Jedyna słuszna ścieżka rejestracji:
+ * - Front robi POST do WebApp URL (Apps Script) z action=register_from_firebase
+ * - Backend:
+ *   1) weryfikuje Google ID Token
+ *   2) jeśli users_active istnieje -> zwraca user (already=true)
+ *   3) jeśli nie istnieje -> JEDNORAZOWO sprawdza BO26 (users_opening_balance_26)
+ *   4) zapisuje users + users_active (Firestore)
+ *   5) upsert do arkusza (nie blokuje rejestracji)
+ *
+ * WAŻNE:
+ * - doGet() NIE jest rejestracją. Jeśli front wali GETem i oczekuje user,
+ *   dostanie błąd "GET_NOT_SUPPORTED_FOR_ACTION".
  ***************************************************/
 
 function json_(obj) {
@@ -58,6 +67,7 @@ function api_fs_getString_(fields, key) {
   if (typeof f.stringValue === "string") return f.stringValue;
   if (typeof f.integerValue === "string") return f.integerValue;
   if (typeof f.doubleValue === "number") return String(f.doubleValue);
+  if (typeof f.booleanValue === "boolean") return f.booleanValue ? "true" : "false";
   return "";
 }
 
@@ -69,44 +79,99 @@ function api_fs_getFirstString_(fields, keys) {
   return "";
 }
 
+function api_fs_getFirstBool_(fields, keys) {
+  for (var i = 0; i < keys.length; i++) {
+    if (api_fs_getBool_(fields, keys[i]) === true) return true;
+  }
+  return false;
+}
+
 /**
- * BO26 lookup: email OR imię+nazwisko
- * return: { found, matchType, docId, isMember }
+ * Dropdown role — dokładnie jak w arkuszu (bez PL znaków)
+ */
+function api_roleDropdown_(rola) {
+  const r = String(rola || "").trim();
+
+  // normalizacja z wariantów "ładnych" / starych
+  if (r === "Zarząd") return "Zarzad";
+  if (r === "Członek") return "Czlonek";
+
+  // akceptujemy już poprawne wartości
+  if (["Zarzad", "KR", "Czlonek", "Kandydat", "Sympatyk"].includes(r)) return r;
+
+  // fallback bez zgadywania roli: Sympatyk (najbezpieczniejsze)
+  return "Sympatyk";
+}
+
+/**
+ * BO26 — dopasowanie (EMAIL lub IMIĘ+NAZWISKO)
+ * UWAGA: import jest 1:1 z nagłówków arkusza, więc nazwy pól mogą mieć różną wielkość liter.
+ * Tu musimy obsłużyć realne warianty nagłówków z Sheets.
  */
 function api_openingBalance26_match_(email, imie, nazwisko) {
   const normEmail = String(email || "").trim().toLowerCase();
-  const nameKey = api_nameKey_(imie, nazwisko);
+  const keyName = api_nameKey_(imie, nazwisko);
 
-  const col = firestoreGetCollection("users_opening_balance_26");
+  const EMAIL_KEYS = [
+    "e-mail", "E-mail", "E-mail ", "e-mail ",
+    "email", "Email", "EMAIL",
+    "e_mail", "E_mail", "eMail", "mail", "Mail",
+    "adres e-mail", "Adres e-mail", "adres email", "Adres email", "adres_email"
+  ];
+
+  const IMIE_KEYS = [
+    "Imię", "imię", "Imie", "imie", "IMIĘ", "IMIE",
+    "first_name", "firstname", "FirstName"
+  ];
+
+  const NAZWISKO_KEYS = [
+    "Nazwisko", "nazwisko", "NAZWISKO",
+    "last_name", "lastname", "LastName"
+  ];
+
+  const MEMBER_KEYS = [
+    "członek stowarzyszenia", "Członek stowarzyszenia", "Członek stowarzyszenia ",
+    "czlonek stowarzyszenia", "Czlonek stowarzyszenia",
+    "czlonek_stowarzyszenia",
+    "member_association"
+  ];
+
+  // 0) Szybki strzał: dokument o ID = email (czasem ktoś tak importuje)
+  if (normEmail) {
+    const direct = firestoreGetDocument(`${USERS_OPENING_BALANCE}/${encodeURIComponent(normEmail)}`);
+    if (direct && direct.fields) {
+      const docId0 = String(direct.name || "").split("/").pop() || normEmail;
+      const isMember0 = api_fs_getFirstBool_(direct.fields, MEMBER_KEYS);
+      return { found: true, matchType: "email_docid", docId: docId0, isMember: isMember0 };
+    }
+  }
+
+  // 1) Skan kolekcji (tylko raz na usera)
+  const col = firestoreGetCollection(USERS_OPENING_BALANCE);
   const docs = (col && col.documents) ? col.documents : [];
 
   let byEmail = null;
   let byName = null;
 
-  docs.forEach(function (d) {
+  docs.forEach(d => {
     if (!d || !d.fields) return;
     const f = d.fields;
 
-    const boEmail = String(api_fs_getFirstString_(f, [
-      "e-mail", "email", "e_mail", "mail", "adres e-mail", "adres email", "adres_email"
-    ]) || "").trim().toLowerCase();
+    const boEmail = String(api_fs_getFirstString_(f, EMAIL_KEYS) || "").trim().toLowerCase();
+    const boImie = api_fs_getFirstString_(f, IMIE_KEYS);
+    const boNazwisko = api_fs_getFirstString_(f, NAZWISKO_KEYS);
 
-    const boImie = api_fs_getFirstString_(f, ["Imię", "Imie", "imię", "imie", "first_name", "firstname"]);
-    const boNazw = api_fs_getFirstString_(f, ["Nazwisko", "nazwisko", "last_name", "lastname"]);
-    const boNameKey = api_nameKey_(boImie, boNazw);
+    const boNameKey = api_nameKey_(boImie, boNazwisko);
 
     if (!byEmail && normEmail && boEmail && boEmail === normEmail) byEmail = d;
-    if (!byName && nameKey && boNameKey && boNameKey === nameKey) byName = d;
+    if (!byName && keyName && boNameKey && boNameKey === keyName) byName = d;
   });
 
   const hit = byEmail || byName;
   if (!hit || !hit.fields) return { found: false, matchType: "none", docId: "", isMember: false };
 
   const docId = String(hit.name || "").split("/").pop() || "";
-  const isMember =
-    api_fs_getBool_(hit.fields, "członek stowarzyszenia") ||
-    api_fs_getBool_(hit.fields, "czlonek stowarzyszenia") ||
-    api_fs_getBool_(hit.fields, "czlonek_stowarzyszenia");
+  const isMember = api_fs_getFirstBool_(hit.fields, MEMBER_KEYS);
 
   return {
     found: true,
@@ -117,12 +182,12 @@ function api_openingBalance26_match_(email, imie, nazwisko) {
 }
 
 /**
- * Zwraca wartości DOKŁADNIE zgodne z dropdownem w arkuszu.
+ * LOGIKA DECYZYJNA (Twoja)
  */
 function api_decideRoleStatus_(match) {
   if (match && match.found === true) {
-    if (match.isMember === true) return { rola: "Członek", status: "Aktywny" };
-    return { rola: "Członek", status: "Zawieszony" };
+    if (match.isMember === true) return { rola: "Czlonek", status: "Aktywny" };
+    return { rola: "Czlonek", status: "Zawieszony" };
   }
   return { rola: "Sympatyk", status: "pending" };
 }
@@ -166,7 +231,10 @@ function api_register_from_firebase(e) {
       status: f.status?.stringValue || "",
       joinedAt: f.joinedAt?.stringValue || ""
     };
+
+    userExisting.rola = api_roleDropdown_(userExisting.rola);
     userExisting.role = userExisting.rola;
+
     return json_({ ok: true, action: "register_from_firebase", already: true, user: userExisting });
   }
 
@@ -182,8 +250,8 @@ function api_register_from_firebase(e) {
     ksywa,
     telefon,
 
-    rola: decision.rola,
-    status: decision.status,
+    rola: api_roleDropdown_(decision.rola),
+    status: String(decision.status || "").trim(),
 
     createdAtIso,
     joinedAt: createdAtIso,
@@ -193,14 +261,14 @@ function api_register_from_firebase(e) {
     openingBalanceDocId: ob.docId || "",
 
     // kompatybilność dla frontu
-    role: decision.rola
+    role: api_roleDropdown_(decision.rola)
   };
 
-  // Firestore (Apps Script)
+  // Firestore — musi się wykonać niezależnie od Sheets
   user_saveUser(userDoc);
   user_saveActive(userDoc);
 
-  // Sheets – jeśli poleci walidacja, NIE blokujemy całej rejestracji
+  // Sheets — nie blokujemy rejestracji
   let sheetWarning = "";
   try {
     if (typeof usersSheet_upsertUser === "function") usersSheet_upsertUser(userDoc);
@@ -214,19 +282,28 @@ function api_register_from_firebase(e) {
     ok: true,
     action: "register_from_firebase",
     user: userDoc,
-    openingBalance: { found: ob.found, matchType: ob.matchType, docId: ob.docId || "" },
+    openingBalance: { found: ob.found, matchType: ob.matchType, docId: ob.docId || "", isMember: ob.isMember === true },
     sheetWarning: sheetWarning
   });
 }
 
 function doPost(e) {
   try {
-    const action = (e && e.parameter && e.parameter.action) ? String(e.parameter.action) : "";
+    // prefer: action w querystring
+    let action = (e && e.parameter && e.parameter.action) ? String(e.parameter.action) : "";
+
+    // fallback: jeśli front nie dokleja ?action=..., a robi POST z JSONem
+    // (wtedy rozpoznajemy po tym, że w body jest idToken)
+    if (!action) {
+      const body = api_readJsonBody_(e);
+      if (body && body.idToken) action = "register_from_firebase";
+    }
+
     if (!action) return json_({ ok: false, error: "NO_ACTION" });
 
     if (action === "register_from_firebase") return api_register_from_firebase(e);
 
-    return json_({ ok: false, error: "UNKNOWN_ACTION", action });
+    return json_({ ok: false, error: "UNKNOWN_ACTION", action: action });
   } catch (err) {
     return json_({
       ok: false,
@@ -237,5 +314,18 @@ function doPost(e) {
 }
 
 function doGet(e) {
-  return json_({ ok: true, service: "api_router", ts: new Date().toISOString() });
+  e = e || {};
+  const p = e.parameter || {};
+  const action = (p.action ? String(p.action) : "").trim();
+
+  // healthcheck / ping
+  if (!action) return json_({ ok: true, service: "api_router", ts: new Date().toISOString() });
+
+  // jeśli ktoś próbuje robić GET jako "rejestrację" – zwracamy twardy błąd (żeby front nie widział {ok:true})
+  return json_({
+    ok: false,
+    error: "GET_NOT_SUPPORTED_FOR_ACTION",
+    action: action,
+    hint: "Use POST with JSON body and action=register_from_firebase (or include idToken in body)."
+  });
 }

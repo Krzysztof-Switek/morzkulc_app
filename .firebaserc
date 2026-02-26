@@ -1,5 +1,9 @@
 {
   "projects": {
-    "default": "sprzet-skk-morzkulc"
-  }
+    "default": "sprzet-skk-morzkulc",
+    "dev": "sprzet-skk-morzkulc",
+    "prod": "morzkulc-e9df7"
+  },
+  "targets": {},
+  "etags": {}
 }

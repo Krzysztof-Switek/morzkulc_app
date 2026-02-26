@@ -57,4 +57,5 @@ const USER_STATUSES = {
   ZAWIESZONY:  'Zawieszony',
   REZYGNACJA:  'Rezygnacja',
   SKRESLONY:   'Skreślony',
+  PENDING: 'pending',
 };

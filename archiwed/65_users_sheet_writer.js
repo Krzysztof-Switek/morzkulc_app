@@ -3,7 +3,7 @@
  * Arkusz: "członkowie i sympatycy"
  *
  * Na czas stabilizacji: BRAK walidacji / dropdownów / checkboxów.
- * Zapis jest atomowy (setValues), żeby nie było połówek (np. bez nazwiska).
+ * Zapis jest atomowy (setValues), żeby nie było połówek.
  ********************************************************************/
 
 function usersSheet_getSheet_() {
@@ -11,6 +11,14 @@ function usersSheet_getSheet_() {
   const sh = ss.getSheetByName("członkowie i sympatycy");
   if (!sh) throw new Error('Brak zakładki: "członkowie i sympatycy"');
   return sh;
+}
+
+function usersSheet_roleDropdown_(rola) {
+  const r = String(rola || "").trim();
+  if (r === "Zarząd") return "Zarzad";
+  if (r === "Członek") return "Czlonek";
+  if (["Zarzad","KR","Czlonek","Kandydat","Sympatyk"].includes(r)) return r;
+  return "Sympatyk";
 }
 
 function usersSheet_norm_(user) {
@@ -25,7 +33,8 @@ function usersSheet_norm_(user) {
   out.nazwisko = String(out.nazwisko || "").trim();
   out.ksywa = String(out.ksywa || "").trim();
   out.telefon = String(out.telefon || "").trim();
-  out.rola = String(out.rola || "").trim();
+
+  out.rola = usersSheet_roleDropdown_(out.rola);
   out.status = String(out.status || "").trim();
 
   return out;

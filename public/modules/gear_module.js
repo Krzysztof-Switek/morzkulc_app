@@ -1,0 +1,424 @@
+import { apiGetJson } from "/core/api_client.js";
+
+const KAYAKS_URL = "/api/gear/kayaks";
+
+// CC0 placeholder (SVG) – używany jako miniatura zanim user kliknie
+// Źródło: SVG Repo (CC0) :contentReference[oaicite:1]{index=1}
+const PLACEHOLDER_SVG = "https://www.svgrepo.com/download/426147/kayak.svg";
+
+export function createGearModule({ id, label, defaultRoute, order, enabled, access }) {
+  return {
+    id,
+    label,
+    defaultRoute,
+    order,
+    enabled,
+    access,
+
+    async render({ viewEl, routeId, ctx }) {
+      const r = String(routeId || "").trim() || "kayaks";
+
+      if (r !== "kayaks") {
+        viewEl.innerHTML = `
+          <div class="card center">
+            <h2>${escapeHtml(label)}</h2>
+            <p>Nieznana podstrona: <strong>${escapeHtml(r)}</strong></p>
+          </div>
+        `;
+        return;
+      }
+
+      if (!ctx?.idToken) {
+        viewEl.innerHTML = `
+          <div class="card center">
+            <h2>${escapeHtml(label)}</h2>
+            <p>Brak tokenu sesji. Odśwież stronę.</p>
+          </div>
+        `;
+        return;
+      }
+
+      viewEl.innerHTML = `
+        <div class="card wide">
+          <h2>${escapeHtml(label)} – Kajaki</h2>
+
+          <div class="gearToolbar">
+            <div class="gearToolbarTop">
+              <div class="row" style="margin:0;">
+                <label for="kayaksSearch">Szukaj</label>
+                <input id="kayaksSearch" placeholder="np. Diesel, Wave sport, niebieski, creek..." />
+                <div class="hint">Filtruje po: nr, producent, model, typ, kolor, status, litry, zakres wag</div>
+              </div>
+
+              <div class="actions" style="margin:0;">
+                <button id="kayaksReloadBtn" type="button">Odśwież</button>
+                <span id="kayaksMeta" class="hint"></span>
+              </div>
+            </div>
+
+            <div id="kayaksErr" class="err hidden"></div>
+            <div id="kayaksList"></div>
+          </div>
+        </div>
+
+        <!-- Modal do zdjęć (ładuje src dopiero po kliknięciu) -->
+        <div id="gearImgModal" class="gearModal hidden" aria-hidden="true">
+          <div class="gearModalBackdrop" data-gear-modal-close="1"></div>
+          <div class="gearModalCard" role="dialog" aria-modal="true" aria-label="Zdjęcie sprzętu">
+            <div class="gearModalTop">
+              <div class="gearModalTitle" id="gearModalTitle">Zdjęcie</div>
+              <button class="gearModalClose" type="button" data-gear-modal-close="1" aria-label="Zamknij">✕</button>
+            </div>
+            <div class="gearModalBody">
+              <img id="gearModalImg" alt="Zdjęcie sprzętu" />
+            </div>
+            <div class="gearModalActions">
+              <button id="gearModalTopBtn" type="button" class="ghost">Z góry</button>
+              <button id="gearModalSideBtn" type="button" class="ghost">Z boku</button>
+              <span class="hint" id="gearModalHint"></span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const errEl = viewEl.querySelector("#kayaksErr");
+      const listEl = viewEl.querySelector("#kayaksList");
+      const metaEl = viewEl.querySelector("#kayaksMeta");
+      const reloadBtn = viewEl.querySelector("#kayaksReloadBtn");
+      const searchEl = viewEl.querySelector("#kayaksSearch");
+
+      const modalEl = viewEl.querySelector("#gearImgModal");
+      const modalImgEl = viewEl.querySelector("#gearModalImg");
+      const modalTitleEl = viewEl.querySelector("#gearModalTitle");
+      const modalHintEl = viewEl.querySelector("#gearModalHint");
+      const modalTopBtn = viewEl.querySelector("#gearModalTopBtn");
+      const modalSideBtn = viewEl.querySelector("#gearModalSideBtn");
+
+      const setErr = (msg) => {
+        errEl.textContent = String(msg || "");
+        errEl.classList.toggle("hidden", !errEl.textContent);
+      };
+
+      let all = [];
+
+      const render = (items) => {
+        if (!items.length) {
+          listEl.innerHTML = `<div class="hint">Brak wyników.</div>`;
+          metaEl.textContent = `Widoczne: 0 / ${all.length}`;
+          return;
+        }
+
+        const cards = items.map((k) => renderKayakCard(k)).join("");
+
+        listEl.innerHTML = `
+          <div class="gearGrid">
+            ${cards}
+          </div>
+        `;
+
+        metaEl.textContent = `Widoczne: ${items.length} / ${all.length}`;
+      };
+
+      const applyFilter = () => {
+        const q = String(searchEl.value || "").trim().toLowerCase();
+        if (!q) {
+          render(all);
+          return;
+        }
+
+        const filtered = all.filter((k) => {
+          const hay = [
+            k?.number,
+            k?.brand,
+            k?.model,
+            k?.type,
+            k?.color,
+            k?.status,
+            k?.liters,
+            k?.weightRange,
+            k?.storage,
+            k?.notes
+          ]
+            .map((x) => String(x || "").toLowerCase())
+            .join(" ");
+          return hay.includes(q);
+        });
+
+        render(filtered);
+      };
+
+      const load = async () => {
+        setErr("");
+        listEl.innerHTML = `<div class="hint">Ładuję...</div>`;
+        metaEl.textContent = "";
+
+        try {
+          const resp = await apiGetJson({
+            url: KAYAKS_URL,
+            idToken: ctx.idToken
+          });
+
+          all = Array.isArray(resp?.kayaks) ? resp.kayaks : [];
+          render(all);
+        } catch (e) {
+          const msg = String(e?.message || e);
+          setErr("Błąd pobierania kajaków: " + msg);
+          listEl.innerHTML = "";
+          metaEl.textContent = "";
+        }
+      };
+
+      // === LAZY IMG MODAL (event delegation) ===
+      let currentImgTop = "";
+      let currentImgSide = "";
+      let currentTitle = "";
+
+      function openModal({ title, topUrl, sideUrl, prefer }) {
+        currentTitle = String(title || "Zdjęcie");
+        currentImgTop = String(topUrl || "");
+        currentImgSide = String(sideUrl || "");
+
+        modalTitleEl.textContent = currentTitle;
+        modalHintEl.textContent = "";
+
+        const hasTop = Boolean(currentImgTop);
+        const hasSide = Boolean(currentImgSide);
+
+        modalTopBtn.disabled = !hasTop;
+        modalSideBtn.disabled = !hasSide;
+
+        // wybór startowy
+        const choice = prefer === "side" ? "side" : "top";
+        const start =
+          choice === "side"
+            ? (hasSide ? currentImgSide : currentImgTop)
+            : (hasTop ? currentImgTop : currentImgSide);
+
+        if (!start) {
+          modalHintEl.textContent = "Brak zdjęcia.";
+          modalImgEl.removeAttribute("src");
+        } else {
+          // TU dopiero ustawiamy src = realny load
+          modalImgEl.setAttribute("src", start);
+        }
+
+        modalEl.classList.remove("hidden");
+        modalEl.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeModal() {
+        modalEl.classList.add("hidden");
+        modalEl.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+        // zwalniamy pamięć + nie trzymamy starego src
+        modalImgEl.removeAttribute("src");
+        currentImgTop = "";
+        currentImgSide = "";
+        currentTitle = "";
+        modalHintEl.textContent = "";
+      }
+
+      // close handlers
+      modalEl.addEventListener("click", (ev) => {
+        const t = ev.target;
+        if (t && t.getAttribute && t.getAttribute("data-gear-modal-close") === "1") {
+          closeModal();
+        }
+      });
+
+      window.addEventListener("keydown", (ev) => {
+        if (ev.key === "Escape" && !modalEl.classList.contains("hidden")) closeModal();
+      });
+
+      modalTopBtn.addEventListener("click", () => {
+        if (!currentImgTop) return;
+        modalImgEl.setAttribute("src", currentImgTop);
+      });
+
+      modalSideBtn.addEventListener("click", () => {
+        if (!currentImgSide) return;
+        modalImgEl.setAttribute("src", currentImgSide);
+      });
+
+      // klik w miniaturę na karcie -> open modal i dopiero wtedy load
+      listEl.addEventListener("click", (ev) => {
+        const el = ev.target;
+        if (!el || !el.closest) return;
+
+        const btn = el.closest("[data-gear-img]");
+        if (!btn) return;
+
+        const prefer = String(btn.getAttribute("data-gear-img") || "top");
+        const topUrl = String(btn.getAttribute("data-gear-top") || "");
+        const sideUrl = String(btn.getAttribute("data-gear-side") || "");
+        const title = String(btn.getAttribute("data-gear-title") || "Zdjęcie");
+
+        openModal({ title, topUrl, sideUrl, prefer });
+      });
+
+      reloadBtn.addEventListener("click", load);
+      searchEl.addEventListener("input", applyFilter);
+
+      await load();
+    }
+  };
+}
+
+function renderKayakCard(k) {
+  const number = String(k?.number || "").trim();
+  const brand = String(k?.brand || "").trim();
+  const model = String(k?.model || "").trim();
+  const type = String(k?.type || "").trim();
+  const color = String(k?.color || "").trim();
+
+  // docelowo: "Sprawny?" -> boolean; ale żeby nie rozwalić, obsługujemy też status string
+  const working = isWorking(k);
+
+  const liters = k?.liters == null ? "" : String(k.liters);
+  const weightRange = String(k?.weightRange || "").trim(); // "Zakres wag"
+  const storage = String(k?.storage || "").trim();         // "Składowany"
+  const isPrivate = toBool(k?.isPrivate);                  // "Prywatny?"
+  const privateRent = toBool(k?.privateForRent);           // "Prywatny do wypożyczenia?"
+  const ownerContact = String(k?.ownerContact || "").trim();
+  const notes = String(k?.notes || "").trim();
+
+  const statusBadge = working
+    ? `<span class="badge ok">sprawny</span>`
+    : `<span class="badge danger">niesprawny</span>`;
+
+  const typeBadge = type ? `<span class="badge soft">${escapeHtml(type)}</span>` : "";
+
+  const imgTop = String(k?.images?.top || "").trim();
+  const imgSide = String(k?.images?.side || "").trim();
+
+  const title = [brand, model].filter(Boolean).join(" ").trim() || "Kajak";
+  const subtitleParts = [];
+  if (number) subtitleParts.push("Nr " + number);
+  if (color) subtitleParts.push(color);
+  const subtitle = subtitleParts.join(" • ");
+
+  const privacyLine = isPrivate
+    ? (privateRent ? "Prywatny (do wypożyczenia)" : "Prywatny (nie do wypożyczenia)")
+    : (storage ? storage : "");
+
+  const detailsRows = [
+    { k: "Pojemność", v: liters ? (liters + " L") : "-" },
+    { k: "Zakres wag", v: weightRange || "-" },
+    { k: "Składowanie", v: storage || "-" },
+    { k: "Własność", v: isPrivate ? "Prywatny" : "Klub" },
+    { k: "Kontakt", v: (isPrivate ? (ownerContact || "-") : "-") },
+    { k: "Uwagi", v: notes || "-" }
+  ];
+
+  return `
+    <div class="gearCard ${working ? "gearOk" : "gearBad"}">
+      <div class="gearCardInner">
+        <div class="gearHead">
+          <div class="gearTitleWrap">
+            <div class="gearTitle">${escapeHtml(title)}</div>
+            <div class="gearSubtitle">${escapeHtml(subtitle)}</div>
+            ${privacyLine ? `<div class="gearSubtitle">${escapeHtml(privacyLine)}</div>` : ""}
+          </div>
+          <div class="gearBadges">
+            ${statusBadge}
+            ${typeBadge}
+          </div>
+        </div>
+
+        <div class="gearImgs">
+          <button
+            class="gearImgBtn"
+            type="button"
+            data-gear-img="top"
+            data-gear-top="${escapeAttr(imgTop)}"
+            data-gear-side="${escapeAttr(imgSide)}"
+            data-gear-title="${escapeAttr(title)}"
+            aria-label="Pokaż zdjęcie z góry">
+            <div class="gearImgPh">
+              <img alt="" loading="lazy" src="${escapeAttr(PLACEHOLDER_SVG)}" />
+              <div class="gearImgLabel">Z góry</div>
+            </div>
+          </button>
+
+          <button
+            class="gearImgBtn"
+            type="button"
+            data-gear-img="side"
+            data-gear-top="${escapeAttr(imgTop)}"
+            data-gear-side="${escapeAttr(imgSide)}"
+            data-gear-title="${escapeAttr(title)}"
+            aria-label="Pokaż zdjęcie z boku">
+            <div class="gearImgPh">
+              <img alt="" loading="lazy" src="${escapeAttr(PLACEHOLDER_SVG)}" />
+              <div class="gearImgLabel">Z boku</div>
+            </div>
+          </button>
+        </div>
+
+        <details class="gearDetails">
+          <summary class="gearDetailsSummary">Szczegóły</summary>
+          <div class="gearMeta">
+            ${detailsRows
+              .map(
+                (r) => `
+                  <div class="gearMetaRow">
+                    <div class="gearMetaKey">${escapeHtml(r.k)}</div>
+                    <div class="gearMetaVal">${escapeHtml(r.v)}</div>
+                  </div>
+                `
+              )
+              .join("")}
+          </div>
+        </details>
+      </div>
+    </div>
+  `;
+}
+
+function isWorking(k) {
+  // priorytet: jawne boolean (Sprawny?)
+  const b =
+    toBoolOrNull(k?.isWorking) ??
+    toBoolOrNull(k?.working) ??
+    toBoolOrNull(k?.isOk) ??
+    toBoolOrNull(k?.ok) ??
+    null;
+
+  if (b !== null) return b;
+
+  // fallback: status string
+  const s = String(k?.status || "").trim().toLowerCase();
+  if (!s) return true;
+  if (s === "repair" || s === "broken" || s === "service" || s === "niesprawny") return false;
+  return true;
+}
+
+function toBool(v) {
+  return toBoolOrNull(v) === true;
+}
+
+function toBoolOrNull(v) {
+  if (v === true) return true;
+  if (v === false) return false;
+  const s = String(v || "").trim().toLowerCase();
+  if (!s) return null;
+  if (s === "true" || s === "tak" || s === "yes" || s === "1") return true;
+  if (s === "false" || s === "nie" || s === "no" || s === "0") return false;
+  return null;
+}
+
+function escapeAttr(s) {
+  return String(s)
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}

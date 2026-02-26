@@ -1,4 +1,23 @@
 {
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "disallowLegacyRuntimeConfig": true,
+      "invoker": "private",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        "npm --prefix functions run lint",
+        "npm --prefix functions run build"
+      ]
+    }
+  ],
   "hosting": {
     "public": "public",
     "ignore": [
@@ -6,10 +25,60 @@
       "**/.*",
       "**/node_modules/**"
     ],
+    "headers": [
+      {
+        "source": "/core/**",
+        "headers": [
+          { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+          { "key": "Pragma", "value": "no-cache" },
+          { "key": "Expires", "value": "0" }
+        ]
+      },
+      {
+        "source": "/index.html",
+        "headers": [
+          { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+          { "key": "Pragma", "value": "no-cache" },
+          { "key": "Expires", "value": "0" }
+        ]
+      },
+      {
+        "source": "/api/**",
+        "headers": [
+          { "key": "Access-Control-Allow-Origin", "value": "*" },
+          { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
+          { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
+        ]
+      }
+    ],
     "rewrites": [
       {
-        "source": "**",
-        "destination": "/index.html"
+        "source": "/api/setup",
+        "function": {
+          "functionId": "getSetup",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/admin/setup",
+        "function": {
+          "functionId": "adminPutSetup",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/register",
+        "function": {
+          "functionId": "registerUser",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/gear/kayaks",
+        "function": {
+          "functionId": "getGearKayaks",
+          "region": "us-central1"
+        }
       }
     ]
   }
