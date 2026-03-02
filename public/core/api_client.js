@@ -15,6 +15,40 @@ export async function apiPostJson({ url, idToken, body }) {
   return JSON.parse(text);
 }
 
+/**
+ * TEST ONLY: Funkcja do sprawdzenia połączenia z Google Apps Script Web App.
+ * Wywołaj ją z konsoli przeglądarki podając URL swojego Web App oraz opcjonalny idToken.
+ */
+export async function testGasConnection(gasUrl, idToken = null) {
+  console.log("Testowanie połączenia z GAS:", gasUrl);
+  try {
+    // Test GET
+    const respGet = await fetch(gasUrl + "?action=ping", { method: "GET" });
+    const dataGet = await respGet.json();
+    console.log("GAS GET Response:", dataGet);
+
+    // Test POST (z Content-Type: text/plain aby uniknąć preflight CORS w GAS)
+    const postBody = {
+      test: "hello from frontend",
+      timestamp: Date.now()
+    };
+    if (idToken) postBody.idToken = idToken;
+
+    const respPost = await fetch(gasUrl, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(postBody)
+    });
+    const dataPost = await respPost.json();
+    console.log("GAS POST Response:", dataPost);
+
+    return { ok: true, dataGet, dataPost };
+  } catch (err) {
+    console.error("Błąd testu GAS:", err);
+    return { ok: false, error: err.message };
+  }
+}
+
 export async function apiGetJson({ url, idToken }) {
   const resp = await fetch(url, {
     method: "GET",
