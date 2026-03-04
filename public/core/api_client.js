@@ -17,7 +17,8 @@ export async function apiPostJson({ url, idToken, body }) {
 
 /**
  * Specjalna funkcja dla Google Apps Script, która unika CORS preflight (OPTIONS).
- * Wysyła dane jako text/plain, a idToken musi być wewnątrz body.
+ * Wysyła dane jako text/plain (bez charset, aby niektóre przeglądarki nie wymuszały preflight).
+ * idToken musi być wewnątrz body.
  */
 export async function apiPostGasJson({ url, idToken, body }) {
   const payload = {
@@ -28,7 +29,7 @@ export async function apiPostGasJson({ url, idToken, body }) {
   const resp = await fetch(url, {
     method: "POST",
     headers: {
-      "Content-Type": "text/plain;charset=utf-8"
+      "Content-Type": "text/plain"
     },
     body: JSON.stringify(payload)
   });
@@ -42,7 +43,6 @@ export async function apiPostGasJson({ url, idToken, body }) {
 
 /**
  * TEST ONLY: Funkcja do sprawdzenia połączenia z Google Apps Script Web App.
- * Wywołaj ją z konsoli przeglądarki podając URL swojego Web App oraz opcjonalny idToken.
  */
 export async function testGasConnection(gasUrl, idToken = null) {
   console.log("Testowanie połączenia z GAS:", gasUrl);
@@ -61,7 +61,7 @@ export async function testGasConnection(gasUrl, idToken = null) {
 
     const respPost = await fetch(gasUrl, {
       method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      headers: { "Content-Type": "text/plain" },
       body: JSON.stringify(postBody)
     });
     const dataPost = await respPost.json();

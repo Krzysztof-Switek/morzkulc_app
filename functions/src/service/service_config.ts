@@ -41,6 +41,8 @@ export interface ServiceConfig {
 export function getServiceConfig(): ServiceConfig {
   const envName = process.env.ENV_NAME || "prod";
 
+  const isProd = envName === "prod";
+
   const listaGroupEmail = process.env.SVC_LISTA_GROUP_EMAIL || "lista@morzkulc.pl";
 
   const privilegedPosterGroupsRaw =
@@ -54,12 +56,20 @@ export function getServiceConfig(): ServiceConfig {
   const adminRoleKeysRaw = process.env.SVC_ADMIN_ROLE_KEYS || "rola_zarzad,rola_kr";
 
   const membersSpreadsheetId =
-    process.env.SVC_MEMBERS_SHEET_ID || "1lF5eDF9B6ip4G497qG1QGePXqrXdLPS8kt-3pX-ZBsM";
+    process.env.SVC_MEMBERS_SHEET_ID ||
+    (isProd ?
+      "1lF5eDF9B6ip4G497qG1QGePXqrXdLPS8kt-3pX-ZBsM" :
+      "1lF5eDF9B6ip4G497qG1QGePXqrXdLPS8kt-3pX-ZBsM" // Tu docelowo idzie ID arkusza DEV
+    );
   const membersTabName = process.env.SVC_MEMBERS_SHEET_TAB || "CZŁONKOWIE I SYMPATYCY";
 
   // ✅ gear defaults (you can override by env later)
   const kayaksSpreadsheetId =
-    process.env.SVC_GEAR_KAYAKS_SHEET_ID || "1eUjW_hyhHBlv4lRTNYS3wcltUarV5G6FiH_b5kujgRI";
+    process.env.SVC_GEAR_KAYAKS_SHEET_ID ||
+    (isProd ?
+      "1eUjW_hyhHBlv4lRTNYS3wcltUarV5G6FiH_b5kujgRI" :
+      "1eUjW_hyhHBlv4lRTNYS3wcltUarV5G6FiH_b5kujgRI" // Tu docelowo idzie ID arkusza DEV
+    );
   const kayaksTabName = process.env.SVC_GEAR_KAYAKS_TAB || "Kajaki";
 
   const cfg: ServiceConfig = {
