@@ -10,7 +10,8 @@ import { apiPostJson, apiGetJson } from "/core/api_client.js";
 import { buildModulesFromSetup } from "/core/modules_registry.js";
 import { renderNav, renderView } from "/core/render_shell.js";
 
-const REGISTER_URL = "/api/register";
+// GAS_ONLY: Przełączamy backend na Google Apps Script (bezkosztowo)
+const REGISTER_URL = "https://script.google.com/macros/s/AKfycbyw84P3QEkeb89PRl0FeC7Utvly2sesR5EE2RonBxTDAqzZKwF57cK2M-943l93RQ/exec";
 const SETUP_URL = "/api/setup";
 
 const loginBtn = document.getElementById("loginBtn");
