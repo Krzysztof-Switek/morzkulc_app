@@ -16,6 +16,31 @@ export async function apiPostJson({ url, idToken, body }) {
 }
 
 /**
+ * Specjalna funkcja dla Google Apps Script, która unika CORS preflight (OPTIONS).
+ * Wysyła dane jako text/plain, a idToken musi być wewnątrz body.
+ */
+export async function apiPostGasJson({ url, idToken, body }) {
+  const payload = {
+    ...body,
+    idToken: idToken
+  };
+
+  const resp = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "text/plain;charset=utf-8"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const text = await resp.text();
+  if (!resp.ok) {
+    throw new Error("HTTP " + resp.status + ": " + text);
+  }
+  return JSON.parse(text);
+}
+
+/**
  * TEST ONLY: Funkcja do sprawdzenia połączenia z Google Apps Script Web App.
  * Wywołaj ją z konsoli przeglądarki podając URL swojego Web App oraz opcjonalny idToken.
  */

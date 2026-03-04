@@ -6,7 +6,7 @@ import {
   authGetBasicUser
 } from "/core/firebase_client.js";
 
-import { apiPostJson, apiGetJson } from "/core/api_client.js";
+import { apiPostJson, apiGetJson, apiPostGasJson } from "/core/api_client.js";
 import { buildModulesFromSetup } from "/core/modules_registry.js";
 import { renderNav, renderView } from "/core/render_shell.js";
 
@@ -75,7 +75,7 @@ authOnChange(async (user) => {
     ctx.idToken = idToken;
     window.__APP_CTX__ = ctx;
 
-    const session = await apiPostJson({
+    const session = await apiPostGasJson({
       url: REGISTER_URL,
       idToken,
       body: { hello: "world" }
