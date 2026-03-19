@@ -21,6 +21,8 @@ db.settings({ignoreUndefinedProperties: true});
 const ALLOWED_HOSTS = new Set<string>([
   "morzkulc-e9df7.web.app",
   "morzkulc-e9df7.firebaseapp.com",
+  "sprzet-skk-morzkulc.web.app",
+  "sprzet-skk-morzkulc.firebaseapp.com",
   "localhost",
   "127.0.0.1",
 ]);
@@ -28,6 +30,8 @@ const ALLOWED_HOSTS = new Set<string>([
 const ALLOWED_ORIGINS = new Set<string>([
   "https://morzkulc-e9df7.web.app",
   "https://morzkulc-e9df7.firebaseapp.com",
+  "https://sprzet-skk-morzkulc.web.app",
+  "https://sprzet-skk-morzkulc.firebaseapp.com",
   "http://localhost:5000",
   "http://localhost:5173",
   "http://127.0.0.1:5000",
