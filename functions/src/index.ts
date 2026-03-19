@@ -9,6 +9,10 @@ import type {Request, Response} from "express";
 
 import {handleRegisterUser} from "./api/registerUserHandler";
 import {handleGetGearKayaks} from "./api/getGearKayaksHandler";
+import {handleGearMyReservations} from "./api/gearMyReservationsHandler";
+import {handleGearReservationCreate} from "./api/gearReservationCreateHandler";
+import {handleGearReservationUpdate} from "./api/gearReservationUpdateHandler";
+import {handleGearReservationCancel} from "./api/gearReservationCancelHandler";
 import {getServiceConfig} from "./service/service_config";
 import {GoogleSheetsProvider} from "./service/providers/googleSheetsProvider";
 
@@ -421,6 +425,62 @@ export const getGearKayaks = onRequest({invoker: "private"}, async (req, res) =>
   return handleGetGearKayaks(req, res, {
     db,
     admin,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * GET /api/gear/my-reservations (authenticated)
+ */
+export const getGearMyReservations = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGearMyReservations(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * POST /api/gear/reservations/create (authenticated)
+ */
+export const createGearReservation = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGearReservationCreate(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * POST /api/gear/reservations/update (authenticated)
+ */
+export const updateGearReservation = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGearReservationUpdate(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * POST /api/gear/reservations/cancel (authenticated)
+ */
+export const cancelGearReservation = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGearReservationCancel(req, res, {
+    db,
     sendPreflight,
     requireAllowedHost,
     setCorsHeaders,

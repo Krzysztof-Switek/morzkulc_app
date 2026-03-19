@@ -1,9 +1,12 @@
-import { apiGetJson } from "/core/api_client.js";
+import { apiGetJson, apiPostJson } from "/core/api_client.js";
 
 const KAYAKS_URL = "/api/gear/kayaks";
+const MY_RESERVATIONS_URL = "/api/gear/my-reservations";
+const CREATE_RESERVATION_URL = "/api/gear/reservations/create";
+const UPDATE_RESERVATION_URL = "/api/gear/reservations/update";
+const CANCEL_RESERVATION_URL = "/api/gear/reservations/cancel";
 
 // CC0 placeholder (SVG) – używany jako miniatura zanim user kliknie
-// Źródło: SVG Repo (CC0) :contentReference[oaicite:1]{index=1}
 const PLACEHOLDER_SVG = "https://www.svgrepo.com/download/426147/kayak.svg";
 
 export function createGearModule({ id, label, defaultRoute, order, enabled, access }) {
@@ -56,12 +59,63 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
               </div>
             </div>
 
+            <div class="card" style="margin-top:12px;">
+              <h3 style="margin-top:0;">Rezerwacja</h3>
+
+              <div id="reservationInfo" class="hint" style="margin-bottom:10px;">
+                Wybierz kajak i kliknij „Rezerwuj”.
+              </div>
+
+              <div id="reservationOk" class="ok hidden" style="margin-bottom:10px;"></div>
+              <div id="reservationErr" class="err hidden" style="margin-bottom:10px;"></div>
+
+              <div class="row" style="margin:0;">
+                <label for="reservationSelectedKayak">Wybrany kajak</label>
+                <input id="reservationSelectedKayak" type="text" value="" readonly />
+              </div>
+
+              <div class="row" style="margin-top:10px;">
+                <label for="reservationStartDate">Data od</label>
+                <input id="reservationStartDate" type="date" />
+              </div>
+
+              <div class="row" style="margin-top:10px;">
+                <label for="reservationEndDate">Data do</label>
+                <input id="reservationEndDate" type="date" />
+              </div>
+
+              <div class="row" style="margin-top:10px;">
+                <label for="reservationNote">Notatka</label>
+                <textarea id="reservationNote" rows="3" placeholder="Opcjonalna notatka"></textarea>
+              </div>
+
+              <div class="actions" style="margin-top:12px;">
+                <button id="reservationCreateBtn" type="button">Zapisz rezerwację</button>
+                <button id="reservationUpdateBtn" type="button" class="ghost hidden">Zapisz zmiany</button>
+                <button id="reservationCancelEditBtn" type="button" class="ghost hidden">Anuluj edycję</button>
+                <button id="reservationClearBtn" type="button" class="ghost">Wyczyść</button>
+              </div>
+
+              <div class="hint" style="margin-top:10px;">
+                Rezerwacja blokuje sprzęt dla innych użytkowników. Koszt godzinek i konflikty terminów sprawdza backend.
+              </div>
+            </div>
+
+            <div class="card" style="margin-top:12px;">
+              <div style="display:flex; gap:10px; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+                <h3 style="margin:0;">Moje rezerwacje</h3>
+                <button id="myReservationsReloadBtn" type="button" class="ghost">Odśwież rezerwacje</button>
+              </div>
+
+              <div id="myReservationsErr" class="err hidden" style="margin-top:10px;"></div>
+              <div id="myReservationsList" style="margin-top:12px;"></div>
+            </div>
+
             <div id="kayaksErr" class="err hidden"></div>
             <div id="kayaksList"></div>
           </div>
         </div>
 
-        <!-- Modal do zdjęć (ładuje src dopiero po kliknięciu) -->
         <div id="gearImgModal" class="gearModal hidden" aria-hidden="true">
           <div class="gearModalBackdrop" data-gear-modal-close="1"></div>
           <div class="gearModalCard" role="dialog" aria-modal="true" aria-label="Zdjęcie sprzętu">
@@ -87,6 +141,22 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
       const reloadBtn = viewEl.querySelector("#kayaksReloadBtn");
       const searchEl = viewEl.querySelector("#kayaksSearch");
 
+      const reservationInfoEl = viewEl.querySelector("#reservationInfo");
+      const reservationOkEl = viewEl.querySelector("#reservationOk");
+      const reservationErrEl = viewEl.querySelector("#reservationErr");
+      const reservationSelectedKayakEl = viewEl.querySelector("#reservationSelectedKayak");
+      const reservationStartDateEl = viewEl.querySelector("#reservationStartDate");
+      const reservationEndDateEl = viewEl.querySelector("#reservationEndDate");
+      const reservationNoteEl = viewEl.querySelector("#reservationNote");
+      const reservationCreateBtn = viewEl.querySelector("#reservationCreateBtn");
+      const reservationUpdateBtn = viewEl.querySelector("#reservationUpdateBtn");
+      const reservationCancelEditBtn = viewEl.querySelector("#reservationCancelEditBtn");
+      const reservationClearBtn = viewEl.querySelector("#reservationClearBtn");
+
+      const myReservationsErrEl = viewEl.querySelector("#myReservationsErr");
+      const myReservationsListEl = viewEl.querySelector("#myReservationsList");
+      const myReservationsReloadBtn = viewEl.querySelector("#myReservationsReloadBtn");
+
       const modalEl = viewEl.querySelector("#gearImgModal");
       const modalImgEl = viewEl.querySelector("#gearModalImg");
       const modalTitleEl = viewEl.querySelector("#gearModalTitle");
@@ -94,12 +164,100 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
       const modalTopBtn = viewEl.querySelector("#gearModalTopBtn");
       const modalSideBtn = viewEl.querySelector("#gearModalSideBtn");
 
+      let all = [];
+      let myReservations = [];
+      let selectedKayak = null;
+      let editReservationId = "";
+
       const setErr = (msg) => {
         errEl.textContent = String(msg || "");
         errEl.classList.toggle("hidden", !errEl.textContent);
       };
 
-      let all = [];
+      const setReservationErr = (msg) => {
+        reservationErrEl.textContent = String(msg || "");
+        reservationErrEl.classList.toggle("hidden", !reservationErrEl.textContent);
+      };
+
+      const setReservationOk = (msg) => {
+        reservationOkEl.textContent = String(msg || "");
+        reservationOkEl.classList.toggle("hidden", !reservationOkEl.textContent);
+      };
+
+      const setMyReservationsErr = (msg) => {
+        myReservationsErrEl.textContent = String(msg || "");
+        myReservationsErrEl.classList.toggle("hidden", !myReservationsErrEl.textContent);
+      };
+
+      const clearReservationMessages = () => {
+        setReservationErr("");
+        setReservationOk("");
+      };
+
+      const syncReservationForm = () => {
+        reservationSelectedKayakEl.value = selectedKayak ? selectedKayak.title : "";
+        reservationInfoEl.textContent = selectedKayak
+          ? `Wybrany kajak: ${selectedKayak.title}`
+          : "Wybierz kajak i kliknij „Rezerwuj”.";
+
+        reservationCreateBtn.classList.toggle("hidden", Boolean(editReservationId));
+        reservationUpdateBtn.classList.toggle("hidden", !editReservationId);
+        reservationCancelEditBtn.classList.toggle("hidden", !editReservationId);
+      };
+
+      const clearReservationForm = () => {
+        selectedKayak = null;
+        editReservationId = "";
+        reservationSelectedKayakEl.value = "";
+        reservationStartDateEl.value = "";
+        reservationEndDateEl.value = "";
+        reservationNoteEl.value = "";
+        clearReservationMessages();
+        syncReservationForm();
+      };
+
+      const startCreateForKayak = (kayakId) => {
+        const found = all.find((k) => String(k?.id || "") === String(kayakId || ""));
+        if (!found) {
+          setReservationErr("Nie znaleziono kajaka.");
+          return;
+        }
+
+        selectedKayak = {
+          id: String(found.id || ""),
+          title: buildKayakTitle(found)
+        };
+
+        editReservationId = "";
+        clearReservationMessages();
+        syncReservationForm();
+        reservationStartDateEl.focus();
+        reservationSelectedKayakEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      };
+
+      const startEditReservation = (reservationId) => {
+        const item = myReservations.find((x) => String(x?.id || "") === String(reservationId || ""));
+        if (!item) {
+          setReservationErr("Nie znaleziono rezerwacji do edycji.");
+          return;
+        }
+
+        const firstKayakId = Array.isArray(item?.kayakIds) && item.kayakIds.length ? String(item.kayakIds[0]) : "";
+        const foundKayak = all.find((k) => String(k?.id || "") === firstKayakId);
+
+        selectedKayak = {
+          id: firstKayakId,
+          title: foundKayak ? buildKayakTitle(foundKayak) : `Kajak ID ${firstKayakId}`
+        };
+
+        editReservationId = String(item.id || "");
+        reservationStartDateEl.value = String(item.startDate || "");
+        reservationEndDateEl.value = String(item.endDate || "");
+        reservationNoteEl.value = String(item.note || "");
+        clearReservationMessages();
+        syncReservationForm();
+        reservationStartDateEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      };
 
       const render = (items) => {
         if (!items.length) {
@@ -117,6 +275,81 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         `;
 
         metaEl.textContent = `Widoczne: ${items.length} / ${all.length}`;
+      };
+
+      const renderMyReservations = () => {
+        if (!myReservations.length) {
+          myReservationsListEl.innerHTML = `<div class="hint">Brak rezerwacji.</div>`;
+          return;
+        }
+
+        myReservationsListEl.innerHTML = myReservations
+          .map((rsv) => {
+            const status = String(rsv?.status || "");
+            const badge =
+              status === "active"
+                ? `<span class="badge ok">aktywna</span>`
+                : `<span class="badge danger">${escapeHtml(status || "nieaktywna")}</span>`;
+
+            const kayakIds = Array.isArray(rsv?.kayakIds) ? rsv.kayakIds.map(String) : [];
+            const costHours = Number(rsv?.costHours || 0);
+            const canEdit = status === "active";
+            const canCancel = status === "active";
+
+            return `
+              <div class="gearCard" style="margin-top:10px;">
+                <div class="gearCardInner">
+                  <div class="gearHead">
+                    <div class="gearTitleWrap">
+                      <div class="gearTitle">Rezerwacja ${escapeHtml(String(rsv?.id || ""))}</div>
+                      <div class="gearSubtitle">
+                        ${escapeHtml(formatDatePL(String(rsv?.startDate || "")))} → ${escapeHtml(formatDatePL(String(rsv?.endDate || "")))}
+                      </div>
+                      <div class="gearSubtitle">
+                        Blokada: ${escapeHtml(formatDatePL(String(rsv?.blockStartIso || "")))} → ${escapeHtml(formatDatePL(String(rsv?.blockEndIso || "")))}
+                      </div>
+                    </div>
+                    <div class="gearBadges">
+                      ${badge}
+                    </div>
+                  </div>
+
+                  <div class="gearMeta">
+                    <div class="gearMetaRow">
+                      <div class="gearMetaKey">Kajaki</div>
+                      <div class="gearMetaVal">${escapeHtml(kayakIds.join(", ") || "-")}</div>
+                    </div>
+                    <div class="gearMetaRow">
+                      <div class="gearMetaKey">Godzinki</div>
+                      <div class="gearMetaVal">${escapeHtml(String(costHours))}</div>
+                    </div>
+                    <div class="gearMetaRow">
+                      <div class="gearMetaKey">Notatka</div>
+                      <div class="gearMetaVal">${escapeHtml(String(rsv?.note || "-"))}</div>
+                    </div>
+                  </div>
+
+                  <div class="actions" style="margin-top:10px;">
+                    <button
+                      type="button"
+                      class="ghost"
+                      data-rsv-edit="${escapeAttr(String(rsv?.id || ""))}"
+                      ${canEdit ? "" : "disabled"}>
+                      Zmień daty
+                    </button>
+                    <button
+                      type="button"
+                      class="ghost"
+                      data-rsv-cancel="${escapeAttr(String(rsv?.id || ""))}"
+                      ${canCancel ? "" : "disabled"}>
+                      Anuluj
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `;
+          })
+          .join("");
       };
 
       const applyFilter = () => {
@@ -147,7 +380,7 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         render(filtered);
       };
 
-      const load = async () => {
+      const loadKayaks = async () => {
         setErr("");
         listEl.innerHTML = `<div class="hint">Ładuję...</div>`;
         metaEl.textContent = "";
@@ -168,7 +401,136 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         }
       };
 
-      // === LAZY IMG MODAL (event delegation) ===
+      const loadMyReservations = async () => {
+        setMyReservationsErr("");
+        myReservationsListEl.innerHTML = `<div class="hint">Ładuję...</div>`;
+
+        try {
+          const resp = await apiGetJson({
+            url: MY_RESERVATIONS_URL,
+            idToken: ctx.idToken
+          });
+
+          myReservations = Array.isArray(resp?.items) ? resp.items : [];
+          renderMyReservations();
+        } catch (e) {
+          const msg = String(e?.message || e);
+          setMyReservationsErr("Błąd pobierania rezerwacji: " + msg);
+          myReservationsListEl.innerHTML = "";
+        }
+      };
+
+      const submitCreateReservation = async () => {
+        clearReservationMessages();
+
+        if (!selectedKayak?.id) {
+          setReservationErr("Najpierw wybierz kajak.");
+          return;
+        }
+
+        const startDate = String(reservationStartDateEl.value || "").trim();
+        const endDate = String(reservationEndDateEl.value || "").trim();
+        const note = String(reservationNoteEl.value || "").trim();
+
+        if (!startDate || !endDate) {
+          setReservationErr("Wybierz datę od i do.");
+          return;
+        }
+
+        reservationCreateBtn.disabled = true;
+
+        try {
+          const resp = await apiPostJson({
+            url: CREATE_RESERVATION_URL,
+            idToken: ctx.idToken,
+            body: {
+              startDate,
+              endDate,
+              kayakIds: [selectedKayak.id],
+              note
+            }
+          });
+
+          setReservationOk(
+            `Rezerwacja zapisana. ID: ${String(resp?.reservationId || "")}. Godzinki: ${String(resp?.costHours || 0)}`
+          );
+          await loadMyReservations();
+          clearReservationForm();
+        } catch (e) {
+          const msg = String(e?.message || e);
+          setReservationErr("Nie udało się zapisać rezerwacji: " + msg);
+        } finally {
+          reservationCreateBtn.disabled = false;
+        }
+      };
+
+      const submitUpdateReservation = async () => {
+        clearReservationMessages();
+
+        if (!editReservationId) {
+          setReservationErr("Brak rezerwacji do edycji.");
+          return;
+        }
+
+        const startDate = String(reservationStartDateEl.value || "").trim();
+        const endDate = String(reservationEndDateEl.value || "").trim();
+
+        if (!startDate || !endDate) {
+          setReservationErr("Wybierz datę od i do.");
+          return;
+        }
+
+        reservationUpdateBtn.disabled = true;
+
+        try {
+          const resp = await apiPostJson({
+            url: UPDATE_RESERVATION_URL,
+            idToken: ctx.idToken,
+            body: {
+              reservationId: editReservationId,
+              startDate,
+              endDate
+            }
+          });
+
+          setReservationOk(
+            `Rezerwacja zmieniona. Godzinki: ${String(resp?.costHours || 0)}`
+          );
+          await loadMyReservations();
+          clearReservationForm();
+        } catch (e) {
+          const msg = String(e?.message || e);
+          setReservationErr("Nie udało się zmienić rezerwacji: " + msg);
+        } finally {
+          reservationUpdateBtn.disabled = false;
+        }
+      };
+
+      const submitCancelReservation = async (reservationId) => {
+        clearReservationMessages();
+
+        const confirmed = window.confirm("Na pewno anulować tę rezerwację?");
+        if (!confirmed) return;
+
+        try {
+          await apiPostJson({
+            url: CANCEL_RESERVATION_URL,
+            idToken: ctx.idToken,
+            body: { reservationId }
+          });
+
+          setReservationOk("Rezerwacja anulowana.");
+          await loadMyReservations();
+
+          if (String(editReservationId || "") === String(reservationId || "")) {
+            clearReservationForm();
+          }
+        } catch (e) {
+          const msg = String(e?.message || e);
+          setReservationErr("Nie udało się anulować rezerwacji: " + msg);
+        }
+      };
+
       let currentImgTop = "";
       let currentImgSide = "";
       let currentTitle = "";
@@ -187,7 +549,6 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         modalTopBtn.disabled = !hasTop;
         modalSideBtn.disabled = !hasSide;
 
-        // wybór startowy
         const choice = prefer === "side" ? "side" : "top";
         const start =
           choice === "side"
@@ -198,7 +559,6 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
           modalHintEl.textContent = "Brak zdjęcia.";
           modalImgEl.removeAttribute("src");
         } else {
-          // TU dopiero ustawiamy src = realny load
           modalImgEl.setAttribute("src", start);
         }
 
@@ -211,7 +571,6 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         modalEl.classList.add("hidden");
         modalEl.setAttribute("aria-hidden", "true");
         document.body.style.overflow = "";
-        // zwalniamy pamięć + nie trzymamy starego src
         modalImgEl.removeAttribute("src");
         currentImgTop = "";
         currentImgSide = "";
@@ -219,7 +578,6 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         modalHintEl.textContent = "";
       }
 
-      // close handlers
       modalEl.addEventListener("click", (ev) => {
         const t = ev.target;
         if (t && t.getAttribute && t.getAttribute("data-gear-modal-close") === "1") {
@@ -241,26 +599,75 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         modalImgEl.setAttribute("src", currentImgSide);
       });
 
-      // klik w miniaturę na karcie -> open modal i dopiero wtedy load
       listEl.addEventListener("click", (ev) => {
         const el = ev.target;
         if (!el || !el.closest) return;
 
-        const btn = el.closest("[data-gear-img]");
-        if (!btn) return;
+        const reserveBtn = el.closest("[data-gear-reserve]");
+        if (reserveBtn) {
+          const kayakId = String(reserveBtn.getAttribute("data-gear-reserve") || "");
+          startCreateForKayak(kayakId);
+          return;
+        }
 
-        const prefer = String(btn.getAttribute("data-gear-img") || "top");
-        const topUrl = String(btn.getAttribute("data-gear-top") || "");
-        const sideUrl = String(btn.getAttribute("data-gear-side") || "");
-        const title = String(btn.getAttribute("data-gear-title") || "Zdjęcie");
+        const imgBtn = el.closest("[data-gear-img]");
+        if (!imgBtn) return;
+
+        const prefer = String(imgBtn.getAttribute("data-gear-img") || "top");
+        const topUrl = String(imgBtn.getAttribute("data-gear-top") || "");
+        const sideUrl = String(imgBtn.getAttribute("data-gear-side") || "");
+        const title = String(imgBtn.getAttribute("data-gear-title") || "Zdjęcie");
 
         openModal({ title, topUrl, sideUrl, prefer });
       });
 
-      reloadBtn.addEventListener("click", load);
+      myReservationsListEl.addEventListener("click", (ev) => {
+        const el = ev.target;
+        if (!el || !el.closest) return;
+
+        const editBtn = el.closest("[data-rsv-edit]");
+        if (editBtn) {
+          const reservationId = String(editBtn.getAttribute("data-rsv-edit") || "");
+          startEditReservation(reservationId);
+          return;
+        }
+
+        const cancelBtn = el.closest("[data-rsv-cancel]");
+        if (cancelBtn) {
+          const reservationId = String(cancelBtn.getAttribute("data-rsv-cancel") || "");
+          submitCancelReservation(reservationId);
+        }
+      });
+
+      reloadBtn.addEventListener("click", async () => {
+        await loadKayaks();
+      });
+
+      myReservationsReloadBtn.addEventListener("click", async () => {
+        await loadMyReservations();
+      });
+
       searchEl.addEventListener("input", applyFilter);
 
-      await load();
+      reservationCreateBtn.addEventListener("click", async () => {
+        await submitCreateReservation();
+      });
+
+      reservationUpdateBtn.addEventListener("click", async () => {
+        await submitUpdateReservation();
+      });
+
+      reservationCancelEditBtn.addEventListener("click", () => {
+        clearReservationForm();
+      });
+
+      reservationClearBtn.addEventListener("click", () => {
+        clearReservationForm();
+      });
+
+      syncReservationForm();
+      await loadKayaks();
+      await loadMyReservations();
     }
   };
 }
@@ -272,16 +679,17 @@ function renderKayakCard(k) {
   const type = String(k?.type || "").trim();
   const color = String(k?.color || "").trim();
 
-  // docelowo: "Sprawny?" -> boolean; ale żeby nie rozwalić, obsługujemy też status string
   const working = isWorking(k);
 
   const liters = k?.liters == null ? "" : String(k.liters);
-  const weightRange = String(k?.weightRange || "").trim(); // "Zakres wag"
-  const storage = String(k?.storage || "").trim();         // "Składowany"
-  const isPrivate = toBool(k?.isPrivate);                  // "Prywatny?"
-  const privateRent = toBool(k?.privateForRent);           // "Prywatny do wypożyczenia?"
+  const weightRange = String(k?.weightRange || "").trim();
+  const storage = String(k?.storage || "").trim();
+  const isPrivate = toBool(k?.isPrivate);
+  const privateRent = toBool(k?.privateForRent) || toBool(k?.isPrivateRentable);
   const ownerContact = String(k?.ownerContact || "").trim();
   const notes = String(k?.notes || "").trim();
+
+  const canReserve = working && (!isPrivate || privateRent);
 
   const statusBadge = working
     ? `<span class="badge ok">sprawny</span>`
@@ -292,7 +700,7 @@ function renderKayakCard(k) {
   const imgTop = String(k?.images?.top || "").trim();
   const imgSide = String(k?.images?.side || "").trim();
 
-  const title = [brand, model].filter(Boolean).join(" ").trim() || "Kajak";
+  const title = buildKayakTitle(k);
   const subtitleParts = [];
   if (number) subtitleParts.push("Nr " + number);
   if (color) subtitleParts.push(color);
@@ -356,6 +764,15 @@ function renderKayakCard(k) {
           </button>
         </div>
 
+        <div class="actions" style="margin-top:4px;">
+          <button
+            type="button"
+            data-gear-reserve="${escapeAttr(String(k?.id || ""))}"
+            ${canReserve ? "" : "disabled"}>
+            Rezerwuj
+          </button>
+        </div>
+
         <details class="gearDetails">
           <summary class="gearDetailsSummary">Szczegóły</summary>
           <div class="gearMeta">
@@ -376,18 +793,33 @@ function renderKayakCard(k) {
   `;
 }
 
+function buildKayakTitle(k) {
+  const brand = String(k?.brand || "").trim();
+  const model = String(k?.model || "").trim();
+  const number = String(k?.number || "").trim();
+
+  const core = [brand, model].filter(Boolean).join(" ").trim() || "Kajak";
+  return number ? `${core} (nr ${number})` : core;
+}
+
+function formatDatePL(iso) {
+  const s = String(iso || "").trim();
+  if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return s || "-";
+  const [yyyy, mm, dd] = s.split("-");
+  return `${dd}.${mm}.${yyyy}`;
+}
+
 function isWorking(k) {
-  // priorytet: jawne boolean (Sprawny?)
   const b =
     toBoolOrNull(k?.isWorking) ??
     toBoolOrNull(k?.working) ??
     toBoolOrNull(k?.isOk) ??
     toBoolOrNull(k?.ok) ??
+    toBoolOrNull(k?.isOperational) ??
     null;
 
   if (b !== null) return b;
 
-  // fallback: status string
   const s = String(k?.status || "").trim().toLowerCase();
   if (!s) return true;
   if (s === "repair" || s === "broken" || s === "service" || s === "niesprawny") return false;

@@ -79,6 +79,34 @@
           "functionId": "getGearKayaks",
           "region": "us-central1"
         }
+      },
+      {
+        "source": "/api/gear/my-reservations",
+        "function": {
+          "functionId": "getGearMyReservations",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/gear/reservations/create",
+        "function": {
+          "functionId": "createGearReservation",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/gear/reservations/update",
+        "function": {
+          "functionId": "updateGearReservation",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/gear/reservations/cancel",
+        "function": {
+          "functionId": "cancelGearReservation",
+          "region": "us-central1"
+        }
       }
     ]
   }
