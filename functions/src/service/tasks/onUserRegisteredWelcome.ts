@@ -16,7 +16,7 @@ function asErr(e: unknown): any {
 
 export const onUserRegisteredWelcomeTask: ServiceTask<OnUserRegisteredPayload> = {
   id: "onUserRegistered.welcome",
-  description: "Send welcome email and add user to lista@ group with read-only posting policy.",
+  description: "Send welcome email and add user to lista@ group.",
 
   validate: (payload) => {
     assertString(payload.uid, "uid");
@@ -66,7 +66,6 @@ export const onUserRegisteredWelcomeTask: ServiceTask<OnUserRegisteredPayload> =
             logger.info("WelcomeTask: step B already member - skip", { uid });
           }
 
-          // ✅ CHANGED: write nested field to avoid overwriting entire "service" map
           await userRef.set({ "service.addedToListaGroupAt": new Date() }, { merge: true });
           logger.info("WelcomeTask: step B firestore marker set", { uid });
         } catch (e) {
@@ -84,35 +83,6 @@ export const onUserRegisteredWelcomeTask: ServiceTask<OnUserRegisteredPayload> =
       }
     } else {
       logger.info("Skip: already added to lista group", { uid });
-    }
-
-    // C) Enforce posting policy (safe to reapply)
-    logger.info("WelcomeTask: step C enforceListaPostingPolicy - begin", {
-      uid,
-      group: config.listaGroupEmail,
-    });
-
-    if (dryRun) {
-      logger.info("DRYRUN: would enforce lista posting policy", { uid });
-    } else {
-      try {
-        await workspace.enforceListaPostingPolicy(
-          config.listaGroupEmail,
-          config.privilegedPosterGroups
-        );
-        logger.info("WelcomeTask: step C enforceListaPostingPolicy - done", { uid });
-      } catch (e) {
-        const err = asErr(e);
-        logger.error("WelcomeTask: step C FAILED", {
-          uid,
-          code: err?.code,
-          message: err?.message,
-          errors: err?.errors,
-          status: err?.response?.status,
-          data: err?.response?.data,
-        });
-        throw e;
-      }
     }
 
     // A) Welcome email - idempotent
@@ -138,7 +108,6 @@ export const onUserRegisteredWelcomeTask: ServiceTask<OnUserRegisteredPayload> =
           );
           logger.info("WelcomeTask: step A sendWelcomeEmail - done", { uid });
 
-          // ✅ CHANGED: write nested field to avoid overwriting entire "service" map
           await userRef.set({ "service.welcomeEmailSentAt": new Date() }, { merge: true });
           logger.info("WelcomeTask: step A firestore marker set", { uid });
         } catch (e) {
