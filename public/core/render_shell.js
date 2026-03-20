@@ -27,111 +27,13 @@ export function renderNav({ navEl, ctx }) {
 export async function renderView({ viewEl, ctx }) {
   const { moduleId, routeId } = parseHash();
 
-  // ✅ Jeśli profil niekompletny → zawsze pokaż formularz (jednorazowo)
   if (!ctx.session?.profileComplete) {
     renderProfileForm({ viewEl, ctx });
     return;
   }
 
   if (moduleId === "home") {
-    const userDisplayName = String(ctx.user?.displayName || "").trim();
-
-    const roleKey = String(ctx.session?.role_key || "");
-    const statusKey = String(ctx.session?.status_key || "");
-
-    const roleLabel = roleKeyToLabel(roleKey);
-    const statusLabel = statusKeyToLabel(statusKey);
-
-    // 🔴 MOCK – do zastąpienia realnym backendem (Firestore/Cloud Functions)
-    // TODO: replace with real volunteer hours (Godzinki)
-    const mockHours = 12;
-
-    // TODO: replace with real membership payment data (Składki)
-    const mockMembershipPaidUntil = "2026-12-31"; // YYYY-MM-DD
-
-    // TODO: replace with real events feed (Imprezy)
-    const mockUpcomingEvents = [
-      { id: "e1", title: "Spływ Redą", date: "2026-03-14", description: "Opis wkrótce." },
-      { id: "e2", title: "Trening techniczny", date: "2026-03-21", description: "Opis wkrótce." },
-      { id: "e3", title: "Kajak Jamboree – spotkanie organizacyjne", date: "2026-03-28", description: "Opis wkrótce." }
-    ];
-    // 🔴 END MOCK
-
-    const eventsToShow = mockUpcomingEvents.slice(0, 3);
-
-    viewEl.innerHTML = `
-      <div class="dashboard">
-        <div class="dashboardHeader">
-          <div class="dashboardTitle">
-            <h2>Witaj ${escapeHtml(userDisplayName || "w aplikacji")}</h2>
-            <div class="dashboardMeta">
-              <span class="dashMetaLine">Rola w systemie: <strong>${escapeHtml(roleLabel)}</strong></span>
-              <span class="dashMetaLine">Status konta: <strong>${escapeHtml(statusLabel)}</strong></span>
-            </div>
-          </div>
-        </div>
-
-        <div class="dashboardGrid">
-          <div class="dashCard">
-            <div class="dashCardHead">
-              <h3>Godzinki</h3>
-            </div>
-            <div class="dashValue">${escapeHtml(String(mockHours))} h</div>
-            <div class="dashSub">Stan aktualny</div>
-          </div>
-
-          <div class="dashCard">
-            <div class="dashCardHead">
-              <h3>Składka</h3>
-            </div>
-            <div class="dashValue">${escapeHtml(formatDatePL(mockMembershipPaidUntil))}</div>
-            <div class="dashSub">Opłacone do</div>
-          </div>
-
-          <div class="dashCard wide">
-            <div class="dashCardHead">
-              <h3>Nadchodzące wydarzenia</h3>
-            </div>
-
-            ${
-              eventsToShow.length
-                ? `
-                  <ul class="eventsList">
-                    ${eventsToShow
-                      .map(
-                        (e) => `
-                          <li class="eventItem">
-                            <div class="eventMain">
-                              <div class="eventDate">${escapeHtml(formatDatePL(e.date))}</div>
-                              <div class="eventTitle">${escapeHtml(String(e.title || ""))}</div>
-                            </div>
-                            <button class="eventBtn" type="button" data-event-id="${escapeHtml(String(e.id))}">
-                              Szczegóły
-                            </button>
-                          </li>
-                        `
-                      )
-                      .join("")}
-                  </ul>
-                `
-                : `<div class="dashEmpty">Brak nadchodzących wydarzeń.</div>`
-            }
-          </div>
-        </div>
-      </div>
-    `;
-
-    // 🔴 MOCK – klik „Szczegóły” pokazuje alert; do zastąpienia realnym widokiem wydarzenia
-    for (const btn of [...viewEl.querySelectorAll(".eventBtn")]) {
-      btn.addEventListener("click", () => {
-        const id = String(btn.getAttribute("data-event-id") || "");
-        const ev = mockUpcomingEvents.find((x) => String(x.id) === id);
-        if (!ev) return;
-        alert(`${formatDatePL(ev.date)}\n${ev.title}\n\n${ev.description || ""}`);
-      });
-    }
-    // 🔴 END MOCK
-
+    renderHomeDashboard({ viewEl, ctx });
     return;
   }
 
@@ -143,7 +45,6 @@ export async function renderView({ viewEl, ctx }) {
     return;
   }
 
-  // gating w view też (na wypadek ręcznego wpisania hash)
   if (!canSeeModule({ ctx, module: mod })) {
     viewEl.innerHTML = `<div class="card center"><h2>Brak dostępu do modułu: ${escapeHtml(mod.label)}</h2></div>`;
     return;
@@ -158,6 +59,141 @@ export async function renderView({ viewEl, ctx }) {
         <pre class="codeBlock">${escapeHtml(String(e?.message || e))}</pre>
       </div>
     `;
+  }
+}
+
+function renderHomeDashboard({ viewEl, ctx }) {
+  const helloName = getHelloName(ctx);
+  const roleLabel = roleKeyToLabel(String(ctx.session?.role_key || ""));
+  const statusLabel = statusKeyToLabel(String(ctx.session?.status_key || ""));
+  const hoursValue = getHoursValue(ctx);
+  const membershipPaidUntil = getMembershipPaidUntil(ctx);
+
+  viewEl.innerHTML = `
+    <div class="dashboard dashboardStart">
+      <section class="startTop">
+        <div class="startHero">
+          <h2>Cześć${helloName ? `, ${escapeHtml(helloName)}` : ""}</h2>
+
+          <div class="startStats">
+            <div class="startStatRow">
+              <span class="startStatKey">Rola</span>
+              <strong class="startStatVal">${escapeHtml(roleLabel)}</strong>
+            </div>
+
+            <div class="startStatRow">
+              <span class="startStatKey">Status</span>
+              <strong class="startStatVal">${escapeHtml(statusLabel)}</strong>
+            </div>
+
+            <div class="startStatRow">
+              <span class="startStatKey">Godzinki</span>
+              <strong class="startStatVal">${escapeHtml(hoursValue || "Dostępne wkrótce")}</strong>
+            </div>
+
+            <div class="startStatRow">
+              <span class="startStatKey">Składka</span>
+              <strong class="startStatVal">${escapeHtml(membershipPaidUntil ? formatDatePL(membershipPaidUntil) : "Dostępne wkrótce")}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="startTopActions">
+          <button type="button" class="startActionBtn primary" data-home-action="reserve-gear">
+            <span class="startTileTitle">Rezerwuj sprzęt</span>
+            <span class="startTileMeta">Przejdź do listy sprzętu</span>
+          </button>
+
+          <button type="button" class="startActionBtn" data-home-action="report-hours">
+            <span class="startTileTitle">Zgłoś godzinki</span>
+            <span class="startTileMeta">Dostępne wkrótce</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="dashCard startSection">
+        <div class="dashCardHead">
+          <h3>Moje rezerwacje</h3>
+          <button type="button" class="ghost" data-home-action="my-reservations">Zobacz wszystkie</button>
+        </div>
+
+        <div class="startList">
+          <div class="startListItem">
+            <div class="startListMain">
+              <div class="startListTitle">Twoje aktywne rezerwacje</div>
+              <div class="startListMeta">Tutaj pokażemy 2–3 najważniejsze rezerwacje.</div>
+            </div>
+            <div class="startListSide">Dostępne wkrótce</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashCard startSection">
+        <div class="dashCardHead">
+          <h3>Najbliższe imprezy</h3>
+          <button type="button" class="ghost" data-home-action="events">Zobacz wszystkie</button>
+        </div>
+
+        <div class="startList">
+          <div class="startListItem">
+            <div class="startListMain">
+              <div class="startListTitle">Nadchodzące wydarzenia klubowe</div>
+              <div class="startListMeta">Tutaj pokażemy 2–3 najbliższe imprezy.</div>
+            </div>
+            <div class="startListSide">Dostępne wkrótce</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="startTiles">
+        <button type="button" class="startTile primary" data-home-action="reserve-gear-bottom">
+          <span class="startTileTitle">Rezerwuj sprzęt</span>
+          <span class="startTileMeta">Przejdź do listy sprzętu</span>
+        </button>
+
+        <button type="button" class="startTile" data-home-action="report-hours-bottom">
+          <span class="startTileTitle">Zgłoś godzinki</span>
+          <span class="startTileMeta">Dostępne wkrótce</span>
+        </button>
+
+        <button type="button" class="startTile" data-home-action="report-repair">
+          <span class="startTileTitle">Zgłoś naprawę</span>
+          <span class="startTileMeta">Dostępne wkrótce</span>
+        </button>
+
+        <button type="button" class="startTile" data-home-action="report-event">
+          <span class="startTileTitle">Zgłoś imprezę</span>
+          <span class="startTileMeta">Dostępne wkrótce</span>
+        </button>
+      </section>
+    </div>
+  `;
+
+  const reserveBtnTop = viewEl.querySelector("[data-home-action='reserve-gear']");
+  const reserveBtnBottom = viewEl.querySelector("[data-home-action='reserve-gear-bottom']");
+  const myReservationsBtn = viewEl.querySelector("[data-home-action='my-reservations']");
+  const eventsBtn = viewEl.querySelector("[data-home-action='events']");
+
+  const openGear = () => {
+    const gearTarget = getGearRoute(ctx);
+    setHash(gearTarget.moduleId, gearTarget.routeId);
+  };
+
+  if (reserveBtnTop) reserveBtnTop.addEventListener("click", openGear);
+  if (reserveBtnBottom) reserveBtnBottom.addEventListener("click", openGear);
+
+  if (myReservationsBtn) {
+    myReservationsBtn.addEventListener("click", () => {
+      const gearTarget = getGearRoute(ctx);
+      setHash(gearTarget.moduleId, gearTarget.routeId);
+    });
+  }
+
+  if (eventsBtn) {
+    eventsBtn.addEventListener("click", () => {
+      const eventsTarget = getModuleRouteByLabelOrId(ctx, ["imprezy", "modul_4"]);
+      setHash(eventsTarget.moduleId, eventsTarget.routeId);
+    });
   }
 }
 
@@ -230,7 +266,6 @@ function renderProfileForm({ viewEl, ctx }) {
     const consentRodo = document.getElementById("consentRodo").checked === true;
     const consentStatute = document.getElementById("consentStatute").checked === true;
 
-    // UI walidacja (backend i tak wymusi)
     if (!fn || !ln || !ph || !dob) {
       setErr("Uzupełnij: imię, nazwisko, telefon i datę urodzenia.");
       return;
@@ -272,8 +307,6 @@ function renderProfileForm({ viewEl, ctx }) {
       });
 
       ctx.session = session;
-
-      // najprościej: reload całej appki (ponownie pobierze setup/moduły)
       location.reload();
     } catch (e) {
       const msg = String(e?.message || e);
@@ -290,6 +323,77 @@ function renderProfileForm({ viewEl, ctx }) {
       btn.textContent = "Zapisz";
     }
   });
+}
+
+function getGearRoute(ctx) {
+  return getModuleRouteByLabelOrId(ctx, ["sprzęt", "modul_2"]);
+}
+
+function getModuleRouteByLabelOrId(ctx, names) {
+  const modules = Array.isArray(ctx?.modules) ? ctx.modules : [];
+  const normalized = Array.isArray(names) ? names.map((x) => String(x || "").trim().toLowerCase()) : [];
+
+  const found = modules.find((m) => {
+    const id = String(m?.id || "").trim().toLowerCase();
+    const label = String(m?.label || "").trim().toLowerCase();
+    return normalized.includes(id) || normalized.includes(label);
+  }) || null;
+
+  if (!found) {
+    return { moduleId: "home", routeId: "home" };
+  }
+
+  return {
+    moduleId: String(found.id || "home"),
+    routeId: String(found.defaultRoute || "home")
+  };
+}
+
+function getHelloName(ctx) {
+  const sessionNickname = String(ctx?.session?.nickname || "").trim();
+  if (sessionNickname) return sessionNickname;
+
+  const userDisplayName = String(ctx?.user?.displayName || "").trim();
+  if (userDisplayName) return userDisplayName;
+
+  const sessionFirstName = String(ctx?.session?.first_name || "").trim();
+  if (sessionFirstName) return sessionFirstName;
+
+  return "";
+}
+
+function getHoursValue(ctx) {
+  const candidates = [
+    ctx?.session?.hours_balance,
+    ctx?.session?.hoursBalance,
+    ctx?.session?.godzinki_balance,
+    ctx?.session?.godzinkiBalance
+  ];
+
+  for (const value of candidates) {
+    if (value === 0 || value === "0") return "0 h";
+    if (value !== undefined && value !== null && String(value).trim() !== "") {
+      return `${String(value).trim()} h`;
+    }
+  }
+
+  return "";
+}
+
+function getMembershipPaidUntil(ctx) {
+  const candidates = [
+    ctx?.session?.membership_paid_until,
+    ctx?.session?.membershipPaidUntil,
+    ctx?.session?.skladka_paid_until,
+    ctx?.session?.skladkaPaidUntil
+  ];
+
+  for (const value of candidates) {
+    const s = String(value || "").trim();
+    if (s) return s;
+  }
+
+  return "";
 }
 
 function roleKeyToLabel(roleKey) {
@@ -316,7 +420,7 @@ function normalizePhoneDigits(v) {
   if (!s) return "";
   const keepPlus = s.startsWith("+");
   const digits = s.replace(/[^\d]/g, "");
-  return keepPlus ? ("+" + digits) : digits;
+  return keepPlus ? (`+${digits}`) : digits;
 }
 
 function isPhoneValid(v) {
@@ -330,7 +434,6 @@ function isIsoDateYYYYMMDD(v) {
 }
 
 function tryParseJsonFromHttpError(msg) {
-  // expected format: "HTTP 400: {json...}"
   const idx = msg.indexOf(":");
   if (idx < 0) return null;
   const tail = msg.slice(idx + 1).trim();
