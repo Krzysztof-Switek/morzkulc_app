@@ -1,9 +1,11 @@
 // public/core/render_shell.js
 import { canSeeModule } from "/core/access_control.js";
 import { setHash, parseHash } from "/core/router.js";
-import { apiPostJson } from "/core/api_client.js";
+import { apiPostJson, apiGetJson } from "/core/api_client.js";
 
 const REGISTER_URL = "/api/register";
+const MY_RESERVATIONS_URL = "/api/gear/my-reservations";
+const KAYAKS_URL = "/api/gear/kayaks";
 
 export function renderNav({ navEl, ctx }) {
   navEl.innerHTML = "";
@@ -33,7 +35,7 @@ export async function renderView({ viewEl, ctx }) {
   }
 
   if (moduleId === "home") {
-    renderHomeDashboard({ viewEl, ctx });
+    await renderHomeDashboard({ viewEl, ctx });
     return;
   }
 
@@ -62,12 +64,14 @@ export async function renderView({ viewEl, ctx }) {
   }
 }
 
-function renderHomeDashboard({ viewEl, ctx }) {
+async function renderHomeDashboard({ viewEl, ctx }) {
   const helloName = getHelloName(ctx);
   const roleLabel = roleKeyToLabel(String(ctx.session?.role_key || ""));
   const statusLabel = statusKeyToLabel(String(ctx.session?.status_key || ""));
   const hoursValue = getHoursValue(ctx);
   const membershipPaidUntil = getMembershipPaidUntil(ctx);
+
+  const reservationsSectionHtml = await buildHomeReservationsSection(ctx);
 
   viewEl.innerHTML = `
     <div class="dashboard dashboardStart">
@@ -104,9 +108,9 @@ function renderHomeDashboard({ viewEl, ctx }) {
             <span class="startTileMeta">Przejdź do listy sprzętu</span>
           </button>
 
-          <button type="button" class="startActionBtn" data-home-action="report-hours">
-            <span class="startTileTitle">Zgłoś godzinki</span>
-            <span class="startTileMeta">Dostępne wkrótce</span>
+          <button type="button" class="startActionBtn" data-home-action="open-my-reservations">
+            <span class="startTileTitle">Moje rezerwacje</span>
+            <span class="startTileMeta">Zobacz i zmieniaj swoje terminy</span>
           </button>
         </div>
       </section>
@@ -118,13 +122,7 @@ function renderHomeDashboard({ viewEl, ctx }) {
         </div>
 
         <div class="startList">
-          <div class="startListItem">
-            <div class="startListMain">
-              <div class="startListTitle">Twoje aktywne rezerwacje</div>
-              <div class="startListMeta">Tutaj pokażemy 2–3 najważniejsze rezerwacje.</div>
-            </div>
-            <div class="startListSide">Dostępne wkrótce</div>
-          </div>
+          ${reservationsSectionHtml}
         </div>
       </section>
 
@@ -151,6 +149,11 @@ function renderHomeDashboard({ viewEl, ctx }) {
           <span class="startTileMeta">Przejdź do listy sprzętu</span>
         </button>
 
+        <button type="button" class="startTile" data-home-action="my-reservations-bottom">
+          <span class="startTileTitle">Moje rezerwacje</span>
+          <span class="startTileMeta">Osobny widok użytkownika</span>
+        </button>
+
         <button type="button" class="startTile" data-home-action="report-hours-bottom">
           <span class="startTileTitle">Zgłoś godzinki</span>
           <span class="startTileMeta">Dostępne wkrótce</span>
@@ -160,11 +163,6 @@ function renderHomeDashboard({ viewEl, ctx }) {
           <span class="startTileTitle">Zgłoś naprawę</span>
           <span class="startTileMeta">Dostępne wkrótce</span>
         </button>
-
-        <button type="button" class="startTile" data-home-action="report-event">
-          <span class="startTileTitle">Zgłoś imprezę</span>
-          <span class="startTileMeta">Dostępne wkrótce</span>
-        </button>
       </section>
     </div>
   `;
@@ -172,6 +170,8 @@ function renderHomeDashboard({ viewEl, ctx }) {
   const reserveBtnTop = viewEl.querySelector("[data-home-action='reserve-gear']");
   const reserveBtnBottom = viewEl.querySelector("[data-home-action='reserve-gear-bottom']");
   const myReservationsBtn = viewEl.querySelector("[data-home-action='my-reservations']");
+  const myReservationsBtnTop = viewEl.querySelector("[data-home-action='open-my-reservations']");
+  const myReservationsBtnBottom = viewEl.querySelector("[data-home-action='my-reservations-bottom']");
   const eventsBtn = viewEl.querySelector("[data-home-action='events']");
 
   const openGear = () => {
@@ -179,15 +179,15 @@ function renderHomeDashboard({ viewEl, ctx }) {
     setHash(gearTarget.moduleId, gearTarget.routeId);
   };
 
+  const openMyReservations = () => {
+    setHash("my_reservations", "list");
+  };
+
   if (reserveBtnTop) reserveBtnTop.addEventListener("click", openGear);
   if (reserveBtnBottom) reserveBtnBottom.addEventListener("click", openGear);
-
-  if (myReservationsBtn) {
-    myReservationsBtn.addEventListener("click", () => {
-      const gearTarget = getGearRoute(ctx);
-      setHash(gearTarget.moduleId, gearTarget.routeId);
-    });
-  }
+  if (myReservationsBtn) myReservationsBtn.addEventListener("click", openMyReservations);
+  if (myReservationsBtnTop) myReservationsBtnTop.addEventListener("click", openMyReservations);
+  if (myReservationsBtnBottom) myReservationsBtnBottom.addEventListener("click", openMyReservations);
 
   if (eventsBtn) {
     eventsBtn.addEventListener("click", () => {
@@ -195,6 +195,99 @@ function renderHomeDashboard({ viewEl, ctx }) {
       setHash(eventsTarget.moduleId, eventsTarget.routeId);
     });
   }
+}
+
+async function buildHomeReservationsSection(ctx) {
+  if (!ctx?.idToken) {
+    return `
+      <div class="startListItem">
+        <div class="startListMain">
+          <div class="startListTitle">Moje rezerwacje</div>
+          <div class="startListMeta">Brak tokenu sesji.</div>
+        </div>
+        <div class="startListSide">—</div>
+      </div>
+    `;
+  }
+
+  try {
+    const [reservationsResp, kayaksResp] = await Promise.all([
+      apiGetJson({
+        url: MY_RESERVATIONS_URL,
+        idToken: ctx.idToken
+      }),
+      apiGetJson({
+        url: KAYAKS_URL,
+        idToken: ctx.idToken
+      })
+    ]);
+
+    const reservations = Array.isArray(reservationsResp?.items) ? reservationsResp.items : [];
+    const kayaks = Array.isArray(kayaksResp?.kayaks) ? kayaksResp.kayaks : [];
+
+    const kayakMap = new Map(
+      kayaks.map((k) => [String(k?.id || ""), buildKayakTitle(k)])
+    );
+
+    const activeReservations = reservations
+      .filter((r) => String(r?.status || "") === "active")
+      .slice(0, 3);
+
+    if (!activeReservations.length) {
+      return `
+        <div class="startListItem">
+          <div class="startListMain">
+            <div class="startListTitle">Brak aktywnych rezerwacji</div>
+            <div class="startListMeta">Kiedy zarezerwujesz sprzęt, pojawi się tutaj.</div>
+          </div>
+          <div class="startListSide">—</div>
+        </div>
+      `;
+    }
+
+    return activeReservations
+      .map((rsv) => {
+        const kayakTitles = getReservationKayakTitles(rsv, kayakMap);
+        const mainTitle = kayakTitles.join(", ") || "Rezerwacja";
+
+        return `
+          <div class="startListItem">
+            <div class="startListMain">
+              <div class="startListTitle">${escapeHtml(mainTitle)}</div>
+              <div class="startListMeta">
+                ${escapeHtml(formatDatePL(String(rsv?.startDate || "")))} → ${escapeHtml(formatDatePL(String(rsv?.endDate || "")))}
+              </div>
+            </div>
+            <div class="startListSide">aktywna</div>
+          </div>
+        `;
+      })
+      .join("");
+  } catch (_e) {
+    return `
+      <div class="startListItem">
+        <div class="startListMain">
+          <div class="startListTitle">Moje rezerwacje</div>
+          <div class="startListMeta">Nie udało się pobrać danych.</div>
+        </div>
+        <div class="startListSide">błąd</div>
+      </div>
+    `;
+  }
+}
+
+function getReservationKayakTitles(rsv, kayakMap) {
+  const kayakIds = Array.isArray(rsv?.kayakIds) ? rsv.kayakIds.map(String) : [];
+  return kayakIds.map((id) => kayakMap.get(id) || `Kajak ID ${id}`);
+}
+
+function buildKayakTitle(k) {
+  const brand = String(k?.brand || "").trim();
+  const model = String(k?.model || "").trim();
+  const number = String(k?.number || "").trim();
+
+  const core = [brand, model].filter(Boolean).join(" ").trim() || "Kajak";
+  return number ? `${core} (nr ${number})` : core;
 }
 
 function renderProfileForm({ viewEl, ctx }) {

@@ -1,10 +1,7 @@
 import { apiGetJson, apiPostJson } from "/core/api_client.js";
 
 const KAYAKS_URL = "/api/gear/kayaks";
-const MY_RESERVATIONS_URL = "/api/gear/my-reservations";
 const CREATE_RESERVATION_URL = "/api/gear/reservations/create";
-const UPDATE_RESERVATION_URL = "/api/gear/reservations/update";
-const CANCEL_RESERVATION_URL = "/api/gear/reservations/cancel";
 
 // CC0 placeholder (SVG) – używany jako miniatura zanim user kliknie
 const PLACEHOLDER_SVG = "https://www.svgrepo.com/download/426147/kayak.svg";
@@ -91,24 +88,12 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
 
               <div class="actions" style="margin-top:12px;">
                 <button id="reservationCreateBtn" type="button">Zapisz rezerwację</button>
-                <button id="reservationUpdateBtn" type="button" class="ghost hidden">Zapisz zmiany</button>
-                <button id="reservationCancelEditBtn" type="button" class="ghost hidden">Anuluj edycję</button>
                 <button id="reservationClearBtn" type="button" class="ghost">Wyczyść</button>
               </div>
 
               <div class="hint" style="margin-top:10px;">
                 Rezerwacja blokuje sprzęt dla innych użytkowników. Koszt godzinek i konflikty terminów sprawdza backend.
               </div>
-            </div>
-
-            <div class="card" style="margin-top:12px;">
-              <div style="display:flex; gap:10px; justify-content:space-between; align-items:center; flex-wrap:wrap;">
-                <h3 style="margin:0;">Moje rezerwacje</h3>
-                <button id="myReservationsReloadBtn" type="button" class="ghost">Odśwież rezerwacje</button>
-              </div>
-
-              <div id="myReservationsErr" class="err hidden" style="margin-top:10px;"></div>
-              <div id="myReservationsList" style="margin-top:12px;"></div>
             </div>
 
             <div id="kayaksErr" class="err hidden"></div>
@@ -149,13 +134,7 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
       const reservationEndDateEl = viewEl.querySelector("#reservationEndDate");
       const reservationNoteEl = viewEl.querySelector("#reservationNote");
       const reservationCreateBtn = viewEl.querySelector("#reservationCreateBtn");
-      const reservationUpdateBtn = viewEl.querySelector("#reservationUpdateBtn");
-      const reservationCancelEditBtn = viewEl.querySelector("#reservationCancelEditBtn");
       const reservationClearBtn = viewEl.querySelector("#reservationClearBtn");
-
-      const myReservationsErrEl = viewEl.querySelector("#myReservationsErr");
-      const myReservationsListEl = viewEl.querySelector("#myReservationsList");
-      const myReservationsReloadBtn = viewEl.querySelector("#myReservationsReloadBtn");
 
       const modalEl = viewEl.querySelector("#gearImgModal");
       const modalImgEl = viewEl.querySelector("#gearModalImg");
@@ -165,9 +144,7 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
       const modalSideBtn = viewEl.querySelector("#gearModalSideBtn");
 
       let all = [];
-      let myReservations = [];
       let selectedKayak = null;
-      let editReservationId = "";
 
       const setErr = (msg) => {
         errEl.textContent = String(msg || "");
@@ -184,11 +161,6 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         reservationOkEl.classList.toggle("hidden", !reservationOkEl.textContent);
       };
 
-      const setMyReservationsErr = (msg) => {
-        myReservationsErrEl.textContent = String(msg || "");
-        myReservationsErrEl.classList.toggle("hidden", !myReservationsErrEl.textContent);
-      };
-
       const clearReservationMessages = () => {
         setReservationErr("");
         setReservationOk("");
@@ -199,15 +171,10 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         reservationInfoEl.textContent = selectedKayak
           ? `Wybrany kajak: ${selectedKayak.title}`
           : "Wybierz kajak i kliknij „Rezerwuj”.";
-
-        reservationCreateBtn.classList.toggle("hidden", Boolean(editReservationId));
-        reservationUpdateBtn.classList.toggle("hidden", !editReservationId);
-        reservationCancelEditBtn.classList.toggle("hidden", !editReservationId);
       };
 
       const clearReservationForm = () => {
         selectedKayak = null;
-        editReservationId = "";
         reservationSelectedKayakEl.value = "";
         reservationStartDateEl.value = "";
         reservationEndDateEl.value = "";
@@ -228,35 +195,10 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
           title: buildKayakTitle(found)
         };
 
-        editReservationId = "";
         clearReservationMessages();
         syncReservationForm();
         reservationStartDateEl.focus();
         reservationSelectedKayakEl.scrollIntoView({ behavior: "smooth", block: "center" });
-      };
-
-      const startEditReservation = (reservationId) => {
-        const item = myReservations.find((x) => String(x?.id || "") === String(reservationId || ""));
-        if (!item) {
-          setReservationErr("Nie znaleziono rezerwacji do edycji.");
-          return;
-        }
-
-        const firstKayakId = Array.isArray(item?.kayakIds) && item.kayakIds.length ? String(item.kayakIds[0]) : "";
-        const foundKayak = all.find((k) => String(k?.id || "") === firstKayakId);
-
-        selectedKayak = {
-          id: firstKayakId,
-          title: foundKayak ? buildKayakTitle(foundKayak) : `Kajak ID ${firstKayakId}`
-        };
-
-        editReservationId = String(item.id || "");
-        reservationStartDateEl.value = String(item.startDate || "");
-        reservationEndDateEl.value = String(item.endDate || "");
-        reservationNoteEl.value = String(item.note || "");
-        clearReservationMessages();
-        syncReservationForm();
-        reservationStartDateEl.scrollIntoView({ behavior: "smooth", block: "center" });
       };
 
       const render = (items) => {
@@ -275,81 +217,6 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         `;
 
         metaEl.textContent = `Widoczne: ${items.length} / ${all.length}`;
-      };
-
-      const renderMyReservations = () => {
-        if (!myReservations.length) {
-          myReservationsListEl.innerHTML = `<div class="hint">Brak rezerwacji.</div>`;
-          return;
-        }
-
-        myReservationsListEl.innerHTML = myReservations
-          .map((rsv) => {
-            const status = String(rsv?.status || "");
-            const badge =
-              status === "active"
-                ? `<span class="badge ok">aktywna</span>`
-                : `<span class="badge danger">${escapeHtml(status || "nieaktywna")}</span>`;
-
-            const kayakIds = Array.isArray(rsv?.kayakIds) ? rsv.kayakIds.map(String) : [];
-            const costHours = Number(rsv?.costHours || 0);
-            const canEdit = status === "active";
-            const canCancel = status === "active";
-
-            return `
-              <div class="gearCard" style="margin-top:10px;">
-                <div class="gearCardInner">
-                  <div class="gearHead">
-                    <div class="gearTitleWrap">
-                      <div class="gearTitle">Rezerwacja ${escapeHtml(String(rsv?.id || ""))}</div>
-                      <div class="gearSubtitle">
-                        ${escapeHtml(formatDatePL(String(rsv?.startDate || "")))} → ${escapeHtml(formatDatePL(String(rsv?.endDate || "")))}
-                      </div>
-                      <div class="gearSubtitle">
-                        Blokada: ${escapeHtml(formatDatePL(String(rsv?.blockStartIso || "")))} → ${escapeHtml(formatDatePL(String(rsv?.blockEndIso || "")))}
-                      </div>
-                    </div>
-                    <div class="gearBadges">
-                      ${badge}
-                    </div>
-                  </div>
-
-                  <div class="gearMeta">
-                    <div class="gearMetaRow">
-                      <div class="gearMetaKey">Kajaki</div>
-                      <div class="gearMetaVal">${escapeHtml(kayakIds.join(", ") || "-")}</div>
-                    </div>
-                    <div class="gearMetaRow">
-                      <div class="gearMetaKey">Godzinki</div>
-                      <div class="gearMetaVal">${escapeHtml(String(costHours))}</div>
-                    </div>
-                    <div class="gearMetaRow">
-                      <div class="gearMetaKey">Notatka</div>
-                      <div class="gearMetaVal">${escapeHtml(String(rsv?.note || "-"))}</div>
-                    </div>
-                  </div>
-
-                  <div class="actions" style="margin-top:10px;">
-                    <button
-                      type="button"
-                      class="ghost"
-                      data-rsv-edit="${escapeAttr(String(rsv?.id || ""))}"
-                      ${canEdit ? "" : "disabled"}>
-                      Zmień daty
-                    </button>
-                    <button
-                      type="button"
-                      class="ghost"
-                      data-rsv-cancel="${escapeAttr(String(rsv?.id || ""))}"
-                      ${canCancel ? "" : "disabled"}>
-                      Anuluj
-                    </button>
-                  </div>
-                </div>
-              </div>
-            `;
-          })
-          .join("");
       };
 
       const applyFilter = () => {
@@ -401,25 +268,6 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         }
       };
 
-      const loadMyReservations = async () => {
-        setMyReservationsErr("");
-        myReservationsListEl.innerHTML = `<div class="hint">Ładuję...</div>`;
-
-        try {
-          const resp = await apiGetJson({
-            url: MY_RESERVATIONS_URL,
-            idToken: ctx.idToken
-          });
-
-          myReservations = Array.isArray(resp?.items) ? resp.items : [];
-          renderMyReservations();
-        } catch (e) {
-          const msg = String(e?.message || e);
-          setMyReservationsErr("Błąd pobierania rezerwacji: " + msg);
-          myReservationsListEl.innerHTML = "";
-        }
-      };
-
       const submitCreateReservation = async () => {
         clearReservationMessages();
 
@@ -452,82 +300,14 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
           });
 
           setReservationOk(
-            `Rezerwacja zapisana. ID: ${String(resp?.reservationId || "")}. Godzinki: ${String(resp?.costHours || 0)}`
+            `Rezerwacja zapisana. Godzinki: ${String(resp?.costHours || 0)}`
           );
-          await loadMyReservations();
           clearReservationForm();
         } catch (e) {
           const msg = String(e?.message || e);
           setReservationErr("Nie udało się zapisać rezerwacji: " + msg);
         } finally {
           reservationCreateBtn.disabled = false;
-        }
-      };
-
-      const submitUpdateReservation = async () => {
-        clearReservationMessages();
-
-        if (!editReservationId) {
-          setReservationErr("Brak rezerwacji do edycji.");
-          return;
-        }
-
-        const startDate = String(reservationStartDateEl.value || "").trim();
-        const endDate = String(reservationEndDateEl.value || "").trim();
-
-        if (!startDate || !endDate) {
-          setReservationErr("Wybierz datę od i do.");
-          return;
-        }
-
-        reservationUpdateBtn.disabled = true;
-
-        try {
-          const resp = await apiPostJson({
-            url: UPDATE_RESERVATION_URL,
-            idToken: ctx.idToken,
-            body: {
-              reservationId: editReservationId,
-              startDate,
-              endDate
-            }
-          });
-
-          setReservationOk(
-            `Rezerwacja zmieniona. Godzinki: ${String(resp?.costHours || 0)}`
-          );
-          await loadMyReservations();
-          clearReservationForm();
-        } catch (e) {
-          const msg = String(e?.message || e);
-          setReservationErr("Nie udało się zmienić rezerwacji: " + msg);
-        } finally {
-          reservationUpdateBtn.disabled = false;
-        }
-      };
-
-      const submitCancelReservation = async (reservationId) => {
-        clearReservationMessages();
-
-        const confirmed = window.confirm("Na pewno anulować tę rezerwację?");
-        if (!confirmed) return;
-
-        try {
-          await apiPostJson({
-            url: CANCEL_RESERVATION_URL,
-            idToken: ctx.idToken,
-            body: { reservationId }
-          });
-
-          setReservationOk("Rezerwacja anulowana.");
-          await loadMyReservations();
-
-          if (String(editReservationId || "") === String(reservationId || "")) {
-            clearReservationForm();
-          }
-        } catch (e) {
-          const msg = String(e?.message || e);
-          setReservationErr("Nie udało się anulować rezerwacji: " + msg);
         }
       };
 
@@ -621,30 +401,8 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         openModal({ title, topUrl, sideUrl, prefer });
       });
 
-      myReservationsListEl.addEventListener("click", (ev) => {
-        const el = ev.target;
-        if (!el || !el.closest) return;
-
-        const editBtn = el.closest("[data-rsv-edit]");
-        if (editBtn) {
-          const reservationId = String(editBtn.getAttribute("data-rsv-edit") || "");
-          startEditReservation(reservationId);
-          return;
-        }
-
-        const cancelBtn = el.closest("[data-rsv-cancel]");
-        if (cancelBtn) {
-          const reservationId = String(cancelBtn.getAttribute("data-rsv-cancel") || "");
-          submitCancelReservation(reservationId);
-        }
-      });
-
       reloadBtn.addEventListener("click", async () => {
         await loadKayaks();
-      });
-
-      myReservationsReloadBtn.addEventListener("click", async () => {
-        await loadMyReservations();
       });
 
       searchEl.addEventListener("input", applyFilter);
@@ -653,21 +411,12 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         await submitCreateReservation();
       });
 
-      reservationUpdateBtn.addEventListener("click", async () => {
-        await submitUpdateReservation();
-      });
-
-      reservationCancelEditBtn.addEventListener("click", () => {
-        clearReservationForm();
-      });
-
       reservationClearBtn.addEventListener("click", () => {
         clearReservationForm();
       });
 
       syncReservationForm();
       await loadKayaks();
-      await loadMyReservations();
     }
   };
 }

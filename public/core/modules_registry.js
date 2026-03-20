@@ -1,5 +1,6 @@
 import { createGenericModule } from "/core/module_stub.js";
 import { createGearModule } from "/modules/gear_module.js";
+import { createMyReservationsModule } from "/modules/my_reservations_module.js";
 
 /**
  * NEW FORMAT ONLY
@@ -24,9 +25,7 @@ export function buildModulesFromSetup(setup) {
       access: cfg?.access || {}
     };
 
-    // ✅ Legacy mapping: modul_2 = Sprzęt
     if (id === "modul_2") {
-      // jeśli setup nie ma defaultRoute → wymuszamy "kayaks" w kodzie
       return createGearModule({
         ...base,
         defaultRoute: base.defaultRoute === "home" ? "kayaks" : base.defaultRoute
@@ -35,6 +34,21 @@ export function buildModulesFromSetup(setup) {
 
     return createGenericModule(base);
   });
+
+  const gearModule = modules.find((m) => String(m?.id || "") === "modul_2") || null;
+
+  if (gearModule) {
+    modules.push(
+      createMyReservationsModule({
+        id: "my_reservations",
+        label: "Moje rezerwacje",
+        defaultRoute: "list",
+        order: Number(gearModule.order ?? 9999) + 0.1,
+        enabled: true,
+        access: gearModule.access || {}
+      })
+    );
+  }
 
   modules.sort((a, b) => (a.order - b.order) || a.id.localeCompare(b.id));
 
