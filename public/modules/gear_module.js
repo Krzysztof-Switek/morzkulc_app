@@ -234,6 +234,7 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
             k?.type,
             k?.color,
             k?.status,
+            k?.reservedNowLabel,
             k?.liters,
             k?.weightRange,
             k?.storage,
@@ -303,6 +304,7 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
             `Rezerwacja zapisana. Godzinki: ${String(resp?.costHours || 0)}`
           );
           clearReservationForm();
+          await loadKayaks();
         } catch (e) {
           const msg = String(e?.message || e);
           setReservationErr("Nie udało się zapisać rezerwacji: " + msg);
@@ -429,6 +431,7 @@ function renderKayakCard(k) {
   const color = String(k?.color || "").trim();
 
   const working = isWorking(k);
+  const reservedNow = k?.isReservedNow === true;
 
   const liters = k?.liters == null ? "" : String(k.liters);
   const weightRange = String(k?.weightRange || "").trim();
@@ -440,9 +443,13 @@ function renderKayakCard(k) {
 
   const canReserve = working && (!isPrivate || privateRent);
 
-  const statusBadge = working
+  const workingBadge = working
     ? `<span class="badge ok">sprawny</span>`
     : `<span class="badge danger">niesprawny</span>`;
+
+  const availabilityBadge = reservedNow
+    ? `<span class="badge danger">zarezerwowany teraz</span>`
+    : `<span class="badge soft">dostępny teraz</span>`;
 
   const typeBadge = type ? `<span class="badge soft">${escapeHtml(type)}</span>` : "";
 
@@ -460,6 +467,7 @@ function renderKayakCard(k) {
     : (storage ? storage : "");
 
   const detailsRows = [
+    { k: "Dostępność", v: reservedNow ? "Zarezerwowany teraz" : "Dostępny teraz" },
     { k: "Pojemność", v: liters ? (liters + " L") : "-" },
     { k: "Zakres wag", v: weightRange || "-" },
     { k: "Składowanie", v: storage || "-" },
@@ -478,7 +486,8 @@ function renderKayakCard(k) {
             ${privacyLine ? `<div class="gearSubtitle">${escapeHtml(privacyLine)}</div>` : ""}
           </div>
           <div class="gearBadges">
-            ${statusBadge}
+            ${workingBadge}
+            ${availabilityBadge}
             ${typeBadge}
           </div>
         </div>
@@ -518,7 +527,7 @@ function renderKayakCard(k) {
             type="button"
             data-gear-reserve="${escapeAttr(String(k?.id || ""))}"
             ${canReserve ? "" : "disabled"}>
-            Rezerwuj
+            Rezerwuj termin
           </button>
         </div>
 
@@ -549,13 +558,6 @@ function buildKayakTitle(k) {
 
   const core = [brand, model].filter(Boolean).join(" ").trim() || "Kajak";
   return number ? `${core} (nr ${number})` : core;
-}
-
-function formatDatePL(iso) {
-  const s = String(iso || "").trim();
-  if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return s || "-";
-  const [yyyy, mm, dd] = s.split("-");
-  return `${dd}.${mm}.${yyyy}`;
 }
 
 function isWorking(k) {

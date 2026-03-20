@@ -27,9 +27,16 @@ function toNumberSafe(v: any): number | null {
   return n;
 }
 
-function pickKayak(doc: any) {
+function todayIsoUTC(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function pickKayak(doc: any, reservedKayakIdsNow: Set<string>) {
+  const id = String(doc?.id || "");
+  const isReservedNow = reservedKayakIdsNow.has(id);
+
   return {
-    id: String(doc?.id || ""),
+    id,
     number: String(doc?.number || ""),
     brand: String(doc?.brand || ""),
     model: String(doc?.model || ""),
@@ -37,11 +44,41 @@ function pickKayak(doc: any) {
     color: String(doc?.color || ""),
     liters: toNumberSafe(doc?.liters),
     status: String(doc?.status || ""),
+    isReservedNow,
+    reservedNowLabel: isReservedNow ? "zarezerwowany teraz" : "dostępny teraz",
     images: {
       top: String(doc?.images?.top || ""),
       side: String(doc?.images?.side || ""),
     },
   };
+}
+
+async function loadReservedKayakIdsNow(db: FirebaseFirestore.Firestore): Promise<Set<string>> {
+  const todayIso = todayIsoUTC();
+
+  const snap = await db
+    .collection("gear_reservations")
+    .where("status", "==", "active")
+    .where("blockStartIso", "<=", todayIso)
+    .get();
+
+  const reserved = new Set<string>();
+
+  for (const doc of snap.docs) {
+    const data = doc.data() as any;
+    const blockStartIso = String(data?.blockStartIso || "");
+    const blockEndIso = String(data?.blockEndIso || "");
+    if (!blockStartIso || !blockEndIso) continue;
+
+    if (!(blockStartIso <= todayIso && todayIso <= blockEndIso)) continue;
+
+    const kayakIds = Array.isArray(data?.kayakIds) ? data.kayakIds.map(String) : [];
+    for (const kayakId of kayakIds) {
+      if (kayakId) reserved.add(kayakId);
+    }
+  }
+
+  return reserved;
 }
 
 export async function handleGetGearKayaks(req: Request, res: Response, deps: GetGearKayaksDeps) {
@@ -72,13 +109,12 @@ export async function handleGetGearKayaks(req: Request, res: Response, deps: Get
         return;
       }
 
-      const snap = await db
-        .collection("gear_kayaks")
-        .where("isActive", "==", true)
-        .limit(500)
-        .get();
+      const [kayaksSnap, reservedKayakIdsNow] = await Promise.all([
+        db.collection("gear_kayaks").where("isActive", "==", true).limit(500).get(),
+        loadReservedKayakIdsNow(db),
+      ]);
 
-      const kayaks = snap.docs.map((d) => pickKayak(d.data()));
+      const kayaks = kayaksSnap.docs.map((d) => pickKayak(d.data(), reservedKayakIdsNow));
 
       res.status(200).json({ok: true, kayaks});
     } catch (err: any) {
