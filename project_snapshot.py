@@ -143,6 +143,10 @@ PATTERNS_TO_SEARCH = [
     "authDomain:",
     "ALLOWED_HOSTS",
     "ALLOWED_ORIGINS",
+    "firestore.indexes.json",
+    "collectionGroup",
+    ".orderBy(",
+    ".where(",
 ]
 
 ENV_NAME_PATTERN = re.compile(r"\bprocess\.env\.([A-Z0-9_]+)\b")
@@ -187,6 +191,23 @@ HTTP_ROUTE_PATTERNS = [
     r'\bfetch\(\s*["\'](/api/[^"\']+)["\']',
 ]
 
+FIRESTORE_QUERY_START_PATTERN = re.compile(
+    r'\.(collection|collectionGroup)\(\s*["\']([^"\']+)["\']\s*\)',
+    re.MULTILINE,
+)
+FIRESTORE_WHERE_PATTERN = re.compile(
+    r'\.where\(\s*["\']([^"\']+)["\']\s*,\s*["\']([^"\']+)["\']',
+    re.MULTILINE,
+)
+FIRESTORE_ORDERBY_PATTERN = re.compile(
+    r'\.orderBy\(\s*["\']([^"\']+)["\'](?:\s*,\s*["\']([^"\']+)["\'])?',
+    re.MULTILINE,
+)
+FIRESTORE_LIMIT_PATTERN = re.compile(r"\.limit\(\s*\d+\s*\)", re.MULTILINE)
+
+INDEX_RANGE_OPERATORS = {"<", "<=", ">", ">=", "!=", "not-in", "array-contains-any"}
+INDEX_EQUALITY_OPERATORS = {"==", "in", "array-contains"}
+
 
 # =========================
 # 🔒 REGUŁY PROJEKTU
@@ -224,19 +245,21 @@ CHANGE DISCIPLINE
 SAFETY
 - Never guess host allowlist
 - Never guess active Firebase project
-- Check .firebaserc, firebase.json, env files, frontend firebase config
+- Check .firebaserc, firebase.json, frontend firebase config, functions env
 - Always inspect downstream dependencies
+- Check firestore.indexes.json when query logic changes
 
 WORKFLOW
 1. Read rules
 2. Read git summary
 3. Read project summary
 4. Read env / firebase / security summaries
-5. Read pattern matches
-6. Identify affected files
-7. Inspect code
-8. Implement
-9. Test
+5. Read Firestore + index summaries
+6. Read pattern matches
+7. Identify affected files
+8. Inspect code
+9. Implement
+10. Test
 """
 
 
@@ -382,6 +405,13 @@ class WebProjectAnalyzer:
                     "keys": keys[:20],
                 }
 
+            if self.path.name == "firestore.indexes.json":
+                return {
+                    "type": "Firestore Indexes",
+                    "file": str(self.path),
+                    "keys": keys[:20],
+                }
+
             return {
                 "type": "JSON",
                 "file": str(self.path),
@@ -487,7 +517,7 @@ def should_include(path: Path) -> bool:
     if path.suffix.lower() in INCLUDE_EXTENSIONS:
         return True
 
-    if path.name.startswith(".env") or path.name in [".firebaserc", "firebase.json"]:
+    if path.name.startswith(".env") or path.name in [".firebaserc", "firebase.json", "firestore.indexes.json"]:
         return True
 
     return False
@@ -572,6 +602,259 @@ def print_git_summary():
 
 
 # =========================
+# 🔍 FIRESTORE INDEX CHECK
+# =========================
+def normalize_index_field_sequence(fields: List[str]) -> Tuple[str, ...]:
+    return tuple(field for field in fields if field)
+
+
+def extract_firestore_query_candidates(content: str) -> List[Dict[str, Any]]:
+    candidates: List[Dict[str, Any]] = []
+
+    for match in FIRESTORE_QUERY_START_PATTERN.finditer(content):
+        collection_kind = match.group(1)
+        collection_name = match.group(2)
+
+        start = match.start()
+        end = min(len(content), start + 1200)
+        snippet = content[start:end]
+
+        terminators = []
+        for token in [";\n", ";\r\n", "\n\n", "\r\n\r\n"]:
+            idx = snippet.find(token)
+            if idx != -1:
+                terminators.append(idx)
+        if terminators:
+            snippet = snippet[:min(terminators) + 1]
+
+        where_matches = FIRESTORE_WHERE_PATTERN.findall(snippet)
+        order_matches = FIRESTORE_ORDERBY_PATTERN.findall(snippet)
+        has_limit = bool(FIRESTORE_LIMIT_PATTERN.search(snippet))
+
+        where_fields = [field for field, _op in where_matches]
+        where_ops = [op for _field, op in where_matches]
+        order_fields = [field for field, _direction in order_matches]
+
+        has_range = any(op in INDEX_RANGE_OPERATORS for op in where_ops)
+        equality_count = sum(1 for op in where_ops if op in INDEX_EQUALITY_OPERATORS)
+
+        requires_index = False
+        reason_parts: List[str] = []
+
+        if len(where_fields) >= 2:
+            requires_index = True
+            reason_parts.append("2+ where")
+        if where_fields and order_fields:
+            requires_index = True
+            reason_parts.append("where + orderBy")
+        if has_range and (len(where_fields) >= 2 or bool(order_fields)):
+            requires_index = True
+            reason_parts.append("range query")
+        if collection_kind == "collectionGroup" and (len(where_fields) >= 2 or order_fields):
+            requires_index = True
+            reason_parts.append("collectionGroup composite")
+        if has_limit and len(where_fields) >= 2:
+            reason_parts.append("limit")
+
+        fields_for_index: List[str] = []
+        seen: Set[str] = set()
+
+        for field in where_fields + order_fields:
+            if field not in seen:
+                fields_for_index.append(field)
+                seen.add(field)
+
+        line_no = content.count("\n", 0, start) + 1
+
+        candidates.append({
+            "collection_kind": collection_kind,
+            "collection": collection_name,
+            "line": line_no,
+            "where_fields": where_fields,
+            "where_ops": where_ops,
+            "order_fields": order_fields,
+            "has_limit": has_limit,
+            "requires_index": requires_index,
+            "reason": ", ".join(reason_parts) if reason_parts else "simple query",
+            "fields_for_index": normalize_index_field_sequence(fields_for_index),
+            "snippet": " ".join(snippet.split())[:280],
+        })
+
+    return candidates
+
+
+def load_declared_firestore_indexes() -> Dict[str, Any]:
+    path = Path(PROJECT_ROOT) / "firestore.indexes.json"
+    result: Dict[str, Any] = {
+        "exists": path.exists(),
+        "path": str(path).replace("\\", "/"),
+        "raw_indexes": [],
+        "normalized": set(),
+        "error": None,
+    }
+
+    if not path.exists():
+        return result
+
+    content = safe_read(path)
+    if not content:
+        result["error"] = "could not read file"
+        return result
+
+    try:
+        data = json.loads(content)
+    except Exception as e:
+        result["error"] = f"invalid JSON: {e}"
+        return result
+
+    indexes = data.get("indexes", [])
+    if not isinstance(indexes, list):
+        result["error"] = "indexes is not a list"
+        return result
+
+    result["raw_indexes"] = indexes
+
+    normalized: Set[Tuple[str, Tuple[str, ...]]] = set()
+
+    for idx in indexes:
+        if not isinstance(idx, dict):
+            continue
+
+        collection_group = idx.get("collectionGroup")
+        fields = idx.get("fields", [])
+
+        if not collection_group or not isinstance(fields, list):
+            continue
+
+        ordered_fields = []
+        for field in fields:
+            if not isinstance(field, dict):
+                continue
+            field_path = field.get("fieldPath")
+            if isinstance(field_path, str) and field_path != "__name__":
+                ordered_fields.append(field_path)
+
+        normalized.add((collection_group, normalize_index_field_sequence(ordered_fields)))
+
+    result["normalized"] = normalized
+    return result
+
+
+def collect_firestore_query_index_requirements() -> Dict[str, Any]:
+    detected_queries: List[Dict[str, Any]] = []
+
+    for path in iter_project_files():
+        rel = str(path).replace("\\", "/")
+        if not (rel.endswith(".ts") or rel.endswith(".js") or rel.endswith(".tsx") or rel.endswith(".jsx")):
+            continue
+
+        content = safe_read(path)
+        if not content:
+            continue
+
+        queries = extract_firestore_query_candidates(content)
+        for query in queries:
+            query["source"] = rel
+            detected_queries.append(query)
+
+    likely_requirements: Dict[Tuple[str, Tuple[str, ...]], List[Dict[str, Any]]] = {}
+
+    for query in detected_queries:
+        fields_for_index = query.get("fields_for_index", ())
+        if query.get("requires_index") and fields_for_index:
+            key = (query["collection"], fields_for_index)
+            likely_requirements.setdefault(key, []).append(query)
+
+    declared = load_declared_firestore_indexes()
+    declared_normalized: Set[Tuple[str, Tuple[str, ...]]] = declared.get("normalized", set())
+
+    missing: Dict[Tuple[str, Tuple[str, ...]], List[Dict[str, Any]]] = {}
+    covered: Dict[Tuple[str, Tuple[str, ...]], List[Dict[str, Any]]] = {}
+
+    for key, queries in likely_requirements.items():
+        if key in declared_normalized:
+            covered[key] = queries
+        else:
+            missing[key] = queries
+
+    return {
+        "detected_queries": detected_queries,
+        "likely_requirements": likely_requirements,
+        "declared": declared,
+        "missing": missing,
+        "covered": covered,
+    }
+
+
+def print_firestore_index_check():
+    print("\n=== FIRESTORE INDEX CHECK ===\n")
+
+    result = collect_firestore_query_index_requirements()
+    detected_queries = result["detected_queries"]
+    likely_requirements = result["likely_requirements"]
+    declared = result["declared"]
+    missing = result["missing"]
+    covered = result["covered"]
+
+    print("- firestore.indexes.json:")
+    if declared["exists"]:
+        print(f"  • present: True ({declared['path']})")
+        if declared.get("error"):
+            print(f"  • error: {declared['error']}")
+        else:
+            print(f"  • declared composite indexes: {len(declared.get('normalized', set()))}")
+    else:
+        print("  • present: False")
+
+    print("\n- detected Firestore query chains:")
+    if detected_queries:
+        for query in detected_queries[:100]:
+            collection = query["collection"]
+            source = query["source"]
+            line = query["line"]
+            where_fields = query.get("where_fields", [])
+            order_fields = query.get("order_fields", [])
+            reason = query.get("reason", "")
+            requires_index = query.get("requires_index", False)
+
+            print(f"  • {source}:{line} :: {collection}")
+            print(f"      - where: {where_fields if where_fields else 'none'}")
+            print(f"      - orderBy: {order_fields if order_fields else 'none'}")
+            print(f"      - likely_requires_index: {requires_index}")
+            print(f"      - reason: {reason}")
+    else:
+        print("  • none")
+
+    print("\n- likely composite index requirements from code:")
+    if likely_requirements:
+        for (collection, fields), queries in sorted(likely_requirements.items()):
+            print(f"  • {collection} :: {' + '.join(fields)}")
+            for q in queries[:5]:
+                print(f"      - {q['source']}:{q['line']} ({q['reason']})")
+    else:
+        print("  • none")
+
+    print("\n- declared indexes covering detected query patterns:")
+    if covered:
+        for (collection, fields), queries in sorted(covered.items()):
+            print(f"  • {collection} :: {' + '.join(fields)}")
+            for q in queries[:3]:
+                print(f"      - covered query: {q['source']}:{q['line']}")
+    else:
+        print("  • none")
+
+    print("\n- missing index declarations:")
+    if missing:
+        for (collection, fields), queries in sorted(missing.items()):
+            print(f"  • {collection} :: {' + '.join(fields)}")
+            for q in queries[:5]:
+                print(f"      - missing for: {q['source']}:{q['line']} ({q['reason']})")
+                print(f"        snippet: {q['snippet']}")
+    else:
+        print("  • none")
+
+
+# =========================
 # 📊 DODATKOWE SEKCJE
 # =========================
 def print_project_summary():
@@ -580,6 +863,7 @@ def print_project_summary():
     found = {
         ".firebaserc": False,
         "firebase.json": False,
+        "firestore.indexes.json": False,
         "functions/src": False,
         "public/core": False,
         "functions env files": [],
@@ -593,6 +877,8 @@ def print_project_summary():
             found[".firebaserc"] = True
         if path.name == "firebase.json":
             found["firebase.json"] = True
+        if path.name == "firestore.indexes.json":
+            found["firestore.indexes.json"] = True
         if rel.startswith("functions/src/"):
             found["functions/src"] = True
         if rel.startswith("public/core/"):
@@ -604,6 +890,7 @@ def print_project_summary():
 
     print(f"- .firebaserc present: {found['.firebaserc']}")
     print(f"- firebase.json present: {found['firebase.json']}")
+    print(f"- firestore.indexes.json present: {found['firestore.indexes.json']}")
     print(f"- functions/src present: {found['functions/src']}")
     print(f"- public/core present: {found['public/core']}")
     print(f"- archiwed present: {found['archiwed']}")
@@ -747,6 +1034,11 @@ def print_firebase_json_summary():
 
     functions_cfg = data.get("functions")
     print("- functions config present:", functions_cfg is not None)
+
+    firestore_cfg = data.get("firestore")
+    print("- firestore config present:", firestore_cfg is not None)
+    if isinstance(firestore_cfg, dict):
+        print(f"  • firestore.indexes path: {firestore_cfg.get('indexes', '(missing)')}")
 
 
 def print_frontend_firebase_summary():
@@ -963,6 +1255,7 @@ def print_snapshot():
     print_frontend_firebase_summary()
     print_host_security_summary()
     print_firestore_summary()
+    print_firestore_index_check()
     print_http_route_summary()
     print_pattern_matches(PATTERNS_TO_SEARCH)
 
@@ -1002,6 +1295,7 @@ def print_snapshot():
                 "YAML": "⚙️",
                 "Package.json": "📦",
                 "Firebase Config": "🔥",
+                "Firestore Indexes": "🧭",
             }.get(data.get("type", ""), "📄")
 
             rel_str = str(file_path).replace("\\", "/")
