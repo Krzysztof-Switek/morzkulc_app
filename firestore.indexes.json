@@ -1,0 +1,22 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "gear_reservations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "userUid", "order": "ASCENDING" },
+        { "fieldPath": "blockStartIso", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "gear_reservations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "blockStartIso", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

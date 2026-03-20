@@ -18,6 +18,9 @@
       ]
     }
   ],
+  "firestore": {
+    "indexes": "firestore.indexes.json"
+  },
   "hosting": {
     "public": "public",
     "ignore": [
