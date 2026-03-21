@@ -1,4 +1,5 @@
 import { apiGetJson, apiPostJson } from "/core/api_client.js";
+import { mapUserFacingApiError } from "/core/user_error_messages.js";
 
 const KAYAKS_URL = "/api/gear/kayaks";
 const CREATE_RESERVATION_URL = "/api/gear/reservations/create";
@@ -262,8 +263,7 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
           all = Array.isArray(resp?.kayaks) ? resp.kayaks : [];
           render(all);
         } catch (e) {
-          const msg = String(e?.message || e);
-          setErr("Błąd pobierania kajaków: " + msg);
+          setErr(mapUserFacingApiError(e, "Nie udało się pobrać kajaków."));
           listEl.innerHTML = "";
           metaEl.textContent = "";
         }
@@ -306,8 +306,7 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
           clearReservationForm();
           await loadKayaks();
         } catch (e) {
-          const msg = String(e?.message || e);
-          setReservationErr("Nie udało się zapisać rezerwacji: " + msg);
+          setReservationErr(mapUserFacingApiError(e, "Nie udało się zapisać rezerwacji."));
         } finally {
           reservationCreateBtn.disabled = false;
         }

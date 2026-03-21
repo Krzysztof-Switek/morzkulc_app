@@ -1,4 +1,5 @@
 import { apiGetJson, apiPostJson } from "/core/api_client.js";
+import { mapUserFacingApiError } from "/core/user_error_messages.js";
 
 const MY_RESERVATIONS_URL = "/api/gear/my-reservations";
 const KAYAKS_URL = "/api/gear/kayaks";
@@ -262,8 +263,7 @@ export function createMyReservationsModule({ id, label, defaultRoute, order, ena
           reservations = Array.isArray(resp?.items) ? resp.items : [];
           renderReservations();
         } catch (e) {
-          const msg = String(e?.message || e);
-          setErr("Błąd pobierania rezerwacji: " + msg);
+          setErr(mapUserFacingApiError(e, "Nie udało się pobrać rezerwacji."));
           listEl.innerHTML = "";
         }
       };
@@ -302,8 +302,7 @@ export function createMyReservationsModule({ id, label, defaultRoute, order, ena
           closeEditModal();
           await loadReservations();
         } catch (e) {
-          const msg = String(e?.message || e);
-          setEditErr("Nie udało się zmienić rezerwacji: " + msg);
+          setEditErr(mapUserFacingApiError(e, "Nie udało się zmienić rezerwacji."));
         } finally {
           editSaveBtn.disabled = false;
         }
@@ -326,8 +325,7 @@ export function createMyReservationsModule({ id, label, defaultRoute, order, ena
           setOk("Rezerwacja anulowana.");
           await loadReservations();
         } catch (e) {
-          const msg = String(e?.message || e);
-          setErr("Nie udało się anulować rezerwacji: " + msg);
+          setErr(mapUserFacingApiError(e, "Nie udało się anulować rezerwacji."));
         }
       };
 
