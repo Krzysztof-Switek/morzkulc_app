@@ -5,7 +5,7 @@ const KAYAKS_URL = "/api/gear/kayaks";
 const CREATE_RESERVATION_URL = "/api/gear/reservations/create";
 
 // CC0 placeholder (SVG) – używany jako miniatura zanim user kliknie
-const PLACEHOLDER_SVG = "https://www.svgrepo.com/download/426147/kayak.svg";
+const PLACEHOLDER_SVG = "/assets/kayak-placeholder.png";
 
 export function createGearModule({ id, label, defaultRoute, order, enabled, access }) {
   return {
