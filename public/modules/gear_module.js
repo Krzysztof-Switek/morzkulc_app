@@ -4,7 +4,7 @@ import { mapUserFacingApiError } from "/core/user_error_messages.js";
 const KAYAKS_URL = "/api/gear/kayaks";
 const CREATE_RESERVATION_URL = "/api/gear/reservations/create";
 
-// CC0 placeholder (SVG) – używany jako miniatura zanim user kliknie
+// Lokalny placeholder dostępny zawsze z aplikacji
 const PLACEHOLDER_SVG = "/assets/kayak-placeholder.png";
 
 export function createGearModule({ id, label, defaultRoute, order, enabled, access }) {
@@ -406,6 +406,14 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
       let currentImgSide = "";
       let currentTitle = "";
 
+      modalImgEl.onerror = () => {
+        const currentSrc = String(modalImgEl.getAttribute("src") || "");
+        if (currentSrc !== PLACEHOLDER_SVG) {
+          modalImgEl.setAttribute("src", PLACEHOLDER_SVG);
+        }
+        modalHintEl.textContent = "Brak zdjęcia.";
+      };
+
       function openModal({ title, topUrl, sideUrl, prefer }) {
         currentTitle = String(title || "Zdjęcie");
         currentImgTop = String(topUrl || "");
@@ -428,7 +436,7 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
 
         if (!start) {
           modalHintEl.textContent = "Brak zdjęcia.";
-          modalImgEl.removeAttribute("src");
+          modalImgEl.setAttribute("src", PLACEHOLDER_SVG);
         } else {
           modalImgEl.setAttribute("src", start);
         }
@@ -470,11 +478,13 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
 
       modalTopBtn.addEventListener("click", () => {
         if (!currentImgTop) return;
+        modalHintEl.textContent = "";
         modalImgEl.setAttribute("src", currentImgTop);
       });
 
       modalSideBtn.addEventListener("click", () => {
         if (!currentImgSide) return;
+        modalHintEl.textContent = "";
         modalImgEl.setAttribute("src", currentImgSide);
       });
 
@@ -651,22 +661,15 @@ function renderKayakCard(k) {
 
 function buildKayakDetailsRows(k) {
   const rows = [
-    ["Producent", k?.brand],
-    ["Model", k?.model],
-    ["Kolor", k?.color],
-    ["Numer", k?.number],
-    ["Typ", k?.type],
-    ["Status", k?.status],
-    ["Prywatny", toBoolOrNull(k?.isPrivate) === null ? "" : (toBool(k?.isPrivate) ? "tak" : "nie")],
-    ["Prywatny do wypożyczeń", toBoolOrNull(k?.privateForRent) === null && toBoolOrNull(k?.isPrivateRentable) === null ? "" : ((toBool(k?.privateForRent) || toBool(k?.isPrivateRentable)) ? "tak" : "nie")],
-    ["Litry", k?.liters],
-    ["Zakres wagi", k?.weightRange],
-    ["Składowanie", k?.storage],
-    ["Właściciel", k?.owner],
-    ["Materiał", k?.material],
-    ["Deck", k?.deck],
-    ["Cockpit", k?.cockpit],
-    ["Notatki", k?.notes]
+    ["Litrów", k?.liters],
+    ["Zakres wag", k?.weightRange],
+    ["Kokpit", k?.cockpit],
+    ["Pół na pół?", toBoolOrNull(k?.isHalfHalf) === null ? "" : (toBool(k?.isHalfHalf) ? "tak" : "nie")],
+    ["Składowany", k?.storage],
+    ["Prywatny?", toBoolOrNull(k?.isPrivate) === null ? "" : (toBool(k?.isPrivate) ? "tak" : "nie")],
+    ["Prywatny do wypożyczenia?", toBoolOrNull(k?.privateForRent) === null && toBoolOrNull(k?.isPrivateRentable) === null ? "" : ((toBool(k?.privateForRent) || toBool(k?.isPrivateRentable)) ? "tak" : "nie")],
+    ["Kontakt do właściciela", k?.ownerContact],
+    ["Uwagi", k?.notes]
   ]
     .filter(([, value]) => String(value ?? "").trim() !== "")
     .map(([key, value]) => `
