@@ -48,7 +48,7 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
               <div class="row" style="margin:0;">
                 <label for="kayaksSearch">Szukaj</label>
                 <input id="kayaksSearch" placeholder="np. Diesel, Wave sport, niebieski, creek..." />
-                <div class="hint">Filtruje po: nr, producent, model, typ, kolor, status, litry, zakres wag</div>
+                <div class="hint">Szukaj po dowolnej informacji o kajaku.</div>
               </div>
 
               <div class="actions" style="margin:0;">
@@ -57,43 +57,22 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
               </div>
             </div>
 
-            <div class="card" style="margin-top:12px;">
-              <h3 style="margin-top:0;">Rezerwacja</h3>
+            <div class="gearFiltersBar">
+              <label class="gearCheckPill" for="filterWorkingOnly">
+                <input id="filterWorkingOnly" type="checkbox" />
+                <span>Sprawny</span>
+              </label>
 
-              <div id="reservationInfo" class="hint" style="margin-bottom:10px;">
-                Wybierz kajak i kliknij „Rezerwuj”.
-              </div>
+              <label class="gearCheckPill" for="filterAvailableNowOnly">
+                <input id="filterAvailableNowOnly" type="checkbox" />
+                <span>Dostępny teraz</span>
+              </label>
 
-              <div id="reservationOk" class="ok hidden" style="margin-bottom:10px;"></div>
-              <div id="reservationErr" class="err hidden" style="margin-bottom:10px;"></div>
-
-              <div class="row" style="margin:0;">
-                <label for="reservationSelectedKayak">Wybrany kajak</label>
-                <input id="reservationSelectedKayak" type="text" value="" readonly />
-              </div>
-
-              <div class="row" style="margin-top:10px;">
-                <label for="reservationStartDate">Data od</label>
-                <input id="reservationStartDate" type="date" />
-              </div>
-
-              <div class="row" style="margin-top:10px;">
-                <label for="reservationEndDate">Data do</label>
-                <input id="reservationEndDate" type="date" />
-              </div>
-
-              <div class="row" style="margin-top:10px;">
-                <label for="reservationNote">Notatka</label>
-                <textarea id="reservationNote" rows="3" placeholder="Opcjonalna notatka"></textarea>
-              </div>
-
-              <div class="actions" style="margin-top:12px;">
-                <button id="reservationCreateBtn" type="button">Zapisz rezerwację</button>
-                <button id="reservationClearBtn" type="button" class="ghost">Wyczyść</button>
-              </div>
-
-              <div class="hint" style="margin-top:10px;">
-                Rezerwacja blokuje sprzęt dla innych użytkowników. Koszt godzinek i konflikty terminów sprawdza backend.
+              <div class="gearTypeFilter">
+                <label for="filterTypeSelect">Typ</label>
+                <select id="filterTypeSelect">
+                  <option value="">Wszystkie typy</option>
+                </select>
               </div>
             </div>
 
@@ -119,6 +98,57 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
             </div>
           </div>
         </div>
+
+        <div id="gearReservationModal" class="gearModal hidden" aria-hidden="true">
+          <div class="gearModalBackdrop" data-gear-reservation-close="1"></div>
+          <div class="gearModalCard" role="dialog" aria-modal="true" aria-label="Rezerwacja kajaka">
+            <div class="gearModalTop">
+              <div class="gearModalTitle" id="gearReservationTitle">Rezerwacja</div>
+              <button class="gearModalClose" type="button" data-gear-reservation-close="1" aria-label="Zamknij">✕</button>
+            </div>
+
+            <div class="gearModalBody">
+              <div style="width:100%; max-width:520px;">
+                <div id="reservationInfo" class="hint" style="margin-bottom:10px;">
+                  Wybierz kajak i kliknij „Rezerwuj”.
+                </div>
+
+                <div id="reservationOk" class="ok hidden" style="margin-bottom:10px;"></div>
+                <div id="reservationErr" class="err hidden" style="margin-bottom:10px;"></div>
+
+                <div class="row" style="margin:0;">
+                  <label for="reservationSelectedKayak">Wybrany kajak</label>
+                  <input id="reservationSelectedKayak" type="text" value="" readonly />
+                </div>
+
+                <div class="row" style="margin-top:10px;">
+                  <label for="reservationStartDate">Data od</label>
+                  <input id="reservationStartDate" type="date" />
+                </div>
+
+                <div class="row" style="margin-top:10px;">
+                  <label for="reservationEndDate">Data do</label>
+                  <input id="reservationEndDate" type="date" />
+                </div>
+
+                <div class="row" style="margin-top:10px;">
+                  <label for="reservationNote">Notatka</label>
+                  <textarea id="reservationNote" rows="3" placeholder="Opcjonalna notatka"></textarea>
+                </div>
+
+                <div class="hint" style="margin-top:10px;">
+                  Rezerwacja blokuje sprzęt dla innych użytkowników. Koszt godzinek i konflikty terminów sprawdza backend.
+                </div>
+              </div>
+            </div>
+
+            <div class="gearModalActions">
+              <button id="reservationCreateBtn" type="button" class="primary">Zapisz rezerwację</button>
+              <button id="reservationClearBtn" type="button" class="ghost">Wyczyść</button>
+              <button type="button" class="ghost" data-gear-reservation-close="1">Zamknij</button>
+            </div>
+          </div>
+        </div>
       `;
 
       const errEl = viewEl.querySelector("#kayaksErr");
@@ -126,7 +156,12 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
       const metaEl = viewEl.querySelector("#kayaksMeta");
       const reloadBtn = viewEl.querySelector("#kayaksReloadBtn");
       const searchEl = viewEl.querySelector("#kayaksSearch");
+      const filterWorkingOnlyEl = viewEl.querySelector("#filterWorkingOnly");
+      const filterAvailableNowOnlyEl = viewEl.querySelector("#filterAvailableNowOnly");
+      const filterTypeSelectEl = viewEl.querySelector("#filterTypeSelect");
 
+      const reservationModalEl = viewEl.querySelector("#gearReservationModal");
+      const reservationTitleEl = viewEl.querySelector("#gearReservationTitle");
       const reservationInfoEl = viewEl.querySelector("#reservationInfo");
       const reservationOkEl = viewEl.querySelector("#reservationOk");
       const reservationErrEl = viewEl.querySelector("#reservationErr");
@@ -172,6 +207,9 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         reservationInfoEl.textContent = selectedKayak
           ? `Wybrany kajak: ${selectedKayak.title}`
           : "Wybierz kajak i kliknij „Rezerwuj”.";
+        reservationTitleEl.textContent = selectedKayak
+          ? `Rezerwacja – ${selectedKayak.title}`
+          : "Rezerwacja";
       };
 
       const clearReservationForm = () => {
@@ -184,10 +222,43 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         syncReservationForm();
       };
 
+      const openReservationModal = () => {
+        reservationModalEl.classList.remove("hidden");
+        reservationModalEl.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+      };
+
+      const closeReservationModal = () => {
+        reservationModalEl.classList.add("hidden");
+        reservationModalEl.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+        clearReservationForm();
+      };
+
+      const populateTypeFilter = (items) => {
+        const currentValue = String(filterTypeSelectEl.value || "");
+        const types = Array.from(
+          new Set(
+            items
+              .map((k) => normalizeTypeValue(k?.type))
+              .filter(Boolean)
+          )
+        ).sort((a, b) => a.localeCompare(b, "pl"));
+
+        filterTypeSelectEl.innerHTML = `
+          <option value="">Wszystkie typy</option>
+          ${types.map((type) => `<option value="${escapeAttr(type)}">${escapeHtml(type)}</option>`).join("")}
+        `;
+
+        if (types.includes(currentValue)) {
+          filterTypeSelectEl.value = currentValue;
+        }
+      };
+
       const startCreateForKayak = (kayakId) => {
         const found = all.find((k) => String(k?.id || "") === String(kayakId || ""));
         if (!found) {
-          setReservationErr("Nie znaleziono kajaka.");
+          setErr("Nie znaleziono kajaka.");
           return;
         }
 
@@ -198,8 +269,8 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
 
         clearReservationMessages();
         syncReservationForm();
+        openReservationModal();
         reservationStartDateEl.focus();
-        reservationSelectedKayakEl.scrollIntoView({ behavior: "smooth", block: "center" });
       };
 
       const render = (items) => {
@@ -222,12 +293,21 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
 
       const applyFilter = () => {
         const q = String(searchEl.value || "").trim().toLowerCase();
-        if (!q) {
-          render(all);
-          return;
-        }
+        const workingOnly = filterWorkingOnlyEl.checked === true;
+        const availableNowOnly = filterAvailableNowOnlyEl.checked === true;
+        const selectedType = normalizeTypeValue(filterTypeSelectEl.value || "");
 
         const filtered = all.filter((k) => {
+          if (workingOnly && !isWorking(k)) return false;
+          if (availableNowOnly && k?.isReservedNow === true) return false;
+
+          if (selectedType) {
+            const kayakType = normalizeTypeValue(k?.type);
+            if (kayakType !== selectedType) return false;
+          }
+
+          if (!q) return true;
+
           const hay = [
             k?.number,
             k?.brand,
@@ -239,10 +319,15 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
             k?.liters,
             k?.weightRange,
             k?.storage,
-            k?.notes
+            k?.notes,
+            k?.owner,
+            k?.deck,
+            k?.cockpit,
+            k?.material
           ]
             .map((x) => String(x || "").toLowerCase())
             .join(" ");
+
           return hay.includes(q);
         });
 
@@ -261,7 +346,8 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
           });
 
           all = Array.isArray(resp?.kayaks) ? resp.kayaks : [];
-          render(all);
+          populateTypeFilter(all);
+          applyFilter();
         } catch (e) {
           setErr(mapUserFacingApiError(e, "Nie udało się pobrać kajaków."));
           listEl.innerHTML = "";
@@ -303,8 +389,12 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
           setReservationOk(
             `Rezerwacja zapisana. Godzinki: ${String(resp?.costHours || 0)}`
           );
-          clearReservationForm();
+
           await loadKayaks();
+
+          window.setTimeout(() => {
+            closeReservationModal();
+          }, 700);
         } catch (e) {
           setReservationErr(mapUserFacingApiError(e, "Nie udało się zapisać rezerwacji."));
         } finally {
@@ -366,8 +456,16 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         }
       });
 
+      reservationModalEl.addEventListener("click", (ev) => {
+        const t = ev.target;
+        if (t && t.getAttribute && t.getAttribute("data-gear-reservation-close") === "1") {
+          closeReservationModal();
+        }
+      });
+
       window.addEventListener("keydown", (ev) => {
         if (ev.key === "Escape" && !modalEl.classList.contains("hidden")) closeModal();
+        if (ev.key === "Escape" && !reservationModalEl.classList.contains("hidden")) closeReservationModal();
       });
 
       modalTopBtn.addEventListener("click", () => {
@@ -392,14 +490,33 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         }
 
         const imgBtn = el.closest("[data-gear-img]");
-        if (!imgBtn) return;
+        if (imgBtn) {
+          const prefer = String(imgBtn.getAttribute("data-gear-img") || "top");
+          const topUrl = String(imgBtn.getAttribute("data-gear-top") || "");
+          const sideUrl = String(imgBtn.getAttribute("data-gear-side") || "");
+          const title = String(imgBtn.getAttribute("data-gear-title") || "Zdjęcie");
 
-        const prefer = String(imgBtn.getAttribute("data-gear-img") || "top");
-        const topUrl = String(imgBtn.getAttribute("data-gear-top") || "");
-        const sideUrl = String(imgBtn.getAttribute("data-gear-side") || "");
-        const title = String(imgBtn.getAttribute("data-gear-title") || "Zdjęcie");
+          openModal({ title, topUrl, sideUrl, prefer });
+          return;
+        }
 
-        openModal({ title, topUrl, sideUrl, prefer });
+        const moreBtn = el.closest(".gearMoreBtn");
+        if (moreBtn) {
+          const card = moreBtn.closest(".gearCard");
+          const detailsEl = card?.querySelector(".gearDetails");
+          if (detailsEl) {
+            detailsEl.open = !detailsEl.open;
+          }
+          return;
+        }
+
+        const detailsSummary = el.closest(".gearDetailsSummary");
+        if (detailsSummary) {
+          const detailsEl = detailsSummary.closest("details");
+          if (detailsEl) {
+            detailsEl.open = !detailsEl.open;
+          }
+        }
       });
 
       reloadBtn.addEventListener("click", async () => {
@@ -407,13 +524,19 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
       });
 
       searchEl.addEventListener("input", applyFilter);
+      filterWorkingOnlyEl.addEventListener("change", applyFilter);
+      filterAvailableNowOnlyEl.addEventListener("change", applyFilter);
+      filterTypeSelectEl.addEventListener("change", applyFilter);
 
       reservationCreateBtn.addEventListener("click", async () => {
         await submitCreateReservation();
       });
 
       reservationClearBtn.addEventListener("click", () => {
-        clearReservationForm();
+        clearReservationMessages();
+        reservationStartDateEl.value = "";
+        reservationEndDateEl.value = "";
+        reservationNoteEl.value = "";
       });
 
       syncReservationForm();
@@ -432,13 +555,8 @@ function renderKayakCard(k) {
   const working = isWorking(k);
   const reservedNow = k?.isReservedNow === true;
 
-  const liters = k?.liters == null ? "" : String(k.liters);
-  const weightRange = String(k?.weightRange || "").trim();
-  const storage = String(k?.storage || "").trim();
   const isPrivate = toBool(k?.isPrivate);
   const privateRent = toBool(k?.privateForRent) || toBool(k?.isPrivateRentable);
-  const ownerContact = String(k?.ownerContact || "").trim();
-  const notes = String(k?.notes || "").trim();
 
   const canReserve = working && (!isPrivate || privateRent);
 
@@ -447,47 +565,37 @@ function renderKayakCard(k) {
     : `<span class="badge danger">niesprawny</span>`;
 
   const availabilityBadge = reservedNow
-    ? `<span class="badge danger">zarezerwowany teraz</span>`
-    : `<span class="badge soft">dostępny teraz</span>`;
+    ? `<span class="badge danger">rezerwacja</span>`
+    : `<span class="badge soft">wolny</span>`;
 
-  const typeBadge = type ? `<span class="badge soft">${escapeHtml(type)}</span>` : "";
+  const typeBadge = type
+    ? `<span class="badge soft">${escapeHtml(type)}</span>`
+    : "";
 
   const imgTop = String(k?.images?.top || "").trim();
   const imgSide = String(k?.images?.side || "").trim();
 
   const title = buildKayakTitle(k);
-  const subtitleParts = [];
-  if (number) subtitleParts.push("Nr " + number);
-  if (color) subtitleParts.push(color);
-  const subtitle = subtitleParts.join(" • ");
-
-  const privacyLine = isPrivate
-    ? (privateRent ? "Prywatny (do wypożyczenia)" : "Prywatny (nie do wypożyczenia)")
-    : (storage ? storage : "");
-
-  const detailsRows = [
-    { k: "Dostępność", v: reservedNow ? "Zarezerwowany teraz" : "Dostępny teraz" },
-    { k: "Pojemność", v: liters ? (liters + " L") : "-" },
-    { k: "Zakres wag", v: weightRange || "-" },
-    { k: "Składowanie", v: storage || "-" },
-    { k: "Własność", v: isPrivate ? "Prywatny" : "Klub" },
-    { k: "Kontakt", v: (isPrivate ? (ownerContact || "-") : "-") },
-    { k: "Uwagi", v: notes || "-" }
-  ];
+  const detailsRows = buildKayakDetailsRows(k);
 
   return `
     <div class="gearCard ${working ? "gearOk" : "gearBad"}">
       <div class="gearCardInner">
+
         <div class="gearHead">
           <div class="gearTitleWrap">
-            <div class="gearTitle">${escapeHtml(title)}</div>
-            <div class="gearSubtitle">${escapeHtml(subtitle)}</div>
-            ${privacyLine ? `<div class="gearSubtitle">${escapeHtml(privacyLine)}</div>` : ""}
+            <div class="gearTitle">${escapeHtml(brand || "Kajak")}</div>
+            <div class="gearModel">${escapeHtml(model || "-")}</div>
+            <div class="gearInlineMeta gearInlineMetaMain"><strong>Kolor:</strong> ${escapeHtml(color || "-")}</div>
+            <div class="gearInlineMeta gearInlineMetaMain"><strong>Nr:</strong> ${escapeHtml(number || "-")}</div>
           </div>
-          <div class="gearBadges">
-            ${workingBadge}
-            ${availabilityBadge}
-            ${typeBadge}
+
+          <div class="gearHeadSide">
+            <div class="gearBadges gearBadgesStack">
+              ${workingBadge}
+              ${availabilityBadge}
+              ${typeBadge}
+            </div>
           </div>
         </div>
 
@@ -498,8 +606,7 @@ function renderKayakCard(k) {
             data-gear-img="top"
             data-gear-top="${escapeAttr(imgTop)}"
             data-gear-side="${escapeAttr(imgSide)}"
-            data-gear-title="${escapeAttr(title)}"
-            aria-label="Pokaż zdjęcie z góry">
+            data-gear-title="${escapeAttr(title)}">
             <div class="gearImgPh">
               <img alt="" loading="lazy" src="${escapeAttr(PLACEHOLDER_SVG)}" />
               <div class="gearImgLabel">Z góry</div>
@@ -512,8 +619,7 @@ function renderKayakCard(k) {
             data-gear-img="side"
             data-gear-top="${escapeAttr(imgTop)}"
             data-gear-side="${escapeAttr(imgSide)}"
-            data-gear-title="${escapeAttr(title)}"
-            aria-label="Pokaż zdjęcie z boku">
+            data-gear-title="${escapeAttr(title)}">
             <div class="gearImgPh">
               <img alt="" loading="lazy" src="${escapeAttr(PLACEHOLDER_SVG)}" />
               <div class="gearImgLabel">Z boku</div>
@@ -521,33 +627,65 @@ function renderKayakCard(k) {
           </button>
         </div>
 
-        <div class="actions" style="margin-top:4px;">
+        <div class="actions gearCardActions">
           <button
             type="button"
             data-gear-reserve="${escapeAttr(String(k?.id || ""))}"
             ${canReserve ? "" : "disabled"}>
-            Rezerwuj termin
+            Rezerwuj
           </button>
+          <button type="button" class="ghost gearMoreBtn">Więcej</button>
         </div>
 
         <details class="gearDetails">
-          <summary class="gearDetailsSummary">Szczegóły</summary>
+          <summary class="gearDetailsSummary">Więcej</summary>
           <div class="gearMeta">
-            ${detailsRows
-              .map(
-                (r) => `
-                  <div class="gearMetaRow">
-                    <div class="gearMetaKey">${escapeHtml(r.k)}</div>
-                    <div class="gearMetaVal">${escapeHtml(r.v)}</div>
-                  </div>
-                `
-              )
-              .join("")}
+            ${detailsRows}
           </div>
         </details>
+
       </div>
     </div>
   `;
+}
+
+function buildKayakDetailsRows(k) {
+  const rows = [
+    ["Producent", k?.brand],
+    ["Model", k?.model],
+    ["Kolor", k?.color],
+    ["Numer", k?.number],
+    ["Typ", k?.type],
+    ["Status", k?.status],
+    ["Prywatny", toBoolOrNull(k?.isPrivate) === null ? "" : (toBool(k?.isPrivate) ? "tak" : "nie")],
+    ["Prywatny do wypożyczeń", toBoolOrNull(k?.privateForRent) === null && toBoolOrNull(k?.isPrivateRentable) === null ? "" : ((toBool(k?.privateForRent) || toBool(k?.isPrivateRentable)) ? "tak" : "nie")],
+    ["Litry", k?.liters],
+    ["Zakres wagi", k?.weightRange],
+    ["Składowanie", k?.storage],
+    ["Właściciel", k?.owner],
+    ["Materiał", k?.material],
+    ["Deck", k?.deck],
+    ["Cockpit", k?.cockpit],
+    ["Notatki", k?.notes]
+  ]
+    .filter(([, value]) => String(value ?? "").trim() !== "")
+    .map(([key, value]) => `
+      <div class="gearMetaRow">
+        <div class="gearMetaKey">${escapeHtml(String(key))}</div>
+        <div class="gearMetaVal">${escapeHtml(String(value))}</div>
+      </div>
+    `);
+
+  if (!rows.length) {
+    return `
+      <div class="gearMetaRow">
+        <div class="gearMetaKey">Informacje</div>
+        <div class="gearMetaVal">Brak dodatkowych danych</div>
+      </div>
+    `;
+  }
+
+  return rows.join("");
 }
 
 function buildKayakTitle(k) {
@@ -557,6 +695,10 @@ function buildKayakTitle(k) {
 
   const core = [brand, model].filter(Boolean).join(" ").trim() || "Kajak";
   return number ? `${core} (nr ${number})` : core;
+}
+
+function normalizeTypeValue(v) {
+  return String(v || "").trim().toLowerCase();
 }
 
 function isWorking(k) {

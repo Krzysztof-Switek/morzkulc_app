@@ -1,0 +1,475 @@
+/* public/styles/gear.css */
+/* ================= GEAR ================= */
+
+.gearToolbar {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: 12px;
+}
+
+.gearToolbarTop {
+  display: grid;
+  gap: var(--space-2);
+}
+
+@media (min-width: 720px) {
+  .gearToolbarTop {
+    grid-template-columns: 1fr auto;
+    align-items: end;
+  }
+}
+
+.gearFiltersBar {
+  display: grid;
+  gap: var(--space-2);
+  align-items: end;
+}
+
+@media (min-width: 720px) {
+  .gearFiltersBar {
+    grid-template-columns: auto auto minmax(180px, 240px);
+  }
+}
+
+.gearCheckPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.03);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+:root[data-theme="light"] .gearCheckPill {
+  background: rgba(12,18,32,0.02);
+}
+
+.gearCheckPill input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--primary);
+}
+
+.gearCheckPill span {
+  line-height: 1;
+}
+
+.gearTypeFilter {
+  display: grid;
+  gap: 6px;
+}
+
+.gearTypeFilter label {
+  margin: 0;
+}
+
+.gearGrid {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  margin-top: 12px;
+}
+
+.gearCard {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+  position: relative;
+}
+
+:root[data-theme="light"] .gearCard {
+  background: linear-gradient(180deg, rgba(12,18,32,0.02), rgba(12,18,32,0.01));
+}
+
+.gearCardInner {
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.gearHead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: start;
+}
+
+.gearHeadSide {
+  display: grid;
+  gap: 10px;
+  justify-items: end;
+  min-width: 110px;
+}
+
+.gearTitleWrap {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.gearTitle {
+  font-size: 17px;
+  font-weight: 900;
+  color: var(--text);
+  line-height: 1.15;
+  word-break: break-word;
+}
+
+.gearModel {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.15;
+  word-break: break-word;
+}
+
+.gearInlineMetaWrap {
+  display: grid;
+  gap: 4px;
+}
+
+.gearInlineMetaStack {
+  justify-items: end;
+  text-align: right;
+}
+
+.gearInlineMeta {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+.gearInlineMeta strong {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.gearInlineMetaMain {
+  color: var(--text);
+}
+
+.gearBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.gearBadgesStack {
+  flex-direction: column;
+  align-items: flex-end;
+  flex-wrap: nowrap;
+}
+
+.badge {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-size: 11px;
+  font-weight: 800;
+  background: rgba(255,255,255,0.03);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.badge.ok {
+  border-color: rgba(74, 222, 128, 0.35);
+  background: var(--ok-2);
+}
+
+.badge.danger {
+  border-color: rgba(255, 107, 107, 0.35);
+  background: var(--danger-2);
+}
+
+.badge.soft {
+  border-color: rgba(138, 180, 255, 0.35);
+  background: var(--primary-2);
+}
+
+.gearImgs {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+}
+
+.gearImgBtn {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  width: 100%;
+}
+
+.gearImgPh {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  background: rgba(0,0,0,0.18);
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+
+:root[data-theme="light"] .gearImgPh {
+  background: rgba(12,18,32,0.04);
+}
+
+.gearImgPh img {
+  width: 54%;
+  height: 54%;
+  object-fit: contain;
+  opacity: 0.9;
+}
+
+.gearImgLabel {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  font-size: 12px;
+  font-weight: 900;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,0.35);
+  color: var(--text);
+  backdrop-filter: blur(10px);
+}
+
+:root[data-theme="light"] .gearImgLabel {
+  background: rgba(255,255,255,0.65);
+  color: var(--text);
+}
+
+.gearCardActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 0;
+}
+
+.gearCardActions button {
+  min-height: 42px;
+  padding: 10px 14px;
+}
+
+.gearCardActions [data-gear-reserve] {
+  min-width: 120px;
+}
+
+.gearMoreBtn {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  min-height: auto;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 800;
+  border-radius: 0;
+}
+
+.gearMoreBtn:hover {
+  transform: none;
+  border-color: transparent;
+  color: var(--text);
+  text-decoration: underline;
+}
+
+.gearMoreBtn:focus-visible {
+  box-shadow: none;
+  outline: none;
+  text-decoration: underline;
+}
+
+.gearDetails {
+  border-top: 1px dashed rgba(230, 232, 238, 0.12);
+  padding-top: 10px;
+}
+
+:root[data-theme="light"] .gearDetails {
+  border-top-color: rgba(12, 18, 32, 0.12);
+}
+
+.gearDetailsSummary {
+  cursor: pointer;
+  font-weight: 900;
+  font-size: 13px;
+  color: var(--text);
+  list-style: none;
+  display: none;
+}
+
+.gearDetailsSummary::-webkit-details-marker { display: none; }
+
+.gearMeta {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  margin-top: 0;
+}
+
+.gearMetaRow {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  justify-content: space-between;
+  border-top: 1px dashed rgba(230, 232, 238, 0.12);
+  padding-top: 8px;
+}
+
+:root[data-theme="light"] .gearMetaRow {
+  border-top-color: rgba(12, 18, 32, 0.12);
+}
+
+.gearMetaKey {
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.gearMetaVal {
+  color: var(--text);
+  font-weight: 850;
+  text-align: right;
+}
+
+/* ✅ Ramka 1px: zielona = sprawny, czerwona = niesprawny */
+.gearCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  pointer-events: none;
+  border: 1px solid rgba(230, 232, 238, 0.20);
+}
+
+.gearOk::before { border-color: rgba(74, 222, 128, 0.75); }
+.gearBad::before { border-color: rgba(255, 107, 107, 0.75); }
+
+/* ================= GEAR MODALS ================= */
+
+.gearModal {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  padding: var(--space-3);
+}
+
+.gearModalBackdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(6px);
+}
+
+.gearModalCard {
+  position: relative;
+  width: min(920px, 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, rgba(16,24,40,0.92), rgba(16,24,40,0.82));
+  box-shadow: var(--shadow-2);
+  overflow: hidden;
+}
+
+:root[data-theme="light"] .gearModalCard {
+  background: rgba(255,255,255,0.92);
+}
+
+.gearModalTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--border);
+}
+
+.gearModalTitle {
+  font-weight: 900;
+}
+
+.gearModalClose {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+}
+
+.gearModalBody {
+  padding: var(--space-3);
+  display: grid;
+  place-items: center;
+}
+
+.gearModalBody img {
+  width: 100%;
+  height: auto;
+  max-height: 70vh;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  object-fit: contain;
+  background: rgba(0,0,0,0.15);
+}
+
+:root[data-theme="light"] .gearModalBody img {
+  background: rgba(12,18,32,0.03);
+}
+
+.gearModalActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+.gearStatusLine {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.gearStatusLine.danger {
+  color: var(--danger);
+}
+
+@media (min-width: 720px) {
+  .gearCardInner {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 420px) {
+  .gearHead {
+    grid-template-columns: 1fr;
+  }
+
+  .gearHeadSide {
+    justify-items: start;
+    min-width: 0;
+  }
+
+  .gearBadgesStack {
+    align-items: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}

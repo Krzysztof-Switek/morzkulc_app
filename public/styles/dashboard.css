@@ -1,0 +1,116 @@
+/* public/styles/dashboard.css */
+/* ================= DASHBOARD ================= */
+
+.dashboardHeader {
+  margin-bottom: var(--space-4);
+}
+
+.dashboardMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dashMetaLine {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.dashMetaLine strong {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.dashboardGrid {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.dashCard {
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-1);
+}
+
+.dashCardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.dashCard.wide {
+  grid-column: span 2;
+}
+
+@media (max-width: 720px) {
+  .dashCard.wide { grid-column: span 1; }
+}
+
+.dashValue {
+  font-size: 22px;
+  font-weight: 900;
+  margin: var(--space-2) 0;
+}
+
+.dashSub {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.dashEmpty {
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 6px 0 0 0;
+}
+
+.eventsList {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-2) 0 0 0;
+  display: grid;
+  gap: 10px;
+}
+
+.eventItem {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(255,255,255,0.03);
+}
+
+:root[data-theme="light"] .eventItem {
+  background: rgba(12,18,32,0.02);
+}
+
+.eventMain {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.eventDate {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.eventTitle {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 800;
+  word-break: break-word;
+}
+
+.eventBtn {
+  border-radius: 999px;
+  padding: 10px 14px;
+  white-space: nowrap;
+}
