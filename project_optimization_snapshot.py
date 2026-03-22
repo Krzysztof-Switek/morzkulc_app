@@ -1,19 +1,18 @@
 """
-PROJECT AI OPTIMIZATION AUDIT — MORZKULC APP
+PROJECT OPTIMIZATION SNAPSHOT TOOL — MORZKULC APP
 
-KOMPLEKSOWY SKRYPT POD AI DEVELOPERA I OPTYMALIZACJĘ
+Cel:
+- przygotować możliwie praktyczny audit dla AI developera
+- wskazać realne miejsca do optymalizacji
+- NIE zmieniać logiki biznesowej
+- NIE mieszać aktywnego runtime z archiwum i narzędziami diagnostycznymi
 
-CEL
-- Ograniczyć halucynacje AI developera.
-- Ograniczyć refaktor na ślepo.
-- Wskazać realne bottlenecks i miejsca do optymalizacji.
-- Nie zmieniać logiki biznesowej ani UX bez potrzeby.
-- Przygotować raport tekstowy + JSON jako wejście dla AI developera.
-
-OUTPUT
-- console
-- ai_audit_report.txt
-- ai_audit_report.json
+Najważniejsze zasady:
+- analizujemy aktywny projekt, nie archiwum
+- functions/src = backend source of truth
+- public/ = frontend runtime source of truth
+- functions/lib = compiled output, nie analizujemy jako source
+- pliki snapshot / audit są raportowane osobno, ale nie mają psuć rankingu runtime
 """
 
 from __future__ import annotations
@@ -25,17 +24,16 @@ import os
 import re
 import subprocess
 from collections import defaultdict
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 
-# =========================================================
-# CONFIG
-# =========================================================
+# =========================
+# ⚙️ KONFIGURACJA
+# =========================
 PROJECT_ROOT = "."
-TEXT_OUTPUT_PATH = "ai_audit_report.txt"
-JSON_OUTPUT_PATH = "ai_audit_report.json"
+OUTPUT_TXT = "ai_audit_report.txt"
+OUTPUT_JSON = "ai_audit_report.json"
 
 INCLUDE_EXTENSIONS = {
     ".py": "Python",
@@ -61,24 +59,18 @@ EXCLUDE_DIRS = {
     "dist",
     "build",
     "coverage",
-    ".aider*",
-    "lib",  # functions/lib = compiled output
+    "lib",          # functions/lib = compiled output
+    "archiwed",     # << WAŻNE: całkowicie wyłączone z analizy
 }
 
 EXCLUDE_EXACT_FILES = {
     "PROJECT_MAP.txt",
 }
 
-ANY_CODE_EXTS = {".py", ".js", ".jsx", ".ts", ".tsx"}
-FRONTEND_CODE_EXTS = {".js", ".jsx", ".ts", ".tsx"}
-
-LONG_FILE_WARN_LINES = 450
-VERY_LONG_FILE_WARN_LINES = 800
-LONG_FUNCTION_WARN_LINES = 80
-VERY_LONG_FUNCTION_WARN_LINES = 140
-
-DUPLICATION_MIN_LINES = 6
-DUPLICATION_WINDOW_MAX = 14
+AUDIT_TOOL_FILES = {
+    "project_snapshot.py",
+    "project_optimization_snapshot.py",
+}
 
 PATTERNS_TO_SEARCH = [
     "requireAllowedHost",
@@ -95,10 +87,6 @@ PATTERNS_TO_SEARCH = [
     "/api/setup",
     "/api/gear/kayaks",
     "/api/gear/items",
-    "/api/gear/my-reservations",
-    "/api/gear/reservations/create",
-    "/api/gear/reservations/update",
-    "/api/gear/reservations/cancel",
     "sprzet-skk-morzkulc.web.app",
     "sprzet-skk-morzkulc.firebaseapp.com",
     "morzkulc-e9df7.web.app",
@@ -110,56 +98,12 @@ PATTERNS_TO_SEARCH = [
     "authDomain:",
     "ALLOWED_HOSTS",
     "ALLOWED_ORIGINS",
-    "invoker",
-    "run.googleapis.com/invoker-iam-disabled",
     "firestore.indexes.json",
     "collectionGroup",
     ".orderBy(",
     ".where(",
-]
-
-FETCH_PATTERNS = [
-    r"\bfetch\(",
-    r"\bapiGetJson\(",
-    r"\bapiPostJson\(",
-]
-
-DOM_QUERY_PATTERNS = [
-    r"\bdocument\.getElementById\(",
-    r"\bdocument\.querySelector\(",
-    r"\bdocument\.querySelectorAll\(",
-    r"\bviewEl\.querySelector\(",
-    r"\bviewEl\.querySelectorAll\(",
-]
-
-LISTENER_PATTERNS = [
-    r"\.addEventListener\(",
-]
-
-HTML_REBUILD_PATTERNS = [
-    r"\.innerHTML\s*=",
-]
-
-ARRAY_OP_PATTERNS = [
-    r"\.map\(",
-    r"\.filter\(",
-    r"\.reduce\(",
-    r"\.sort\(",
-    r"\.find\(",
-    r"\.some\(",
-    r"\.every\(",
-]
-
-TIMER_PATTERNS = [
-    r"\bsetTimeout\(",
-    r"\bsetInterval\(",
-    r"\brequestAnimationFrame\(",
-]
-
-CONSOLE_PATTERNS = [
-    r"\bconsole\.log\(",
-    r"\bconsole\.warn\(",
-    r"\bconsole\.error\(",
+    "invoker",
+    "run.googleapis.com/invoker-iam-disabled",
 ]
 
 ENV_NAME_PATTERN = re.compile(r"\bprocess\.env\.([A-Z0-9_]+)\b")
@@ -183,6 +127,17 @@ ORIGIN_LITERAL_PATTERN = re.compile(
     )["']""",
     re.VERBOSE,
 )
+
+IMPORT_FROM_PATTERN = re.compile(r'import\s+.*\s+from\s+[\'"]([^\'"]+)[\'"]')
+IMPORT_SIDE_PATTERN = re.compile(r'import\s+[\'"]([^\'"]+)[\'"]')
+REQUIRE_PATTERN = re.compile(r'(?:const|let|var)\s+.*=\s*require\([\'"]([^\'"]+)[\'"]\)')
+
+FUNCTION_DEF_JS_PATTERN = re.compile(r"(?:async\s+)?function\s+([A-Za-z0-9_]+)\s*\(")
+FUNCTION_ARROW_PATTERN = re.compile(r"const\s+([A-Za-z0-9_]+)\s*=\s*(?:async\s+)?\([^)]*\)\s*=>")
+FUNCTION_METHOD_PATTERN = re.compile(r"([A-Za-z0-9_]+)\s*:\s*(?:async\s+)?function\s*\(")
+
+TS_INTERFACE_PATTERN = re.compile(r"\binterface\s+([A-Za-z0-9_]+)")
+TS_TYPE_PATTERN = re.compile(r"\btype\s+([A-Za-z0-9_]+)\s*=")
 
 HTTP_ROUTE_PATTERNS = [
     r'\b(source)\s*:\s*["\'](/api/[^"\']+)["\']',
@@ -222,15 +177,27 @@ FIRESTORE_LIMIT_PATTERN = re.compile(r"\.limit\(\s*\d+\s*\)", re.MULTILINE)
 INDEX_RANGE_OPERATORS = {"<", "<=", ">", ">=", "!=", "not-in", "array-contains-any"}
 INDEX_EQUALITY_OPERATORS = {"==", "in", "array-contains"}
 
-FUNCTION_DEF_PATTERNS = [
-    re.compile(r"(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*\("),
-    re.compile(r"(?:export\s+)?const\s+(\w+)\s*=\s*(?:async\s+)?\([^)]*\)\s*=>"),
+SHARED_CONTRACT_PATTERNS = [
+    "modules",
+    "access",
+    "role_key",
+    "status_key",
+    "defaultRoute",
+    "profileComplete",
+    "setupMissing",
+    "createdAt",
+    "memberId",
+    "openingMatch",
+    "kayakIds",
+    "blockStartIso",
+    "blockEndIso",
+    "userUid",
+    "isActive",
+    "images",
+    "gearCategory",
+    "gearCategoryDisplay",
 ]
 
-
-# =========================================================
-# RULES
-# =========================================================
 RULES = """
 === PROJECT AI OPTIMIZATION AUDIT RULES ===
 
@@ -263,74 +230,24 @@ SAFETY
 - Shared contracts must be identified before refactor
 - Browser-facing endpoints require routing/security review
 - Firestore-heavy services require index/query review
+
+IMPORTANT FILTERS
+- Folder 'archiwed/' is excluded from analysis
+- Audit/snapshot tools are excluded from runtime ranking
+- Runtime usage is separated from diagnostic/reference usage
+- Quick wins should focus on active runtime first
 """
 
 
-# =========================================================
-# OUTPUT WRITER
-# =========================================================
-class ReportWriter:
-    def __init__(self):
-        self.lines: List[str] = []
-
-    def add(self, text: str = ""):
-        self.lines.append(text)
-
-    def section(self, title: str):
-        self.add("")
-        self.add(title)
-        self.add("")
-
-    def dump_console(self):
-        print("\n".join(self.lines))
-
-    def write_text(self, path: str):
-        Path(path).write_text("\n".join(self.lines), encoding="utf-8")
+# =========================
+# 🧩 POMOCNICZE
+# =========================
+def normalize_rel(path: Path) -> str:
+    return str(path).replace("\\", "/")
 
 
-# =========================================================
-# HELPERS
-# =========================================================
-def should_include(path: Path) -> bool:
-    if path.name in EXCLUDE_EXACT_FILES:
-        return False
-
-    for part in path.parts:
-        if any(part.startswith(exclude) or part == exclude for exclude in EXCLUDE_DIRS if "*" not in exclude):
-            return False
-        if any(exclude.endswith("*") and part.startswith(exclude[:-1]) for exclude in EXCLUDE_DIRS if "*" in exclude):
-            return False
-
-    if path.suffix.lower() in INCLUDE_EXTENSIONS:
-        return True
-
-    if path.name.startswith(".env") or path.name in [".firebaserc", "firebase.json", "firestore.indexes.json"]:
-        return True
-
-    return False
-
-
-def iter_project_files():
-    for root, dirs, files in os.walk(PROJECT_ROOT):
-        dirs[:] = [
-            d for d in dirs
-            if not any(
-                d.startswith(exclude[:-1]) if "*" in exclude else d == exclude
-                for exclude in EXCLUDE_DIRS
-            )
-        ]
-
-        for file in sorted(files):
-            path = Path(root) / file
-            if should_include(path):
-                yield path
-
-
-def safe_read(path: Path) -> Optional[str]:
-    try:
-        return path.read_text(encoding="utf-8")
-    except Exception:
-        return None
+def is_audit_tool_file(rel_path: str) -> bool:
+    return Path(rel_path).name in AUDIT_TOOL_FILES
 
 
 def classify_file(rel_path: str) -> str:
@@ -341,63 +258,93 @@ def classify_file(rel_path: str) -> str:
         return "COMPILED"
     if rel.startswith("public/"):
         return "FRONTEND"
-    if rel.startswith("archiwed/"):
-        return "ARCHIVED"
     return "PROJECT"
+
+
+def is_runtime_file(rel_path: str) -> bool:
+    scope = classify_file(rel_path)
+    if is_audit_tool_file(rel_path):
+        return False
+    return scope in {"BACKEND_SOURCE", "FRONTEND"}
+
+
+def is_backend_runtime_file(rel_path: str) -> bool:
+    return classify_file(rel_path) == "BACKEND_SOURCE" and not is_audit_tool_file(rel_path)
+
+
+def is_frontend_runtime_file(rel_path: str) -> bool:
+    return classify_file(rel_path) == "FRONTEND" and not is_audit_tool_file(rel_path)
+
+
+def should_include(path: Path) -> bool:
+    if path.name in EXCLUDE_EXACT_FILES:
+        return False
+
+    for part in path.parts:
+        if part in EXCLUDE_DIRS:
+            return False
+
+    if path.suffix.lower() in INCLUDE_EXTENSIONS:
+        return True
+
+    if path.name in [".firebaserc", "firebase.json", "firestore.indexes.json"]:
+        return True
+
+    if path.name.startswith(".env"):
+        return True
+
+    return False
+
+
+def iter_project_files():
+    for root, dirs, files in os.walk(PROJECT_ROOT):
+        dirs[:] = [d for d in dirs if d not in EXCLUDE_DIRS]
+
+        for file in sorted(files):
+            path = Path(root) / file
+            if should_include(path):
+                yield path
+
+
+def safe_read(path: Path) -> Optional[str]:
+    try:
+        return path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        try:
+            return path.read_text(encoding="utf-8", errors="ignore")
+        except Exception:
+            return None
+    except Exception:
+        return None
 
 
 def line_count(content: str) -> int:
     return len(content.splitlines())
 
 
-def short_hash(text: str) -> str:
-    return hashlib.sha1(text.encode("utf-8")).hexdigest()[:12]
-
-
-def count_matches(content: str, patterns: List[str]) -> int:
-    total = 0
-    for pattern in patterns:
-        total += len(re.findall(pattern, content))
-    return total
-
-
-def normalize_index_field_sequence(fields: List[str]) -> Tuple[str, ...]:
-    return tuple(field for field in fields if field)
-
-
-def normalize_dup_line(line: str) -> str:
-    s = line.strip()
-    s = re.sub(r"\s+", " ", s)
-    s = re.sub(r'["\'][^"\']{0,80}["\']', '"STR"', s)
-    s = re.sub(r"\b\d+\b", "NUM", s)
-    return s
-
-
-def run_git(args: List[str]) -> Tuple[bool, str]:
+def file_size(path: Path) -> int:
     try:
-        result = subprocess.run(
-            ["git"] + args,
-            capture_output=True,
-            text=True,
-            cwd=PROJECT_ROOT,
-            shell=False,
-        )
-        if result.returncode == 0:
-            return True, result.stdout.strip()
-        return False, (result.stderr or result.stdout).strip()
-    except Exception as e:
-        return False, str(e)
+        return path.stat().st_size
+    except Exception:
+        return 0
 
 
-# =========================================================
-# PYTHON ANALYZER
-# =========================================================
+def count_occurrences(pattern: str, content: str) -> int:
+    return len(re.findall(pattern, content, flags=re.MULTILINE))
+
+
+def md5_short(text: str) -> str:
+    return hashlib.md5(text.encode("utf-8", errors="ignore")).hexdigest()[:12]
+
+
+# =========================
+# 🧠 ANALIZA PLIKU
+# =========================
 class PythonAnalyzer(ast.NodeVisitor):
     def __init__(self):
         self.imports: List[str] = []
         self.functions: List[Dict[str, Any]] = []
         self.classes: List[Dict[str, Any]] = []
-        self.calls: List[str] = []
 
     def visit_Import(self, node):
         for alias in node.names:
@@ -409,19 +356,25 @@ class PythonAnalyzer(ast.NodeVisitor):
             self.imports.append(f"{module}.{alias.name}")
 
     def visit_FunctionDef(self, node):
-        end_line = getattr(node, "end_lineno", node.lineno)
         self.functions.append({
             "name": node.name,
             "line": node.lineno,
-            "end_line": end_line,
-            "length": max(1, end_line - node.lineno + 1),
+            "end_line": getattr(node, "end_lineno", node.lineno),
+            "length": max(1, getattr(node, "end_lineno", node.lineno) - node.lineno + 1),
         })
-        self.generic_visit(node)
+
+    def visit_AsyncFunctionDef(self, node):
+        self.functions.append({
+            "name": node.name,
+            "line": node.lineno,
+            "end_line": getattr(node, "end_lineno", node.lineno),
+            "length": max(1, getattr(node, "end_lineno", node.lineno) - node.lineno + 1),
+        })
 
     def visit_ClassDef(self, node):
         methods = []
         for item in node.body:
-            if isinstance(item, ast.FunctionDef):
+            if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 methods.append({
                     "name": item.name,
                     "line": item.lineno,
@@ -429,399 +382,443 @@ class PythonAnalyzer(ast.NodeVisitor):
         self.classes.append({
             "name": node.name,
             "line": node.lineno,
-            "methods": methods[:12],
+            "methods": methods[:20],
         })
-        self.generic_visit(node)
 
-    def visit_Call(self, node):
+
+class FileAnalyzer:
+    def __init__(self, path: Path):
+        self.path = path
+        self.rel = normalize_rel(path)
+        self.scope = classify_file(self.rel)
+        self.content = safe_read(path) or ""
+        self.lines = self.content.splitlines()
+        self.extension = path.suffix.lower()
+
+    def analyze(self) -> Dict[str, Any]:
+        result = {
+            "path": self.rel,
+            "scope": self.scope,
+            "type": INCLUDE_EXTENSIONS.get(self.extension, self.extension or "Generic"),
+            "line_count": line_count(self.content),
+            "size_bytes": file_size(self.path),
+            "imports": [],
+            "functions": [],
+            "classes": [],
+            "interfaces": [],
+            "types": [],
+        }
+
+        if self.extension == ".py":
+            return self._analyze_python(result)
+        if self.extension in {".js", ".jsx", ".ts", ".tsx"}:
+            return self._analyze_js_ts(result)
+        if self.extension in {".json", ".html", ".css", ".scss", ".yml", ".yaml"}:
+            return result
+        return result
+
+    def _analyze_python(self, result: Dict[str, Any]) -> Dict[str, Any]:
         try:
-            if isinstance(node.func, ast.Name):
-                self.calls.append(node.func.id)
-            elif isinstance(node.func, ast.Attribute):
-                self.calls.append(node.func.attr)
+            tree = ast.parse(self.content)
+            analyzer = PythonAnalyzer()
+            analyzer.visit(tree)
+            result["imports"] = sorted(set(analyzer.imports))
+            result["functions"] = analyzer.functions
+            result["classes"] = analyzer.classes
+            return result
         except Exception:
-            pass
-        self.generic_visit(node)
+            return result
 
+    def _analyze_js_ts(self, result: Dict[str, Any]) -> Dict[str, Any]:
+        imports = []
+        functions = []
+        interfaces = []
+        types_ = []
 
-# =========================================================
-# JS/TS ANALYZER
-# =========================================================
-def extract_js_ts_imports(content: str) -> List[str]:
-    imports = []
-    lines = content.splitlines()
+        for i, line in enumerate(self.lines, 1):
+            for patt in [IMPORT_FROM_PATTERN, IMPORT_SIDE_PATTERN, REQUIRE_PATTERN]:
+                m = patt.search(line)
+                if m:
+                    imports.append(m.group(1))
 
-    for line in lines:
-        if match := re.search(r'import\s+.*\s+from\s+[\'"]([^\'"]+)[\'"]', line):
-            imports.append(match.group(1))
-        elif match := re.search(r'import\s+[\'"]([^\'"]+)[\'"]', line):
-            imports.append(match.group(1))
-        elif match := re.search(r'(?:const|let|var)\s+.*\s*=\s*require\([\'"]([^\'"]+)[\'"]\)', line):
-            imports.append(match.group(1))
-
-    return list(dict.fromkeys(imports))
-
-
-def extract_js_ts_functions(content: str) -> List[Dict[str, Any]]:
-    lines = content.splitlines()
-    out: List[Dict[str, Any]] = []
-
-    i = 0
-    while i < len(lines):
-        line = lines[i]
-
-        matched_name = None
-        for pattern in FUNCTION_DEF_PATTERNS:
-            m = pattern.search(line)
+            m = FUNCTION_DEF_JS_PATTERN.search(line)
             if m:
-                matched_name = m.group(1)
-                break
+                functions.append({
+                    "name": m.group(1),
+                    "line": i,
+                    "end_line": i,
+                    "length": None,
+                })
 
-        if matched_name:
-            start = i + 1
-            brace_balance = line.count("{") - line.count("}")
-            j = i
+            m = FUNCTION_ARROW_PATTERN.search(line)
+            if m:
+                functions.append({
+                    "name": m.group(1),
+                    "line": i,
+                    "end_line": i,
+                    "length": None,
+                })
 
-            while j + 1 < len(lines):
-                if brace_balance <= 0 and "{" not in line:
-                    break
-                j += 1
-                brace_balance += lines[j].count("{") - lines[j].count("}")
-                if brace_balance <= 0:
-                    break
+            m = FUNCTION_METHOD_PATTERN.search(line)
+            if m:
+                functions.append({
+                    "name": m.group(1),
+                    "line": i,
+                    "end_line": i,
+                    "length": None,
+                })
 
-            end = max(start, j + 1)
+            if self.extension in {".ts", ".tsx"}:
+                m = TS_INTERFACE_PATTERN.search(line)
+                if m:
+                    interfaces.append({"name": m.group(1), "line": i})
+                m = TS_TYPE_PATTERN.search(line)
+                if m:
+                    types_.append({"name": m.group(1), "line": i})
 
-            out.append({
-                "name": matched_name,
-                "line": start,
-                "end_line": end,
-                "length": max(1, end - start + 1),
-            })
+        result["imports"] = sorted(set(imports))
+        result["functions"] = self._estimate_js_function_lengths(functions)
+        result["interfaces"] = interfaces
+        result["types"] = types_
+        return result
 
-            i = j + 1
-            continue
+    def _estimate_js_function_lengths(self, funcs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        if not funcs:
+            return funcs
 
-        i += 1
+        funcs = sorted(funcs, key=lambda x: x["line"])
+        total = len(self.lines)
 
+        for idx, fn in enumerate(funcs):
+            start = fn["line"]
+            next_start = funcs[idx + 1]["line"] if idx + 1 < len(funcs) else total + 1
+            end = max(start, next_start - 1)
+            fn["end_line"] = end
+            fn["length"] = max(1, end - start + 1)
+
+        return funcs
+
+
+# =========================
+# 🧪 GIT
+# =========================
+def run_git(args: List[str]) -> Tuple[bool, str]:
+    try:
+        result = subprocess.run(
+            ["git"] + args,
+            capture_output=True,
+            text=True,
+            cwd=PROJECT_ROOT,
+            shell=False,
+            encoding="utf-8",
+            errors="replace",
+        )
+        if result.returncode == 0:
+            return True, result.stdout.strip()
+        return False, (result.stderr or result.stdout).strip()
+    except Exception as e:
+        return False, str(e)
+
+
+def get_git_summary() -> Dict[str, Any]:
+    ok_branch, branch = run_git(["branch", "--show-current"])
+    ok_status, status = run_git(["status", "--short"])
+    ok_head, head = run_git(["rev-parse", "--short", "HEAD"])
+    ok_log, last_commit = run_git(["log", "-1", "--oneline"])
+
+    lines = []
+    if ok_status and status:
+        lines = status.splitlines()
+
+    return {
+        "current_branch": branch if ok_branch else "(unavailable)",
+        "head_short_hash": head if ok_head else "(unavailable)",
+        "last_commit": last_commit if ok_log else "(unavailable)",
+        "status_lines": lines,
+    }
+
+
+# =========================
+# 📦 ZEBRANIE DANYCH O PLIKACH
+# =========================
+def collect_file_data() -> List[Dict[str, Any]]:
+    out = []
+    for path in iter_project_files():
+        rel = normalize_rel(path)
+        analyzer = FileAnalyzer(path)
+        out.append(analyzer.analyze())
     return out
 
 
-def extract_functions(path: Path, content: str) -> List[Dict[str, Any]]:
-    ext = path.suffix.lower()
-
-    if ext == ".py":
-        try:
-            tree = ast.parse(content)
-            analyzer = PythonAnalyzer()
-            analyzer.visit(tree)
-            return analyzer.functions
-        except Exception:
-            return []
-
-    if ext in {".js", ".jsx", ".ts", ".tsx"}:
-        return extract_js_ts_functions(content)
-
-    return []
-
-
-# =========================================================
-# RISK / CRITICALITY
-# =========================================================
-def is_runtime_critical(rel: str) -> bool:
-    rel = rel.replace("\\", "/")
-
-    critical_exact = {
-        "firebase.json",
-        ".firebaserc",
-        "firestore.indexes.json",
-        "functions/src/index.ts",
-        "public/core/firebase_client.js",
-        "public/core/app_shell.js",
-        "public/core/render_shell.js",
-    }
-
-    if rel in critical_exact:
-        return True
-
-    if rel.startswith("functions/src/api/"):
-        return True
-
-    if rel.startswith("functions/src/modules/equipment/"):
-        return True
-
-    return False
-
-
-def infer_critical_tags(rel: str, content: str) -> List[str]:
-    tags = []
-    rel_norm = rel.replace("\\", "/")
-
-    if rel_norm == "firebase.json":
-        tags.extend(["routing_critical", "hosting_critical"])
-
-    if rel_norm == ".firebaserc":
-        tags.append("environment_critical")
-
-    if rel_norm == "firestore.indexes.json":
-        tags.append("firestore_index_critical")
-
-    if rel_norm.startswith("functions/src/"):
-        tags.append("backend_runtime")
-
-    if rel_norm.startswith("public/"):
-        tags.append("frontend_runtime")
-
-    if rel_norm.startswith("functions/src/api/"):
-        tags.append("endpoint_critical")
-
-    if "requireAllowedHost" in content or "ALLOWED_HOSTS" in content or "ALLOWED_ORIGINS" in content:
-        tags.append("security_critical")
-
-    if "/api/" in content or "onRequest(" in content:
-        tags.append("browser_route_related")
-
-    if ".collection(" in content or "collection(" in content:
-        tags.append("firestore_related")
-
-    if "initializeApp(" in content or "projectId:" in content or "authDomain:" in content:
-        tags.append("env_auth_critical")
-
-    if "invoker" in content:
-        tags.append("invoker_related")
-
-    return sorted(set(tags))
-
-
-def compute_refactor_risk(rel: str, content: str, functions: List[Dict[str, Any]], imports_count: int) -> Tuple[str, int]:
-    score = 0
-    lc = line_count(content)
-
-    if lc >= VERY_LONG_FILE_WARN_LINES:
-        score += 5
-    elif lc >= LONG_FILE_WARN_LINES:
-        score += 3
-
-    score += sum(1 for f in functions if f["length"] >= LONG_FUNCTION_WARN_LINES)
-
-    if imports_count >= 12:
-        score += 3
-    elif imports_count >= 6:
-        score += 2
-
-    if is_runtime_critical(rel):
-        score += 4
-
-    rel_norm = rel.replace("\\", "/")
-
-    if rel_norm.startswith("functions/src/api/"):
-        score += 3
-
-    if rel_norm.startswith("public/core/"):
-        score += 2
-
-    if rel_norm.startswith("functions/src/modules/equipment/"):
-        score += 3
-
-    if score >= 10:
-        return "HIGH", score
-    if score >= 5:
-        return "MEDIUM", score
-    return "LOW", score
-
-
-# =========================================================
-# COLLECTORS
-# =========================================================
-def collect_file_analysis() -> List[Dict[str, Any]]:
-    rows = []
-
-    for path in iter_project_files():
-        rel = str(path).replace("\\", "/")
-        content = safe_read(path)
-        if not content:
-            continue
-
-        ext = path.suffix.lower()
-        functions = extract_functions(path, content)
-
-        imports_count = 0
-        if ext == ".py":
-            try:
-                tree = ast.parse(content)
-                analyzer = PythonAnalyzer()
-                analyzer.visit(tree)
-                imports_count = len(set(analyzer.imports))
-            except Exception:
-                imports_count = 0
-        elif ext in {".js", ".jsx", ".ts", ".tsx"}:
-            imports_count = len(extract_js_ts_imports(content))
-
-        risk_level, risk_score = compute_refactor_risk(rel, content, functions, imports_count)
-
-        row = {
-            "file": rel,
-            "scope": classify_file(rel),
-            "lines": line_count(content),
-            "imports_count": imports_count,
-            "functions": functions,
-            "functions_count": len(functions),
-            "long_functions_count": sum(1 for f in functions if f["length"] >= LONG_FUNCTION_WARN_LINES),
-            "critical_tags": infer_critical_tags(rel, content),
-            "risk_level": risk_level,
-            "risk_score": risk_score,
-            "fetch_calls": count_matches(content, FETCH_PATTERNS),
-            "dom_queries": count_matches(content, DOM_QUERY_PATTERNS),
-            "listeners": count_matches(content, LISTENER_PATTERNS),
-            "html_rebuilds": count_matches(content, HTML_REBUILD_PATTERNS),
-            "array_ops": count_matches(content, ARRAY_OP_PATTERNS),
-            "timers": count_matches(content, TIMER_PATTERNS),
-            "console_logs": count_matches(content, CONSOLE_PATTERNS),
-            "firestore_ops": count_matches(content, [
-                r"\.collection\(",
-                r"\.where\(",
-                r"\.orderBy\(",
-                r"\.limit\(",
-                r"\.get\(",
-                r"\.doc\(",
-            ]),
-        }
-
-        rows.append(row)
-
-    return rows
-
-
-def build_dependency_maps() -> Dict[str, Any]:
-    imports_by_file: Dict[str, List[str]] = {}
-    imported_by: Dict[str, Set[str]] = defaultdict(set)
-
-    for path in iter_project_files():
-        rel = str(path).replace("\\", "/")
-        content = safe_read(path)
-        if not content:
-            continue
-
-        ext = path.suffix.lower()
-        imports = []
-
-        if ext == ".py":
-            try:
-                tree = ast.parse(content)
-                analyzer = PythonAnalyzer()
-                analyzer.visit(tree)
-                imports = analyzer.imports
-            except Exception:
-                imports = []
-        elif ext in {".js", ".jsx", ".ts", ".tsx"}:
-            imports = extract_js_ts_imports(content)
-
-        imports_by_file[rel] = imports
-
-    for rel, imports in imports_by_file.items():
-        for imp in imports:
-            imported_by[imp].add(rel)
+# =========================
+# 📏 METRYKI PLIKÓW
+# =========================
+def build_project_summary(files_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+    counts = defaultdict(int)
+    for f in files_data:
+        counts[f["scope"]] += 1
 
     return {
-        "imports_by_file": imports_by_file,
-        "imported_by": {k: sorted(v) for k, v in imported_by.items()},
+        "counts_by_scope": dict(counts),
+        "total_files": len(files_data),
     }
 
 
-def detect_shared_contract_fields() -> Dict[str, List[str]]:
-    interesting_fields = {
-        "role_key",
-        "status_key",
-        "profileComplete",
-        "setupMissing",
-        "openingMatch",
-        "kayakIds",
-        "blockStartIso",
-        "blockEndIso",
-        "userUid",
-        "createdAt",
-        "isActive",
-        "gearCategory",
-        "gearCategoryDisplay",
-        "images",
-        "modules",
-        "defaultRoute",
-        "access",
-        "memberId",
-    }
-
-    usage: Dict[str, Set[str]] = defaultdict(set)
-
-    for path in iter_project_files():
-        rel = str(path).replace("\\", "/")
-        content = safe_read(path)
-        if not content:
-            continue
-
-        for field in interesting_fields:
-            if field in content:
-                usage[field].add(rel)
-
-    return {k: sorted(v) for k, v in usage.items()}
+def top_files_by_lines(files_data: List[Dict[str, Any]], limit: int = 40) -> List[Dict[str, Any]]:
+    return sorted(
+        files_data,
+        key=lambda x: x.get("line_count", 0),
+        reverse=True
+    )[:limit]
 
 
-def collect_duplication_blocks() -> List[Dict[str, Any]]:
-    blocks: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+def complexity_bucket(lines: int) -> Optional[str]:
+    if lines >= 1000:
+        return "HIGH"
+    if lines >= 500:
+        return "WARN"
+    return None
 
-    for path in iter_project_files():
-        if path.suffix.lower() not in ANY_CODE_EXTS:
-            continue
 
-        rel = str(path).replace("\\", "/")
-        content = safe_read(path)
-        if not content:
-            continue
+def file_size_complexity_summary(files_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    out = []
+    for f in files_data:
+        level = complexity_bucket(f.get("line_count", 0))
+        if level:
+            out.append({
+                "level": level,
+                "path": f["path"],
+                "line_count": f["line_count"],
+                "scope": f["scope"],
+            })
+    return sorted(out, key=lambda x: x["line_count"], reverse=True)
 
-        lines = content.splitlines()
 
-        for window in range(DUPLICATION_MIN_LINES, DUPLICATION_WINDOW_MAX + 1):
-            for i in range(0, max(0, len(lines) - window + 1)):
-                chunk = lines[i:i + window]
-                normalized = [normalize_dup_line(x) for x in chunk]
-
-                if all(not x or x in {"{", "}", ");", ")", "];"} for x in normalized):
-                    continue
-
-                joined = "\n".join(normalized).strip()
-                if len(joined) < 80:
-                    continue
-
-                key = short_hash(joined)
-                blocks[key].append({
-                    "file": rel,
-                    "line_start": i + 1,
-                    "line_end": i + window,
-                    "window": window,
-                    "preview": "\n".join(chunk[:3]).strip(),
+def large_functions_summary(files_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    out = []
+    for f in files_data:
+        for fn in f.get("functions", []):
+            length = fn.get("length") or 0
+            if length >= 80:
+                level = "HIGH" if length >= 180 else "WARN"
+                out.append({
+                    "level": level,
+                    "path": f["path"],
+                    "function": fn["name"],
+                    "start_line": fn.get("line"),
+                    "end_line": fn.get("end_line"),
+                    "length": length,
+                    "scope": f["scope"],
                 })
+    return sorted(out, key=lambda x: x["length"], reverse=True)
 
-    repeated = []
-    seen_sets = set()
 
-    for hits in blocks.values():
-        unique_places = {(h["file"], h["line_start"], h["line_end"]) for h in hits}
-        if len(unique_places) < 2:
+# =========================
+# 🔥 HOTSPOTY FRONTEND/BACKEND
+# =========================
+def analyze_frontend_hotspots(path: str, content: str) -> Optional[Dict[str, Any]]:
+    if not is_frontend_runtime_file(path):
+        return None
+
+    fetch_calls = count_occurrences(r"\bfetch\(", content)
+    api_calls = count_occurrences(r"\bapiGetJson\(", content) + count_occurrences(r"\bapiPostJson\(", content)
+    dom_queries = count_occurrences(r"\.querySelector\(", content) + count_occurrences(r"\.querySelectorAll\(", content) + count_occurrences(r"document\.getElementById\(", content)
+    listeners = count_occurrences(r"\.addEventListener\(", content)
+    inner_html = count_occurrences(r"\.innerHTML\s*=", content)
+    array_ops = sum(
+        count_occurrences(p, content) for p in [
+            r"\.map\(",
+            r"\.filter\(",
+            r"\.reduce\(",
+            r"\.find\(",
+            r"\.some\(",
+            r"\.every\(",
+            r"\.sort\(",
+            r"\.forEach\(",
+        ]
+    )
+    timers = count_occurrences(r"\bsetTimeout\(", content) + count_occurrences(r"\bsetInterval\(", content)
+
+    score = (
+        (fetch_calls + api_calls) * 10
+        + dom_queries * 2
+        + listeners * 3
+        + inner_html * 6
+        + array_ops * 2
+        + timers * 3
+    )
+
+    return {
+        "path": path,
+        "score": score,
+        "fetch_api_calls": fetch_calls + api_calls,
+        "dom_queries": dom_queries,
+        "listeners": listeners,
+        "innerHTML": inner_html,
+        "array_ops": array_ops,
+        "timers": timers,
+    }
+
+
+def analyze_backend_hotspots(path: str, content: str) -> Optional[Dict[str, Any]]:
+    if not is_backend_runtime_file(path):
+        return None
+
+    firestore_ops = (
+        count_occurrences(r"\.collection\(", content)
+        + count_occurrences(r"\.doc\(", content)
+        + count_occurrences(r"\.where\(", content)
+        + count_occurrences(r"\.orderBy\(", content)
+        + count_occurrences(r"\.limit\(", content)
+        + count_occurrences(r"\.get\(", content)
+        + count_occurrences(r"\.set\(", content)
+        + count_occurrences(r"\.update\(", content)
+        + count_occurrences(r"\.add\(", content)
+        + count_occurrences(r"\.runTransaction\(", content)
+    )
+    array_ops = sum(
+        count_occurrences(p, content) for p in [
+            r"\.map\(",
+            r"\.filter\(",
+            r"\.reduce\(",
+            r"\.find\(",
+            r"\.sort\(",
+            r"\.forEach\(",
+        ]
+    )
+    console_logs = count_occurrences(r"\bconsole\.", content)
+
+    score = firestore_ops * 4 + array_ops * 2 + console_logs * 1
+
+    return {
+        "path": path,
+        "score": score,
+        "firestore_ops": firestore_ops,
+        "array_ops": array_ops,
+        "console_logs": console_logs,
+    }
+
+
+def collect_frontend_hotspots(files_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    out = []
+    for f in files_data:
+        if not is_frontend_runtime_file(f["path"]):
+            continue
+        content = safe_read(Path(PROJECT_ROOT) / f["path"]) or ""
+        item = analyze_frontend_hotspots(f["path"], content)
+        if item:
+            out.append(item)
+    return sorted(out, key=lambda x: x["score"], reverse=True)
+
+
+def collect_backend_hotspots(files_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    out = []
+    for f in files_data:
+        if not is_backend_runtime_file(f["path"]):
+            continue
+        content = safe_read(Path(PROJECT_ROOT) / f["path"]) or ""
+        item = analyze_backend_hotspots(f["path"], content)
+        if item:
+            out.append(item)
+    return sorted(out, key=lambda x: x["score"], reverse=True)
+
+
+# =========================
+# 🌐 ROUTY / API
+# =========================
+def collect_http_routes() -> Dict[str, Set[str]]:
+    routes: Dict[str, Set[str]] = defaultdict(set)
+
+    for path in iter_project_files():
+        rel = normalize_rel(path)
+        content = safe_read(path)
+        if not content:
             continue
 
-        normalized_places = tuple(sorted(unique_places))
-        if normalized_places in seen_sets:
+        for pattern in HTTP_ROUTE_PATTERNS:
+            for match in re.finditer(pattern, content):
+                route = match.group(match.lastindex)
+                routes[route].add(rel)
+
+    return routes
+
+
+def split_route_usage(routes: Dict[str, Set[str]]) -> Dict[str, Any]:
+    runtime_usage = {}
+    diagnostic_usage = {}
+
+    for route, files in routes.items():
+        runtime_files = sorted([f for f in files if is_runtime_file(f)])
+        diagnostic_files = sorted([f for f in files if not is_runtime_file(f)])
+
+        runtime_usage[route] = runtime_files
+        if diagnostic_files:
+            diagnostic_usage[route] = diagnostic_files
+
+    return {
+        "runtime_usage": runtime_usage,
+        "diagnostic_usage": diagnostic_usage,
+    }
+
+
+# =========================
+# 🔒 SECURITY / HOST / ROUTING
+# =========================
+def print_host_security_data() -> Dict[str, Any]:
+    hosts_found: Dict[str, Set[str]] = defaultdict(set)
+    origins_found: Dict[str, Set[str]] = defaultdict(set)
+    api_refs: Set[str] = set()
+    security_hits: Set[str] = set()
+
+    for path in iter_project_files():
+        rel = normalize_rel(path)
+        content = safe_read(path)
+        if not content:
             continue
-        seen_sets.add(normalized_places)
 
-        repeated.append({
-            "occurrences": len(hits),
-            "window": hits[0]["window"],
-            "hits": sorted(hits, key=lambda x: (x["file"], x["line_start"]))[:10],
-            "preview": hits[0]["preview"][:220],
-        })
+        for match in HOST_LITERAL_PATTERN.finditer(content):
+            hosts_found[match.group(1)].add(rel)
 
-    repeated.sort(key=lambda x: (-x["occurrences"], -x["window"]))
-    return repeated[:30]
+        for match in ORIGIN_LITERAL_PATTERN.finditer(content):
+            origins_found[match.group(1)].add(rel)
+
+        for pattern in [
+            "requireAllowedHost",
+            "isAllowedHost",
+            "/api/register",
+            "/api/setup",
+            "/api/gear/kayaks",
+            "/api/gear/items",
+        ]:
+            if pattern in content:
+                api_refs.add(f"{rel} :: {pattern}")
+
+        for pattern in [
+            "req.headers.host",
+            "req.headers.origin",
+            "req.headers.referer",
+            "Access-Control-Allow-Origin",
+            "ALLOWED_HOSTS",
+            "ALLOWED_ORIGINS",
+            "invoker",
+            "run.googleapis.com/invoker-iam-disabled",
+        ]:
+            if pattern in content:
+                security_hits.add(f"{rel} :: {pattern}")
+
+    return {
+        "hosts_found": {k: sorted(v) for k, v in sorted(hosts_found.items())},
+        "origins_found": {k: sorted(v) for k, v in sorted(origins_found.items())},
+        "api_refs": sorted(api_refs),
+        "security_hits": sorted(security_hits),
+    }
+
+
+# =========================
+# 🔥 FIRESTORE
+# =========================
+def normalize_index_field_sequence(fields: List[str]) -> Tuple[str, ...]:
+    return tuple(field for field in fields if field)
 
 
 def extract_firestore_query_candidates(content: str) -> List[Dict[str, Any]]:
@@ -873,7 +870,6 @@ def extract_firestore_query_candidates(content: str) -> List[Dict[str, Any]]:
 
         fields_for_index: List[str] = []
         seen: Set[str] = set()
-
         for field in where_fields + order_fields:
             if field not in seen:
                 fields_for_index.append(field)
@@ -959,8 +955,8 @@ def collect_firestore_query_index_requirements() -> Dict[str, Any]:
     detected_queries: List[Dict[str, Any]] = []
 
     for path in iter_project_files():
-        rel = str(path).replace("\\", "/")
-        if not rel.endswith((".ts", ".js", ".tsx", ".jsx")):
+        rel = normalize_rel(path)
+        if not is_backend_runtime_file(rel):
             continue
 
         content = safe_read(path)
@@ -1001,164 +997,12 @@ def collect_firestore_query_index_requirements() -> Dict[str, Any]:
     }
 
 
-# =========================================================
-# SUMMARIES
-# =========================================================
-def build_project_summary(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
-    by_scope = defaultdict(int)
-    for row in rows:
-        by_scope[row["scope"]] += 1
-
-    return {
-        "by_scope": dict(sorted(by_scope.items())),
-        "total_files": len(rows),
-    }
-
-
-def build_top_files(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    ordered = sorted(rows, key=lambda x: -x["lines"])[:40]
-    return [
-        {"file": r["file"], "lines": r["lines"], "scope": r["scope"]}
-        for r in ordered
-    ]
-
-
-def build_large_files(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    out = []
-    for row in rows:
-        if row["lines"] >= LONG_FILE_WARN_LINES:
-            level = "WARN"
-            if row["lines"] >= VERY_LONG_FILE_WARN_LINES:
-                level = "HIGH"
-            out.append({
-                "level": level,
-                "file": row["file"],
-                "lines": row["lines"],
-                "scope": row["scope"],
-            })
-    out.sort(key=lambda x: (-x["lines"], x["file"]))
-    return out
-
-
-def build_large_functions(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    out = []
-    for row in rows:
-        for fn in row["functions"]:
-            if fn["length"] >= LONG_FUNCTION_WARN_LINES:
-                level = "WARN"
-                if fn["length"] >= VERY_LONG_FUNCTION_WARN_LINES:
-                    level = "HIGH"
-                out.append({
-                    "level": level,
-                    "file": row["file"],
-                    "function": fn["name"],
-                    "line_start": fn["line"],
-                    "line_end": fn["end_line"],
-                    "length": fn["length"],
-                })
-
-    out.sort(key=lambda x: (-x["length"], x["file"], x["function"]))
-    return out[:80]
-
-
-def build_frontend_hotspots(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    out = []
-
-    for row in rows:
-        if row["scope"] != "FRONTEND":
-            continue
-
-        # nie analizujemy css jak JS
-        if not row["file"].endswith((".js", ".jsx", ".ts", ".tsx")):
-            continue
-
-        score = (
-            row["fetch_calls"] * 5
-            + row["dom_queries"] * 2
-            + row["listeners"] * 2
-            + row["html_rebuilds"] * 4
-            + row["array_ops"] * 1
-            + row["timers"] * 2
-        )
-
-        out.append({
-            "file": row["file"],
-            "score": score,
-            "fetch_calls": row["fetch_calls"],
-            "dom_queries": row["dom_queries"],
-            "listeners": row["listeners"],
-            "html_rebuilds": row["html_rebuilds"],
-            "array_ops": row["array_ops"],
-            "timers": row["timers"],
-        })
-
-    out.sort(key=lambda x: (-x["score"], x["file"]))
-    return [x for x in out if x["score"] > 0][:40]
-
-
-def build_backend_hotspots(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    out = []
-
-    for row in rows:
-        if row["scope"] != "BACKEND_SOURCE":
-            continue
-
-        score = row["firestore_ops"] * 4 + row["array_ops"] + row["console_logs"]
-
-        out.append({
-            "file": row["file"],
-            "score": score,
-            "firestore_ops": row["firestore_ops"],
-            "array_ops": row["array_ops"],
-            "console_logs": row["console_logs"],
-        })
-
-    out.sort(key=lambda x: (-x["score"], x["file"]))
-    return [x for x in out if x["score"] > 0][:40]
-
-
-def build_repeated_api_usage() -> Dict[str, List[str]]:
-    route_usage: Dict[str, Set[str]] = defaultdict(set)
-    route_regex = re.compile(r'["\'](/api/[^"\']+)["\']')
-
-    for path in iter_project_files():
-        rel = str(path).replace("\\", "/")
-        content = safe_read(path)
-        if not content:
-            continue
-
-        for match in route_regex.finditer(content):
-            route_usage[match.group(1)].add(rel)
-
-    return {k: sorted(v) for k, v in sorted(route_usage.items(), key=lambda x: (-len(x[1]), x[0]))}
-
-
-def build_render_risks(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    out = []
-    for row in rows:
-        if row["scope"] != "FRONTEND":
-            continue
-        if not row["file"].endswith((".js", ".jsx", ".ts", ".tsx")):
-            continue
-
-        if row["html_rebuilds"] >= 3 or row["dom_queries"] >= 12 or row["listeners"] >= 8:
-            out.append({
-                "file": row["file"],
-                "innerHTML_assignments": row["html_rebuilds"],
-                "dom_queries": row["dom_queries"],
-                "listeners": row["listeners"],
-            })
-
-    out.sort(key=lambda x: (-x["innerHTML_assignments"], -x["dom_queries"], x["file"]))
-    return out
-
-
-def build_firestore_summary() -> Dict[str, Any]:
+def collect_firestore_summary() -> Dict[str, Any]:
     collections: Dict[str, Set[str]] = defaultdict(set)
     docs: Dict[str, Set[str]] = defaultdict(set)
 
     for path in iter_project_files():
-        rel = str(path).replace("\\", "/")
+        rel = normalize_rel(path)
         content = safe_read(path)
         if not content:
             continue
@@ -1177,16 +1021,412 @@ def build_firestore_summary() -> Dict[str, Any]:
 
     return {
         "collections": {k: sorted(v) for k, v in sorted(collections.items())},
-        "documents": {k: sorted(v) for k, v in sorted(docs.items())},
+        "docs": {k: sorted(v) for k, v in sorted(docs.items())},
     }
 
 
-def build_env_summary() -> Dict[str, Any]:
-    env_files: Dict[str, List[str]] = {}
+# =========================
+# 🔗 SHARED CONTRACTS / DEPENDENCIES
+# =========================
+def collect_dependency_summary(files_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+    files_with_many_imports = []
+    imported_by: Dict[str, Set[str]] = defaultdict(set)
+
+    for f in files_data:
+        imports = f.get("imports", [])
+        if len(imports) >= 2:
+            files_with_many_imports.append({
+                "path": f["path"],
+                "imports_count": len(imports),
+            })
+
+        for imp in imports:
+            imported_by[imp].add(f["path"])
+
+    shared_imports = []
+    for imp, used_by in imported_by.items():
+        if len(used_by) >= 2:
+            shared_imports.append({
+                "module": imp,
+                "used_by_count": len(used_by),
+                "used_by": sorted(used_by),
+            })
+
+    files_with_many_imports.sort(key=lambda x: x["imports_count"], reverse=True)
+    shared_imports.sort(key=lambda x: x["used_by_count"], reverse=True)
+
+    return {
+        "files_with_many_imports": files_with_many_imports[:50],
+        "shared_imports": shared_imports[:50],
+    }
+
+
+def collect_shared_contracts() -> Dict[str, List[str]]:
+    out: Dict[str, List[str]] = {}
+
+    for token in SHARED_CONTRACT_PATTERNS:
+        hits = []
+        for path in iter_project_files():
+            rel = normalize_rel(path)
+            content = safe_read(path)
+            if content and token in content:
+                hits.append(rel)
+        if hits:
+            out[token] = sorted(hits)
+
+    return out
+
+
+# =========================
+# 🧱 DUPLIKACJA
+# =========================
+def iter_blocks(lines: List[str], min_len: int = 6, max_len: int = 14):
+    for block_len in range(min_len, max_len + 1):
+        for i in range(0, len(lines) - block_len + 1):
+            block = "\n".join(lines[i:i + block_len]).strip()
+            if not block:
+                continue
+            yield block_len, i + 1, i + block_len, block
+
+
+def looks_meaningful_duplicate(block: str) -> bool:
+    s = block.strip()
+    if len(s) < 80:
+        return False
+    if s.count("\n") < 2:
+        return False
+    if s.startswith('"') or s.startswith("'"):
+        return False
+    return True
+
+
+def collect_duplication_summary(limit: int = 30) -> List[Dict[str, Any]]:
+    blocks_index: Dict[str, Dict[str, Any]] = {}
+
+    for path in iter_project_files():
+        rel = normalize_rel(path)
+        if is_audit_tool_file(rel):
+            continue
+
+        content = safe_read(path)
+        if not content:
+            continue
+
+        lines = content.splitlines()
+        for block_len, start, end, block in iter_blocks(lines):
+            if not looks_meaningful_duplicate(block):
+                continue
+
+            digest = md5_short(block)
+            key = f"{block_len}:{digest}"
+
+            item = blocks_index.setdefault(key, {
+                "block_len": block_len,
+                "block": block,
+                "occurrences": [],
+            })
+            item["occurrences"].append({
+                "path": rel,
+                "start_line": start,
+                "end_line": end,
+            })
+
+    out = []
+    for item in blocks_index.values():
+        unique_files = {o["path"] for o in item["occurrences"]}
+        if len(item["occurrences"]) >= 3 and len(unique_files) >= 2:
+            out.append({
+                "occurrences": len(item["occurrences"]),
+                "block_len": item["block_len"],
+                "preview": "\n".join(item["block"].splitlines()[:3]),
+                "occurrence_samples": item["occurrences"][:6],
+            })
+
+    out.sort(key=lambda x: (x["occurrences"], x["block_len"]), reverse=True)
+    return out[:limit]
+
+
+# =========================
+# 🔁 LOOP + AWAIT RISK
+# =========================
+def collect_loop_await_risk(limit: int = 30) -> List[Dict[str, Any]]:
+    out = []
+
+    loop_pattern = re.compile(r"\bfor\s*\(")
+    await_pattern = re.compile(r"\bawait\b")
+
+    for path in iter_project_files():
+        rel = normalize_rel(path)
+        if not is_runtime_file(rel):
+            continue
+
+        content = safe_read(path)
+        if not content:
+            continue
+
+        lines = content.splitlines()
+        for idx, line in enumerate(lines, 1):
+            if loop_pattern.search(line) or await_pattern.search(line):
+                stripped = line.strip()
+                if "for (" in stripped or "await " in stripped:
+                    out.append({
+                        "path": rel,
+                        "line": idx,
+                        "snippet": stripped[:220],
+                    })
+
+    return out[:limit]
+
+
+# =========================
+# ⚠️ RYZYKO REFAKTORU
+# =========================
+def build_critical_files(files_data: List[Dict[str, Any]],
+                         frontend_hotspots: List[Dict[str, Any]],
+                         backend_hotspots: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    fh_map = {x["path"]: x for x in frontend_hotspots}
+    bh_map = {x["path"]: x for x in backend_hotspots}
+
+    critical = []
+
+    for f in files_data:
+        path = f["path"]
+        tags = []
+        risk = 0
+
+        if path == "functions/src/index.ts":
+            tags += ["backend_runtime", "browser_route_related", "env_auth_critical", "firestore_related", "invoker_related", "security_critical"]
+            risk += 10
+
+        if path == "public/core/render_shell.js":
+            tags += ["frontend_runtime", "browser_route_related"]
+            risk += 11
+
+        if path == "public/modules/gear_module.js":
+            tags += ["frontend_runtime", "browser_route_related"]
+            risk += 8
+
+        if path == "functions/src/api/registerUserHandler.ts":
+            tags += ["backend_runtime", "endpoint_critical", "firestore_related", "security_critical"]
+            risk += 8
+
+        if path == "firebase.json":
+            tags += ["hosting_critical", "browser_route_related", "routing_critical", "invoker_related"]
+            risk += 4
+
+        if path == "firestore.indexes.json":
+            tags += ["firestore_index_critical"]
+            risk += 4
+
+        if path == "public/core/firebase_client.js":
+            tags += ["frontend_runtime", "env_auth_critical"]
+            risk += 6
+
+        if path.startswith("functions/src/api/") and path.endswith(".ts"):
+            tags += ["backend_runtime", "endpoint_critical", "security_critical"]
+            risk += 7
+
+        if path.startswith("functions/src/modules/equipment/"):
+            tags += ["backend_runtime", "firestore_related"]
+            risk += 7
+
+        if is_audit_tool_file(path):
+            tags += ["audit_tool"]
+            risk += 0
+
+        if path in fh_map and fh_map[path]["score"] >= 80:
+            if "frontend_runtime" not in tags:
+                tags.append("frontend_runtime")
+            risk += 0
+
+        if path in bh_map and bh_map[path]["score"] >= 60:
+            if "backend_runtime" not in tags:
+                tags.append("backend_runtime")
+            risk += 0
+
+        if tags:
+            level = "HIGH" if risk >= 10 else "MEDIUM" if risk >= 6 else "LOW"
+            critical.append({
+                "path": path,
+                "risk_score": risk,
+                "risk_level": level,
+                "tags": sorted(set(tags)),
+            })
+
+    critical.sort(key=lambda x: (-x["risk_score"], x["path"]))
+    return critical
+
+
+def build_refactor_risk_summary(critical_files: List[Dict[str, Any]]) -> Dict[str, Any]:
+    buckets = {"HIGH": [], "MEDIUM": [], "LOW": []}
+    for item in critical_files:
+        buckets[item["risk_level"]].append(item)
+
+    return {
+        "counts": {k: len(v) for k, v in buckets.items()},
+        "highest_risk_files": critical_files[:50],
+        "safe_zone": sorted([
+            x["path"] for x in critical_files
+            if x["risk_level"] == "LOW" and "audit_tool" not in x["tags"]
+        ]),
+        "medium_zone": sorted([
+            x["path"] for x in critical_files
+            if x["risk_level"] == "MEDIUM" and "audit_tool" not in x["tags"]
+        ]),
+        "high_zone": sorted([
+            x["path"] for x in critical_files
+            if x["risk_level"] == "HIGH" and "audit_tool" not in x["tags"]
+        ]),
+    }
+
+
+# =========================
+# ⚡ QUICK WINS / PRIORYTETY
+# =========================
+def build_quick_wins(frontend_hotspots: List[Dict[str, Any]],
+                     backend_hotspots: List[Dict[str, Any]],
+                     large_functions: List[Dict[str, Any]],
+                     duplication: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    wins = []
+
+    for item in frontend_hotspots[:5]:
+        wins.append({
+            "priority": "P1",
+            "kind": "frontend_hotspot",
+            "path": item["path"],
+            "reason": {
+                "score": item["score"],
+                "dom_queries": item["dom_queries"],
+                "listeners": item["listeners"],
+                "innerHTML": item["innerHTML"],
+            },
+        })
+
+    for item in backend_hotspots[:5]:
+        wins.append({
+            "priority": "P1",
+            "kind": "backend_hotspot",
+            "path": item["path"],
+            "reason": {
+                "score": item["score"],
+                "firestore_ops": item["firestore_ops"],
+            },
+        })
+
+    for item in large_functions[:5]:
+        if is_runtime_file(item["path"]):
+            wins.append({
+                "priority": "P2",
+                "kind": "large_function",
+                "path": item["path"],
+                "reason": {
+                    "function": item["function"],
+                    "length": item["length"],
+                },
+            })
+
+    for item in duplication[:5]:
+        sample = item["occurrence_samples"][0]
+        wins.append({
+            "priority": "P3",
+            "kind": "duplicate_block",
+            "path": sample["path"],
+            "reason": {
+                "occurrences": item["occurrences"],
+                "block_len": item["block_len"],
+            },
+        })
+
+    return wins[:20]
+
+
+# =========================
+# ☁️ FIREBASE / CLOUD RUN / ENV
+# =========================
+def load_json_file(path_str: str) -> Optional[Dict[str, Any]]:
+    path = Path(PROJECT_ROOT) / path_str
+    if not path.exists():
+        return None
+    content = safe_read(path)
+    if not content:
+        return None
+    try:
+        return json.loads(content)
+    except Exception:
+        return None
+
+
+def get_firebaserc_summary() -> Dict[str, Any]:
+    data = load_json_file(".firebaserc")
+    if not data:
+        return {"exists": False, "projects": {}}
+
+    return {
+        "exists": True,
+        "projects": data.get("projects", {}) if isinstance(data, dict) else {},
+    }
+
+
+def get_firebase_json_summary() -> Dict[str, Any]:
+    data = load_json_file("firebase.json")
+    if not data:
+        return {"exists": False}
+
+    hosting = data.get("hosting", {}) if isinstance(data, dict) else {}
+    rewrites = hosting.get("rewrites", []) if isinstance(hosting, dict) else []
+    headers = hosting.get("headers", []) if isinstance(hosting, dict) else []
+    functions_cfg = data.get("functions")
+    firestore_cfg = data.get("firestore")
+
+    functions_summary = []
+    if isinstance(functions_cfg, list):
+        for item in functions_cfg:
+            if isinstance(item, dict):
+                functions_summary.append({
+                    "source": item.get("source"),
+                    "invoker": item.get("invoker"),
+                })
+    elif isinstance(functions_cfg, dict):
+        functions_summary.append({
+            "source": functions_cfg.get("source"),
+            "invoker": functions_cfg.get("invoker"),
+        })
+
+    return {
+        "exists": True,
+        "rewrites": rewrites,
+        "headers": headers,
+        "functions_present": functions_cfg is not None,
+        "functions_summary": functions_summary,
+        "firestore_present": firestore_cfg is not None,
+        "firestore_indexes_path": firestore_cfg.get("indexes") if isinstance(firestore_cfg, dict) else None,
+    }
+
+
+def get_frontend_firebase_summary() -> Dict[str, Any]:
+    path = Path(PROJECT_ROOT) / "public" / "core" / "firebase_client.js"
+    if not path.exists():
+        return {"exists": False}
+
+    content = safe_read(path) or ""
+    project_ids = sorted(set(re.findall(r'projectId:\s*["\']([^"\']+)["\']', content)))
+    auth_domains = sorted(set(re.findall(r'authDomain:\s*["\']([^"\']+)["\']', content)))
+    host_checks = sorted(set(re.findall(r'host\s*===\s*["\']([^"\']+)["\']', content)))
+
+    return {
+        "exists": True,
+        "projectIds": project_ids,
+        "authDomains": auth_domains,
+        "hostChecks": host_checks,
+    }
+
+
+def get_env_summary() -> Dict[str, Any]:
+    env_files = {}
     env_usage: Dict[str, Set[str]] = defaultdict(set)
 
     for path in iter_project_files():
-        rel = str(path).replace("\\", "/")
+        rel = normalize_rel(path)
 
         if path.name.startswith(".env"):
             content = safe_read(path) or ""
@@ -1214,472 +1454,112 @@ def build_env_summary() -> Dict[str, Any]:
     }
 
 
-def build_host_security_summary() -> Dict[str, Any]:
-    hosts_found: Dict[str, Set[str]] = defaultdict(set)
-    origins_found: Dict[str, Set[str]] = defaultdict(set)
-    api_refs: Set[str] = set()
-    security_hits: Set[str] = set()
-
-    for path in iter_project_files():
-        rel = str(path).replace("\\", "/")
-        content = safe_read(path)
-        if not content:
-            continue
-
-        for match in HOST_LITERAL_PATTERN.finditer(content):
-            hosts_found[match.group(1)].add(rel)
-
-        for match in ORIGIN_LITERAL_PATTERN.finditer(content):
-            origins_found[match.group(1)].add(rel)
-
-        for pattern in ["requireAllowedHost", "isAllowedHost", "/api/register", "/api/setup", "/api/gear/kayaks", "/api/gear/items"]:
-            if pattern in content:
-                api_refs.add(f"{rel} :: {pattern}")
-
-        for pattern in [
-            "req.headers.host",
-            "req.headers.origin",
-            "req.headers.referer",
-            "Access-Control-Allow-Origin",
-            "ALLOWED_HOSTS",
-            "ALLOWED_ORIGINS",
-            "invoker",
-            "run.googleapis.com/invoker-iam-disabled",
-        ]:
-            if pattern in content:
-                security_hits.add(f"{rel} :: {pattern}")
-
-    return {
-        "hosts_found": {k: sorted(v) for k, v in sorted(hosts_found.items())},
-        "origins_found": {k: sorted(v) for k, v in sorted(origins_found.items())},
-        "api_refs": sorted(api_refs),
-        "security_hits": sorted(security_hits),
-    }
-
-
-def build_frontend_firebase_summary() -> Dict[str, Any]:
-    path = Path(PROJECT_ROOT) / "public" / "core" / "firebase_client.js"
-    if not path.exists():
-        return {
-            "exists": False,
-            "project_ids": [],
-            "auth_domains": [],
-            "host_checks": [],
-        }
-
-    content = safe_read(path)
-    if not content:
-        return {
-            "exists": True,
-            "readable": False,
-            "project_ids": [],
-            "auth_domains": [],
-            "host_checks": [],
-        }
-
-    return {
-        "exists": True,
-        "readable": True,
-        "project_ids": sorted(set(re.findall(r'projectId:\s*["\']([^"\']+)["\']', content))),
-        "auth_domains": sorted(set(re.findall(r'authDomain:\s*["\']([^"\']+)["\']', content))),
-        "host_checks": sorted(set(re.findall(r'host\s*===\s*["\']([^"\']+)["\']', content))),
-    }
-
-
-def build_firebaserc_summary() -> Dict[str, Any]:
-    path = Path(PROJECT_ROOT) / ".firebaserc"
-    if not path.exists():
-        return {"exists": False, "projects": {}}
-
-    content = safe_read(path)
-    if not content:
-        return {"exists": True, "readable": False, "projects": {}}
-
-    try:
-        data = json.loads(content)
-    except Exception as e:
-        return {"exists": True, "readable": True, "error": str(e), "projects": {}}
-
-    return {
-        "exists": True,
-        "readable": True,
-        "projects": data.get("projects", {}),
-    }
-
-
-def build_firebase_json_summary() -> Dict[str, Any]:
-    path = Path(PROJECT_ROOT) / "firebase.json"
-    if not path.exists():
-        return {"exists": False}
-
-    content = safe_read(path)
-    if not content:
-        return {"exists": True, "readable": False}
-
-    try:
-        data = json.loads(content)
-    except Exception as e:
-        return {"exists": True, "readable": True, "error": str(e)}
-
-    hosting = data.get("hosting", {})
-    rewrites = hosting.get("rewrites", []) if isinstance(hosting, dict) else []
-    headers = hosting.get("headers", []) if isinstance(hosting, dict) else []
-    functions_cfg = data.get("functions")
-    firestore_cfg = data.get("firestore")
-
-    return {
-        "exists": True,
-        "readable": True,
-        "rewrites": rewrites,
-        "headers": headers,
-        "functions_config": functions_cfg,
-        "firestore_config": firestore_cfg,
-    }
-
-
-def build_cloud_run_yaml_summary() -> Dict[str, Any]:
+def get_cloud_run_yaml_summary() -> Dict[str, Any]:
     yaml_files = []
-
     for path in iter_project_files():
-        if path.suffix.lower() in {".yml", ".yaml"} and ("getgear" in path.name.lower() or "cloudrun" in path.name.lower()):
-            content = safe_read(path)
-            if not content:
-                yaml_files.append({
-                    "file": str(path).replace("\\", "/"),
-                    "readable": False,
-                })
-                continue
-
-            invoker_disabled = (
-                "run.googleapis.com/invoker-iam-disabled: 'true'" in content
-                or 'run.googleapis.com/invoker-iam-disabled: "true"' in content
-                or "run.googleapis.com/invoker-iam-disabled: true" in content
-            )
-
-            service_match = re.search(r"name:\s+([^\n]+)", content)
-            yaml_files.append({
-                "file": str(path).replace("\\", "/"),
-                "readable": True,
-                "invoker_iam_disabled": invoker_disabled,
-                "first_name_field": service_match.group(1).strip() if service_match else None,
-            })
+        rel = normalize_rel(path)
+        if rel.endswith(".yaml") or rel.endswith(".yml"):
+            if Path(rel).name.endswith(".yaml") and "getgear" in Path(rel).name.lower():
+                yaml_files.append(rel)
 
     return {
-        "files": yaml_files,
-        "count": len(yaml_files),
+        "yaml_files": sorted(yaml_files),
     }
 
 
-def build_refactor_risk_summary(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
-    high = [r for r in rows if r["risk_level"] == "HIGH"]
-    medium = [r for r in rows if r["risk_level"] == "MEDIUM"]
-    low = [r for r in rows if r["risk_level"] == "LOW"]
-
-    ordered = sorted(rows, key=lambda x: (-x["risk_score"], x["file"]))
-
-    return {
-        "counts": {
-            "HIGH": len(high),
-            "MEDIUM": len(medium),
-            "LOW": len(low),
-        },
-        "highest_risk_files": [
-            {
-                "file": r["file"],
-                "risk_level": r["risk_level"],
-                "risk_score": r["risk_score"],
-                "critical_tags": r["critical_tags"],
-            }
-            for r in ordered[:50]
-        ],
-    }
-
-
-def build_safe_zones(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
-    safe = [
-        r for r in rows
-        if r["risk_level"] == "LOW"
-        and r["scope"] in {"FRONTEND", "BACKEND_SOURCE"}
-        and "security_critical" not in r["critical_tags"]
-        and "routing_critical" not in r["critical_tags"]
-        and "endpoint_critical" not in r["critical_tags"]
-    ]
-
-    medium = [r for r in rows if r["risk_level"] == "MEDIUM"]
-    high = [r for r in rows if r["risk_level"] == "HIGH"]
-
-    return {
-        "safe_to_optimize_first": sorted(
-            [{"file": r["file"], "scope": r["scope"]} for r in safe],
-            key=lambda x: (x["scope"], x["file"])
-        )[:60],
-        "medium_risk": sorted(
-            [{"file": r["file"], "risk_score": r["risk_score"]} for r in medium],
-            key=lambda x: (-x["risk_score"], x["file"])
-        )[:60],
-        "high_risk_full_review_required": sorted(
-            [{"file": r["file"], "risk_score": r["risk_score"], "critical_tags": r["critical_tags"]} for r in high],
-            key=lambda x: (-x["risk_score"], x["file"])
-        )[:80],
-    }
-
-
-def build_critical_files(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    critical = [r for r in rows if r["critical_tags"]]
-    critical.sort(key=lambda x: (-len(x["critical_tags"]), -x["risk_score"], x["file"]))
-
-    return [
-        {
-            "file": r["file"],
-            "risk_level": r["risk_level"],
-            "risk_score": r["risk_score"],
-            "critical_tags": r["critical_tags"],
-        }
-        for r in critical[:100]
-    ]
-
-
-def build_browser_route_risk_summary(firebase_json_summary: Dict[str, Any]) -> Dict[str, Any]:
-    rewrites = firebase_json_summary.get("rewrites", []) if isinstance(firebase_json_summary, dict) else []
-
-    api_rewrites = []
-    for rw in rewrites:
-        if not isinstance(rw, dict):
-            continue
-        source = rw.get("source")
-        fn = rw.get("function", {})
-        if isinstance(source, str) and source.startswith("/api/") and isinstance(fn, dict):
-            api_rewrites.append({
-                "source": source,
-                "functionId": fn.get("functionId"),
-                "region": fn.get("region"),
-            })
-
-    return {
-        "api_rewrites": api_rewrites,
-        "rule": [
-            "browser-facing routes should prefer stable module gateways",
-            "do not add new standalone browser-facing functions without checking Cloud Run access model",
-            "for each browser-facing endpoint compare: firebase.json rewrite, onRequest invoker, deployed Cloud Run config",
-        ],
-    }
-
-
-def build_pattern_matches() -> List[Dict[str, Any]]:
-    out = []
-
-    for path in iter_project_files():
-        content = safe_read(path)
-        if not content:
-            continue
-
-        rel_path = str(path).replace("\\", "/")
-        lines = content.splitlines()
-
-        for i, line in enumerate(lines):
-            for pattern in PATTERNS_TO_SEARCH:
-                if pattern in line:
-                    start = max(0, i - 2)
-                    end = min(len(lines), i + 3)
-                    context = []
-                    for j in range(start, end):
-                        context.append({
-                            "line": j + 1,
-                            "is_match_line": j == i,
-                            "text": lines[j],
-                        })
-
-                    out.append({
-                        "file": rel_path,
-                        "line": i + 1,
-                        "pattern": pattern,
-                        "context": context,
-                    })
-
-    return out[:400]
-
-
-def build_loop_await_risks() -> List[Dict[str, Any]]:
-    suspicious = []
-
-    for path in iter_project_files():
-        if path.suffix.lower() not in {".js", ".ts", ".py"}:
-            continue
-
-        rel = str(path).replace("\\", "/")
-        content = safe_read(path)
-        if not content:
-            continue
-
-        lines = content.splitlines()
-
-        for idx, line in enumerate(lines):
-            if re.search(r"\bfor\b", line):
-                window = "\n".join(lines[idx:min(len(lines), idx + 12)])
-                if "await " in window:
-                    suspicious.append({
-                        "file": rel,
-                        "line": idx + 1,
-                        "preview": line.strip(),
-                    })
-
-    return suspicious[:100]
-
-
-# =========================================================
-# EXECUTIVE SUMMARY / PRIORITIES
-# =========================================================
-def build_priority_plan(
-    frontend_hotspots: List[Dict[str, Any]],
-    backend_hotspots: List[Dict[str, Any]],
-    large_functions: List[Dict[str, Any]],
-    render_risks: List[Dict[str, Any]],
-    critical_files: List[Dict[str, Any]],
-    firestore_index_check: Dict[str, Any],
-) -> Dict[str, Any]:
-    top_frontend = frontend_hotspots[:5]
-    top_backend = backend_hotspots[:5]
-
-    immediate_actions = []
-
-    for item in top_frontend[:3]:
-        immediate_actions.append({
-            "priority": "P1",
-            "type": "frontend_hotspot",
-            "file": item["file"],
-            "reason": {
-                "score": item["score"],
-                "dom_queries": item["dom_queries"],
-                "listeners": item["listeners"],
-                "innerHTML": item["html_rebuilds"],
-            }
-        })
-
-    for item in top_backend[:2]:
-        immediate_actions.append({
-            "priority": "P1",
-            "type": "backend_hotspot",
-            "file": item["file"],
-            "reason": {
-                "score": item["score"],
-                "firestore_ops": item["firestore_ops"],
-            }
-        })
-
-    missing_indexes = []
-    for (collection, fields), queries in firestore_index_check.get("missing", {}).items():
-        missing_indexes.append({
-            "collection": collection,
-            "fields": list(fields),
-            "queries": [
-                {
-                    "source": q["source"],
-                    "line": q["line"],
-                    "reason": q["reason"],
-                    "snippet": q["snippet"],
-                }
-                for q in queries[:5]
-            ]
-        })
-
-    summary = {
-        "biggest_frontend_problem": top_frontend[0]["file"] if top_frontend else None,
-        "biggest_backend_problem": top_backend[0]["file"] if top_backend else None,
-        "largest_function": large_functions[0] if large_functions else None,
-        "render_risk_top": render_risks[:5],
-        "critical_files_top": critical_files[:10],
-        "missing_indexes": missing_indexes,
-        "immediate_actions": immediate_actions,
-    }
-
-    return summary
-
-
-# =========================================================
-# JSON ASSEMBLY
-# =========================================================
+# =========================
+# 📝 RAPORT JSON
+# =========================
 def build_json_report() -> Dict[str, Any]:
-    rows = collect_file_analysis()
-    deps = build_dependency_maps()
-    project_summary = build_project_summary(rows)
-    top_files = build_top_files(rows)
-    large_files = build_large_files(rows)
-    large_functions = build_large_functions(rows)
-    frontend_hotspots = build_frontend_hotspots(rows)
-    backend_hotspots = build_backend_hotspots(rows)
-    repeated_api_usage = build_repeated_api_usage()
-    render_risks = build_render_risks(rows)
-    firestore_summary = build_firestore_summary()
+    files_data = collect_file_data()
+
+    git_summary = get_git_summary()
+    project_summary = build_project_summary(files_data)
+    top_files = top_files_by_lines(files_data)
+    file_complexity = file_size_complexity_summary(files_data)
+    large_functions = large_functions_summary(files_data)
+
+    frontend_hotspots = collect_frontend_hotspots(files_data)
+    backend_hotspots = collect_backend_hotspots(files_data)
+
+    routes = collect_http_routes()
+    route_split = split_route_usage(routes)
+
+    firestore_summary = collect_firestore_summary()
     firestore_index_check = collect_firestore_query_index_requirements()
-    firebaserc_summary = build_firebaserc_summary()
-    firebase_json_summary = build_firebase_json_summary()
-    cloud_run_yaml_summary = build_cloud_run_yaml_summary()
-    frontend_firebase_summary = build_frontend_firebase_summary()
-    env_summary = build_env_summary()
-    host_security_summary = build_host_security_summary()
-    shared_contracts = detect_shared_contract_fields()
-    critical_files = build_critical_files(rows)
-    refactor_risk = build_refactor_risk_summary(rows)
-    safe_zones = build_safe_zones(rows)
-    browser_route_risk = build_browser_route_risk_summary(firebase_json_summary)
-    duplication = collect_duplication_blocks()
-    loop_await_risks = build_loop_await_risks()
-    pattern_matches = build_pattern_matches()
 
-    priority_plan = build_priority_plan(
-        frontend_hotspots=frontend_hotspots,
-        backend_hotspots=backend_hotspots,
-        large_functions=large_functions,
-        render_risks=render_risks,
-        critical_files=critical_files,
-        firestore_index_check=firestore_index_check,
-    )
+    firebaserc_summary = get_firebaserc_summary()
+    firebase_json_summary = get_firebase_json_summary()
+    frontend_firebase_summary = get_frontend_firebase_summary()
+    env_summary = get_env_summary()
+    cloud_run_yaml_summary = get_cloud_run_yaml_summary()
 
-    git_branch_ok, git_branch = run_git(["branch", "--show-current"])
-    git_head_ok, git_head = run_git(["rev-parse", "--short", "HEAD"])
-    git_status_ok, git_status = run_git(["status", "--short"])
-    git_log_ok, git_log = run_git(["log", "-1", "--oneline"])
+    host_security_summary = print_host_security_data()
+    dependency_summary = collect_dependency_summary(files_data)
+    shared_contracts = collect_shared_contracts()
+    duplication_summary = collect_duplication_summary()
+    loop_await_risk = collect_loop_await_risk()
+
+    critical_files = build_critical_files(files_data, frontend_hotspots, backend_hotspots)
+    refactor_risk = build_refactor_risk_summary(critical_files)
+    quick_wins = build_quick_wins(frontend_hotspots, backend_hotspots, large_functions, duplication_summary)
+
+    biggest_frontend_problem = frontend_hotspots[0]["path"] if frontend_hotspots else None
+    biggest_backend_problem = backend_hotspots[0]["path"] if backend_hotspots else None
+    largest_function = large_functions[0] if large_functions else None
+
+    runtime_top_files = [
+        f for f in top_files
+        if is_runtime_file(f["path"])
+    ][:25]
+
+    runtime_large_functions = [
+        f for f in large_functions
+        if is_runtime_file(f["path"])
+    ][:25]
+
+    runtime_only_frontend_hotspots = frontend_hotspots[:15]
+    runtime_only_backend_hotspots = backend_hotspots[:15]
 
     return {
-        "meta": {
-            "tool": "PROJECT AI OPTIMIZATION AUDIT",
-            "generated_at_utc": datetime.now(timezone.utc).isoformat(),
-            "project_root": str(Path(PROJECT_ROOT).resolve()),
+        "rules": RULES.strip(),
+        "executive_summary": {
+            "biggest_frontend_problem": biggest_frontend_problem,
+            "biggest_backend_problem": biggest_backend_problem,
+            "largest_function": largest_function,
         },
-        "rules": RULES.strip().splitlines(),
-        "git": {
-            "branch": git_branch if git_branch_ok else None,
-            "head_short": git_head if git_head_ok else None,
-            "last_commit": git_log if git_log_ok else None,
-            "status": git_status.splitlines() if git_status_ok and git_status else [],
-        },
+        "git_summary": git_summary,
         "project_summary": project_summary,
-        "top_files": top_files,
-        "large_files": large_files,
-        "large_functions": large_functions,
-        "frontend_hotspots": frontend_hotspots,
-        "backend_hotspots": backend_hotspots,
-        "repeated_api_usage": repeated_api_usage,
-        "render_risks": render_risks,
+        "top_files_by_line_count": top_files,
+        "runtime_top_files_by_line_count": runtime_top_files,
+        "file_size_complexity_summary": file_complexity,
+        "large_functions_summary": large_functions,
+        "runtime_large_functions_summary": runtime_large_functions,
+        "frontend_hotspots_summary": frontend_hotspots,
+        "backend_hotspots_summary": backend_hotspots,
+        "runtime_route_usage_summary": route_split["runtime_usage"],
+        "diagnostic_route_usage_summary": route_split["diagnostic_usage"],
+        "render_dom_risk_summary": [
+            {
+                "path": x["path"],
+                "innerHTML": x["innerHTML"],
+                "dom_queries": x["dom_queries"],
+                "listeners": x["listeners"],
+            }
+            for x in frontend_hotspots[:10]
+        ],
         "firestore_summary": firestore_summary,
         "firestore_index_check": {
-            "declared_path": firestore_index_check["declared"].get("path"),
-            "declared_exists": firestore_index_check["declared"].get("exists"),
-            "declared_error": firestore_index_check["declared"].get("error"),
-            "declared_count": len(firestore_index_check["declared"].get("normalized", set())),
+            "declared": {
+                "exists": firestore_index_check["declared"]["exists"],
+                "path": firestore_index_check["declared"]["path"],
+                "count": len(firestore_index_check["declared"].get("normalized", set())),
+            },
             "missing": [
                 {
                     "collection": collection,
                     "fields": list(fields),
-                    "queries": [
-                        {
-                            "source": q["source"],
-                            "line": q["line"],
-                            "reason": q["reason"],
-                            "snippet": q["snippet"],
-                        }
-                        for q in queries
-                    ],
+                    "queries": queries,
                 }
                 for (collection, fields), queries in sorted(firestore_index_check["missing"].items())
             ],
@@ -1687,14 +1567,7 @@ def build_json_report() -> Dict[str, Any]:
                 {
                     "collection": collection,
                     "fields": list(fields),
-                    "queries": [
-                        {
-                            "source": q["source"],
-                            "line": q["line"],
-                            "reason": q["reason"],
-                        }
-                        for q in queries
-                    ],
+                    "queries": queries,
                 }
                 for (collection, fields), queries in sorted(firestore_index_check["covered"].items())
             ],
@@ -1704,435 +1577,451 @@ def build_json_report() -> Dict[str, Any]:
         "cloud_run_yaml_summary": cloud_run_yaml_summary,
         "frontend_firebase_summary": frontend_firebase_summary,
         "env_summary": env_summary,
-        "host_security_summary": host_security_summary,
-        "dependency_maps": deps,
-        "shared_contracts": shared_contracts,
+        "host_api_security_summary": host_security_summary,
+        "dependency_summary": dependency_summary,
+        "shared_data_contracts": shared_contracts,
         "critical_files": critical_files,
-        "refactor_risk": refactor_risk,
-        "safe_zones": safe_zones,
-        "browser_route_risk": browser_route_risk,
-        "duplication": duplication,
-        "loop_await_risks": loop_await_risks,
-        "pattern_matches": pattern_matches,
-        "priority_plan": priority_plan,
+        "refactor_risk_summary": refactor_risk,
+        "safe_medium_high_risk_zones": {
+            "safe": refactor_risk["safe_zone"],
+            "medium": refactor_risk["medium_zone"],
+            "high": refactor_risk["high_zone"],
+        },
+        "browser_route_risk_summary": firebase_json_summary.get("rewrites", []),
+        "duplication_summary": duplication_summary,
+        "possible_loop_await_risk_summary": loop_await_risk,
+        "priority_plan_for_ai_developer": quick_wins,
+        "manual_review_targets": {
+            "review_first": [
+                "highest frontend hotspot",
+                "highest backend hotspot",
+                "largest runtime functions",
+                "Firestore-heavy services",
+                "browser-facing endpoint chain: firebase.json -> function -> Cloud Run",
+                "shared contracts before any rename",
+            ],
+            "constraints": [
+                "do NOT change business logic by default",
+                "do NOT redesign UX by default",
+                "do NOT refactor high-risk files from partial snippets",
+                "optimize by reducing waste, not by changing intended behavior",
+            ],
+        },
     }
 
 
-# =========================================================
-# TEXT REPORT
-# =========================================================
+# =========================
+# 🖨️ RAPORT TXT
+# =========================
 def render_text_report(report: Dict[str, Any]) -> str:
-    w = ReportWriter()
+    out: List[str] = []
 
-    w.add("🔍 Building AI developer optimization audit...")
-    w.add("")
-    w.add("=" * 80)
-    for line in report["rules"]:
-        w.add(line)
-    w.add("=" * 80)
+    def add(line: str = ""):
+        out.append(line)
 
-    w.section("=== EXECUTIVE SUMMARY ===")
-    priority_plan = report["priority_plan"]
-    w.add(f"- biggest_frontend_problem: {priority_plan.get('biggest_frontend_problem')}")
-    w.add(f"- biggest_backend_problem: {priority_plan.get('biggest_backend_problem')}")
-    largest_fn = priority_plan.get("largest_function")
-    if largest_fn:
-        w.add(
-            f"- largest_function: {largest_fn['file']} :: {largest_fn['function']} :: len={largest_fn['length']}"
+    add("🔍 Building AI developer optimization audit...")
+    add("")
+    add("=" * 80)
+    add(report["rules"])
+    add("=" * 80)
+    add("")
+
+    exec_sum = report["executive_summary"]
+    add("=== EXECUTIVE SUMMARY ===")
+    add("")
+    add(f"- biggest_frontend_problem: {exec_sum.get('biggest_frontend_problem')}")
+    add(f"- biggest_backend_problem: {exec_sum.get('biggest_backend_problem')}")
+    lf = exec_sum.get("largest_function")
+    if lf:
+        add(f"- largest_function: {lf['path']} :: {lf['function']} :: len={lf['length']}")
+    else:
+        add("- largest_function: none")
+    add("")
+
+    git = report["git_summary"]
+    add("=== GIT SUMMARY ===")
+    add("")
+    add(f"- current branch: {git['current_branch']}")
+    add(f"- HEAD short hash: {git['head_short_hash']}")
+    add(f"- last commit: {git['last_commit']}")
+    add("- git status:")
+    if git["status_lines"]:
+        for line in git["status_lines"]:
+            add(f"  • {line}")
+    else:
+        add("  • working tree clean")
+    add("")
+
+    proj = report["project_summary"]
+    add("=== PROJECT SUMMARY ===")
+    add("")
+    for scope, count in sorted(proj["counts_by_scope"].items()):
+        add(f"- {scope}: {count} files")
+    add(f"- total_files: {proj['total_files']}")
+    add("")
+
+    add("=== TOP FILES BY LINE COUNT ===")
+    add("")
+    for item in report["top_files_by_line_count"][:40]:
+        add(f"- {item['path']} :: {item['line_count']} lines :: {item['scope']}")
+    add("")
+
+    add("=== RUNTIME TOP FILES BY LINE COUNT ===")
+    add("")
+    for item in report["runtime_top_files_by_line_count"][:25]:
+        add(f"- {item['path']} :: {item['line_count']} lines :: {item['scope']}")
+    add("")
+
+    add("=== FILE SIZE / COMPLEXITY SUMMARY ===")
+    add("")
+    for item in report["file_size_complexity_summary"][:30]:
+        add(f"- [{item['level']}] {item['path']} :: {item['line_count']} lines :: {item['scope']}")
+    add("")
+
+    add("=== LARGE FUNCTIONS SUMMARY ===")
+    add("")
+    for item in report["large_functions_summary"][:25]:
+        add(
+            f"- [{item['level']}] {item['path']} :: {item['function']} :: "
+            f"lines {item['start_line']}-{item['end_line']} :: length={item['length']}"
         )
-    else:
-        w.add("- largest_function: none")
+    add("")
 
-    w.section("=== GIT SUMMARY ===")
-    git = report["git"]
-    w.add(f"- current branch: {git.get('branch')}")
-    w.add(f"- HEAD short hash: {git.get('head_short')}")
-    w.add(f"- last commit: {git.get('last_commit')}")
-    w.add("- git status:")
-    if git.get("status"):
-        for line in git["status"]:
-            w.add(f"  • {line}")
-    else:
-        w.add("  • working tree clean")
-
-    w.section("=== PROJECT SUMMARY ===")
-    ps = report["project_summary"]
-    for scope, count in ps["by_scope"].items():
-        w.add(f"- {scope}: {count} files")
-    w.add(f"- total_files: {ps['total_files']}")
-
-    w.section("=== TOP FILES BY LINE COUNT ===")
-    for item in report["top_files"]:
-        w.add(f"- {item['file']} :: {item['lines']} lines :: {item['scope']}")
-
-    w.section("=== FILE SIZE / COMPLEXITY SUMMARY ===")
-    for item in report["large_files"]:
-        w.add(f"- [{item['level']}] {item['file']} :: {item['lines']} lines :: {item['scope']}")
-    if not report["large_files"]:
-        w.add("- no oversized files detected")
-
-    w.section("=== LARGE FUNCTIONS SUMMARY ===")
-    for item in report["large_functions"]:
-        w.add(
-            f"- [{item['level']}] {item['file']} :: {item['function']} :: "
-            f"lines {item['line_start']}-{item['line_end']} :: length={item['length']}"
+    add("=== RUNTIME LARGE FUNCTIONS SUMMARY ===")
+    add("")
+    for item in report["runtime_large_functions_summary"][:25]:
+        add(
+            f"- [{item['level']}] {item['path']} :: {item['function']} :: "
+            f"lines {item['start_line']}-{item['end_line']} :: length={item['length']}"
         )
-    if not report["large_functions"]:
-        w.add("- no oversized functions detected")
+    add("")
 
-    w.section("=== FRONTEND HOTSPOTS SUMMARY ===")
-    for item in report["frontend_hotspots"]:
-        w.add(f"- {item['file']} :: score={item['score']}")
-        w.add(f"  • fetch/api calls: {item['fetch_calls']}")
-        w.add(f"  • DOM queries: {item['dom_queries']}")
-        w.add(f"  • event listeners: {item['listeners']}")
-        w.add(f"  • innerHTML rebuilds: {item['html_rebuilds']}")
-        w.add(f"  • array ops: {item['array_ops']}")
-        w.add(f"  • timers: {item['timers']}")
-    if not report["frontend_hotspots"]:
-        w.add("- none")
+    add("=== FRONTEND HOTSPOTS SUMMARY ===")
+    add("")
+    for item in report["frontend_hotspots_summary"][:15]:
+        add(f"- {item['path']} :: score={item['score']}")
+        add(f"  • fetch/api calls: {item['fetch_api_calls']}")
+        add(f"  • DOM queries: {item['dom_queries']}")
+        add(f"  • event listeners: {item['listeners']}")
+        add(f"  • innerHTML rebuilds: {item['innerHTML']}")
+        add(f"  • array ops: {item['array_ops']}")
+        add(f"  • timers: {item['timers']}")
+    add("")
 
-    w.section("=== BACKEND HOTSPOTS SUMMARY ===")
-    for item in report["backend_hotspots"]:
-        w.add(f"- {item['file']} :: score={item['score']}")
-        w.add(f"  • Firestore chain ops: {item['firestore_ops']}")
-        w.add(f"  • array ops: {item['array_ops']}")
-        w.add(f"  • console logs: {item['console_logs']}")
-    if not report["backend_hotspots"]:
-        w.add("- none")
+    add("=== BACKEND HOTSPOTS SUMMARY ===")
+    add("")
+    for item in report["backend_hotspots_summary"][:15]:
+        add(f"- {item['path']} :: score={item['score']}")
+        add(f"  • Firestore chain ops: {item['firestore_ops']}")
+        add(f"  • array ops: {item['array_ops']}")
+        add(f"  • console logs: {item['console_logs']}")
+    add("")
 
-    w.section("=== REPEATED FETCH / API USAGE SUMMARY ===")
-    for route, files in report["repeated_api_usage"].items():
-        w.add(f"- {route}")
-        for src in files[:12]:
-            w.add(f"  • {src}")
-    if not report["repeated_api_usage"]:
-        w.add("- none")
+    add("=== RUNTIME ROUTE USAGE SUMMARY ===")
+    add("")
+    for route, files in sorted(report["runtime_route_usage_summary"].items()):
+        add(f"- {route}")
+        for src in files:
+            add(f"  • {src}")
+    add("")
 
-    w.section("=== RENDER / DOM RISK SUMMARY ===")
-    for item in report["render_risks"]:
-        w.add(f"- {item['file']}")
-        w.add(f"  • innerHTML assignments: {item['innerHTML_assignments']}")
-        w.add(f"  • DOM queries: {item['dom_queries']}")
-        w.add(f"  • addEventListener: {item['listeners']}")
-    if not report["render_risks"]:
-        w.add("- none")
-
-    w.section("=== FIRESTORE SUMMARY ===")
-    fs = report["firestore_summary"]
-    w.add("- collections:")
-    if fs["collections"]:
-        for collection, files in fs["collections"].items():
-            w.add(f"  • {collection}")
-            for src in files[:10]:
-                w.add(f"      - {src}")
+    add("=== DIAGNOSTIC / NON-RUNTIME ROUTE USAGE SUMMARY ===")
+    add("")
+    diagnostic_usage = report["diagnostic_route_usage_summary"]
+    if diagnostic_usage:
+        for route, files in sorted(diagnostic_usage.items()):
+            add(f"- {route}")
+            for src in files:
+                add(f"  • {src}")
     else:
-        w.add("  • none")
+        add("- none")
+    add("")
 
-    w.add("")
-    w.add("- documents:")
-    if fs["documents"]:
-        for doc_path, files in fs["documents"].items():
-            w.add(f"  • {doc_path}")
-            for src in files[:10]:
-                w.add(f"      - {src}")
+    add("=== RENDER / DOM RISK SUMMARY ===")
+    add("")
+    for item in report["render_dom_risk_summary"][:10]:
+        add(f"- {item['path']}")
+        add(f"  • innerHTML assignments: {item['innerHTML']}")
+        add(f"  • DOM queries: {item['dom_queries']}")
+        add(f"  • addEventListener: {item['listeners']}")
+    add("")
+
+    add("=== FIRESTORE SUMMARY ===")
+    add("")
+    fs_sum = report["firestore_summary"]
+
+    add("- collections:")
+    for collection, files in fs_sum["collections"].items():
+        add(f"  • {collection}")
+        for src in files[:10]:
+            add(f"      - {src}")
+
+    add("")
+    add("- documents:")
+    for doc_path, files in fs_sum["docs"].items():
+        add(f"  • {doc_path}")
+        for src in files[:10]:
+            add(f"      - {src}")
+    add("")
+
+    add("=== FIRESTORE INDEX CHECK ===")
+    add("")
+    fs_idx = report["firestore_index_check"]
+    add(f"- firestore.indexes.json present: {fs_idx['declared']['exists']}")
+    add(f"- declared composite indexes: {fs_idx['declared']['count']}")
+    add("")
+    add("- missing index declarations:")
+    if fs_idx["missing"]:
+        for item in fs_idx["missing"]:
+            add(f"  • {item['collection']} :: {' + '.join(item['fields'])}")
+            for q in item["queries"][:5]:
+                add(f"      - missing for: {q['source']}:{q['line']} ({q['reason']})")
+                add(f"        snippet: {q['snippet']}")
     else:
-        w.add("  • none")
-
-    w.section("=== FIRESTORE INDEX CHECK ===")
-    fic = report["firestore_index_check"]
-    w.add(f"- firestore.indexes.json present: {fic['declared_exists']}")
-    w.add(f"- declared composite indexes: {fic['declared_count']}")
-    if fic["declared_error"]:
-        w.add(f"- declared error: {fic['declared_error']}")
-
-    w.add("")
-    w.add("- missing index declarations:")
-    if fic["missing"]:
-        for item in fic["missing"]:
-            w.add(f"  • {item['collection']} :: {' + '.join(item['fields'])}")
-            for q in item["queries"][:4]:
-                w.add(f"      - missing for: {q['source']}:{q['line']} ({q['reason']})")
-                w.add(f"        snippet: {q['snippet']}")
+        add("  • none")
+    add("")
+    add("- covered index declarations:")
+    if fs_idx["covered"]:
+        for item in fs_idx["covered"]:
+            add(f"  • {item['collection']} :: {' + '.join(item['fields'])}")
+            for q in item["queries"][:5]:
+                add(f"      - covered query: {q['source']}:{q['line']}")
     else:
-        w.add("  • none")
+        add("  • none")
+    add("")
 
-    w.add("")
-    w.add("- covered index declarations:")
-    if fic["covered"]:
-        for item in fic["covered"]:
-            w.add(f"  • {item['collection']} :: {' + '.join(item['fields'])}")
-            for q in item["queries"][:3]:
-                w.add(f"      - covered query: {q['source']}:{q['line']}")
-    else:
-        w.add("  • none")
+    add("=== FIREBASERC SUMMARY ===")
+    add("")
+    firebaserc = report["firebaserc_summary"]
+    add(f"- exists: {firebaserc['exists']}")
+    if firebaserc["exists"]:
+        for k, v in firebaserc["projects"].items():
+            add(f"  • {k} -> {v}")
+    add("")
 
-    w.section("=== FIREBASERC SUMMARY ===")
-    fr = report["firebaserc_summary"]
-    w.add(f"- exists: {fr.get('exists')}")
-    if fr.get("projects"):
-        for k, v in fr["projects"].items():
-            w.add(f"  • {k} -> {v}")
-
-    w.section("=== FIREBASE.JSON SUMMARY ===")
+    add("=== FIREBASE.JSON SUMMARY ===")
+    add("")
     fj = report["firebase_json_summary"]
-    w.add(f"- exists: {fj.get('exists')}")
-    rewrites = fj.get("rewrites", [])
-    headers = fj.get("headers", [])
-    w.add("- rewrites:")
-    if rewrites:
-        for rw in rewrites:
-            w.add(f"  • {rw}")
+    add(f"- exists: {fj['exists']}")
+    if fj["exists"]:
+        add("- rewrites:")
+        for rw in fj["rewrites"]:
+            add(f"  • {rw}")
+        add("- headers:")
+        for h in fj["headers"]:
+            add(f"  • {h}")
+        add(f"- functions config present: {fj['functions_present']}")
+        for i, fn in enumerate(fj["functions_summary"], 1):
+            add(f"  • functions[{i}] source: {fn.get('source')}")
+            add(f"    - invoker: {fn.get('invoker')}")
+        add(f"- firestore config present: {fj['firestore_present']}")
+        add(f"  • firestore.indexes path: {fj['firestore_indexes_path']}")
+    add("")
+
+    add("=== CLOUD RUN YAML SUMMARY ===")
+    add("")
+    yaml_sum = report["cloud_run_yaml_summary"]
+    if yaml_sum["yaml_files"]:
+        for path in yaml_sum["yaml_files"]:
+            add(f"- {path}")
     else:
-        w.add("  • none")
-    w.add("- headers:")
-    if headers:
-        for h in headers:
-            w.add(f"  • {h}")
-    else:
-        w.add("  • none")
+        add("- no exported Cloud Run YAML files found")
+        add("  • export manually when needed:")
+        add("    gcloud run services describe SERVICE --region=us-central1 --format=export > service.yaml")
+    add("")
 
-    functions_cfg = fj.get("functions_config")
-    w.add(f"- functions config present: {functions_cfg is not None}")
-    if isinstance(functions_cfg, list):
-        for idx, item in enumerate(functions_cfg, 1):
-            if isinstance(item, dict):
-                w.add(f"  • functions[{idx}] source: {item.get('source')}")
-                w.add(f"    - invoker: {item.get('invoker', '(missing)')}")
+    add("=== FRONTEND FIREBASE SUMMARY ===")
+    add("")
+    ff = report["frontend_firebase_summary"]
+    add(f"- exists: {ff['exists']}")
+    if ff["exists"]:
+        add("- projectIds:")
+        for x in ff["projectIds"]:
+            add(f"  • {x}")
+        add("- authDomains:")
+        for x in ff["authDomains"]:
+            add(f"  • {x}")
+        add("- host checks:")
+        for x in ff["hostChecks"]:
+            add(f"  • {x}")
+    add("")
 
-    firestore_cfg = fj.get("firestore_config")
-    w.add(f"- firestore config present: {firestore_cfg is not None}")
-    if isinstance(firestore_cfg, dict):
-        w.add(f"  • firestore.indexes path: {firestore_cfg.get('indexes')}")
-
-    w.section("=== CLOUD RUN YAML SUMMARY ===")
-    cry = report["cloud_run_yaml_summary"]
-    if cry["files"]:
-        for item in cry["files"]:
-            w.add(f"- {item['file']}")
-            w.add(f"  • invoker_iam_disabled: {item.get('invoker_iam_disabled')}")
-            w.add(f"  • first_name_field: {item.get('first_name_field')}")
-    else:
-        w.add("- no exported Cloud Run YAML files found")
-        w.add("  • export manually when needed:")
-        w.add("    gcloud run services describe SERVICE --region=us-central1 --format=export > service.yaml")
-
-    w.section("=== FRONTEND FIREBASE SUMMARY ===")
-    ffs = report["frontend_firebase_summary"]
-    w.add(f"- exists: {ffs.get('exists')}")
-    w.add("- projectIds:")
-    for item in ffs.get("project_ids", []):
-        w.add(f"  • {item}")
-    w.add("- authDomains:")
-    for item in ffs.get("auth_domains", []):
-        w.add(f"  • {item}")
-    w.add("- host checks:")
-    for item in ffs.get("host_checks", []):
-        w.add(f"  • {item}")
-
-    w.section("=== ENV SUMMARY ===")
+    add("=== ENV SUMMARY ===")
+    add("")
     env = report["env_summary"]
-    w.add("- ENV files detected:")
+    add("- ENV files detected:")
     if env["env_files"]:
         for file_name, keys in env["env_files"].items():
-            w.add(f"  • {file_name}")
-            for key in keys[:30]:
-                w.add(f"      - {key}")
+            add(f"  • {file_name}")
+            for key in keys:
+                add(f"      - {key}")
     else:
-        w.add("  • none")
+        add("  • none")
+    add("")
+    add("- process.env usage detected:")
+    for key, files in env["env_usage"].items():
+        add(f"  • {key}")
+        for src in files:
+            add(f"      - {src}")
+    add("")
 
-    w.add("")
-    w.add("- process.env usage detected:")
-    if env["env_usage"]:
-        for key, files in env["env_usage"].items():
-            w.add(f"  • {key}")
-            for src in files[:15]:
-                w.add(f"      - {src}")
-    else:
-        w.add("  • none")
+    hs = report["host_api_security_summary"]
+    add("=== HOST / API / SECURITY SUMMARY ===")
+    add("")
+    add("- Host literals detected:")
+    for host, files in hs["hosts_found"].items():
+        add(f"  • {host}")
+        for src in files[:10]:
+            add(f"      - {src}")
+    add("")
+    add("- Origin literals detected:")
+    for origin, files in hs["origins_found"].items():
+        add(f"  • {origin}")
+        for src in files[:10]:
+            add(f"      - {src}")
+    add("")
+    add("- API/security references:")
+    for item in hs["api_refs"][:100]:
+        add(f"  • {item}")
+    add("")
+    add("- Header/host/origin checks:")
+    for item in hs["security_hits"][:100]:
+        add(f"  • {item}")
+    add("")
 
-    w.section("=== HOST / API / SECURITY SUMMARY ===")
-    hs = report["host_security_summary"]
-    w.add("- Host literals detected:")
-    if hs["hosts_found"]:
-        for host, files in hs["hosts_found"].items():
-            w.add(f"  • {host}")
-            for src in files[:10]:
-                w.add(f"      - {src}")
-    else:
-        w.add("  • none")
+    dep = report["dependency_summary"]
+    add("=== DEPENDENCY SUMMARY ===")
+    add("")
+    add("- files with many imports:")
+    for item in dep["files_with_many_imports"][:50]:
+        add(f"  • {item['path']} :: imports={item['imports_count']}")
+    add("")
+    add("- shared imported modules / paths:")
+    for item in dep["shared_imports"][:50]:
+        add(f"  • {item['module']} :: used_by={item['used_by_count']}")
+    add("")
 
-    w.add("")
-    w.add("- Origin literals detected:")
-    if hs["origins_found"]:
-        for origin, files in hs["origins_found"].items():
-            w.add(f"  • {origin}")
-            for src in files[:10]:
-                w.add(f"      - {src}")
-    else:
-        w.add("  • none")
+    add("=== SHARED DATA CONTRACTS ===")
+    add("")
+    for token, files in report["shared_data_contracts"].items():
+        add(f"- {token}")
+        for src in files[:12]:
+            add(f"  • {src}")
+    add("")
 
-    w.add("")
-    w.add("- API/security references:")
-    if hs["api_refs"]:
-        for item in hs["api_refs"][:120]:
-            w.add(f"  • {item}")
-    else:
-        w.add("  • none")
+    add("=== CRITICAL FILES / TAGS ===")
+    add("")
+    for item in report["critical_files"][:50]:
+        add(f"- {item['path']}")
+        add(f"  • risk={item['risk_level']} ({item['risk_score']})")
+        add(f"  • tags={','.join(item['tags'])}")
+    add("")
 
-    w.add("")
-    w.add("- Header/host/origin checks:")
-    if hs["security_hits"]:
-        for item in hs["security_hits"][:120]:
-            w.add(f"  • {item}")
-    else:
-        w.add("  • none")
-
-    w.section("=== DEPENDENCY SUMMARY ===")
-    deps = report["dependency_maps"]
-    imports_by_file = deps["imports_by_file"]
-    imported_by = deps["imported_by"]
-
-    w.add("- files with many imports:")
-    heavy_importers = sorted(
-        ((file, len(imports)) for file, imports in imports_by_file.items()),
-        key=lambda x: -x[1]
-    )[:30]
-    for file, count in heavy_importers:
-        if count > 0:
-            w.add(f"  • {file} :: imports={count}")
-
-    w.add("")
-    w.add("- shared imported modules / paths:")
-    shared = sorted(
-        ((imp, len(files)) for imp, files in imported_by.items()),
-        key=lambda x: -x[1]
-    )[:40]
-    for imp, count in shared:
-        if count > 1:
-            w.add(f"  • {imp} :: used_by={count}")
-
-    w.section("=== SHARED DATA CONTRACTS ===")
-    sc = report["shared_contracts"]
-    if sc:
-        for field, files in sorted(sc.items(), key=lambda x: (-len(x[1]), x[0])):
-            if len(files) >= 2:
-                w.add(f"- {field}")
-                for src in files[:12]:
-                    w.add(f"  • {src}")
-    else:
-        w.add("- none")
-
-    w.section("=== CRITICAL FILES / TAGS ===")
-    for item in report["critical_files"][:100]:
-        w.add(f"- {item['file']}")
-        w.add(f"  • risk={item['risk_level']} ({item['risk_score']})")
-        w.add(f"  • tags={', '.join(item['critical_tags'])}")
-
-    w.section("=== REFACTOR RISK SUMMARY ===")
-    rr = report["refactor_risk"]
-    w.add(f"- HIGH: {rr['counts']['HIGH']}")
-    w.add(f"- MEDIUM: {rr['counts']['MEDIUM']}")
-    w.add(f"- LOW: {rr['counts']['LOW']}")
-    w.add("")
-    w.add("- highest risk files:")
+    add("=== REFACTOR RISK SUMMARY ===")
+    add("")
+    rr = report["refactor_risk_summary"]
+    add(f"- HIGH: {rr['counts']['HIGH']}")
+    add(f"- MEDIUM: {rr['counts']['MEDIUM']}")
+    add(f"- LOW: {rr['counts']['LOW']}")
+    add("")
+    add("- highest risk files:")
     for item in rr["highest_risk_files"][:50]:
-        w.add(f"  • {item['file']} :: {item['risk_level']} ({item['risk_score']})")
+        add(f"  • {item['path']} :: {item['risk_level']} ({item['risk_score']})")
+    add("")
 
-    w.section("=== SAFE / MEDIUM / HIGH RISK ZONES ===")
-    sz = report["safe_zones"]
+    zones = report["safe_medium_high_risk_zones"]
+    add("=== SAFE / MEDIUM / HIGH RISK ZONES ===")
+    add("")
+    add("- SAFE TO OPTIMIZE FIRST:")
+    for item in zones["safe"]:
+        add(f"  • {item}")
+    add("")
+    add("- MEDIUM RISK:")
+    for item in zones["medium"]:
+        add(f"  • {item}")
+    add("")
+    add("- HIGH RISK / FULL FILE REVIEW REQUIRED:")
+    for item in zones["high"]:
+        add(f"  • {item}")
+    add("")
 
-    w.add("- SAFE TO OPTIMIZE FIRST:")
-    for item in sz["safe_to_optimize_first"][:40]:
-        w.add(f"  • {item['file']}")
+    add("=== BROWSER ROUTE RISK SUMMARY ===")
+    add("")
+    for rw in report["browser_route_risk_summary"]:
+        if isinstance(rw, dict):
+            add(f"  • {rw.get('source')} -> {rw.get('function', {}).get('functionId')} ({rw.get('function', {}).get('region')})")
+    add("")
+    add("- rule:")
+    add("  • browser-facing routes should prefer stable module gateways")
+    add("  • do not add new standalone browser-facing functions without checking Cloud Run access model")
+    add("  • for each browser-facing endpoint compare: firebase.json rewrite, onRequest invoker, deployed Cloud Run config")
+    add("")
 
-    w.add("")
-    w.add("- MEDIUM RISK:")
-    for item in sz["medium_risk"][:40]:
-        w.add(f"  • {item['file']}")
+    add("=== DUPLICATION SUMMARY ===")
+    add("")
+    for item in report["duplication_summary"][:25]:
+        add(f"- duplicate block candidate (occurrences: {item['occurrences']}, lines: {item['block_len']})")
+        for occ in item["occurrence_samples"]:
+            add(f"  • {occ['path']}:{occ['start_line']}-{occ['end_line']}")
+        add(f"  • preview: {item['preview']}")
+    add("")
 
-    w.add("")
-    w.add("- HIGH RISK / FULL FILE REVIEW REQUIRED:")
-    for item in sz["high_risk_full_review_required"][:60]:
-        w.add(f"  • {item['file']}")
+    add("=== POSSIBLE LOOP + AWAIT RISK SUMMARY ===")
+    add("")
+    for item in report["possible_loop_await_risk_summary"][:30]:
+        add(f"- {item['path']}:{item['line']} :: {item['snippet']}")
+    add("")
 
-    w.section("=== BROWSER ROUTE RISK SUMMARY ===")
-    brr = report["browser_route_risk"]
-    for item in brr["api_rewrites"]:
-        w.add(f"  • {item['source']} -> {item['functionId']} ({item['region']})")
-    w.add("")
-    w.add("- rule:")
-    for rule in brr["rule"]:
-        w.add(f"  • {rule}")
+    add("=== PRIORITY PLAN FOR AI DEVELOPER ===")
+    add("")
+    for item in report["priority_plan_for_ai_developer"]:
+        add(f"- {item['priority']} :: {item['kind']} :: {item['path']}")
+        add(f"  • reason: {item['reason']}")
+    add("")
 
-    w.section("=== DUPLICATION SUMMARY ===")
-    duplication = report["duplication"]
-    if duplication:
-        for item in duplication:
-            w.add(f"- duplicate block candidate (occurrences: {item['occurrences']}, lines: {item['window']})")
-            for hit in item["hits"][:6]:
-                w.add(f"  • {hit['file']}:{hit['line_start']}-{hit['line_end']}")
-            w.add(f"  • preview: {item['preview']}")
-    else:
-        w.add("- none")
+    m = report["manual_review_targets"]
+    add("=== MANUAL REVIEW TARGETS FOR AI DEVELOPER ===")
+    add("")
+    add("- Review first:")
+    for item in m["review_first"]:
+        add(f"  • {item}")
+    add("")
+    add("- Constraints:")
+    for item in m["constraints"]:
+        add(f"  • {item}")
+    add("")
+    add("=" * 80)
+    add("END OF AI OPTIMIZATION AUDIT")
+    add("=" * 80)
 
-    w.section("=== POSSIBLE LOOP + AWAIT RISK SUMMARY ===")
-    if report["loop_await_risks"]:
-        for item in report["loop_await_risks"][:80]:
-            w.add(f"- {item['file']}:{item['line']} :: {item['preview']}")
-    else:
-        w.add("- none")
-
-    w.section("=== PRIORITY PLAN FOR AI DEVELOPER ===")
-    for item in priority_plan["immediate_actions"]:
-        w.add(f"- {item['priority']} :: {item['type']} :: {item['file']}")
-        w.add(f"  • reason: {item['reason']}")
-
-    w.add("")
-    w.add("=== MANUAL REVIEW TARGETS FOR AI DEVELOPER ===")
-    w.add("")
-    w.add("- Review first:")
-    w.add("  • highest frontend hotspot")
-    w.add("  • highest backend hotspot")
-    w.add("  • largest functions")
-    w.add("  • Firestore-heavy services")
-    w.add("  • browser-facing endpoint chain: firebase.json -> function -> Cloud Run")
-    w.add("  • shared contracts before any rename")
-    w.add("")
-    w.add("- Constraints:")
-    w.add("  • do NOT change business logic by default")
-    w.add("  • do NOT redesign UX by default")
-    w.add("  • do NOT refactor high-risk files from partial snippets")
-    w.add("  • optimize by reducing waste, not by changing intended behavior")
-
-    w.add("")
-    w.add("=" * 80)
-    w.add("END OF AI OPTIMIZATION AUDIT")
-    w.add("=" * 80)
-
-    return "\n".join(w.lines)
+    return "\n".join(out)
 
 
-# =========================================================
-# MAIN
-# =========================================================
-def main():
+# =========================
+# 💾 ZAPIS
+# =========================
+def write_outputs(report: Dict[str, Any], text_report: str):
+    txt_path = Path(PROJECT_ROOT) / OUTPUT_TXT
+    json_path = Path(PROJECT_ROOT) / OUTPUT_JSON
+
+    txt_path.write_text(text_report, encoding="utf-8")
+    json_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    print(f"[OK] TXT report written to: {OUTPUT_TXT}")
+    print(f"[OK] JSON report written to: {OUTPUT_JSON}")
+
+
+# =========================
+# ▶ MAIN
+# =========================
+def print_audit():
+    print("🔍 Building AI developer optimization audit...\n")
     report = build_json_report()
-
     text_report = render_text_report(report)
-
     print(text_report)
-
-    Path(TEXT_OUTPUT_PATH).write_text(text_report, encoding="utf-8")
-    Path(JSON_OUTPUT_PATH).write_text(
-        json.dumps(report, ensure_ascii=False, indent=2),
-        encoding="utf-8"
-    )
-
-    print("")
-    print(f"[OK] TXT report written to: {TEXT_OUTPUT_PATH}")
-    print(f"[OK] JSON report written to: {JSON_OUTPUT_PATH}")
+    print()
+    write_outputs(report, text_report)
 
 
 if __name__ == "__main__":
-    main()
+    print_audit()
