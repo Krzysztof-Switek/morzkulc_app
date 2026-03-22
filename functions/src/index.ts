@@ -9,6 +9,7 @@ import type {Request, Response} from "express";
 
 import {handleRegisterUser} from "./api/registerUserHandler";
 import {handleGetGearKayaks} from "./api/getGearKayaksHandler";
+import {handleGetGearItems} from "./api/getGearItemsHandler";
 import {handleGearMyReservations} from "./api/gearMyReservationsHandler";
 import {handleGearReservationCreate} from "./api/gearReservationCreateHandler";
 import {handleGearReservationUpdate} from "./api/gearReservationUpdateHandler";
@@ -425,6 +426,20 @@ export const getGearKayaks = onRequest({invoker: "private"}, async (req, res) =>
   return handleGetGearKayaks(req, res, {
     db,
     admin,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * GET /api/gear/items (authenticated)
+ */
+export const getGearItems = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetGearItems(req, res, {
+    db,
     sendPreflight,
     requireAllowedHost,
     setCorsHeaders,

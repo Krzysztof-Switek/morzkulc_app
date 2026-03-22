@@ -7,6 +7,15 @@ const CREATE_RESERVATION_URL = "/api/gear/reservations/create";
 // Lokalny placeholder dostępny zawsze z aplikacji
 const PLACEHOLDER_SVG = "/assets/kayak-placeholder.png";
 
+const GEAR_TABS = [
+  { id: "kayaks", label: "Kajaki" },
+  { id: "paddles", label: "Wiosła" },
+  { id: "lifejackets", label: "Kamizelki" },
+  { id: "helmets", label: "Kaski" },
+  { id: "throwbags", label: "Rzutki" },
+  { id: "sprayskirts", label: "Fartuchy" }
+];
+
 export function createGearModule({ id, label, defaultRoute, order, enabled, access }) {
   return {
     id,
@@ -17,17 +26,10 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
     access,
 
     async render({ viewEl, routeId, ctx }) {
-      const r = String(routeId || "").trim() || "kayaks";
-
-      if (r !== "kayaks") {
-        viewEl.innerHTML = `
-          <div class="card center">
-            <h2>${escapeHtml(label)}</h2>
-            <p>Nieznana podstrona: <strong>${escapeHtml(r)}</strong></p>
-          </div>
-        `;
-        return;
-      }
+      const requestedRoute = String(routeId || "").trim() || "kayaks";
+      const activeTab = GEAR_TABS.find((t) => t.id === requestedRoute)?.id || "kayaks";
+      const activeTabLabel = GEAR_TABS.find((t) => t.id === activeTab)?.label || "Kajaki";
+      const isKayaksView = activeTab === "kayaks";
 
       if (!ctx?.idToken) {
         viewEl.innerHTML = `
@@ -41,44 +43,66 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
 
       viewEl.innerHTML = `
         <div class="card wide">
-          <h2>${escapeHtml(label)} – Kajaki</h2>
+          <h2>${escapeHtml(label)} – ${escapeHtml(activeTabLabel)}</h2>
 
-          <div class="gearToolbar">
-            <div class="gearToolbarTop">
-              <div class="row" style="margin:0;">
-                <label for="kayaksSearch">Szukaj</label>
-                <input id="kayaksSearch" placeholder="np. Diesel, Wave sport, niebieski, creek..." />
-                <div class="hint">Szukaj po dowolnej informacji o kajaku.</div>
-              </div>
-
-              <div class="actions" style="margin:0;">
-                <button id="kayaksReloadBtn" type="button">Odśwież</button>
-                <span id="kayaksMeta" class="hint"></span>
-              </div>
-            </div>
-
-            <div class="gearFiltersBar">
-              <label class="gearCheckPill" for="filterWorkingOnly">
-                <input id="filterWorkingOnly" type="checkbox" />
-                <span>Sprawny</span>
-              </label>
-
-              <label class="gearCheckPill" for="filterAvailableNowOnly">
-                <input id="filterAvailableNowOnly" type="checkbox" />
-                <span>Dostępny teraz</span>
-              </label>
-
-              <div class="gearTypeFilter">
-                <label for="filterTypeSelect">Typ</label>
-                <select id="filterTypeSelect">
-                  <option value="">Wszystkie typy</option>
-                </select>
-              </div>
-            </div>
-
-            <div id="kayaksErr" class="err hidden"></div>
-            <div id="kayaksList"></div>
+          <div class="gearTabs" role="tablist" aria-label="Kategorie sprzętu">
+            ${GEAR_TABS.map((tab) => `
+              <button
+                type="button"
+                class="gearTab ${tab.id === activeTab ? "active" : ""}"
+                data-gear-tab="${escapeAttr(tab.id)}"
+                aria-pressed="${tab.id === activeTab ? "true" : "false"}"
+              >
+                ${escapeHtml(tab.label)}
+              </button>
+            `).join("")}
           </div>
+
+          ${
+            isKayaksView ? `
+              <div class="gearToolbar">
+                <div class="gearToolbarTop">
+                  <div class="row" style="margin:0;">
+                    <label for="kayaksSearch">Szukaj</label>
+                    <input id="kayaksSearch" placeholder="np. Diesel, Wave sport, niebieski, creek..." />
+                    <div class="hint">Szukaj po dowolnej informacji o kajaku.</div>
+                  </div>
+
+                  <div class="actions" style="margin:0;">
+                    <button id="kayaksReloadBtn" type="button">Odśwież</button>
+                    <span id="kayaksMeta" class="hint"></span>
+                  </div>
+                </div>
+
+                <div class="gearFiltersBar">
+                  <label class="gearCheckPill" for="filterWorkingOnly">
+                    <input id="filterWorkingOnly" type="checkbox" />
+                    <span>Sprawny</span>
+                  </label>
+
+                  <label class="gearCheckPill" for="filterAvailableNowOnly">
+                    <input id="filterAvailableNowOnly" type="checkbox" />
+                    <span>Dostępny teraz</span>
+                  </label>
+
+                  <div class="gearTypeFilter">
+                    <label for="filterTypeSelect">Typ</label>
+                    <select id="filterTypeSelect">
+                      <option value="">Wszystkie typy</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div id="kayaksErr" class="err hidden"></div>
+                <div id="kayaksList"></div>
+              </div>
+            ` : `
+              <div class="gearComingSoon card center">
+                <h3>${escapeHtml(activeTabLabel)}</h3>
+                <p>Dostępne wkrótce</p>
+              </div>
+            `
+          }
         </div>
 
         <div id="gearImgModal" class="gearModal hidden" aria-hidden="true">
@@ -150,6 +174,19 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
           </div>
         </div>
       `;
+
+      const tabButtons = viewEl.querySelectorAll("[data-gear-tab]");
+      tabButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const tabId = String(btn.getAttribute("data-gear-tab") || "").trim();
+          if (!tabId || tabId === activeTab) return;
+          window.location.hash = `#${id}/${tabId}`;
+        });
+      });
+
+      if (!isKayaksView) {
+        return;
+      }
 
       const errEl = viewEl.querySelector("#kayaksErr");
       const listEl = viewEl.querySelector("#kayaksList");

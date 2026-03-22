@@ -84,6 +84,13 @@
         }
       },
       {
+        "source": "/api/gear/items",
+        "function": {
+          "functionId": "getGearItems",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "/api/gear/my-reservations",
         "function": {
           "functionId": "getGearMyReservations",
