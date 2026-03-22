@@ -4,6 +4,10 @@
 import type {Request, Response} from "express";
 import type * as admin from "firebase-admin";
 import {logger} from "firebase-functions/v2";
+import {
+  isSupportedGearCategory,
+  listGearItemsByCategory,
+} from "../modules/equipment/shared/gear_catalog_service";
 
 type TokenCheck =
   | {error: string}
@@ -29,6 +33,12 @@ function toNumberSafe(v: any): number | null {
 
 function todayIsoUTC(): string {
   return new Date().toISOString().slice(0, 10);
+}
+
+function getCategoryFromRequest(req: Request): string {
+  const raw = req.query?.category;
+  if (Array.isArray(raw)) return String(raw[0] || "").trim().toLowerCase();
+  return String(raw || "kayaks").trim().toLowerCase();
 }
 
 function pickKayak(doc: any, reservedKayakIdsNow: Set<string>) {
@@ -106,6 +116,25 @@ export async function handleGetGearKayaks(req: Request, res: Response, deps: Get
       const tokenCheck = await requireIdToken(req);
       if ("error" in tokenCheck) {
         res.status(401).json({error: tokenCheck.error});
+        return;
+      }
+
+      const category = getCategoryFromRequest(req);
+
+      if (category !== "kayaks") {
+        if (!isSupportedGearCategory(category)) {
+          res.status(400).json({error: "Unsupported category"});
+          return;
+        }
+
+        const items = await listGearItemsByCategory(db, category);
+
+        res.status(200).json({
+          ok: true,
+          category,
+          count: items.length,
+          items,
+        });
         return;
       }
 
