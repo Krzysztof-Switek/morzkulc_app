@@ -129,9 +129,11 @@ PATTERNS_TO_SEARCH = [
     "getSetup",
     "adminPutSetup",
     "getGearKayaks",
+    "getGearItems",
     "/api/register",
     "/api/setup",
     "/api/gear/kayaks",
+    "/api/gear/items",
     "sprzet-skk-morzkulc.web.app",
     "sprzet-skk-morzkulc.firebaseapp.com",
     "morzkulc-e9df7.web.app",
@@ -143,6 +145,10 @@ PATTERNS_TO_SEARCH = [
     "authDomain:",
     "ALLOWED_HOSTS",
     "ALLOWED_ORIGINS",
+    "invoker",
+    "run.googleapis.com/invoker-iam-disabled",
+    "get-iam-policy",
+    "--format=export",
     "firestore.indexes.json",
     "collectionGroup",
     ".orderBy(",
@@ -234,6 +240,18 @@ ARCHITECTURE
 - Frontend runtime in public/
 - Hosting rewrites /api/* are critical
 - Firebase client config must support both DEV and PROD safely
+
+BROWSER-FACING FUNCTIONS / CLOUD RUN
+- New browser-facing features should NOT default to new standalone public functions
+- Prefer one public gateway function per module and route internally by query/path
+- Before deploying any browser-facing endpoint, always compare:
+  - firebase.json rewrite target
+  - onRequest({invoker: ...}) in functions/src
+  - deployed Cloud Run service config
+  - whether service uses run.googleapis.com/invoker-iam-disabled
+- Never assume that an endpoint is public only because frontend uses /api/*
+- If a feature works in Cloud but local code says invoker=private/public differently, STOP and reconcile local vs deployed state first
+- Separate browser-facing functions from internal/private/service functions
 
 CHANGE DISCIPLINE
 - One logical change at a time
@@ -636,7 +654,6 @@ def extract_firestore_query_candidates(content: str) -> List[Dict[str, Any]]:
         order_fields = [field for field, _direction in order_matches]
 
         has_range = any(op in INDEX_RANGE_OPERATORS for op in where_ops)
-        equality_count = sum(1 for op in where_ops if op in INDEX_EQUALITY_OPERATORS)
 
         requires_index = False
         reason_parts: List[str] = []
@@ -1035,10 +1052,50 @@ def print_firebase_json_summary():
     functions_cfg = data.get("functions")
     print("- functions config present:", functions_cfg is not None)
 
+    if isinstance(functions_cfg, list):
+        for idx, item in enumerate(functions_cfg, 1):
+            if isinstance(item, dict):
+                print(f"  • functions[{idx}] source: {item.get('source', '(missing)')}")
+                print(f"    - invoker: {item.get('invoker', '(missing)')}")
+
     firestore_cfg = data.get("firestore")
     print("- firestore config present:", firestore_cfg is not None)
     if isinstance(firestore_cfg, dict):
         print(f"  • firestore.indexes path: {firestore_cfg.get('indexes', '(missing)')}")
+
+
+def print_cloud_run_yaml_summary():
+    print("\n=== CLOUD RUN YAML SUMMARY ===\n")
+
+    yaml_files = []
+    for path in iter_project_files():
+        if path.suffix.lower() in {".yml", ".yaml"} and "getgear" in path.name.lower():
+            yaml_files.append(path)
+
+    if not yaml_files:
+        print("- no exported Cloud Run YAML files found")
+        print("  • export manually when needed:")
+        print("    gcloud run services describe SERVICE --region=us-central1 --format=export > service.yaml")
+        return
+
+    for path in sorted(yaml_files):
+        content = safe_read(path)
+        if not content:
+            print(f"- {path.name}: unreadable")
+            continue
+
+        invoker_disabled = (
+            "run.googleapis.com/invoker-iam-disabled: 'true'" in content
+            or 'run.googleapis.com/invoker-iam-disabled: "true"' in content
+            or "run.googleapis.com/invoker-iam-disabled: true" in content
+        )
+
+        print(f"- {path.name}")
+        print(f"  • invoker_iam_disabled: {invoker_disabled}")
+
+        service_match = re.search(r"name:\s+([^\n]+)", content)
+        if service_match:
+            print(f"  • first name field: {service_match.group(1).strip()}")
 
 
 def print_frontend_firebase_summary():
@@ -1102,11 +1159,20 @@ def print_host_security_summary():
             origin = match.group(1)
             origins_found.setdefault(origin, set()).add(rel)
 
-        for pattern in ["requireAllowedHost", "isAllowedHost", "/api/register", "/api/setup", "/api/gear/kayaks"]:
+        for pattern in ["requireAllowedHost", "isAllowedHost", "/api/register", "/api/setup", "/api/gear/kayaks", "/api/gear/items"]:
             if pattern in content:
                 api_refs.append(f"{rel} :: {pattern}")
 
-        for pattern in ["req.headers.host", "req.headers.origin", "req.headers.referer", "Access-Control-Allow-Origin", "ALLOWED_HOSTS", "ALLOWED_ORIGINS"]:
+        for pattern in [
+            "req.headers.host",
+            "req.headers.origin",
+            "req.headers.referer",
+            "Access-Control-Allow-Origin",
+            "ALLOWED_HOSTS",
+            "ALLOWED_ORIGINS",
+            "invoker",
+            "run.googleapis.com/invoker-iam-disabled",
+        ]:
             if pattern in content:
                 security_hits.append(f"{rel} :: {pattern}")
 
@@ -1130,14 +1196,14 @@ def print_host_security_summary():
 
     print("\n- API/security references:")
     if api_refs:
-        for item in sorted(set(api_refs))[:100]:
+        for item in sorted(set(api_refs))[:120]:
             print(f"  • {item}")
     else:
         print("  • none")
 
     print("\n- Header/host/origin checks:")
     if security_hits:
-        for item in sorted(set(security_hits))[:100]:
+        for item in sorted(set(security_hits))[:120]:
             print(f"  • {item}")
     else:
         print("  • none")
@@ -1211,6 +1277,45 @@ def print_http_route_summary():
         print("  • none")
 
 
+def print_browser_route_risk_summary():
+    print("\n=== BROWSER ROUTE RISK SUMMARY ===\n")
+
+    path = Path(PROJECT_ROOT) / "firebase.json"
+    content = safe_read(path)
+    if not content:
+        print("- firebase.json unreadable")
+        return
+
+    try:
+        data = json.loads(content)
+    except Exception as e:
+        print(f"- invalid firebase.json JSON: {e}")
+        return
+
+    hosting = data.get("hosting", {})
+    rewrites = hosting.get("rewrites", []) if isinstance(hosting, dict) else []
+
+    api_rewrites = []
+    for rw in rewrites:
+        if not isinstance(rw, dict):
+            continue
+        source = rw.get("source")
+        fn = rw.get("function", {})
+        if isinstance(source, str) and source.startswith("/api/") and isinstance(fn, dict):
+            api_rewrites.append((source, fn.get("functionId")))
+
+    if not api_rewrites:
+        print("- no /api rewrites found")
+        return
+
+    for source, function_id in api_rewrites:
+        print(f"  • {source} -> {function_id}")
+
+    print("\n- rule:")
+    print("  • browser-facing routes should prefer stable module gateways")
+    print("  • do not add new standalone browser-facing functions without checking deployed Cloud Run access model")
+
+
 def print_pattern_matches(patterns: List[str]):
     print("\n=== PATTERN MATCHES ===\n")
 
@@ -1252,11 +1357,13 @@ def print_snapshot():
     print_env_summary()
     print_firebaserc_summary()
     print_firebase_json_summary()
+    print_cloud_run_yaml_summary()
     print_frontend_firebase_summary()
     print_host_security_summary()
     print_firestore_summary()
     print_firestore_index_check()
     print_http_route_summary()
+    print_browser_route_risk_summary()
     print_pattern_matches(PATTERNS_TO_SEARCH)
 
     print("\n=== PROJECT MAP ===\n")
