@@ -230,27 +230,35 @@ button[disabled] {
     right: 0;
     bottom: 0;
     z-index: 60;
-    padding: var(--space-2) var(--space-3);
+    padding: 8px 12px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
     border-top: 1px solid var(--border);
     border-bottom: 0;
-    background: rgba(16, 24, 40, 0.72);
-    backdrop-filter: blur(12px);
-    max-width: 980px;
-    margin: 0 auto;
+    background: rgba(16, 24, 40, 0.88);
+    backdrop-filter: blur(16px);
+    max-width: 100%;
+    margin: 0;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 6px;
+    scrollbar-width: none;
   }
 
+  #nav::-webkit-scrollbar { display: none; }
+
   :root[data-theme="light"] #nav {
-    background: rgba(255, 255, 255, 0.75);
+    background: rgba(255, 255, 255, 0.88);
   }
 
   #nav button {
-    flex: 1 1 auto;
-    justify-content: center;
+    flex: 0 0 auto;
     min-height: 44px;
-    font-size: 13px;
+    font-size: 12px;
+    padding: 8px 14px;
+    white-space: nowrap;
   }
 
-  #view { padding-bottom: 92px; }
+  #view { padding-bottom: 80px; }
 }
 
 /* --- View --- */
