@@ -22,6 +22,8 @@ firebase-debug.*.log*
 .env.*
 functions/.env*
 functions/.runtimeconfig.json
+.env.morzkulc-e9df7
+.env.sprzet-skk-morzkulc
 
 # ===============================
 # Node
