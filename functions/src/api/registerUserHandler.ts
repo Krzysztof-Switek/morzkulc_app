@@ -195,14 +195,20 @@ function computeRoleKeyFromOpeningBalance(obData: any): "rola_czlonek" | "rola_s
 async function findOpeningBalanceByEmail(db: FirebaseFirestore.Firestore, email: string) {
   if (!email || !email.includes("@")) return {openingMatch: false, obData: null as any};
 
-  const q = await db
-    .collection("users_opening_balance_26")
-    .where("e-mail", "==", email)
-    .limit(1)
-    .get();
+  const normalizedEmail = String(email).trim().toLowerCase();
 
-  if (q.empty) return {openingMatch: false, obData: null as any};
-  return {openingMatch: true, obData: q.docs[0].data() as any};
+  const snap = await db.collection("users_opening_balance_26").get();
+
+  for (const doc of snap.docs) {
+    const data = doc.data() as any;
+    const rowEmail = String(data["e-mail"] || "").trim().toLowerCase();
+
+    if (rowEmail && rowEmail === normalizedEmail) {
+      return {openingMatch: true, obData: data};
+    }
+  }
+
+  return {openingMatch: false, obData: null as any};
 }
 
 export async function handleRegisterUser(req: Request, res: Response, deps: RegisterUserDeps) {
