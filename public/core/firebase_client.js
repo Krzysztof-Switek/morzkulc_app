@@ -85,26 +85,39 @@ export function authGetBasicUser(user) {
 
 const storage = getStorage(app);
 
-function kayakDirPath(number) {
+function kayakStorageNumber(number) {
   const n = String(number || "").trim();
+  // Numer katalogu: zawsze 3 cyfry (np. "13" -> "013")
   const padded = /^\d+$/.test(n) && n.length < 3 ? n.padStart(3, "0") : n;
-  return `GEAR/KAJAKS/${padded}`;
+  return { n, padded };
 }
 
+// Cover: próbuje thumbnail (mały, szybki), fallback na oryginał
+// Thumbnail generowany przez Firebase "Resize Images" extension:
+//   GEAR/KAJAKS/013/COVER/13_cover_thumb.jpg
+// Oryginał:
+//   GEAR/KAJAKS/013/COVER/13_cover.jpg
 export async function storageFetchKayakCoverUrl(number) {
-  const coverRef = ref(storage, `${kayakDirPath(number)}/cover`);
-  const result = await listAll(coverRef);
-  if (!result.items.length) return null;
-  return getDownloadURL(result.items[0]);
+  const { n, padded } = kayakStorageNumber(number);
+  const thumbPath = `GEAR/KAJAKS/${padded}/COVER/${n}_cover_thumb.jpg`;
+  const fullPath = `GEAR/KAJAKS/${padded}/COVER/${n}_cover.jpg`;
+  try {
+    return await getDownloadURL(ref(storage, thumbPath));
+  } catch {
+    // brak thumbnailа — fallback na pełne zdjęcie
+    try {
+      return await getDownloadURL(ref(storage, fullPath));
+    } catch {
+      return null;
+    }
+  }
 }
 
+// Galeria: wszystkie pliki z GEAR/KAJAKS/013/GALLERY/
 export async function storageFetchKayakGalleryUrls(number) {
-  const dirRef = ref(storage, kayakDirPath(number));
-  const result = await listAll(dirRef);
-  const allItems = [...result.items];
-  for (const prefix of result.prefixes) {
-    const sub = await listAll(prefix);
-    allItems.push(...sub.items);
-  }
-  return Promise.all(allItems.map((item) => getDownloadURL(item)));
+  const { padded } = kayakStorageNumber(number);
+  const galleryRef = ref(storage, `GEAR/KAJAKS/${padded}/GALLERY`);
+  const result = await listAll(galleryRef);
+  if (!result.items.length) return [];
+  return Promise.all(result.items.map((item) => getDownloadURL(item)));
 }

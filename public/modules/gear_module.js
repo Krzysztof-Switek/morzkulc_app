@@ -377,6 +377,22 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         `;
 
         metaEl.textContent = `Widoczne: ${items.length} / ${all.length}`;
+
+        if (isKayaksView) {
+          listEl.querySelectorAll("img[data-cover-number]").forEach((imgEl) => {
+            const num = String(imgEl.getAttribute("data-cover-number") || "");
+            if (!num) return;
+            storageFetchKayakCoverUrl(num)
+              .then((url) => {
+                if (!url) return;
+                imgEl.src = url;
+                imgEl.classList.add("gearCoverLoaded");
+                const btn = imgEl.closest("[data-gear-kayak-cover]");
+                if (btn) btn.setAttribute("data-loaded-cover-url", url);
+              })
+              .catch((err) => console.error("[Storage] cover load failed for", num, err));
+          });
+        }
       };
 
       const applyFilter = () => {
@@ -587,15 +603,13 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         document.body.style.overflow = "hidden";
       }
 
-      async function openKayakPhotoModal({ number, title }) {
+      async function openKayakPhotoModal({ number, title, preloadedUrl }) {
         currentKayakNumber = String(number || "");
         currentImgTop = "";
         currentImgSide = "";
         currentTitle = String(title || "Zdjęcia");
 
         modalTitleEl.textContent = currentTitle;
-        modalHintEl.textContent = "Ładuję...";
-        modalImgEl.removeAttribute("src");
         modalThumbsEl.innerHTML = "";
         modalThumbsEl.classList.add("hidden");
 
@@ -606,22 +620,35 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         modalAllBtn.disabled = false;
         modalAllBtn.textContent = "Więcej zdjęć";
 
+        if (preloadedUrl) {
+          // Zdjęcie już załadowane w karcie — użyj bez ponownego fetcha
+          modalImgEl.setAttribute("src", preloadedUrl);
+          modalHintEl.textContent = "";
+        } else {
+          modalImgEl.removeAttribute("src");
+          modalHintEl.textContent = "Ładuję...";
+        }
+
         modalEl.classList.remove("hidden");
         modalEl.setAttribute("aria-hidden", "false");
         document.body.style.overflow = "hidden";
 
-        try {
-          const url = await storageFetchKayakCoverUrl(currentKayakNumber);
-          if (url) {
-            modalImgEl.setAttribute("src", url);
-            modalHintEl.textContent = "";
-          } else {
+        if (!preloadedUrl) {
+          try {
+            const url = await storageFetchKayakCoverUrl(currentKayakNumber);
+            if (url) {
+              modalImgEl.setAttribute("src", url);
+              modalHintEl.textContent = "";
+            } else {
+              modalImgEl.setAttribute("src", PLACEHOLDER_SVG);
+              modalHintEl.textContent = "Brak zdjęcia okładkowego.";
+              console.warn("[Storage] brak cover dla kajaka nr", currentKayakNumber);
+            }
+          } catch (err) {
             modalImgEl.setAttribute("src", PLACEHOLDER_SVG);
-            modalHintEl.textContent = "Brak zdjęcia okładkowego.";
+            modalHintEl.textContent = "Nie udało się załadować zdjęcia.";
+            console.error("[Storage] błąd cover dla kajaka nr", currentKayakNumber, err);
           }
-        } catch {
-          modalImgEl.setAttribute("src", PLACEHOLDER_SVG);
-          modalHintEl.textContent = "Nie udało się załadować zdjęcia.";
         }
       }
 
@@ -722,7 +749,8 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         if (coverBtn) {
           const number = String(coverBtn.getAttribute("data-gear-kayak-cover") || "");
           const title = String(coverBtn.getAttribute("data-gear-title") || "Zdjęcia");
-          await openKayakPhotoModal({ number, title });
+          const preloadedUrl = coverBtn.getAttribute("data-loaded-cover-url") || null;
+          await openKayakPhotoModal({ number, title, preloadedUrl });
           return;
         }
 
@@ -844,7 +872,12 @@ function renderKayakCard(k) {
             data-gear-kayak-cover="${escapeAttr(number)}"
             data-gear-title="${escapeAttr(title)}">
             <div class="gearImgPh">
-              <img alt="" src="${escapeAttr(PLACEHOLDER_SVG)}" />
+              <img
+                alt=""
+                src="${escapeAttr(PLACEHOLDER_SVG)}"
+                data-cover-number="${escapeAttr(number)}"
+                loading="lazy"
+              />
               <div class="gearImgLabel">Zdjecia</div>
             </div>
           </button>

@@ -238,6 +238,13 @@
   opacity: 0.9;
 }
 
+.gearImgPh img.gearCoverLoaded {
+  position: absolute;
+  inset: 0;
+  object-fit: cover;
+  opacity: 1;
+}
+
 .gearImgLabel {
   position: absolute;
   left: 10px;
