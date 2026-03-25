@@ -49,6 +49,8 @@ function getFirebaseConfig() {
 }
 
 const firebaseConfig = getFirebaseConfig();
+export const isDev = firebaseConfig === DEV_CONFIG;
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();

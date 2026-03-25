@@ -90,13 +90,14 @@ export async function getDelegatedAuth(
   const delegatedFinal = String(delegatedUserEmail || "").trim().toLowerCase();
   const saFinal = String(saEmailFinal || "").trim().toLowerCase();
 
-  // 🔎 DEBUG – zobaczymy w stdout dokładnie co trafia do JWT
-  console.log("DWD_DEBUG", {
-    saEmailFinal: saFinal,
-    delegatedUserEmail: delegatedFinal,
-    envDelegated: process.env.SVC_WORKSPACE_DELEGATED_SUBJECT,
-    envSa: process.env.SVC_WORKSPACE_SA_EMAIL,
-  });
+  if (process.env.ENV_NAME !== "prod") {
+    console.log("DWD_DEBUG", {
+      saEmailFinal: saFinal,
+      delegatedUserEmail: delegatedFinal,
+      envDelegated: process.env.SVC_WORKSPACE_DELEGATED_SUBJECT,
+      envSa: process.env.SVC_WORKSPACE_SA_EMAIL,
+    });
+  }
 
   // 🔥 Twarde zabezpieczenie – sub nie może być service accountem
   if (!delegatedFinal.includes("@")) {

@@ -3,7 +3,8 @@ import {
   authLoginPopup,
   authLogout,
   authGetIdToken,
-  authGetBasicUser
+  authGetBasicUser,
+  isDev
 } from "/core/firebase_client.js";
 
 import { apiPostJson, apiGetJson } from "/core/api_client.js";
@@ -26,6 +27,11 @@ const viewEl = document.getElementById("view");
 if (!appRoot || !navEl || !viewEl) {
   // eslint-disable-next-line no-console
   console.error("Missing DOM nodes: appRoot/nav/view. Check public/index.html ids.");
+}
+
+const debugPanel = document.getElementById("debugPanel");
+if (debugPanel && !isDev) {
+  debugPanel.remove();
 }
 
 const ctx = {
@@ -66,10 +72,10 @@ authOnChange(async (user) => {
   ctx.user = user;
   window.__APP_CTX__ = ctx;
 
-  userData.textContent = JSON.stringify(authGetBasicUser(user), null, 2);
+  if (userData) userData.textContent = JSON.stringify(authGetBasicUser(user), null, 2);
 
   try {
-    registerData.textContent = "Rejestracja: wysyłam token do backendu...";
+    if (registerData) registerData.textContent = "Rejestracja: wysyłam token do backendu...";
     const idToken = await authGetIdToken(user, true);
     ctx.idToken = idToken;
     window.__APP_CTX__ = ctx;
@@ -83,7 +89,7 @@ authOnChange(async (user) => {
     ctx.session = session;
     window.__APP_CTX__ = ctx;
 
-    registerData.textContent = JSON.stringify(session, null, 2);
+    if (registerData) registerData.textContent = JSON.stringify(session, null, 2);
 
     // setup jest opcjonalny (może jeszcze nie istnieć)
     ctx.setup = null;
@@ -115,7 +121,7 @@ authOnChange(async (user) => {
       );
     }
   } catch (e) {
-    registerData.textContent = "Błąd rejestracji: " + (e?.message || e);
+    if (registerData) registerData.textContent = "Błąd rejestracji: " + (e?.message || e);
     ctx.session = null;
     window.__APP_CTX__ = ctx;
   }
@@ -126,8 +132,8 @@ function hardResetUi() {
   logoutBtn.classList.add("hidden");
   appRoot.classList.add("hidden");
 
-  userData.textContent = "";
-  registerData.textContent = "";
+  if (userData) userData.textContent = "";
+  if (registerData) registerData.textContent = "";
   if (modulesData) modulesData.textContent = "";
 
   navEl.innerHTML = "";
