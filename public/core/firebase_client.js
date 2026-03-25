@@ -6,6 +6,12 @@ import {
   signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+  getStorage,
+  ref,
+  listAll,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const DEV_CONFIG = {
   apiKey: "AIzaSyCzWcAgskiyp1AyibbiPLeAfCUfr7e3gtg",
@@ -75,4 +81,30 @@ export function authGetBasicUser(user) {
     email: user.email,
     displayName: user.displayName
   };
+}
+
+const storage = getStorage(app);
+
+function kayakDirPath(number) {
+  const n = String(number || "").trim();
+  const padded = /^\d+$/.test(n) && n.length < 3 ? n.padStart(3, "0") : n;
+  return `GEAR/KAJAKS/${padded}`;
+}
+
+export async function storageFetchKayakCoverUrl(number) {
+  const coverRef = ref(storage, `${kayakDirPath(number)}/cover`);
+  const result = await listAll(coverRef);
+  if (!result.items.length) return null;
+  return getDownloadURL(result.items[0]);
+}
+
+export async function storageFetchKayakGalleryUrls(number) {
+  const dirRef = ref(storage, kayakDirPath(number));
+  const result = await listAll(dirRef);
+  const allItems = [...result.items];
+  for (const prefix of result.prefixes) {
+    const sub = await listAll(prefix);
+    allItems.push(...sub.items);
+  }
+  return Promise.all(allItems.map((item) => getDownloadURL(item)));
 }

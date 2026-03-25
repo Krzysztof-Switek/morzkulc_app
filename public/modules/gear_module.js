@@ -1,5 +1,6 @@
 import { apiGetJson, apiPostJson } from "/core/api_client.js";
 import { mapUserFacingApiError } from "/core/user_error_messages.js";
+import { storageFetchKayakCoverUrl, storageFetchKayakGalleryUrls } from "/core/firebase_client.js";
 
 const GEAR_URL = "/api/gear/kayaks";
 const CREATE_RESERVATION_URL = "/api/gear/reservations/create";
@@ -137,9 +138,11 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
             <div class="gearModalBody">
               <img id="gearModalImg" alt="Zdjęcie sprzętu" />
             </div>
+            <div id="gearModalThumbs" class="gearModalThumbs hidden"></div>
             <div class="gearModalActions">
               <button id="gearModalTopBtn" type="button" class="ghost">Zdjęcie 1</button>
               <button id="gearModalSideBtn" type="button" class="ghost">Zdjęcie 2</button>
+              <button id="gearModalAllBtn" type="button" class="ghost hidden">Więcej zdjęć</button>
               <span class="hint" id="gearModalHint"></span>
             </div>
           </div>
@@ -235,6 +238,8 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
       const modalHintEl = viewEl.querySelector("#gearModalHint");
       const modalTopBtn = viewEl.querySelector("#gearModalTopBtn");
       const modalSideBtn = viewEl.querySelector("#gearModalSideBtn");
+      const modalThumbsEl = viewEl.querySelector("#gearModalThumbs");
+      const modalAllBtn = viewEl.querySelector("#gearModalAllBtn");
 
       let all = [];
       let selectedKayak = null;
@@ -529,6 +534,7 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
       let currentImgTop = "";
       let currentImgSide = "";
       let currentTitle = "";
+      let currentKayakNumber = null;
 
       modalImgEl.onerror = () => {
         const currentSrc = String(modalImgEl.getAttribute("src") || "");
@@ -542,9 +548,17 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         currentTitle = String(title || "Zdjęcie");
         currentImgTop = String(topUrl || "");
         currentImgSide = String(sideUrl || "");
+        currentKayakNumber = null;
 
         modalTitleEl.textContent = currentTitle;
         modalHintEl.textContent = "";
+
+        // Reset kayak-only elements
+        modalThumbsEl.innerHTML = "";
+        modalThumbsEl.classList.add("hidden");
+        modalAllBtn.classList.add("hidden");
+        modalTopBtn.classList.remove("hidden");
+        modalSideBtn.classList.remove("hidden");
 
         const hasTop = Boolean(currentImgTop);
         const hasSide = Boolean(currentImgSide);
@@ -573,6 +587,44 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         document.body.style.overflow = "hidden";
       }
 
+      async function openKayakPhotoModal({ number, title }) {
+        currentKayakNumber = String(number || "");
+        currentImgTop = "";
+        currentImgSide = "";
+        currentTitle = String(title || "Zdjęcia");
+
+        modalTitleEl.textContent = currentTitle;
+        modalHintEl.textContent = "Ładuję...";
+        modalImgEl.removeAttribute("src");
+        modalThumbsEl.innerHTML = "";
+        modalThumbsEl.classList.add("hidden");
+
+        // Show kayak-only elements, hide generic ones
+        modalTopBtn.classList.add("hidden");
+        modalSideBtn.classList.add("hidden");
+        modalAllBtn.classList.remove("hidden");
+        modalAllBtn.disabled = false;
+        modalAllBtn.textContent = "Więcej zdjęć";
+
+        modalEl.classList.remove("hidden");
+        modalEl.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+
+        try {
+          const url = await storageFetchKayakCoverUrl(currentKayakNumber);
+          if (url) {
+            modalImgEl.setAttribute("src", url);
+            modalHintEl.textContent = "";
+          } else {
+            modalImgEl.setAttribute("src", PLACEHOLDER_SVG);
+            modalHintEl.textContent = "Brak zdjęcia okładkowego.";
+          }
+        } catch {
+          modalImgEl.setAttribute("src", PLACEHOLDER_SVG);
+          modalHintEl.textContent = "Nie udało się załadować zdjęcia.";
+        }
+      }
+
       function closeModal() {
         modalEl.classList.add("hidden");
         modalEl.setAttribute("aria-hidden", "true");
@@ -581,7 +633,13 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         currentImgTop = "";
         currentImgSide = "";
         currentTitle = "";
+        currentKayakNumber = null;
         modalHintEl.textContent = "";
+        modalThumbsEl.innerHTML = "";
+        modalThumbsEl.classList.add("hidden");
+        modalAllBtn.classList.add("hidden");
+        modalTopBtn.classList.remove("hidden");
+        modalSideBtn.classList.remove("hidden");
       }
 
       modalEl.addEventListener("click", (ev) => {
@@ -615,7 +673,41 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         modalImgEl.setAttribute("src", currentImgSide);
       });
 
-      listEl.addEventListener("click", (ev) => {
+      modalAllBtn.addEventListener("click", async () => {
+        if (!currentKayakNumber) return;
+        modalAllBtn.disabled = true;
+        modalHintEl.textContent = "Ładuję galerię...";
+
+        try {
+          const urls = await storageFetchKayakGalleryUrls(currentKayakNumber);
+          if (!urls.length) {
+            modalHintEl.textContent = "Brak zdjęć w galerii.";
+            modalAllBtn.disabled = false;
+            return;
+          }
+          modalThumbsEl.innerHTML = urls
+            .map((url) => `<button class="gearThumbBtn" type="button" data-thumb-url="${escapeAttr(url)}"><img src="${escapeAttr(url)}" alt="" loading="lazy" /></button>`)
+            .join("");
+          modalThumbsEl.classList.remove("hidden");
+          modalAllBtn.classList.add("hidden");
+          modalHintEl.textContent = `${urls.length} zdjęć`;
+          if (urls.length > 0) {
+            modalImgEl.setAttribute("src", urls[0]);
+          }
+        } catch {
+          modalHintEl.textContent = "Nie udało się załadować galerii.";
+          modalAllBtn.disabled = false;
+        }
+      });
+
+      modalThumbsEl.addEventListener("click", (ev) => {
+        const btn = ev.target.closest("[data-thumb-url]");
+        if (!btn) return;
+        const url = String(btn.getAttribute("data-thumb-url") || "");
+        if (url) modalImgEl.setAttribute("src", url);
+      });
+
+      listEl.addEventListener("click", async (ev) => {
         const el = ev.target;
         if (!el || !el.closest) return;
 
@@ -623,6 +715,14 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         if (reserveBtn) {
           const kayakId = String(reserveBtn.getAttribute("data-gear-reserve") || "");
           startCreateForKayak(kayakId);
+          return;
+        }
+
+        const coverBtn = el.closest("[data-gear-kayak-cover]");
+        if (coverBtn) {
+          const number = String(coverBtn.getAttribute("data-gear-kayak-cover") || "");
+          const title = String(coverBtn.getAttribute("data-gear-title") || "Zdjęcia");
+          await openKayakPhotoModal({ number, title });
           return;
         }
 
@@ -737,30 +837,15 @@ function renderKayakCard(k) {
           </div>
         </div>
 
-        <div class="gearImgs">
+        <div class="gearImgs gearImgsSingle">
           <button
             class="gearImgBtn"
             type="button"
-            data-gear-img="top"
-            data-gear-top="${escapeAttr(imgTop)}"
-            data-gear-side="${escapeAttr(imgSide)}"
+            data-gear-kayak-cover="${escapeAttr(number)}"
             data-gear-title="${escapeAttr(title)}">
             <div class="gearImgPh">
-              <img alt="" loading="lazy" src="${escapeAttr(PLACEHOLDER_SVG)}" />
-              <div class="gearImgLabel">Z góry</div>
-            </div>
-          </button>
-
-          <button
-            class="gearImgBtn"
-            type="button"
-            data-gear-img="side"
-            data-gear-top="${escapeAttr(imgTop)}"
-            data-gear-side="${escapeAttr(imgSide)}"
-            data-gear-title="${escapeAttr(title)}">
-            <div class="gearImgPh">
-              <img alt="" loading="lazy" src="${escapeAttr(PLACEHOLDER_SVG)}" />
-              <div class="gearImgLabel">Z boku</div>
+              <img alt="" src="${escapeAttr(PLACEHOLDER_SVG)}" />
+              <div class="gearImgLabel">Zdjecia</div>
             </div>
           </button>
         </div>

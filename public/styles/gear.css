@@ -203,6 +203,10 @@
   width: 100%;
 }
 
+.gearImgsSingle {
+  grid-template-columns: 1fr;
+}
+
 .gearImgBtn {
   border: 0;
   background: transparent;
@@ -430,6 +434,37 @@
 
 :root[data-theme="light"] .gearModalBody img {
   background: rgba(12,18,32,0.03);
+}
+
+.gearModalThumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--border);
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.gearThumbBtn {
+  padding: 0;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.gearThumbBtn img {
+  display: block;
+  width: 80px;
+  height: 60px;
+  object-fit: cover;
+}
+
+.gearThumbBtn:hover {
+  border-color: var(--primary);
 }
 
 .gearModalActions {
