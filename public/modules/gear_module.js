@@ -853,7 +853,7 @@ function renderKayakCard(k) {
             <div class="gearTitle">${escapeHtml(brand || "Kajak")}</div>
             <div class="gearModel">${escapeHtml(model || "-")}</div>
             <div class="gearInlineMeta gearInlineMetaMain"><strong>Kolor:</strong> ${escapeHtml(color || "-")}</div>
-            <div class="gearInlineMeta gearInlineMetaMain"><strong>Nr:</strong> ${escapeHtml(number || "-")}</div>
+            <div class="gearInlineMeta gearInlineMetaMain gearNr"><strong>Nr:</strong> ${escapeHtml(number || "-")}</div>
           </div>
 
           <div class="gearHeadSide">

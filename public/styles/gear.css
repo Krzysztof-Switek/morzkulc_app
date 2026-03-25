@@ -539,57 +539,23 @@
 
 /* ================= MOBILE OPTIMIZATIONS ================= */
 
+/* --- Tablets i większe telefony (≤720px): modal bottom sheet, toolbar --- */
 @media (max-width: 720px) {
 
-  /* Tabs: poziomy scroll zamiast wrap */
   .gearTabs {
     flex-wrap: nowrap;
     overflow-x: auto;
     scrollbar-width: none;
     padding-bottom: 4px;
-    margin-bottom: 2px;
   }
-
   .gearTabs::-webkit-scrollbar { display: none; }
 
-  /* Grid: zawsze jedna kolumna na telefonie */
-  .gearGrid {
-    grid-template-columns: 1fr;
-    gap: var(--space-2);
-  }
-
-  /* Karta: mniejsze paddingi */
-  .gearCardInner {
-    padding: 12px;
-    gap: 10px;
-  }
-
-  /* Head: dwie kolumny na małym ekranie z mniejszą min-width dla badge */
-  .gearHeadSide {
-    min-width: 90px;
-  }
-
-  /* Zdjęcie: niższy aspect ratio na mobilnym */
-  .gearImgsSingle .gearImgPh {
-    aspect-ratio: 3 / 2;
-  }
-
-  /* Toolbar: kompaktowo */
   .gearToolbar {
     gap: var(--space-2);
     margin-top: 8px;
   }
 
-  /* Akcje karty: pełna szerokość przycisków na małym ekranie */
-  .gearCardActions {
-    gap: 8px;
-  }
-
-  .gearCardActions [data-gear-reserve] {
-    flex: 1;
-  }
-
-  /* Modal: bottom sheet zamiast wyśrodkowanego okna */
+  /* Modal: bottom sheet */
   .gearModal {
     padding: 0;
     align-items: flex-end;
@@ -623,17 +589,155 @@
     padding-bottom: max(var(--space-2), env(safe-area-inset-bottom));
   }
 
-  /* Rezerwacja modal: też bottom sheet */
-  #gearReservationModal.gearModal {
-    align-items: flex-end;
-  }
-
   #gearReservationModal .gearModalCard {
-    width: 100%;
-    max-width: 100%;
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     max-height: 92vh;
     overflow-y: auto;
+  }
+}
+
+/* --- Telefony (≤600px): kompaktowe kafelki 2 kolumny --- */
+@media (max-width: 600px) {
+
+  /* 2 równe kolumny, mały gap */
+  .gearGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  /* Karta: zero padding, flex w dół */
+  .gearCard {
+    border-radius: var(--radius-md);
+  }
+
+  .gearCardInner {
+    padding: 0;
+    gap: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Zdjęcie na górze karty, zaokrąglone tylko góra */
+  .gearImgs {
+    order: 0;
+  }
+
+  .gearImgsSingle {
+    grid-template-columns: 1fr;
+  }
+
+  .gearImgsSingle .gearImgPh {
+    aspect-ratio: 16 / 9;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    border-left: 0;
+    border-right: 0;
+    border-top: 0;
+  }
+
+  /* Ukryj etykietę "Zdjecia" — za mało miejsca */
+  .gearImgsSingle .gearImgLabel {
+    display: none;
+  }
+
+  /* Nagłówek: compact, pod zdjęciem */
+  .gearHead {
+    order: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 7px 8px 4px;
+  }
+
+  .gearTitleWrap {
+    gap: 1px;
+  }
+
+  .gearTitle {
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1.2;
+  }
+
+  .gearModel {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+
+  /* Pokaż tylko nr, ukryj kolor */
+  .gearInlineMeta {
+    display: none;
+  }
+
+  .gearInlineMeta.gearNr {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* Badges: poziomo, małe, pod tytułem */
+  .gearHeadSide {
+    order: 2;
+    min-width: 0;
+    justify-items: start;
+  }
+
+  .gearBadges.gearBadgesStack {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 3px;
+    padding: 0 8px 6px;
+  }
+
+  .badge {
+    font-size: 9px;
+    padding: 3px 6px;
+    border-radius: 999px;
+  }
+
+  /* Przyciski: tylko "Rezerwuj" jako pełna szerokość, bez "Więcej" */
+  .gearCardActions {
+    order: 3;
+    padding: 0 8px 8px;
+    gap: 0;
+    margin-top: 2px;
+  }
+
+  .gearCardActions [data-gear-reserve] {
+    width: 100%;
+    min-width: 0;
+    min-height: 34px;
+    padding: 6px 8px;
+    font-size: 11px;
+    border-radius: 8px;
+  }
+
+  /* Ukryj "Więcej" — użytkownik używa gearDetails */
+  .gearMoreBtn {
+    display: none;
+  }
+
+  /* Details: kompaktowo, bez górnego border */
+  .gearDetails {
+    order: 4;
+    border-top: 1px dashed rgba(230, 232, 238, 0.10);
+    padding: 6px 8px 8px;
+    font-size: 12px;
+  }
+
+  .gearMeta {
+    gap: 4px;
+  }
+
+  .gearMetaRow {
+    padding-top: 5px;
+  }
+
+  /* Toolbar filtry: jedna kolumna */
+  .gearFiltersBar {
+    grid-template-columns: 1fr;
   }
 }
 
