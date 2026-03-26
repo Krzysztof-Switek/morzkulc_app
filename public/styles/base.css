@@ -111,16 +111,12 @@ body {
 
 .hidden { display: none !important; }
 
-/* --- Loading spinner --- */
-.spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--border);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-  display: inline-block;
+/* --- Paddle spinner --- */
+.paddleSpinner {
+  animation: paddleSpin 1.2s linear infinite;
+  color: var(--primary);
   flex-shrink: 0;
+  display: inline-block;
 }
 
 .spinnerRow {
@@ -132,7 +128,7 @@ body {
   padding: 12px 0;
 }
 
-@keyframes spin {
+@keyframes paddleSpin {
   to { transform: rotate(360deg); }
 }
 

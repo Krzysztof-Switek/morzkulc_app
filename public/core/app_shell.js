@@ -8,7 +8,7 @@ import {
 
 import { apiPostJson, apiGetJson } from "/core/api_client.js";
 import { buildModulesFromSetup } from "/core/modules_registry.js";
-import { renderNav, renderView } from "/core/render_shell.js";
+import { renderNav, renderView, spinnerHtml } from "/core/render_shell.js";
 
 const REGISTER_URL = "/api/register";
 const SETUP_URL = "/api/setup";
@@ -68,7 +68,7 @@ authOnChange(async (user) => {
 
   userData.textContent = JSON.stringify(authGetBasicUser(user), null, 2);
 
-  viewEl.innerHTML = `<div class="spinnerRow"><span class="spinner"></span>Ładowanie...</div>`;
+  viewEl.innerHTML = spinnerHtml();
 
   try {
     registerData.textContent = "Rejestracja: wysyłam token do backendu...";
