@@ -81,36 +81,46 @@ async function renderHomeDashboard({ viewEl, ctx }) {
 
           <div class="startStats">
             <div class="startStatRow">
-              <span class="startStatKey">Rola</span>
+              <span class="startStatKey">Rola:</span>
               <strong class="startStatVal">${escapeHtml(roleLabel)}</strong>
             </div>
 
             <div class="startStatRow">
-              <span class="startStatKey">Status</span>
+              <span class="startStatKey">Status:</span>
               <strong class="startStatVal">${escapeHtml(statusLabel)}</strong>
             </div>
 
             <div class="startStatRow">
-              <span class="startStatKey">Godzinki</span>
+              <span class="startStatKey">Godzinki:</span>
               <strong class="startStatVal">${escapeHtml(hoursValue || "Dostępne wkrótce")}</strong>
             </div>
 
             <div class="startStatRow">
-              <span class="startStatKey">Składka</span>
+              <span class="startStatKey">Składka:</span>
               <strong class="startStatVal">${escapeHtml(membershipPaidUntil ? formatDatePL(membershipPaidUntil) : "Dostępne wkrótce")}</strong>
             </div>
           </div>
         </div>
 
         <div class="startTopActions">
-          <button type="button" class="startActionBtn primary" data-home-action="reserve-gear">
+          <button type="button" class="startTile primary" data-home-action="reserve-gear">
             <span class="startTileTitle">Rezerwuj sprzęt</span>
             <span class="startTileMeta">Przejdź do listy sprzętu</span>
           </button>
 
-          <button type="button" class="startActionBtn" data-home-action="open-my-reservations">
-            <span class="startTileTitle">Moje rezerwacje</span>
-            <span class="startTileMeta">Zobacz i zmieniaj swoje terminy</span>
+          <button type="button" class="startTile" data-home-action="add-hours">
+            <span class="startTileTitle">Dodaj godzinki</span>
+            <span class="startTileMeta">Dostępne wkrótce</span>
+          </button>
+
+          <button type="button" class="startTile" data-home-action="report-repair">
+            <span class="startTileTitle">Zgłoś naprawę</span>
+            <span class="startTileMeta">Dostępne wkrótce</span>
+          </button>
+
+          <button type="button" class="startTile" data-home-action="add-event">
+            <span class="startTileTitle">Dodaj imprezę</span>
+            <span class="startTileMeta">Dostępne wkrótce</span>
           </button>
         </div>
       </section>
@@ -143,35 +153,11 @@ async function renderHomeDashboard({ viewEl, ctx }) {
         </div>
       </section>
 
-      <section class="startTiles">
-        <button type="button" class="startTile primary" data-home-action="reserve-gear-bottom">
-          <span class="startTileTitle">Rezerwuj sprzęt</span>
-          <span class="startTileMeta">Przejdź do listy sprzętu</span>
-        </button>
-
-        <button type="button" class="startTile" data-home-action="my-reservations-bottom">
-          <span class="startTileTitle">Moje rezerwacje</span>
-          <span class="startTileMeta">Osobny widok użytkownika</span>
-        </button>
-
-        <button type="button" class="startTile" data-home-action="report-hours-bottom">
-          <span class="startTileTitle">Zgłoś godzinki</span>
-          <span class="startTileMeta">Dostępne wkrótce</span>
-        </button>
-
-        <button type="button" class="startTile" data-home-action="report-repair">
-          <span class="startTileTitle">Zgłoś naprawę</span>
-          <span class="startTileMeta">Dostępne wkrótce</span>
-        </button>
-      </section>
     </div>
   `;
 
-  const reserveBtnTop = viewEl.querySelector("[data-home-action='reserve-gear']");
-  const reserveBtnBottom = viewEl.querySelector("[data-home-action='reserve-gear-bottom']");
+  const reserveBtn = viewEl.querySelector("[data-home-action='reserve-gear']");
   const myReservationsBtn = viewEl.querySelector("[data-home-action='my-reservations']");
-  const myReservationsBtnTop = viewEl.querySelector("[data-home-action='open-my-reservations']");
-  const myReservationsBtnBottom = viewEl.querySelector("[data-home-action='my-reservations-bottom']");
   const eventsBtn = viewEl.querySelector("[data-home-action='events']");
 
   const openGear = () => {
@@ -179,15 +165,11 @@ async function renderHomeDashboard({ viewEl, ctx }) {
     setHash(gearTarget.moduleId, gearTarget.routeId);
   };
 
-  const openMyReservations = () => {
-    setHash("my_reservations", "list");
-  };
+  if (reserveBtn) reserveBtn.addEventListener("click", openGear);
 
-  if (reserveBtnTop) reserveBtnTop.addEventListener("click", openGear);
-  if (reserveBtnBottom) reserveBtnBottom.addEventListener("click", openGear);
-  if (myReservationsBtn) myReservationsBtn.addEventListener("click", openMyReservations);
-  if (myReservationsBtnTop) myReservationsBtnTop.addEventListener("click", openMyReservations);
-  if (myReservationsBtnBottom) myReservationsBtnBottom.addEventListener("click", openMyReservations);
+  if (myReservationsBtn) {
+    myReservationsBtn.addEventListener("click", () => setHash("my_reservations", "list"));
+  }
 
   if (eventsBtn) {
     eventsBtn.addEventListener("click", () => {
