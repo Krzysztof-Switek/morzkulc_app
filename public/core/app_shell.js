@@ -68,6 +68,8 @@ authOnChange(async (user) => {
 
   userData.textContent = JSON.stringify(authGetBasicUser(user), null, 2);
 
+  viewEl.innerHTML = `<div class="spinnerRow"><span class="spinner"></span>Ładowanie...</div>`;
+
   try {
     registerData.textContent = "Rejestracja: wysyłam token do backendu...";
     const idToken = await authGetIdToken(user, true);

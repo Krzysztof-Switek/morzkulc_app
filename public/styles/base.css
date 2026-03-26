@@ -111,6 +111,31 @@ body {
 
 .hidden { display: none !important; }
 
+/* --- Loading spinner --- */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.spinnerRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 12px 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 h1, h2, h3 { margin: 0 0 var(--space-2) 0; letter-spacing: -0.02em; }
 h1 { font-size: 18px; }
 h2 { font-size: 18px; }
