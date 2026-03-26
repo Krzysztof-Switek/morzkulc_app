@@ -13,7 +13,7 @@
 
 @media (min-width: 900px) {
   .startTop {
-    grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
+    grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
     align-items: start;
   }
 }

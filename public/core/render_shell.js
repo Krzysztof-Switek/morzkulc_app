@@ -105,7 +105,6 @@ async function renderHomeDashboard({ viewEl, ctx }) {
         <div class="startTopActions">
           <button type="button" class="startTile primary" data-home-action="reserve-gear">
             <span class="startTileTitle">Rezerwuj sprzęt</span>
-            <span class="startTileMeta">Przejdź do listy sprzętu</span>
           </button>
 
           <button type="button" class="startTile" data-home-action="add-hours">
@@ -428,11 +427,11 @@ function getHelloName(ctx) {
   const sessionNickname = String(ctx?.session?.nickname || "").trim();
   if (sessionNickname) return sessionNickname;
 
+  const sessionFirstName = String(ctx?.session?.firstName || ctx?.session?.first_name || "").trim();
+  if (sessionFirstName) return sessionFirstName;
+
   const userDisplayName = String(ctx?.user?.displayName || "").trim();
   if (userDisplayName) return userDisplayName;
-
-  const sessionFirstName = String(ctx?.session?.first_name || "").trim();
-  if (sessionFirstName) return sessionFirstName;
 
   return "";
 }
@@ -486,7 +485,7 @@ function statusKeyToLabel(statusKey) {
   const k = String(statusKey || "").trim();
   if (k === "status_aktywny") return "Aktywny";
   if (k === "status_zawieszony") return "Zawieszony";
-  if (k === "status_pending") return "Pending";
+  if (k === "status_skreslony") return "Skreślony";
   return k || "-";
 }
 

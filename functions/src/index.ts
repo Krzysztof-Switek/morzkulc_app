@@ -141,8 +141,22 @@ type SetupModuleConfig = {
   access?: ModuleAccess;
 };
 
+type StatusMapping = {
+  label: string;
+  blocksAccess?: boolean;
+};
+
+type SetupDefaults = {
+  newUserRoleCode?: string;
+  newUserStatusCode?: string;
+  openingBalanceMemberField?: string;
+  openingBalanceMemberRoleCode?: string;
+};
+
 type SetupApp = {
   modules?: Record<string, SetupModuleConfig>;
+  statusMappings?: Record<string, StatusMapping>;
+  defaults?: SetupDefaults;
   updatedAt?: any;
   updatedBy?: string;
 };
@@ -194,7 +208,7 @@ function statusLabel(statusKey: string): string {
   const m: Record<string, string> = {
     status_aktywny: "Aktywny",
     status_zawieszony: "Zawieszony",
-    status_pending: "Pending",
+    status_skreslony: "Skreślony",
   };
   return m[statusKey] || statusKey || "";
 }

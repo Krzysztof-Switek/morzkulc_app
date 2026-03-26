@@ -10,6 +10,12 @@ type TokenCheck =
 
 type SetupApp = {
   modules?: Record<string, any>;
+  defaults?: {
+    newUserRoleCode?: string;
+    newUserStatusCode?: string;
+    openingBalanceMemberField?: string;
+    openingBalanceMemberRoleCode?: string;
+  };
 };
 
 export type RegisterUserDeps = {
@@ -187,9 +193,14 @@ function validateIncomingProfile(incoming: ProfileInput): ValidationResult {
   return {ok: Object.keys(fields).length === 0, fields};
 }
 
-function computeRoleKeyFromOpeningBalance(obData: any): "rola_czlonek" | "rola_sympatyk" {
-  if (obData && obData["członek stowarzyszenia"] === true) return "rola_czlonek";
-  return "rola_sympatyk";
+function computeRoleKeyFromOpeningBalance(
+  obData: any,
+  memberField: string,
+  memberRoleCode: string,
+  defaultRoleCode: string
+): string {
+  if (obData && obData[memberField] === true) return memberRoleCode;
+  return defaultRoleCode;
 }
 
 async function findOpeningBalance(
@@ -258,6 +269,13 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
         return;
       }
 
+      const setupApp = await getSetupApp();
+      const setupDefaults = setupApp?.defaults || {};
+      const newUserRoleCode = normalizeStr(setupDefaults.newUserRoleCode) || "rola_sympatyk";
+      const newUserStatusCode = normalizeStr(setupDefaults.newUserStatusCode) || "status_aktywny";
+      const obMemberField = normalizeStr(setupDefaults.openingBalanceMemberField) || "członek stowarzyszenia";
+      const obMemberRoleCode = normalizeStr(setupDefaults.openingBalanceMemberRoleCode) || "rola_czlonek";
+
       const decoded = tokenCheck.decoded;
       const uid = decoded.uid;
       const email = String(decoded.email || "").trim().toLowerCase();
@@ -284,8 +302,8 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
       // =========================
       if (existing.exists) {
         const data = existing.data() || {};
-        let roleKey = String((data as any).role_key || "rola_sympatyk");
-        const statusKey = String((data as any).status_key || "status_aktywny");
+        let roleKey = String((data as any).role_key || newUserRoleCode);
+        const statusKey = String((data as any).status_key || newUserStatusCode);
 
         // Jednorazowy fallback po imieniu+nazwisku (tylko gdy nie ma jeszcze trafienia z BO26)
         if (
@@ -300,7 +318,7 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
             incomingProfile.lastName
           );
           if (nameFound.openingMatch && nameFound.obData) {
-            roleKey = computeRoleKeyFromOpeningBalance(nameFound.obData);
+            roleKey = computeRoleKeyFromOpeningBalance(nameFound.obData, obMemberField, obMemberRoleCode, newUserRoleCode);
             await userRef.set(
               {
                 role_key: roleKey,
@@ -363,6 +381,11 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
           }
         }
 
+        const mergedProfile = {
+          ...((data as any).profile || {}),
+          ...(Object.keys(incomingProfile).length > 0 ? incomingProfile : {}),
+        };
+
         res.status(200).json({
           ok: true,
           existed: true,
@@ -371,9 +394,11 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
           role_key: roleKey,
           status_key: statusKey,
           screen: defaultScreenForRoleKey(roleKey),
-          setupMissing: (await getSetupApp()) ? false : true,
+          setupMissing: !setupApp,
           openingMatch: Boolean((data as any).openingMatch),
           profileComplete,
+          nickname: normalizeStr(mergedProfile.nickname) || null,
+          firstName: normalizeStr(mergedProfile.firstName) || null,
         });
         return;
       }
@@ -388,12 +413,12 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
         incomingProfile.lastName
       );
 
-      let roleKey: "rola_czlonek" | "rola_sympatyk" = "rola_sympatyk";
+      let roleKey: string = newUserRoleCode;
       if (found.openingMatch && found.obData) {
-        roleKey = computeRoleKeyFromOpeningBalance(found.obData);
+        roleKey = computeRoleKeyFromOpeningBalance(found.obData, obMemberField, obMemberRoleCode, newUserRoleCode);
       }
 
-      const statusKey = "status_aktywny";
+      const statusKey = newUserStatusCode;
       const openingMatch = Boolean(found.openingMatch);
 
       const docToCreate: any = {
@@ -456,9 +481,11 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
         role_key: roleKey,
         status_key: statusKey,
         screen: defaultScreenForRoleKey(roleKey),
-        setupMissing: (await getSetupApp()) ? false : true,
+        setupMissing: !setupApp,
         openingMatch,
         profileComplete,
+        nickname: normalizeStr(incomingProfile.nickname) || null,
+        firstName: normalizeStr(incomingProfile.firstName) || null,
       });
     } catch (err: any) {
       res.status(500).json({error: "Server error", message: err?.message || String(err)});
