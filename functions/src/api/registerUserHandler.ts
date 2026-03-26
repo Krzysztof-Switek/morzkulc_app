@@ -366,18 +366,14 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
             ...incomingProfile,
           });
 
-          // ✅ jeśli po tym profilu jest komplet → sync do arkusza (best-effort)
+          // jeśli po tym profilu jest komplet → sync do arkusza (fire-and-forget, nie blokuje odpowiedzi)
           if (profileComplete) {
-            try {
-              await syncMemberToSheet(uid);
-            } catch (sheetErr: any) {
-              // Profil jest zapisany w Firestore — błąd arkusza nie blokuje rejestracji.
-              // Sync zostanie ponowiony przy kolejnym zalogowaniu lub ręcznie.
+            syncMemberToSheet(uid).catch((sheetErr: any) => {
               console.error("syncMemberToSheet failed (existing user)", {
                 uid,
                 message: sheetErr?.message || String(sheetErr),
               });
-            }
+            });
           }
         }
 
@@ -460,17 +456,14 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
 
       const profileComplete = isProfileComplete(incomingProfile);
 
-      // ✅ jeśli user już podał komplet profilu → sync do arkusza (best-effort)
+      // jeśli user już podał komplet profilu → sync do arkusza (fire-and-forget, nie blokuje odpowiedzi)
       if (profileComplete) {
-        try {
-          await syncMemberToSheet(uid);
-        } catch (sheetErr: any) {
-          // Profil jest zapisany w Firestore — błąd arkusza nie blokuje rejestracji.
+        syncMemberToSheet(uid).catch((sheetErr: any) => {
           console.error("syncMemberToSheet failed (new user)", {
             uid,
             message: sheetErr?.message || String(sheetErr),
           });
-        }
+        });
       }
 
       res.status(200).json({

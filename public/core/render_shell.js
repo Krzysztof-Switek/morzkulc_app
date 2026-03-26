@@ -52,6 +52,8 @@ export async function renderView({ viewEl, ctx }) {
     return;
   }
 
+  viewEl.innerHTML = `<div class="spinnerRow"><span class="spinner"></span>Ładowanie...</div>`;
+
   try {
     await mod.render({ viewEl, routeId, ctx });
   } catch (e) {
@@ -71,8 +73,7 @@ async function renderHomeDashboard({ viewEl, ctx }) {
   const hoursValue = getHoursValue(ctx);
   const membershipPaidUntil = getMembershipPaidUntil(ctx);
 
-  const reservationsSectionHtml = await buildHomeReservationsSection(ctx);
-
+  // Render struktury natychmiast — rezerwacje ładujemy asynchronicznie
   viewEl.innerHTML = `
     <div class="dashboard dashboardStart">
       <section class="startTop">
@@ -130,8 +131,8 @@ async function renderHomeDashboard({ viewEl, ctx }) {
           <button type="button" class="ghost" data-home-action="my-reservations">Zobacz wszystkie</button>
         </div>
 
-        <div class="startList">
-          ${reservationsSectionHtml}
+        <div class="startList" id="homeReservationsList">
+          <div class="spinnerRow"><span class="spinner"></span>Ładowanie rezerwacji...</div>
         </div>
       </section>
 
@@ -176,6 +177,15 @@ async function renderHomeDashboard({ viewEl, ctx }) {
       setHash(eventsTarget.moduleId, eventsTarget.routeId);
     });
   }
+
+  // Ładuj rezerwacje asynchronicznie po wyrenderowaniu dashboardu
+  buildHomeReservationsSection(ctx).then((html) => {
+    const listEl = viewEl.querySelector("#homeReservationsList");
+    if (listEl) listEl.innerHTML = html;
+  }).catch(() => {
+    const listEl = viewEl.querySelector("#homeReservationsList");
+    if (listEl) listEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać rezerwacji.</div></div></div>`;
+  });
 }
 
 async function buildHomeReservationsSection(ctx) {
