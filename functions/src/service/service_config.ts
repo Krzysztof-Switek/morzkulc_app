@@ -5,6 +5,7 @@ export interface ServiceConfig {
   jobsCollection: string;
 
   listaGroupEmail: string;
+  membersGroupEmail: string;
   privilegedPosterGroups: string[];
 
   welcomeFromEmail: string;
@@ -42,6 +43,7 @@ export function getServiceConfig(): ServiceConfig {
   const envName = process.env.ENV_NAME || "prod";
 
   const listaGroupEmail = process.env.SVC_LISTA_GROUP_EMAIL || "lista@morzkulc.pl";
+  const membersGroupEmail = process.env.SVC_MEMBERS_GROUP_EMAIL || "czlonkowie@morzkulc.pl";
 
   const privilegedPosterGroupsRaw =
     process.env.SVC_PRIV_POSTER_GROUPS || "zarzad_skk@morzkulc.pl,kr@morzkulc.pl,czlonkowie@morzkulc.pl";
@@ -67,6 +69,7 @@ export function getServiceConfig(): ServiceConfig {
     jobsCollection: "service_jobs",
 
     listaGroupEmail,
+    membersGroupEmail,
     privilegedPosterGroups: privilegedPosterGroupsRaw.split(",").map((s) => s.trim()).filter(Boolean),
 
     welcomeFromEmail,

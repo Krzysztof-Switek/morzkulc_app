@@ -14,6 +14,12 @@ function assertNonEmpty(label: string, v: string) {
   if (!v) throw new Error(`Missing ${label}`);
 }
 
+// Google Sheets API wymaga apostrofów wokół nazwy zakładki jeśli zawiera spacje lub znaki specjalne.
+// Apostrofy wewnątrz nazwy są escapowane jako ''.
+function quoteTab(tabName: string): string {
+  return `'${tabName.replace(/'/g, "''")}'`;
+}
+
 function columnToA1(colIndex0: number): string {
   // 0->A, 25->Z, 26->AA...
   let n = colIndex0 + 1;
@@ -70,7 +76,7 @@ export class GoogleSheetsProvider {
     const sheets = await this.getSheetsClient();
 
     // Read all values (header + data)
-    const range = rangeA1 ? `${tabName}!${rangeA1}` : `${tabName}`;
+    const range = rangeA1 ? `${quoteTab(tabName)}!${rangeA1}` : quoteTab(tabName);
     const resp = await sheets.spreadsheets.values.get({
       spreadsheetId,
       range,
@@ -125,7 +131,7 @@ export class GoogleSheetsProvider {
     // 1) read header row
     const headerResp = await sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: `${tabName}!1:1`,
+      range: `${quoteTab(tabName)}!1:1`,
       majorDimension: "ROWS",
     });
 
@@ -166,7 +172,7 @@ export class GoogleSheetsProvider {
     // 2) find row by ID
     const idColResp = await sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: `${tabName}!${idColA1}2:${idColA1}`,
+      range: `${quoteTab(tabName)}!${idColA1}2:${idColA1}`,
       majorDimension: "COLUMNS",
     });
 
@@ -184,7 +190,7 @@ export class GoogleSheetsProvider {
       // 3A) update existing row (preserve other columns)
       const rowResp = await sheets.spreadsheets.values.get({
         spreadsheetId,
-        range: `${tabName}!${foundRowNumber}:${foundRowNumber}`,
+        range: `${quoteTab(tabName)}!${foundRowNumber}:${foundRowNumber}`,
         majorDimension: "ROWS",
       });
 
@@ -193,7 +199,7 @@ export class GoogleSheetsProvider {
 
       await sheets.spreadsheets.values.update({
         spreadsheetId,
-        range: `${tabName}!${foundRowNumber}:${foundRowNumber}`,
+        range: `${quoteTab(tabName)}!${foundRowNumber}:${foundRowNumber}`,
         valueInputOption: "RAW",
         requestBody: {values: [newRow]},
       });
@@ -211,7 +217,7 @@ export class GoogleSheetsProvider {
 
       const emailColResp = await sheets.spreadsheets.values.get({
         spreadsheetId,
-        range: `${tabName}!${emailColA1}2:${emailColA1}`,
+        range: `${quoteTab(tabName)}!${emailColA1}2:${emailColA1}`,
         majorDimension: "COLUMNS",
       });
 
@@ -229,7 +235,7 @@ export class GoogleSheetsProvider {
         // update that row AND set ID to prevent duplicates later
         const rowResp = await sheets.spreadsheets.values.get({
           spreadsheetId,
-          range: `${tabName}!${emailRowNumber}:${emailRowNumber}`,
+          range: `${quoteTab(tabName)}!${emailRowNumber}:${emailRowNumber}`,
           majorDimension: "ROWS",
         });
 
@@ -238,7 +244,7 @@ export class GoogleSheetsProvider {
 
         await sheets.spreadsheets.values.update({
           spreadsheetId,
-          range: `${tabName}!${emailRowNumber}:${emailRowNumber}`,
+          range: `${quoteTab(tabName)}!${emailRowNumber}:${emailRowNumber}`,
           valueInputOption: "RAW",
           requestBody: {values: [newRow]},
         });
@@ -248,23 +254,39 @@ export class GoogleSheetsProvider {
     }
 
     // 3C) append new row
+    // Nie używamy values.append — wykrywa zasięg tabeli na podstawie formatowania,
+    // co powoduje pominięcie pustych (ale sformatowanych) wierszy i zapis w złym miejscu.
+    // Zamiast tego: czytamy rzeczywistą zawartość i piszemy dokładnie do pierwszego wolnego wiersza.
+    const bodyResp = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${quoteTab(tabName)}!A2:ZZ`,
+      majorDimension: "ROWS",
+    });
+
+    const bodyRows = bodyResp.data.values || [];
+    // Szukamy PIERWSZEGO pustego wiersza (bez żadnej niepustej komórki).
+    // API zwraca wiersze od wiersza 2 do ostatniego niepustego — puste wiersze
+    // pomiędzy danymi są zwrócone jako []. Wiersz za zakresem = bodyRows.length.
+    let firstEmptyIdx = bodyRows.length; // domyślnie: za ostatnim wierszem z danymi
+    for (let i = 0; i < bodyRows.length; i++) {
+      const row = bodyRows[i] || [];
+      if (!row.some((cell: any) => normalizeStr(cell) !== "")) {
+        firstEmptyIdx = i;
+        break;
+      }
+    }
+    // bodyRows[0] odpowiada wierszowi 2 arkusza
+    const newRowNumber = 2 + firstEmptyIdx;
     const newRow = buildRowValues(null);
 
-    const appendResp = await sheets.spreadsheets.values.append({
+    await sheets.spreadsheets.values.update({
       spreadsheetId,
-      range: `${tabName}!A:ZZ`,
+      range: `${quoteTab(tabName)}!${newRowNumber}:${newRowNumber}`,
       valueInputOption: "RAW",
-      insertDataOption: "INSERT_ROWS",
       requestBody: {values: [newRow]},
     });
 
-    // best effort parse row number from updates
-    const updatedRange = appendResp.data.updates?.updatedRange || "";
-    // example: 'TAB!A123:Q123'
-    const m = /!A(\d+):/i.exec(updatedRange);
-    const rowNumber = m ? Number(m[1]) : (2 + idValues.length);
-
-    return {action: "appended", rowNumber};
+    return {action: "appended", rowNumber: newRowNumber};
   }
 
   async upsertMemberRowByEmail(

@@ -192,23 +192,43 @@ function computeRoleKeyFromOpeningBalance(obData: any): "rola_czlonek" | "rola_s
   return "rola_sympatyk";
 }
 
-async function findOpeningBalanceByEmail(db: FirebaseFirestore.Firestore, email: string) {
-  if (!email || !email.includes("@")) return {openingMatch: false, obData: null as any};
-
-  const normalizedEmail = String(email).trim().toLowerCase();
-
+async function findOpeningBalance(
+  db: FirebaseFirestore.Firestore,
+  email: string,
+  firstName?: string,
+  lastName?: string
+): Promise<{openingMatch: boolean; obData: any; matchMethod: "email" | "name" | null}> {
   const snap = await db.collection("users_opening_balance_26").get();
+
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  const normalizedFirst = normalizeStr(firstName).toLowerCase();
+  const normalizedLast = normalizeStr(lastName).toLowerCase();
+
+  let nameMatch: {openingMatch: boolean; obData: any; matchMethod: "name"} | null = null;
 
   for (const doc of snap.docs) {
     const data = doc.data() as any;
-    const rowEmail = String(data["e-mail"] || "").trim().toLowerCase();
 
-    if (rowEmail && rowEmail === normalizedEmail) {
-      return {openingMatch: true, obData: data};
+    // 1. Dopasowanie po e-mailu (priorytet)
+    if (normalizedEmail && normalizedEmail.includes("@")) {
+      const rowEmail = String(data["e-mail"] || "").trim().toLowerCase();
+      if (rowEmail && rowEmail === normalizedEmail) {
+        return {openingMatch: true, obData: data, matchMethod: "email"};
+      }
+    }
+
+    // 2. Zbierz kandydatów po imieniu i nazwisku (fallback)
+    if (!nameMatch && normalizedFirst && normalizedLast) {
+      const rowFirst = normalizeStr(data["imię"] || data["imie"] || "").toLowerCase();
+      const rowLast = normalizeStr(data["nazwisko"] || "").toLowerCase();
+      if (rowFirst && rowLast && rowFirst === normalizedFirst && rowLast === normalizedLast) {
+        nameMatch = {openingMatch: true, obData: data, matchMethod: "name"};
+      }
     }
   }
 
-  return {openingMatch: false, obData: null as any};
+  if (nameMatch) return nameMatch;
+  return {openingMatch: false, obData: null, matchMethod: null};
 }
 
 export async function handleRegisterUser(req: Request, res: Response, deps: RegisterUserDeps) {
@@ -264,8 +284,36 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
       // =========================
       if (existing.exists) {
         const data = existing.data() || {};
-        const roleKey = String((data as any).role_key || "rola_sympatyk");
+        let roleKey = String((data as any).role_key || "rola_sympatyk");
         const statusKey = String((data as any).status_key || "status_aktywny");
+
+        // Jednorazowy fallback po imieniu+nazwisku (tylko gdy nie ma jeszcze trafienia z BO26)
+        if (
+          !(data as any).openingMatch &&
+          incomingProfile.firstName &&
+          incomingProfile.lastName
+        ) {
+          const nameFound = await findOpeningBalance(
+            db,
+            email,
+            incomingProfile.firstName,
+            incomingProfile.lastName
+          );
+          if (nameFound.openingMatch && nameFound.obData) {
+            roleKey = computeRoleKeyFromOpeningBalance(nameFound.obData);
+            await userRef.set(
+              {
+                role_key: roleKey,
+                openingMatch: true,
+                openingMatchMethod: nameFound.matchMethod,
+                openingBalance: nameFound.obData,
+                openingMatchedAt: admin.firestore.FieldValue.serverTimestamp(),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              },
+              {merge: true}
+            );
+          }
+        }
 
         let profileComplete = isProfileComplete((data as any).profile);
 
@@ -300,9 +348,18 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
             ...incomingProfile,
           });
 
-          // ✅ jeśli po tym profilu jest komplet → sync do arkusza
+          // ✅ jeśli po tym profilu jest komplet → sync do arkusza (best-effort)
           if (profileComplete) {
-            await syncMemberToSheet(uid);
+            try {
+              await syncMemberToSheet(uid);
+            } catch (sheetErr: any) {
+              // Profil jest zapisany w Firestore — błąd arkusza nie blokuje rejestracji.
+              // Sync zostanie ponowiony przy kolejnym zalogowaniu lub ręcznie.
+              console.error("syncMemberToSheet failed (existing user)", {
+                uid,
+                message: sheetErr?.message || String(sheetErr),
+              });
+            }
           }
         }
 
@@ -324,7 +381,12 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
       // =========================
       // NEW USER (BOOTSTRAP FROM BO26)
       // =========================
-      const found = await findOpeningBalanceByEmail(db, email);
+      const found = await findOpeningBalance(
+        db,
+        email,
+        incomingProfile.firstName,
+        incomingProfile.lastName
+      );
 
       let roleKey: "rola_czlonek" | "rola_sympatyk" = "rola_sympatyk";
       if (found.openingMatch && found.obData) {
@@ -341,13 +403,13 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
         role_key: roleKey,
         status_key: statusKey,
         openingMatch,
-        openingMatchMethod: "email",
         firstLoginAt: admin.firestore.FieldValue.serverTimestamp(),
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       };
 
       if (openingMatch && found.obData) {
+        docToCreate.openingMatchMethod = found.matchMethod;
         docToCreate.openingBalance = found.obData;
         docToCreate.openingMatchedAt = admin.firestore.FieldValue.serverTimestamp();
       }
@@ -373,9 +435,17 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
 
       const profileComplete = isProfileComplete(incomingProfile);
 
-      // ✅ jeśli user już podał komplet profilu → sync do arkusza
+      // ✅ jeśli user już podał komplet profilu → sync do arkusza (best-effort)
       if (profileComplete) {
-        await syncMemberToSheet(uid);
+        try {
+          await syncMemberToSheet(uid);
+        } catch (sheetErr: any) {
+          // Profil jest zapisany w Firestore — błąd arkusza nie blokuje rejestracji.
+          console.error("syncMemberToSheet failed (new user)", {
+            uid,
+            message: sheetErr?.message || String(sheetErr),
+          });
+        }
       }
 
       res.status(200).json({

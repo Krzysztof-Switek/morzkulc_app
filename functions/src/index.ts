@@ -302,15 +302,12 @@ async function syncMemberToSheet(uid: string): Promise<void> {
     patch
   );
 
-  await db.collection("users_active").doc(uid).set(
-    {
-      "service.sheetSyncedAt": admin.firestore.FieldValue.serverTimestamp(),
-      "service.sheetRowNumber": result.rowNumber,
-      "service.sheetAction": result.action,
-      "updatedAt": admin.firestore.FieldValue.serverTimestamp(),
-    },
-    {merge: true}
-  );
+  await db.collection("users_active").doc(uid).update({
+    "service.sheetSyncedAt": admin.firestore.FieldValue.serverTimestamp(),
+    "service.sheetRowNumber": result.rowNumber,
+    "service.sheetAction": result.action,
+    "updatedAt": admin.firestore.FieldValue.serverTimestamp(),
+  });
 }
 
 /**
