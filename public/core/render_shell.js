@@ -3,14 +3,8 @@ import { canSeeModule } from "/core/access_control.js";
 import { setHash, parseHash } from "/core/router.js";
 import { apiPostJson, apiGetJson } from "/core/api_client.js";
 
-const PADDLE_SVG = `<svg class="paddleSpinner" width="22" height="22" viewBox="-12 -12 24 24" xmlns="http://www.w3.org/2000/svg">
-  <line x1="-9" y1="0" x2="9" y2="0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-  <ellipse cx="-9" cy="0" rx="2.2" ry="5" transform="rotate(-22,-9,0)" fill="currentColor"/>
-  <ellipse cx="9" cy="0" rx="2.2" ry="5" transform="rotate(22,9,0)" fill="currentColor"/>
-</svg>`;
-
-export function spinnerHtml(text = "Ładowanie...") {
-  return `<div class="spinnerRow">${PADDLE_SVG}<span>${escapeHtml(text)}</span></div>`;
+export function spinnerHtml(text = "Morzkulc myśli") {
+  return `<div class="thinking">${escapeHtml(text)}<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></div>`;
 }
 
 const REGISTER_URL = "/api/register";
