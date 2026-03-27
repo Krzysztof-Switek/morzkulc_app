@@ -14,6 +14,8 @@ import {handleGearMyReservations} from "./api/gearMyReservationsHandler";
 import {handleGearReservationCreate} from "./api/gearReservationCreateHandler";
 import {handleGearReservationUpdate} from "./api/gearReservationUpdateHandler";
 import {handleGearReservationCancel} from "./api/gearReservationCancelHandler";
+import {handleGetGearFavorites} from "./api/getGearFavoritesHandler";
+import {handleGearFavoriteToggle} from "./api/gearFavoriteToggleHandler";
 import {getServiceConfig} from "./service/service_config";
 import {GoogleSheetsProvider} from "./service/providers/googleSheetsProvider";
 
@@ -494,6 +496,7 @@ export const updateGearReservation = onRequest({invoker: "private"}, async (req,
   return handleGearReservationUpdate(req, res, {
     db,
     sendPreflight,
+
     requireAllowedHost,
     setCorsHeaders,
     corsHandler,
@@ -506,6 +509,34 @@ export const updateGearReservation = onRequest({invoker: "private"}, async (req,
  */
 export const cancelGearReservation = onRequest({invoker: "private"}, async (req, res) => {
   return handleGearReservationCancel(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * GET /api/gear/favorites?category=kayaks (authenticated)
+ */
+export const getGearFavorites = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetGearFavorites(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * POST /api/gear/favorites/toggle (authenticated)
+ */
+export const gearFavoriteToggle = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGearFavoriteToggle(req, res, {
     db,
     sendPreflight,
     requireAllowedHost,

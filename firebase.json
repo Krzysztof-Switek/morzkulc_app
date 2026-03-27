@@ -133,6 +133,20 @@
           "functionId": "cancelGearReservation",
           "region": "us-central1"
         }
+      },
+      {
+        "source": "/api/gear/favorites",
+        "function": {
+          "functionId": "getGearFavorites",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/gear/favorites/toggle",
+        "function": {
+          "functionId": "gearFavoriteToggle",
+          "region": "us-central1"
+        }
       }
     ]
   }

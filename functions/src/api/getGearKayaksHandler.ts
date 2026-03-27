@@ -143,7 +143,7 @@ export async function handleGetGearKayaks(req: Request, res: Response, deps: Get
         loadReservedKayakIdsNow(db),
       ]);
 
-      const kayaks = kayaksSnap.docs.map((d) => pickKayak(d.data(), reservedKayakIdsNow));
+      const kayaks = kayaksSnap.docs.map((d) => pickKayak({...d.data(), id: String(d.data()?.id || "") || d.id}, reservedKayakIdsNow));
 
       res.status(200).json({ok: true, kayaks});
     } catch (err: any) {

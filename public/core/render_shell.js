@@ -20,7 +20,7 @@ export function renderNav({ navEl, ctx }) {
   navEl.appendChild(homeBtn);
 
   const modules = Array.isArray(ctx.modules) ? ctx.modules : [];
-  const visible = modules.filter((m) => canSeeModule({ ctx, module: m }));
+  const visible = modules.filter((m) => canSeeModule({ ctx, module: m }) && m.id !== "my_reservations");
 
   for (const m of visible) {
     const btn = document.createElement("button");

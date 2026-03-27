@@ -4,6 +4,8 @@ import { storageFetchKayakCoverUrl, storageFetchKayakGalleryUrls } from "/core/f
 
 const GEAR_URL = "/api/gear/kayaks";
 const CREATE_RESERVATION_URL = "/api/gear/reservations/create";
+const GEAR_FAVORITES_URL = "/api/gear/favorites";
+const GEAR_FAVORITES_TOGGLE_URL = "/api/gear/favorites/toggle";
 
 // Lokalny placeholder dostępny zawsze z aplikacji
 const PLACEHOLDER_SVG = "/assets/kayak-placeholder.png";
@@ -97,6 +99,11 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
                     <span>Dostępny teraz</span>
                   </label>
 
+                  <label class="gearCheckPill" for="filterFavoritesOnly">
+                    <input id="filterFavoritesOnly" type="checkbox" />
+                    <span>Ulubione</span>
+                  </label>
+
                   <div class="gearTypeFilter">
                     <label for="filterTypeSelect">Typ</label>
                     <select id="filterTypeSelect">
@@ -106,6 +113,11 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
                 </div>
               ` : `
                 <div class="gearFiltersBar">
+                  <label class="gearCheckPill" for="filterFavoritesOnly">
+                    <input id="filterFavoritesOnly" type="checkbox" />
+                    <span>Ulubione</span>
+                  </label>
+
                   <div class="gearTypeFilter">
                     <label for="filterTypeSelect">Typ</label>
                     <select id="filterTypeSelect">
@@ -218,6 +230,7 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
 
       const filterWorkingOnlyEl = viewEl.querySelector("#filterWorkingOnly");
       const filterAvailableNowOnlyEl = viewEl.querySelector("#filterAvailableNowOnly");
+      const filterFavoritesOnlyEl = viewEl.querySelector("#filterFavoritesOnly");
       const filterSizeSelectEl = viewEl.querySelector("#filterSizeSelect");
 
       const reservationModalEl = viewEl.querySelector("#gearReservationModal");
@@ -242,6 +255,7 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
       const modalAllBtn = viewEl.querySelector("#gearModalAllBtn");
 
       let all = [];
+      let favSet = new Set();
       let selectedKayak = null;
 
       const setErr = (msg) => {
@@ -367,8 +381,8 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         }
 
         const cards = isKayaksView
-          ? items.map((k) => renderKayakCard(k)).join("")
-          : items.map((item) => renderGenericGearCard(item)).join("");
+          ? items.map((k) => renderKayakCard(k, favSet.has(String(k?.id || "")))).join("")
+          : items.map((item) => renderGenericGearCard(item, favSet.has(String(item?.id || "")))).join("");
 
         listEl.innerHTML = `
           <div class="gearGrid">
@@ -398,8 +412,11 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
       const applyFilter = () => {
         const q = String(searchEl.value || "").trim().toLowerCase();
         const selectedType = normalizeTypeValue(filterTypeSelectEl?.value || "");
+        const favoritesOnly = filterFavoritesOnlyEl?.checked === true;
 
         const filtered = all.filter((item) => {
+          if (favoritesOnly && !favSet.has(String(item?.id || ""))) return false;
+
           if (selectedType) {
             const itemType = normalizeTypeValue(item?.type);
             if (itemType !== selectedType) return false;
@@ -467,6 +484,18 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         render(filtered);
       };
 
+      const loadFavorites = async (category) => {
+        try {
+          const resp = await apiGetJson({
+            url: `${GEAR_FAVORITES_URL}?category=${encodeURIComponent(category)}`,
+            idToken: ctx.idToken,
+          });
+          favSet = new Set(Array.isArray(resp?.favoriteIds) ? resp.favoriteIds : []);
+        } catch {
+          favSet = new Set();
+        }
+      };
+
       const loadGear = async (category) => {
         setErr("");
         listEl.innerHTML = `<div class="hint">Ładuję...</div>`;
@@ -474,10 +503,10 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
 
         try {
           const url = `${GEAR_URL}?category=${encodeURIComponent(category)}`;
-          const resp = await apiGetJson({
-            url,
-            idToken: ctx.idToken
-          });
+          const [resp] = await Promise.all([
+            apiGetJson({ url, idToken: ctx.idToken }),
+            loadFavorites(category),
+          ]);
 
           if (category === "kayaks") {
             all = Array.isArray(resp?.kayaks) ? resp.kayaks : [];
@@ -738,6 +767,46 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         const el = ev.target;
         if (!el || !el.closest) return;
 
+        const favBtn = el.closest("[data-gear-fav]");
+        if (favBtn) {
+          const itemId = String(favBtn.getAttribute("data-gear-fav") || "");
+          if (!itemId) return;
+
+          // Optimistic toggle
+          const wasActive = favBtn.classList.contains("active");
+          const nowFav = !wasActive;
+          favBtn.classList.toggle("active", nowFav);
+          favBtn.innerHTML = heartSvg(nowFav);
+          favBtn.setAttribute("aria-label", nowFav ? "Usuń z ulubionych" : "Dodaj do ulubionych");
+          if (nowFav) { favSet.add(itemId); } else { favSet.delete(itemId); }
+          if (filterFavoritesOnlyEl?.checked) applyFilter();
+
+          // Persist to Firestore via API
+          apiPostJson({
+            url: GEAR_FAVORITES_TOGGLE_URL,
+            idToken: ctx.idToken,
+            body: { itemId, category: activeTab },
+          }).then((resp) => {
+            // Sync with server response in case of discrepancy
+            const serverFav = resp?.isFav === true;
+            if (serverFav !== nowFav) {
+              favBtn.classList.toggle("active", serverFav);
+              favBtn.innerHTML = heartSvg(serverFav);
+              favBtn.setAttribute("aria-label", serverFav ? "Usuń z ulubionych" : "Dodaj do ulubionych");
+              if (serverFav) { favSet.add(itemId); } else { favSet.delete(itemId); }
+              if (filterFavoritesOnlyEl?.checked) applyFilter();
+            }
+          }).catch(() => {
+            // Revert on error
+            favBtn.classList.toggle("active", wasActive);
+            favBtn.innerHTML = heartSvg(wasActive);
+            favBtn.setAttribute("aria-label", wasActive ? "Usuń z ulubionych" : "Dodaj do ulubionych");
+            if (wasActive) { favSet.add(itemId); } else { favSet.delete(itemId); }
+            if (filterFavoritesOnlyEl?.checked) applyFilter();
+          });
+          return;
+        }
+
         const reserveBtn = el.closest("[data-gear-reserve]");
         if (reserveBtn) {
           const kayakId = String(reserveBtn.getAttribute("data-gear-reserve") || "");
@@ -791,6 +860,7 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
       searchEl.addEventListener("input", applyFilter);
       if (filterWorkingOnlyEl) filterWorkingOnlyEl.addEventListener("change", applyFilter);
       if (filterAvailableNowOnlyEl) filterAvailableNowOnlyEl.addEventListener("change", applyFilter);
+      if (filterFavoritesOnlyEl) filterFavoritesOnlyEl.addEventListener("change", applyFilter);
       if (filterTypeSelectEl) filterTypeSelectEl.addEventListener("change", applyFilter);
       if (filterSizeSelectEl) filterSizeSelectEl.addEventListener("change", applyFilter);
 
@@ -811,7 +881,7 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
   };
 }
 
-function renderKayakCard(k) {
+function renderKayakCard(k, isFav = false) {
   const number = String(k?.number || "").trim();
   const brand = String(k?.brand || "").trim();
   const model = String(k?.model || "").trim();
@@ -857,6 +927,12 @@ function renderKayakCard(k) {
           </div>
 
           <div class="gearHeadSide">
+            <button
+              class="gearFavBtn${isFav ? " active" : ""}"
+              type="button"
+              data-gear-fav="${escapeAttr(String(k?.id || ""))}"
+              aria-label="${isFav ? "Usuń z ulubionych" : "Dodaj do ulubionych"}"
+            >${heartSvg(isFav)}</button>
             <div class="gearBadges gearBadgesStack">
               ${workingBadge}
               ${availabilityBadge}
@@ -893,6 +969,20 @@ function renderKayakCard(k) {
           <button type="button" class="ghost gearMoreBtn">Więcej</button>
         </div>
 
+        <div class="gearMiniBar">
+          <div class="gearMiniIcons">
+            <span class="gearMiniStatusIcon ${working ? "gearMiniOk" : "gearMiniBad"}"
+              title="${working ? "Sprawny" : "Niesprawny"}">${workingIconSvg(working)}</span>
+            ${reservedNow ? `<span class="gearMiniStatusIcon gearMiniLocked" title="Zarezerwowany teraz">${lockIconSvg()}</span>` : ""}
+            <button type="button" class="gearMiniMoreBtn gearMoreBtn" title="Szczegóły" aria-label="Szczegóły">${dotsIconSvg()}</button>
+          </div>
+          <button
+            type="button"
+            class="gearMiniReserveBtn"
+            data-gear-reserve="${escapeAttr(String(k?.id || ""))}"
+            ${canReserve ? "" : "disabled"}>Rezerwuj</button>
+        </div>
+
         <details class="gearDetails">
           <summary class="gearDetailsSummary">Więcej</summary>
           <div class="gearMeta">
@@ -905,7 +995,7 @@ function renderKayakCard(k) {
   `;
 }
 
-function renderGenericGearCard(item) {
+function renderGenericGearCard(item, isFav = false) {
   const number = String(item?.number || "").trim();
   const brand = String(item?.brand || "").trim();
   const model = String(item?.model || "").trim();
@@ -951,6 +1041,12 @@ function renderGenericGearCard(item) {
           </div>
 
           <div class="gearHeadSide">
+            <button
+              class="gearFavBtn${isFav ? " active" : ""}"
+              type="button"
+              data-gear-fav="${escapeAttr(String(item?.id || ""))}"
+              aria-label="${isFav ? "Usuń z ulubionych" : "Dodaj do ulubionych"}"
+            >${heartSvg(isFav)}</button>
             <div class="gearBadges gearBadgesStack">
               ${typeBadge}
               ${sizeBadge}
@@ -1145,4 +1241,24 @@ function escapeHtml(s) {
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;");
+}
+
+function heartSvg(filled) {
+  const fill = filled ? "currentColor" : "none";
+  return `<svg viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+}
+
+function workingIconSvg(ok) {
+  if (ok) {
+    return `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="8.5"/><path d="M6.5 10.5l2.5 2.5 4.5-5" stroke-width="1.75"/></svg>`;
+  }
+  return `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="8.5"/><line x1="13.5" y1="6.5" x2="6.5" y2="13.5" stroke-width="1.75"/></svg>`;
+}
+
+function lockIconSvg() {
+  return `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="9.5" width="11" height="8" rx="1.5"/><path d="M7.5 9.5V7a2.5 2.5 0 015 0v2.5"/></svg>`;
+}
+
+function dotsIconSvg() {
+  return `<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="4.5" cy="10" r="1.5"/><circle cx="10" cy="10" r="1.5"/><circle cx="15.5" cy="10" r="1.5"/></svg>`;
 }
