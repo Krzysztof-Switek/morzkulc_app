@@ -29,6 +29,8 @@ img, svg { display: block; max-width: 100%; }
 
   --ring: 0 0 0 3px rgba(120, 160, 255, 0.35);
 
+  color-scheme: dark;
+
   /* Default = DARK */
   --bg: #0b0f17;
   --surface: #101828;
@@ -53,6 +55,8 @@ img, svg { display: block; max-width: 100%; }
 
 /* Light theme overrides */
 :root[data-theme="light"] {
+  color-scheme: light;
+
   --bg: #f6f7fb;
   --surface: #ffffff;
   --surface-2: #f2f4f8;

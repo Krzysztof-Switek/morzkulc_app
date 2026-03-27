@@ -74,7 +74,6 @@ export const gearSyncKayaksFromSheetTask: ServiceTask<Payload> = {
       const liters = parseNumber(r["Litrów"]);
       const isOperational = parseBool(r["Sprawny?"]);
       const isHalfHalf = parseBool(r["Pół na pół?"]);
-      const isPoolAllowed = parseBool(r["Basen?"]);
       const isPrivate = parseBool(r["Prywatny?"]);
       const isPrivateRentable = parseBool(r["Prywatny do wypożyczenia?"]);
 
@@ -86,6 +85,7 @@ export const gearSyncKayaksFromSheetTask: ServiceTask<Payload> = {
         number: norm(r["Numer Kajaka"]),
         brand: norm(r["Producent"]),
         model: norm(r["Model"]),
+        size: norm(r["Rozmiar"]),
         color: norm(r["Kolor"]),
         type: norm(r["Typ"]),
         liters: liters === null ? null : liters,
@@ -93,14 +93,14 @@ export const gearSyncKayaksFromSheetTask: ServiceTask<Payload> = {
         cockpit: norm(r["Kokpit"]),
         images: {
           top: norm(r["Zdjęcie z góry"]),
-          side: norm(r["Zdjęcie z boku"]),
+          side: "",
         },
 
         isOperational: isOperational === null ? null : isOperational,
         isHalfHalf: isHalfHalf === null ? null : isHalfHalf,
-        isPoolAllowed: isPoolAllowed === null ? null : isPoolAllowed,
         isPrivate: isPrivate === null ? null : isPrivate,
         isPrivateRentable: isPrivateRentable === null ? null : isPrivateRentable,
+        storage: norm(r["Składowany"]),
         ownerContact: norm(r["kontakt do właściciela"]),
         notes: norm(r["Uwagi"]),
 

@@ -55,8 +55,10 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
                 class="gearTab ${tab.id === activeTab ? "active" : ""}"
                 data-gear-tab="${escapeAttr(tab.id)}"
                 aria-pressed="${tab.id === activeTab ? "true" : "false"}"
+                title="${escapeAttr(tab.label)}"
               >
-                ${escapeHtml(tab.label)}
+                <span class="gearTabIcon">${gearTabIcon(tab.id)}</span>
+                <span class="gearTabLabel">${escapeHtml(tab.label)}</span>
               </button>
             `).join("")}
           </div>
@@ -73,15 +75,10 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
                       "np. Werner, L, czerwony, pool..."
                   )}"
                 />
-                <div class="hint">
-                  ${isKayaksView ?
-                    "Szukaj po dowolnej informacji o kajaku." :
-                    "Szukaj po nazwie, numerze, typie, kolorze, rozmiarze i notatkach."}
-                </div>
               </div>
 
               <div class="actions" style="margin:0;">
-                <button id="gearReloadBtn" type="button">Odśwież</button>
+                <button id="gearReloadBtn" type="button" class="gearReloadBtn ghost" title="Odśwież" aria-label="Odśwież">${refreshIconSvg()}</button>
                 <span id="gearMeta" class="hint"></span>
               </div>
             </div>
@@ -96,7 +93,7 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
 
                   <label class="gearCheckPill" for="filterAvailableNowOnly">
                     <input id="filterAvailableNowOnly" type="checkbox" />
-                    <span>Dostępny teraz</span>
+                    <span>Dostępny</span>
                   </label>
 
                   <label class="gearCheckPill" for="filterFavoritesOnly">
@@ -920,10 +917,13 @@ function renderKayakCard(k, isFav = false) {
 
         <div class="gearHead">
           <div class="gearTitleWrap">
-            <div class="gearTitle">${escapeHtml(brand || "Kajak")}</div>
-            <div class="gearModel">${escapeHtml(model || "-")}</div>
+            <div class="gearTitleLine">
+              <span class="gearTitle">${escapeHtml(brand || "Kajak")}</span><span class="gearModel"> ${escapeHtml(model || "")}</span>
+            </div>
+            ${type ? `<div class="gearInlineMeta gearInlineMetaMain gearMiniType">${escapeHtml(type)}</div>` : ""}
             <div class="gearInlineMeta gearInlineMetaMain"><strong>Kolor:</strong> ${escapeHtml(color || "-")}</div>
             <div class="gearInlineMeta gearInlineMetaMain gearNr"><strong>Nr:</strong> ${escapeHtml(number || "-")}</div>
+            <div class="gearNrColorMobile">Nr ${escapeHtml(number || "-")}${color ? ` (${escapeHtml(color)})` : ""}</div>
           </div>
 
           <div class="gearHeadSide">
@@ -1101,6 +1101,7 @@ function renderGenericGearCard(item, isFav = false) {
 
 function buildKayakDetailsRows(k) {
   const rows = [
+    ["Rozmiar", k?.size],
     ["Litrów", k?.liters],
     ["Zakres wag", k?.weightRange],
     ["Kokpit", k?.cockpit],
@@ -1114,7 +1115,7 @@ function buildKayakDetailsRows(k) {
     .filter(([, value]) => String(value ?? "").trim() !== "")
     .map(([key, value]) => `
       <div class="gearMetaRow">
-        <div class="gearMetaKey">${escapeHtml(String(key))}</div>
+        <div class="gearMetaKey">${escapeHtml(String(key))}:</div>
         <div class="gearMetaVal">${escapeHtml(String(value))}</div>
       </div>
     `);
@@ -1122,7 +1123,7 @@ function buildKayakDetailsRows(k) {
   if (!rows.length) {
     return `
       <div class="gearMetaRow">
-        <div class="gearMetaKey">Informacje</div>
+        <div class="gearMetaKey">Informacje:</div>
         <div class="gearMetaVal">Brak dodatkowych danych</div>
       </div>
     `;
@@ -1153,7 +1154,7 @@ function buildGenericGearDetailsRows(item) {
     .filter(([, value]) => String(value ?? "").trim() !== "")
     .map(([key, value]) => `
       <div class="gearMetaRow">
-        <div class="gearMetaKey">${escapeHtml(String(key))}</div>
+        <div class="gearMetaKey">${escapeHtml(String(key))}:</div>
         <div class="gearMetaVal">${escapeHtml(String(value))}</div>
       </div>
     `);
@@ -1261,4 +1262,28 @@ function lockIconSvg() {
 
 function dotsIconSvg() {
   return `<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="4.5" cy="10" r="1.5"/><circle cx="10" cy="10" r="1.5"/><circle cx="15.5" cy="10" r="1.5"/></svg>`;
+}
+
+function refreshIconSvg() {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>`;
+}
+
+function gearTabIcon(id) {
+  const a = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+  switch (id) {
+    case "kayaks":
+      return `<svg ${a}><path d="M3 13Q7.5 7.5 12 7.5Q16.5 7.5 21 13"/><path d="M2 13Q12 18.5 22 13"/><ellipse cx="12" cy="13.5" rx="3" ry="1.5"/></svg>`;
+    case "paddles":
+      return `<svg ${a}><line x1="12" y1="3" x2="12" y2="21"/><path d="M9 4Q12 2.5 15 4v5Q12 10.5 9 9V4z"/><path d="M9 20Q12 21.5 15 20v-5Q12 13.5 9 15v5z"/></svg>`;
+    case "lifejackets":
+      return `<svg ${a}><path d="M7 3L4.5 6.5v13h15V6.5L17 3"/><path d="M7 3Q12 7 17 3"/><line x1="12" y1="7" x2="12" y2="11.5"/></svg>`;
+    case "helmets":
+      return `<svg ${a}><path d="M4.5 17Q4.5 7 12 7Q19.5 7 19.5 17"/><line x1="3.5" y1="17" x2="20.5" y2="17"/><path d="M3.5 17Q3.5 20 6.5 20h11Q20.5 20 20.5 17"/></svg>`;
+    case "throwbags":
+      return `<svg ${a}><path d="M9 9.5a3 3 0 016 0V20H9V9.5z"/><path d="M9 9.5V8a3 3 0 016 0v1.5"/><circle cx="12" cy="5.5" r="1.5"/></svg>`;
+    case "sprayskirts":
+      return `<svg ${a}><ellipse cx="12" cy="15.5" rx="9" ry="4.5"/><ellipse cx="12" cy="15.5" rx="4.5" ry="2"/><line x1="12" y1="11" x2="12" y2="7"/><path d="M9.5 7.5Q12 6 14.5 7.5"/></svg>`;
+    default:
+      return "";
+  }
 }
