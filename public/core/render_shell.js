@@ -10,6 +10,7 @@ export function spinnerHtml(text = "Morzkulc myśli") {
 const REGISTER_URL = "/api/register";
 const MY_RESERVATIONS_URL = "/api/gear/my-reservations";
 const KAYAKS_URL = "/api/gear/kayaks";
+const GODZINKI_URL = "/api/godzinki";
 
 export function renderNav({ navEl, ctx }) {
   navEl.innerHTML = "";
@@ -97,7 +98,9 @@ async function renderHomeDashboard({ viewEl, ctx }) {
 
             <div class="startStatRow">
               <span class="startStatKey">Godzinki:</span>
-              <strong class="startStatVal">${escapeHtml(hoursValue || "Dostępne wkrótce")}</strong>
+              <span id="homeHoursCell">
+                <strong class="startStatVal">${escapeHtml(hoursValue || "…")}</strong>
+              </span>
             </div>
 
             <div class="startStatRow">
@@ -114,7 +117,6 @@ async function renderHomeDashboard({ viewEl, ctx }) {
 
           <button type="button" class="startTile" data-home-action="add-hours">
             <span class="startTileTitle">Dodaj godzinki</span>
-            <span class="startTileMeta">Dostępne wkrótce</span>
           </button>
 
           <button type="button" class="startTile" data-home-action="report-repair">
@@ -182,6 +184,18 @@ async function renderHomeDashboard({ viewEl, ctx }) {
     });
   }
 
+  const addHoursBtn = viewEl.querySelector("[data-home-action='add-hours']");
+  if (addHoursBtn) {
+    addHoursBtn.addEventListener("click", () => {
+      const godzinkiTarget = getModuleRouteByLabelOrId(ctx, ["godzinki", "modul_3"]);
+      if (godzinkiTarget.moduleId !== "home") {
+        setHash(godzinkiTarget.moduleId, "submit");
+      } else {
+        setHash("modul_3", "submit");
+      }
+    });
+  }
+
   // Ładuj rezerwacje asynchronicznie po wyrenderowaniu dashboardu
   buildHomeReservationsSection(ctx).then((html) => {
     const listEl = viewEl.querySelector("#homeReservationsList");
@@ -190,6 +204,35 @@ async function renderHomeDashboard({ viewEl, ctx }) {
     const listEl = viewEl.querySelector("#homeReservationsList");
     if (listEl) listEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać rezerwacji.</div></div></div>`;
   });
+
+  // Ładuj saldo godzinek asynchronicznie
+  if (ctx?.idToken) {
+    buildHomeHoursCell(ctx).then((html) => {
+      const cell = viewEl.querySelector("#homeHoursCell");
+      if (cell) cell.innerHTML = html;
+    }).catch(() => {
+      // cicha porażka — komórka zostaje z placeholder "…"
+    });
+  }
+}
+
+async function buildHomeHoursCell(ctx) {
+  if (!ctx?.idToken) return `<strong class="startStatVal">—</strong>`;
+
+  try {
+    const data = await apiGetJson({ url: GODZINKI_URL + "?view=home", idToken: ctx.idToken });
+    const balance = Number(data?.balance ?? 0);
+    const nextExpiry = data?.nextExpiryMonthYear || null;
+    const sign = balance > 0 ? "+" : "";
+    const cls = balance < 0 ? "startStatValNeg" : "";
+
+    return `
+      <strong class="startStatVal ${escapeHtml(cls)}">${escapeHtml(sign + balance)} h</strong>
+      ${nextExpiry ? `<span class="startStatExpiry">wygasa ${escapeHtml(nextExpiry)}</span>` : ""}
+    `;
+  } catch {
+    return `<strong class="startStatVal">—</strong>`;
+  }
 }
 
 async function buildHomeReservationsSection(ctx) {

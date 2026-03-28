@@ -16,6 +16,8 @@ import {handleGearReservationUpdate} from "./api/gearReservationUpdateHandler";
 import {handleGearReservationCancel} from "./api/gearReservationCancelHandler";
 import {handleGetGearFavorites} from "./api/getGearFavoritesHandler";
 import {handleGearFavoriteToggle} from "./api/gearFavoriteToggleHandler";
+import {handleGetGodzinki} from "./api/getGodzinkiHandler";
+import {handleSubmitGodzinki} from "./api/submitGodzinkiHandler";
 import {getServiceConfig} from "./service/service_config";
 import {GoogleSheetsProvider} from "./service/providers/googleSheetsProvider";
 
@@ -497,6 +499,7 @@ export const updateGearReservation = onRequest({invoker: "private"}, async (req,
     db,
     sendPreflight,
 
+
     requireAllowedHost,
     setCorsHeaders,
     corsHandler,
@@ -543,6 +546,52 @@ export const gearFavoriteToggle = onRequest({invoker: "private"}, async (req, re
     setCorsHeaders,
     corsHandler,
     requireIdToken,
+  });
+});
+
+/**
+ * Kolejkuje zadanie serwisowe zapisu godzinek do Google Sheets.
+ * Fire-and-forget — nie blokuje odpowiedzi na zgłoszenie.
+ */
+async function enqueueGodzinkiSheetWrite(recordId: string, uid: string): Promise<void> {
+  const jobRef = db.collection("service_jobs").doc();
+  await jobRef.set({
+    id: jobRef.id,
+    taskId: "godzinki.writeToSheet",
+    payload: {recordId, uid},
+    status: "queued",
+    attempts: 0,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+}
+
+/**
+ * GET /api/godzinki (authenticated)
+ */
+export const getGodzinki = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetGodzinki(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * POST /api/godzinki/submit (authenticated)
+ */
+export const submitGodzinki = onRequest({invoker: "private"}, async (req, res) => {
+  return handleSubmitGodzinki(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    enqueueGodzinkiSheetWrite,
   });
 });
 

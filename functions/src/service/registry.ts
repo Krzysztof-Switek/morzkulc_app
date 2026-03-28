@@ -1,10 +1,13 @@
 import { ServiceTask } from "./types";
 import { onUserRegisteredWelcomeTask } from "./tasks/onUserRegisteredWelcome";
 import { gearSyncKayaksFromSheetTask } from "./tasks/gearSyncKayaksFromSheet";
+import { godzinkiSyncFromSheetTask, godzinkiWriteToSheetTask } from "./tasks/godzinkiSyncFromSheet";
 
 const tasks: ServiceTask[] = [
   onUserRegisteredWelcomeTask,
   gearSyncKayaksFromSheetTask,
+  godzinkiSyncFromSheetTask,
+  godzinkiWriteToSheetTask,
 ];
 
 export function getTaskRegistry(): Map<string, ServiceTask> {

@@ -37,6 +37,12 @@ export interface ServiceConfig {
     kayaksSpreadsheetId: string;
     kayaksTabName: string;
   };
+
+  // ✅ NEW: Godzinki sheets config
+  godzinki: {
+    spreadsheetId: string;
+    tabName: string;
+  };
 }
 
 export function getServiceConfig(): ServiceConfig {
@@ -63,6 +69,10 @@ export function getServiceConfig(): ServiceConfig {
   const kayaksSpreadsheetId =
     process.env.SVC_GEAR_KAYAKS_SHEET_ID || "1eUjW_hyhHBlv4lRTNYS3wcltUarV5G6FiH_b5kujgRI";
   const kayaksTabName = process.env.SVC_GEAR_KAYAKS_TAB || "Kajaki";
+
+  // ✅ godzinki defaults — domyślnie ten sam arkusz co członkowie, zakładka "Godzinki"
+  const godzinkiSpreadsheetId = process.env.SVC_GODZINKI_SHEET_ID || membersSpreadsheetId;
+  const godzinkiTabName = process.env.SVC_GODZINKI_SHEET_TAB || "Godzinki";
 
   const cfg: ServiceConfig = {
     envName,
@@ -128,6 +138,11 @@ export function getServiceConfig(): ServiceConfig {
     gear: {
       kayaksSpreadsheetId,
       kayaksTabName,
+    },
+
+    godzinki: {
+      spreadsheetId: godzinkiSpreadsheetId,
+      tabName: godzinkiTabName,
     },
   };
 

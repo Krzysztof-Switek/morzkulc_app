@@ -3,6 +3,7 @@
 
 import type {Request, Response} from "express";
 import type * as admin from "firebase-admin";
+import {creditOpeningBalance} from "../modules/hours/godzinki_service";
 
 type TokenCheck =
   | {error: string}
@@ -193,6 +194,18 @@ function validateIncomingProfile(incoming: ProfileInput): ValidationResult {
   return {ok: Object.keys(fields).length === 0, fields};
 }
 
+/**
+ * Odczytuje ilość godzinek z dokumentu bilansu otwarcia.
+ * Nazwa pola zawiera datę (np. "Godzinki Bilans otwarcia01.04.2026"),
+ * dlatego szukamy po prefiksie "Godzinki" (case-insensitive).
+ */
+function getObHours(obData: any): number {
+  if (!obData) return 0;
+  const key = Object.keys(obData).find((k) => k.toLowerCase().startsWith("godzinki"));
+  if (!key) return 0;
+  return Number(obData[key] ?? 0) || 0;
+}
+
 function computeRoleKeyFromOpeningBalance(
   obData: any,
   memberField: string,
@@ -275,6 +288,8 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
       const newUserStatusCode = normalizeStr(setupDefaults.newUserStatusCode) || "status_aktywny";
       const obMemberField = normalizeStr(setupDefaults.openingBalanceMemberField) || "członek stowarzyszenia";
       const obMemberRoleCode = normalizeStr(setupDefaults.openingBalanceMemberRoleCode) || "rola_czlonek";
+      // Godzinki z bilansu otwarcia wygasają 2028-01-01 (wymóg biznesowy)
+      const OB_HOURS_EXPIRES_AT = new Date(Date.UTC(2028, 0, 1));
 
       const decoded = tokenCheck.decoded;
       const uid = decoded.uid;
@@ -330,6 +345,13 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
               },
               {merge: true}
             );
+            // Kredytuj godzinki z bilansu otwarcia (fire-and-forget, idempotentne przez marker)
+            const obHours = getObHours(nameFound.obData);
+            if (obHours > 0 && !data.service?.openingBalanceHoursCredited) {
+              creditOpeningBalance(db, uid, obHours, OB_HOURS_EXPIRES_AT)
+                .then(() => userRef.set({"service.openingBalanceHoursCredited": true}, {merge: true}))
+                .catch((e: any) => console.error("creditOpeningBalance (existing user) failed", {uid, message: e?.message}));
+            }
           }
         }
 
@@ -453,6 +475,16 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
       }
 
       await userRef.set(docToCreate);
+
+      // Kredytuj godzinki z bilansu otwarcia (fire-and-forget, idempotentne przez marker)
+      if (openingMatch && found.obData) {
+        const obHours = getObHours(found.obData);
+        if (obHours > 0) {
+          creditOpeningBalance(db, uid, obHours, OB_HOURS_EXPIRES_AT)
+            .then(() => userRef.set({"service.openingBalanceHoursCredited": true}, {merge: true}))
+            .catch((e: any) => console.error("creditOpeningBalance (new user) failed", {uid, message: e?.message}));
+        }
+      }
 
       const profileComplete = isProfileComplete(incomingProfile);
 
