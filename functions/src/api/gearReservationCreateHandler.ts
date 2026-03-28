@@ -43,8 +43,6 @@ export async function handleGearReservationCreate(req: Request, res: Response, d
       const startDate = norm(body.startDate);
       const endDate = norm(body.endDate);
       const kayakIds = asStringArray(body.kayakIds);
-      const note = norm(body.note);
-
       if (!isIsoDateYYYYMMDD(startDate) || !isIsoDateYYYYMMDD(endDate) || startDate > endDate) {
         res.status(400).json({ok: false, code: "validation_failed", message: "Invalid startDate/endDate"});
         return;
@@ -55,7 +53,6 @@ export async function handleGearReservationCreate(req: Request, res: Response, d
         startDate,
         endDate,
         kayakIds,
-        note,
       });
 
       if (!out.ok) {

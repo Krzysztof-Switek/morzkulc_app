@@ -127,7 +127,7 @@ async function findConflicts(
 
 export async function createReservation(
   db: FirebaseFirestore.Firestore,
-  args: { uid: string; startDate: string; endDate: string; kayakIds: string[]; note?: string }
+  args: { uid: string; startDate: string; endDate: string; kayakIds: string[] }
 ) {
   const user = await getUserRole(db, args.uid);
   if (!user) return {ok: false, code: "forbidden", message: "User not registered"} as const;
@@ -190,7 +190,6 @@ export async function createReservation(
     kayakCount: kayakIds.length,
 
     costHours,
-    note: norm(args.note),
 
     createdAt: now,
     updatedAt: now,

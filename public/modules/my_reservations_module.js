@@ -205,10 +205,6 @@ export function createMyReservationsModule({ id, label, defaultRoute, order, ena
                       <div class="gearMetaKey">Godzinki</div>
                       <div class="gearMetaVal">${escapeHtml(String(rsv?.costHours ?? "-"))}</div>
                     </div>
-                    <div class="gearMetaRow">
-                      <div class="gearMetaKey">Notatka</div>
-                      <div class="gearMetaVal">${escapeHtml(String(rsv?.note || "-"))}</div>
-                    </div>
                   </div>
 
                   <div class="actions" style="margin-top:10px;">

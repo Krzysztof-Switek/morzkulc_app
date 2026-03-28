@@ -189,11 +189,6 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
                   <input id="reservationEndDate" type="date" />
                 </div>
 
-                <div class="row" style="margin-top:10px;">
-                  <label for="reservationNote">Notatka</label>
-                  <textarea id="reservationNote" rows="3" placeholder="Opcjonalna notatka"></textarea>
-                </div>
-
                 <div class="hint" style="margin-top:10px;">
                   Rezerwacja blokuje sprzęt dla innych użytkowników. Koszt godzinek i konflikty terminów sprawdza backend.
                 </div>
@@ -238,7 +233,6 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
       const reservationSelectedKayakEl = viewEl.querySelector("#reservationSelectedKayak");
       const reservationStartDateEl = viewEl.querySelector("#reservationStartDate");
       const reservationEndDateEl = viewEl.querySelector("#reservationEndDate");
-      const reservationNoteEl = viewEl.querySelector("#reservationNote");
       const reservationCreateBtn = viewEl.querySelector("#reservationCreateBtn");
       const reservationClearBtn = viewEl.querySelector("#reservationClearBtn");
 
@@ -290,7 +284,6 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         reservationSelectedKayakEl.value = "";
         reservationStartDateEl.value = "";
         reservationEndDateEl.value = "";
-        reservationNoteEl.value = "";
         clearReservationMessages();
         syncReservationForm();
       };
@@ -536,8 +529,6 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
 
         const startDate = String(reservationStartDateEl.value || "").trim();
         const endDate = String(reservationEndDateEl.value || "").trim();
-        const note = String(reservationNoteEl.value || "").trim();
-
         if (!startDate || !endDate) {
           setReservationErr("Wybierz datę od i do.");
           return;
@@ -553,7 +544,6 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
               startDate,
               endDate,
               kayakIds: [selectedKayak.id],
-              note
             }
           });
 
@@ -869,7 +859,6 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         clearReservationMessages();
         reservationStartDateEl.value = "";
         reservationEndDateEl.value = "";
-        reservationNoteEl.value = "";
       });
 
       syncReservationForm();
