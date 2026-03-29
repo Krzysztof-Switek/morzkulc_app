@@ -5,10 +5,17 @@ import {
   authGetIdToken,
   authGetBasicUser
 } from "/core/firebase_client.js";
-
 import { apiPostJson, apiGetJson } from "/core/api_client.js";
 import { buildModulesFromSetup } from "/core/modules_registry.js";
 import { renderNav, renderView, spinnerHtml } from "/core/render_shell.js";
+
+// ── Service Worker registration ───────────────────────────────────────────────
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js").catch((err) => {
+    // Rejestracja SW nie jest krytyczna — aplikacja działa bez niego
+    console.warn("SW registration failed:", err?.message);
+  });
+}
 
 const REGISTER_URL = "/api/register";
 const SETUP_URL = "/api/setup";
@@ -117,9 +124,30 @@ authOnChange(async (user) => {
       );
     }
   } catch (e) {
-    registerData.textContent = "Błąd rejestracji: " + (e?.message || e);
+    registerData.textContent = "Błąd: " + (e?.message || e);
     ctx.session = null;
     window.__APP_CTX__ = ctx;
+
+    // ⚠️  Wyczyść spinner — bez tego UI zawisa na "Morzkulc myśli..." na zawsze
+    viewEl.innerHTML = `
+      <div class="card center" style="max-width:360px;margin:40px auto;text-align:center;">
+        <h2>Nie można załadować aplikacji</h2>
+        <p class="muted">Sprawdź połączenie z internetem i spróbuj ponownie.</p>
+        <button id="startupRetryBtn" class="primary" type="button" style="margin-top:8px;">
+          Odśwież stronę
+        </button>
+        <br />
+        <button id="startupLogoutBtn" class="ghost" type="button" style="margin-top:8px;">
+          Wyloguj i zaloguj ponownie
+        </button>
+      </div>`;
+    document.getElementById("startupRetryBtn")
+      ?.addEventListener("click", () => location.reload());
+    document.getElementById("startupLogoutBtn")
+      ?.addEventListener("click", async () => {
+        await authLogout();
+        hardResetUi();
+      });
   }
 });
 
