@@ -21,6 +21,13 @@ import {handleSubmitGodzinki} from "./api/submitGodzinkiHandler";
 import {handleGetKayakReservations} from "./api/getKayakReservationsHandler";
 import {handleGetEvents} from "./api/getEventsHandler";
 import {handleSubmitEvent} from "./api/submitEventHandler";
+import {handleGetBasenSessions} from "./api/getBasenSessionsHandler";
+import {handleBasenEnroll} from "./api/basenEnrollHandler";
+import {handleBasenCancelEnrollment} from "./api/basenCancelEnrollmentHandler";
+import {handleGetBasenKarnety} from "./api/getBasenKarnetyHandler";
+import {handleBasenCreateSession} from "./api/basenCreateSessionHandler";
+import {handleBasenCancelSession} from "./api/basenCancelSessionHandler";
+import {handleBasenGrantKarnet} from "./api/basenGrantKarnetHandler";
 import {getServiceConfig} from "./service/service_config";
 import {GoogleSheetsProvider} from "./service/providers/googleSheetsProvider";
 
@@ -655,6 +662,121 @@ export const submitEvent = onRequest({invoker: "private"}, async (req, res) => {
     corsHandler,
     requireIdToken,
     enqueueEventSheetWrite,
+  });
+});
+
+/**
+ * Kolejkuje powiadomienie o anulowaniu sesji basenowej.
+ */
+async function enqueueBasenSessionCancelledNotify(sessionId: string): Promise<void> {
+  const jobRef = db.collection("service_jobs").doc();
+  await jobRef.set({
+    id: jobRef.id,
+    taskId: "basen.notifySessionCancelled",
+    payload: {sessionId},
+    status: "queued",
+    attempts: 0,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+}
+
+/**
+ * GET /api/basen/sessions (authenticated)
+ */
+export const getBasenSessions = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetBasenSessions(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * POST /api/basen/enroll (authenticated, role: czlonek/zarzad/kr)
+ */
+export const basenEnroll = onRequest({invoker: "private"}, async (req, res) => {
+  return handleBasenEnroll(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * POST /api/basen/cancel-enrollment (authenticated)
+ */
+export const basenCancelEnrollment = onRequest({invoker: "private"}, async (req, res) => {
+  return handleBasenCancelEnrollment(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * GET /api/basen/karnety (authenticated)
+ */
+export const getBasenKarnety = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetBasenKarnety(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * POST /api/basen/sessions/create (authenticated, role: zarzad/kr)
+ */
+export const basenCreateSession = onRequest({invoker: "private"}, async (req, res) => {
+  return handleBasenCreateSession(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * POST /api/basen/sessions/cancel (authenticated, role: zarzad/kr)
+ */
+export const basenCancelSession = onRequest({invoker: "private"}, async (req, res) => {
+  return handleBasenCancelSession(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    enqueueBasenSessionCancelledNotify,
+  });
+});
+
+/**
+ * POST /api/basen/karnety/grant (authenticated, role: zarzad/kr)
+ */
+export const basenGrantKarnet = onRequest({invoker: "private"}, async (req, res) => {
+  return handleBasenGrantKarnet(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
   });
 });
 

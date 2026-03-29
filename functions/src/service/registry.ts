@@ -3,6 +3,7 @@ import { onUserRegisteredWelcomeTask } from "./tasks/onUserRegisteredWelcome";
 import { gearSyncKayaksFromSheetTask } from "./tasks/gearSyncKayaksFromSheet";
 import { godzinkiSyncFromSheetTask, godzinkiWriteToSheetTask } from "./tasks/godzinkiSyncFromSheet";
 import { eventsSyncFromSheetTask, eventsWriteToSheetTask } from "./tasks/eventsSyncFromSheet";
+import { basenNotifySessionCancelledTask } from "./tasks/basenNotifySessionCancelled";
 
 const tasks: ServiceTask[] = [
   onUserRegisteredWelcomeTask,
@@ -11,6 +12,7 @@ const tasks: ServiceTask[] = [
   godzinkiWriteToSheetTask,
   eventsSyncFromSheetTask,
   eventsWriteToSheetTask,
+  basenNotifySessionCancelledTask,
 ];
 
 export function getTaskRegistry(): Map<string, ServiceTask> {

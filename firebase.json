@@ -205,6 +205,55 @@
           "functionId": "submitGodzinki",
           "region": "us-central1"
         }
+      },
+      {
+        "source": "/api/basen/sessions",
+        "function": {
+          "functionId": "getBasenSessions",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/basen/enroll",
+        "function": {
+          "functionId": "basenEnroll",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/basen/cancel-enrollment",
+        "function": {
+          "functionId": "basenCancelEnrollment",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/basen/karnety",
+        "function": {
+          "functionId": "getBasenKarnety",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/basen/sessions/create",
+        "function": {
+          "functionId": "basenCreateSession",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/basen/sessions/cancel",
+        "function": {
+          "functionId": "basenCancelSession",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/basen/karnety/grant",
+        "function": {
+          "functionId": "basenGrantKarnet",
+          "region": "us-central1"
+        }
       }
     ]
   }

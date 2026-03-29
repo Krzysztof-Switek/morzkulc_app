@@ -3,6 +3,7 @@ import { createGearModule } from "/modules/gear_module.js";
 import { createMyReservationsModule } from "/modules/my_reservations_module.js";
 import { createGodzinkiModule } from "/modules/godzinki_module.js";
 import { createImprezaModule } from "/modules/impreza_module.js";
+import { createBasenModule } from "/modules/basen_module.js";
 
 /**
  * NEW FORMAT ONLY
@@ -45,6 +46,13 @@ export function buildModulesFromSetup(setup) {
       return createImprezaModule({
         ...base,
         defaultRoute: base.defaultRoute === "home" ? "list" : base.defaultRoute
+      });
+    }
+
+    if (id === "modul_5") {
+      return createBasenModule({
+        ...base,
+        defaultRoute: base.defaultRoute === "home" ? "sessions" : base.defaultRoute
       });
     }
 

@@ -144,6 +144,41 @@ export class GoogleWorkspaceProvider {
     }
   }
 
+  async sendGenericEmail(
+    toEmail: string,
+    subject: string,
+    bodyText: string
+  ): Promise<void> {
+    const gmail = await this.getGmailClient();
+
+    const from = normalizeEmail(this.delegatedUserEmail);
+    const to = normalizeEmail(toEmail);
+
+    assertLooksLikeEmail("fromEmail (delegated)", from);
+    assertLooksLikeEmail("toEmail", to);
+
+    const messageParts = [
+      `From: ${from}`,
+      `To: ${to}`,
+      `Subject: ${subject}`,
+      "MIME-Version: 1.0",
+      "Content-Type: text/plain; charset=utf-8",
+      "",
+      bodyText,
+    ];
+
+    const raw = Buffer.from(messageParts.join("\n"))
+      .toString("base64")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
+
+    await gmail.users.messages.send({
+      userId: "me",
+      requestBody: { raw },
+    });
+  }
+
   // ✅ CHANGED: replyToEmail added
   async sendWelcomeEmail(
     fromEmail: string,

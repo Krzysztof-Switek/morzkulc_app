@@ -12,6 +12,7 @@ const MY_RESERVATIONS_URL = "/api/gear/my-reservations";
 const KAYAKS_URL = "/api/gear/kayaks";
 const GODZINKI_URL = "/api/godzinki";
 const EVENTS_URL = "/api/events";
+const BASEN_SESSIONS_URL = "/api/basen/sessions";
 
 export function renderNav({ navEl, ctx }) {
   navEl.innerHTML = "";
@@ -153,6 +154,17 @@ async function renderHomeDashboard({ viewEl, ctx }) {
         </div>
       </section>
 
+      <section class="dashCard startSection" id="homeBasenSection" style="display:none;">
+        <div class="dashCardHead">
+          <h3>Zajęcia basenowe</h3>
+          <button type="button" class="ghost" data-home-action="basen">Zobacz wszystkie</button>
+        </div>
+
+        <div class="startList" id="homeBasenList">
+          ${spinnerHtml("Ładowanie sesji...")}
+        </div>
+      </section>
+
     </div>
   `;
 
@@ -175,6 +187,14 @@ async function renderHomeDashboard({ viewEl, ctx }) {
     eventsBtn.addEventListener("click", () => {
       const eventsTarget = getModuleRouteByLabelOrId(ctx, ["imprezy", "modul_4"]);
       setHash(eventsTarget.moduleId, eventsTarget.routeId);
+    });
+  }
+
+  const basenBtn = viewEl.querySelector("[data-home-action='basen']");
+  if (basenBtn) {
+    basenBtn.addEventListener("click", () => {
+      const basenTarget = getModuleRouteByLabelOrId(ctx, ["basen", "modul_5"]);
+      setHash(basenTarget.moduleId, basenTarget.routeId);
     });
   }
 
@@ -229,6 +249,21 @@ async function renderHomeDashboard({ viewEl, ctx }) {
     const listEl = viewEl.querySelector("#homeEventsList");
     if (listEl) listEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać imprez.</div></div></div>`;
   });
+
+  // Ładuj zajęcia basenowe — sekcja widoczna tylko jeśli modul_5 dostępny
+  const basenModule = (ctx.modules || []).find((m) => m.id === "modul_5" && m.enabled);
+  if (basenModule) {
+    const basenSection = viewEl.querySelector("#homeBasenSection");
+    if (basenSection) basenSection.style.display = "";
+
+    buildHomeBasenSection(ctx).then((html) => {
+      const listEl = viewEl.querySelector("#homeBasenList");
+      if (listEl) listEl.innerHTML = html;
+    }).catch(() => {
+      const listEl = viewEl.querySelector("#homeBasenList");
+      if (listEl) listEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać sesji.</div></div></div>`;
+    });
+  }
 }
 
 async function buildHomeHoursCell(ctx) {
@@ -285,6 +320,51 @@ async function buildHomeEventsSection(ctx) {
     }).join("");
   } catch {
     return `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać imprez.</div></div></div>`;
+  }
+}
+
+async function buildHomeBasenSection(ctx) {
+  if (!ctx?.idToken) {
+    return `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Brak sesji.</div></div></div>`;
+  }
+
+  try {
+    const data = await apiGetJson({ url: BASEN_SESSIONS_URL, idToken: ctx.idToken });
+    const sessions = Array.isArray(data?.sessions) ? data.sessions : [];
+    const upcoming = sessions.slice(0, 3);
+
+    if (!upcoming.length) {
+      return `
+        <div class="startListItem">
+          <div class="startListMain">
+            <div class="startListTitle">Brak nadchodzących zajęć</div>
+          </div>
+        </div>
+      `;
+    }
+
+    return upcoming.map((s) => {
+      const days = ["niedz.", "pon.", "wt.", "śr.", "czw.", "pt.", "sob."];
+      const d = new Date(`${s.date}T12:00:00`);
+      const dayName = days[d.getDay()] || "";
+      const m = String(s.date || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      const dateStr = m ? `${m[3]}.${m[2]} (${dayName})` : String(s.date || "");
+      const spotsLeft = s.capacity - s.enrolledCount;
+      const spotsLabel = s.userEnrolled
+        ? "Zapisany/a"
+        : spotsLeft > 0 ? `${spotsLeft} miejsc` : "Brak miejsc";
+
+      return `
+        <div class="startListItem">
+          <div class="startListMain">
+            <div class="startListTitle">${escapeHtml(dateStr)} ${escapeHtml(s.timeStart || "")}–${escapeHtml(s.timeEnd || "")}</div>
+            <div class="startListMeta">${escapeHtml(spotsLabel)}${s.instructorName ? " · " + escapeHtml(String(s.instructorName)) : ""}</div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  } catch {
+    return `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać zajęć.</div></div></div>`;
   }
 }
 

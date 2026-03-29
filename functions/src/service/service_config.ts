@@ -49,6 +49,11 @@ export interface ServiceConfig {
     spreadsheetId: string;
     tabName: string;
   };
+
+  // ✅ NEW: Basen (pool) config
+  basen: {
+    adminEmail: string;
+  };
 }
 
 export function getServiceConfig(): ServiceConfig {
@@ -158,6 +163,10 @@ export function getServiceConfig(): ServiceConfig {
     events: {
       spreadsheetId: eventsSpreadsheetId,
       tabName: eventsTabName,
+    },
+
+    basen: {
+      adminEmail: process.env.SVC_BASEN_ADMIN_EMAIL || "",
     },
   };
 
