@@ -6,6 +6,7 @@ const GEAR_URL = "/api/gear/kayaks";
 const CREATE_RESERVATION_URL = "/api/gear/reservations/create";
 const GEAR_FAVORITES_URL = "/api/gear/favorites";
 const GEAR_FAVORITES_TOGGLE_URL = "/api/gear/favorites/toggle";
+const KAYAK_RESERVATIONS_URL = "/api/gear/kayak-reservations";
 
 // Lokalny placeholder dostępny zawsze z aplikacji
 const PLACEHOLDER_SVG = "/assets/kayak-placeholder.png";
@@ -192,6 +193,11 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
                 <div class="hint" style="margin-top:10px;">
                   Rezerwacja blokuje sprzęt dla innych użytkowników. Koszt godzinek i konflikty terminów sprawdza backend.
                 </div>
+
+                <div id="reservationExistingSection" class="gearReservModalSection hidden">
+                  <div class="gearReservModalTitle">Kiedy zajęty?</div>
+                  <div id="reservationExistingContent"></div>
+                </div>
               </div>
             </div>
 
@@ -235,6 +241,8 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
       const reservationEndDateEl = viewEl.querySelector("#reservationEndDate");
       const reservationCreateBtn = viewEl.querySelector("#reservationCreateBtn");
       const reservationClearBtn = viewEl.querySelector("#reservationClearBtn");
+      const reservationExistingSectionEl = viewEl.querySelector("#reservationExistingSection");
+      const reservationExistingContentEl = viewEl.querySelector("#reservationExistingContent");
 
       const modalEl = viewEl.querySelector("#gearImgModal");
       const modalImgEl = viewEl.querySelector("#gearModalImg");
@@ -286,6 +294,22 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         reservationEndDateEl.value = "";
         clearReservationMessages();
         syncReservationForm();
+      };
+
+      const loadAndRenderReservations = async (kayakId, containerEl, withCalendar = false) => {
+        containerEl.innerHTML = `<div class="gearReservNoData">Ładuję...</div>`;
+        try {
+          const resp = await apiGetJson({
+            url: `${KAYAK_RESERVATIONS_URL}?kayakId=${encodeURIComponent(kayakId)}`,
+            idToken: ctx.idToken,
+          });
+          const reservations = Array.isArray(resp?.reservations) ? resp.reservations : [];
+          containerEl.innerHTML = withCalendar
+            ? renderReservationsContent(reservations)
+            : renderReservationsSimple(reservations);
+        } catch {
+          containerEl.innerHTML = `<div class="gearReservNoData">Nie udało się załadować.</div>`;
+        }
       };
 
       const openReservationModal = () => {
@@ -345,7 +369,7 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         }
       };
 
-      const startCreateForKayak = (kayakId) => {
+      const startCreateForKayak = async (kayakId) => {
         const found = all.find((k) => String(k?.id || "") === String(kayakId || ""));
         if (!found) {
           setErr("Nie znaleziono kajaka.");
@@ -361,6 +385,12 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         syncReservationForm();
         openReservationModal();
         reservationStartDateEl.focus();
+
+        // Pokaż aktywne rezerwacje w modalu (z kalendarzem)
+        if (reservationExistingSectionEl && reservationExistingContentEl) {
+          reservationExistingSectionEl.classList.remove("hidden");
+          await loadAndRenderReservations(String(found.id || ""), reservationExistingContentEl, true);
+        }
       };
 
       const render = (items) => {
@@ -797,7 +827,7 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         const reserveBtn = el.closest("[data-gear-reserve]");
         if (reserveBtn) {
           const kayakId = String(reserveBtn.getAttribute("data-gear-reserve") || "");
-          startCreateForKayak(kayakId);
+          await startCreateForKayak(kayakId);
           return;
         }
 
@@ -826,7 +856,19 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
           const card = moreBtn.closest(".gearCard");
           const detailsEl = card?.querySelector(".gearDetails");
           if (detailsEl) {
-            detailsEl.open = !detailsEl.open;
+            const wasOpen = detailsEl.open;
+            detailsEl.open = !wasOpen;
+
+            // Lazy-load rezerwacji przy pierwszym otwarciu karty kajaka
+            if (!wasOpen && card) {
+              const cardKayakId = String(card.getAttribute("data-gear-card-id") || "");
+              const reservSection = card.querySelector(".gearReservSection");
+              const reservContent = card.querySelector(".gearReservSectionContent");
+              if (cardKayakId && reservSection && reservContent && !reservSection.getAttribute("data-loaded")) {
+                reservSection.setAttribute("data-loaded", "1");
+                loadAndRenderReservations(cardKayakId, reservContent);
+              }
+            }
           }
           return;
         }
@@ -901,7 +943,7 @@ function renderKayakCard(k, isFav = false) {
   const detailsRows = buildKayakDetailsRows(k);
 
   return `
-    <div class="gearCard ${working ? "gearOk" : "gearBad"}">
+    <div class="gearCard ${working ? "gearOk" : "gearBad"}" data-gear-card-id="${escapeAttr(String(k?.id || ""))}">
       <div class="gearCardInner">
 
         <div class="gearHead">
@@ -976,6 +1018,9 @@ function renderKayakCard(k, isFav = false) {
           <summary class="gearDetailsSummary">Więcej</summary>
           <div class="gearMeta">
             ${detailsRows}
+          </div>
+          <div class="gearReservSection">
+            <div class="gearReservSectionContent"></div>
           </div>
         </details>
 
@@ -1255,6 +1300,32 @@ function dotsIconSvg() {
 
 function refreshIconSvg() {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>`;
+}
+
+function formatDatePLFromIso(iso) {
+  if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(String(iso))) return String(iso || "");
+  const [y, m, d] = String(iso).split("-");
+  return `${d}.${m}.${y}`;
+}
+
+function renderReservationsSimple(reservations) {
+  if (!reservations.length) {
+    return `<div class="gearReservNoData">Brak aktywnych rezerwacji.</div>`;
+  }
+  return reservations.map((r) => {
+    const start = formatDatePLFromIso(r.startDate);
+    const end = formatDatePLFromIso(r.endDate);
+    return `
+      <div class="gearReservSimpleRow">
+        <div class="gearReservSimpleDates">Zajęty: ${escapeHtml(start)} – ${escapeHtml(end)}</div>
+        <div class="gearReservSimpleUser">Wypożyczony przez: ${escapeHtml(r.userDisplayName || "—")}</div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderReservationsContent(reservations) {
+  return renderReservationsSimple(reservations);
 }
 
 function gearTabIcon(id) {

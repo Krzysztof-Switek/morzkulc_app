@@ -172,6 +172,13 @@
         }
       },
       {
+        "source": "/api/gear/kayak-reservations",
+        "function": {
+          "functionId": "getKayakReservations",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "/api/godzinki",
         "function": {
           "functionId": "getGodzinki",

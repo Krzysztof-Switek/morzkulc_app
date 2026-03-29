@@ -18,6 +18,7 @@ import {handleGetGearFavorites} from "./api/getGearFavoritesHandler";
 import {handleGearFavoriteToggle} from "./api/gearFavoriteToggleHandler";
 import {handleGetGodzinki} from "./api/getGodzinkiHandler";
 import {handleSubmitGodzinki} from "./api/submitGodzinkiHandler";
+import {handleGetKayakReservations} from "./api/getKayakReservationsHandler";
 import {getServiceConfig} from "./service/service_config";
 import {GoogleSheetsProvider} from "./service/providers/googleSheetsProvider";
 
@@ -571,6 +572,21 @@ async function enqueueGodzinkiSheetWrite(recordId: string, uid: string): Promise
  */
 export const getGodzinki = onRequest({invoker: "private"}, async (req, res) => {
   return handleGetGodzinki(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * GET /api/gear/kayak-reservations?kayakId=X (authenticated)
+ * Zwraca aktywne rezerwacje danego kajaka z nazwami użytkowników.
+ */
+export const getKayakReservations = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetKayakReservations(req, res, {
     db,
     sendPreflight,
     requireAllowedHost,

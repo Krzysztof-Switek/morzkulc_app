@@ -936,3 +936,75 @@
   }
 }
 
+/* ================= GEAR RESERVATIONS SECTION ================= */
+
+.gearReservSection {
+  margin-top: 12px;
+  border-top: 1px dashed rgba(230, 232, 238, 0.15);
+  padding-top: 10px;
+}
+
+:root[data-theme="light"] .gearReservSection {
+  border-top-color: rgba(12, 18, 32, 0.12);
+}
+
+.gearReservSectionTitle {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted, #888);
+  margin-bottom: 8px;
+}
+
+/* ================= RESERVATIONS LIST ================= */
+
+/* In modal */
+.gearReservModalSection {
+  margin-top: 14px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.gearReservModalSection.hidden {
+  display: none;
+}
+
+.gearReservModalTitle {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted, #888);
+  margin-bottom: 8px;
+}
+
+.gearReservNoData {
+  font-size: 12px;
+  color: var(--text-muted, #888);
+}
+
+.gearReservSimpleRow {
+  padding: 4px 0;
+  border-bottom: 1px dashed rgba(230, 232, 238, 0.12);
+}
+
+.gearReservSimpleRow:last-child {
+  border-bottom: none;
+}
+
+:root[data-theme="light"] .gearReservSimpleRow {
+  border-bottom-color: rgba(12, 18, 32, 0.10);
+}
+
+.gearReservSimpleDates {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.gearReservSimpleUser {
+  font-size: 12px;
+  color: var(--text-muted, #888);
+}
+
