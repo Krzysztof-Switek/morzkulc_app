@@ -11,6 +11,7 @@ const REGISTER_URL = "/api/register";
 const MY_RESERVATIONS_URL = "/api/gear/my-reservations";
 const KAYAKS_URL = "/api/gear/kayaks";
 const GODZINKI_URL = "/api/godzinki";
+const EVENTS_URL = "/api/events";
 
 export function renderNav({ navEl, ctx }) {
   navEl.innerHTML = "";
@@ -126,7 +127,6 @@ async function renderHomeDashboard({ viewEl, ctx }) {
 
           <button type="button" class="startTile" data-home-action="add-event">
             <span class="startTileTitle">Dodaj imprezę</span>
-            <span class="startTileMeta">Dostępne wkrótce</span>
           </button>
         </div>
       </section>
@@ -148,14 +148,8 @@ async function renderHomeDashboard({ viewEl, ctx }) {
           <button type="button" class="ghost" data-home-action="events">Zobacz wszystkie</button>
         </div>
 
-        <div class="startList">
-          <div class="startListItem">
-            <div class="startListMain">
-              <div class="startListTitle">Nadchodzące wydarzenia klubowe</div>
-              <div class="startListMeta">Tutaj pokażemy 2–3 najbliższe imprezy.</div>
-            </div>
-            <div class="startListSide">Dostępne wkrótce</div>
-          </div>
+        <div class="startList" id="homeEventsList">
+          ${spinnerHtml("Ładowanie imprez...")}
         </div>
       </section>
 
@@ -181,6 +175,18 @@ async function renderHomeDashboard({ viewEl, ctx }) {
     eventsBtn.addEventListener("click", () => {
       const eventsTarget = getModuleRouteByLabelOrId(ctx, ["imprezy", "modul_4"]);
       setHash(eventsTarget.moduleId, eventsTarget.routeId);
+    });
+  }
+
+  const addEventBtn = viewEl.querySelector("[data-home-action='add-event']");
+  if (addEventBtn) {
+    addEventBtn.addEventListener("click", () => {
+      const eventsTarget = getModuleRouteByLabelOrId(ctx, ["imprezy", "modul_4"]);
+      if (eventsTarget.moduleId !== "home") {
+        setHash(eventsTarget.moduleId, "submit");
+      } else {
+        setHash("modul_4", "submit");
+      }
     });
   }
 
@@ -214,6 +220,15 @@ async function renderHomeDashboard({ viewEl, ctx }) {
       // cicha porażka — komórka zostaje z placeholder "…"
     });
   }
+
+  // Ładuj nadchodzące imprezy asynchronicznie
+  buildHomeEventsSection(ctx).then((html) => {
+    const listEl = viewEl.querySelector("#homeEventsList");
+    if (listEl) listEl.innerHTML = html;
+  }).catch(() => {
+    const listEl = viewEl.querySelector("#homeEventsList");
+    if (listEl) listEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać imprez.</div></div></div>`;
+  });
 }
 
 async function buildHomeHoursCell(ctx) {
@@ -232,6 +247,44 @@ async function buildHomeHoursCell(ctx) {
     `;
   } catch {
     return `<strong class="startStatVal">—</strong>`;
+  }
+}
+
+async function buildHomeEventsSection(ctx) {
+  if (!ctx?.idToken) {
+    return `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Brak sesji.</div></div></div>`;
+  }
+
+  try {
+    const data = await apiGetJson({ url: EVENTS_URL, idToken: ctx.idToken });
+    const events = Array.isArray(data?.events) ? data.events : [];
+    const upcoming = events.slice(0, 3);
+
+    if (!upcoming.length) {
+      return `
+        <div class="startListItem">
+          <div class="startListMain">
+            <div class="startListTitle">Brak nadchodzących imprez</div>
+          </div>
+        </div>
+      `;
+    }
+
+    return upcoming.map((ev) => {
+      const start = formatDatePL(String(ev?.startDate || ""));
+      const end = formatDatePL(String(ev?.endDate || ""));
+      const dateRange = ev.startDate === ev.endDate ? start : `${start} – ${end}`;
+      return `
+        <div class="startListItem">
+          <div class="startListMain">
+            <div class="startListTitle">${escapeHtml(String(ev?.name || "Impreza"))}</div>
+            <div class="startListMeta">${escapeHtml(String(ev?.location || ""))}${ev?.location ? " · " : ""}${escapeHtml(dateRange)}</div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  } catch {
+    return `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać imprez.</div></div></div>`;
   }
 }
 

@@ -43,6 +43,12 @@ export interface ServiceConfig {
     spreadsheetId: string;
     tabName: string;
   };
+
+  // ✅ NEW: Events (imprezy) sheets config
+  events: {
+    spreadsheetId: string;
+    tabName: string;
+  };
 }
 
 export function getServiceConfig(): ServiceConfig {
@@ -73,6 +79,10 @@ export function getServiceConfig(): ServiceConfig {
   // ✅ godzinki defaults — domyślnie ten sam arkusz co członkowie, zakładka "Godzinki"
   const godzinkiSpreadsheetId = process.env.SVC_GODZINKI_SHEET_ID || membersSpreadsheetId;
   const godzinkiTabName = process.env.SVC_GODZINKI_SHEET_TAB || "Godzinki";
+
+  // ✅ events defaults — ten sam arkusz co członkowie, zakładka "imprezy"
+  const eventsSpreadsheetId = process.env.SVC_EVENTS_SHEET_ID || membersSpreadsheetId;
+  const eventsTabName = process.env.SVC_EVENTS_SHEET_TAB || "imprezy";
 
   const cfg: ServiceConfig = {
     envName,
@@ -143,6 +153,11 @@ export function getServiceConfig(): ServiceConfig {
     godzinki: {
       spreadsheetId: godzinkiSpreadsheetId,
       tabName: godzinkiTabName,
+    },
+
+    events: {
+      spreadsheetId: eventsSpreadsheetId,
+      tabName: eventsTabName,
     },
   };
 

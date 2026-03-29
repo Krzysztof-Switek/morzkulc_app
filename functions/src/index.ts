@@ -19,6 +19,8 @@ import {handleGearFavoriteToggle} from "./api/gearFavoriteToggleHandler";
 import {handleGetGodzinki} from "./api/getGodzinkiHandler";
 import {handleSubmitGodzinki} from "./api/submitGodzinkiHandler";
 import {handleGetKayakReservations} from "./api/getKayakReservationsHandler";
+import {handleGetEvents} from "./api/getEventsHandler";
+import {handleSubmitEvent} from "./api/submitEventHandler";
 import {getServiceConfig} from "./service/service_config";
 import {GoogleSheetsProvider} from "./service/providers/googleSheetsProvider";
 
@@ -608,6 +610,51 @@ export const submitGodzinki = onRequest({invoker: "private"}, async (req, res) =
     corsHandler,
     requireIdToken,
     enqueueGodzinkiSheetWrite,
+  });
+});
+
+/**
+ * Kolejkuje zadanie serwisowe zapisu imprezy do Google Sheets.
+ */
+async function enqueueEventSheetWrite(eventId: string, uid: string): Promise<void> {
+  const jobRef = db.collection("service_jobs").doc();
+  await jobRef.set({
+    id: jobRef.id,
+    taskId: "events.writeToSheet",
+    payload: {eventId, uid},
+    status: "queued",
+    attempts: 0,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+}
+
+/**
+ * GET /api/events (authenticated)
+ */
+export const getEvents = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetEvents(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * POST /api/events/submit (authenticated, role: czlonek/zarzad/kr)
+ */
+export const submitEvent = onRequest({invoker: "private"}, async (req, res) => {
+  return handleSubmitEvent(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    enqueueEventSheetWrite,
   });
 });
 
