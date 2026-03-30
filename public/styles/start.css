@@ -13,7 +13,7 @@
 
 @media (min-width: 900px) {
   .startTop {
-    grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
+    grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
     align-items: start;
   }
 }
@@ -32,16 +32,12 @@
 
 .startStatRow {
   display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px dashed rgba(230, 232, 238, 0.12);
+  justify-content: flex-start;
+  gap: 6px;
+  align-items: baseline;
+  padding: 4px 0;
 }
 
-:root[data-theme="light"] .startStatRow {
-  border-bottom-color: rgba(12, 18, 32, 0.12);
-}
 
 .startStatKey {
   color: var(--text-muted);
@@ -53,25 +49,13 @@
   color: var(--text);
   font-size: 14px;
   font-weight: 900;
-  text-align: right;
 }
 
 .startTopActions {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
   align-self: start;
-}
-
-.startActionBtn {
-  width: 100%;
-  min-height: 88px;
-  border-radius: 16px;
-  padding: 14px;
-  display: grid;
-  gap: 4px;
-  justify-items: start;
-  text-align: left;
 }
 
 .startSection {
@@ -86,7 +70,7 @@
 
 .startListItem {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr auto;
   gap: 8px;
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -121,11 +105,6 @@
   font-weight: 800;
 }
 
-.startTiles {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-}
 
 .startTile {
   width: 100%;
@@ -150,8 +129,3 @@
   font-weight: 700;
 }
 
-@media (min-width: 720px) {
-  .startTiles {
-    grid-template-columns: 1fr 1fr;
-  }
-}

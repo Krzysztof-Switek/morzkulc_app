@@ -14,6 +14,20 @@ import {handleGearMyReservations} from "./api/gearMyReservationsHandler";
 import {handleGearReservationCreate} from "./api/gearReservationCreateHandler";
 import {handleGearReservationUpdate} from "./api/gearReservationUpdateHandler";
 import {handleGearReservationCancel} from "./api/gearReservationCancelHandler";
+import {handleGetGearFavorites} from "./api/getGearFavoritesHandler";
+import {handleGearFavoriteToggle} from "./api/gearFavoriteToggleHandler";
+import {handleGetGodzinki} from "./api/getGodzinkiHandler";
+import {handleSubmitGodzinki} from "./api/submitGodzinkiHandler";
+import {handleGetKayakReservations} from "./api/getKayakReservationsHandler";
+import {handleGetEvents} from "./api/getEventsHandler";
+import {handleSubmitEvent} from "./api/submitEventHandler";
+import {handleGetBasenSessions} from "./api/getBasenSessionsHandler";
+import {handleBasenEnroll} from "./api/basenEnrollHandler";
+import {handleBasenCancelEnrollment} from "./api/basenCancelEnrollmentHandler";
+import {handleGetBasenKarnety} from "./api/getBasenKarnetyHandler";
+import {handleBasenCreateSession} from "./api/basenCreateSessionHandler";
+import {handleBasenCancelSession} from "./api/basenCancelSessionHandler";
+import {handleBasenGrantKarnet} from "./api/basenGrantKarnetHandler";
 import {getServiceConfig} from "./service/service_config";
 import {GoogleSheetsProvider} from "./service/providers/googleSheetsProvider";
 
@@ -141,8 +155,22 @@ type SetupModuleConfig = {
   access?: ModuleAccess;
 };
 
+type StatusMapping = {
+  label: string;
+  blocksAccess?: boolean;
+};
+
+type SetupDefaults = {
+  newUserRoleCode?: string;
+  newUserStatusCode?: string;
+  openingBalanceMemberField?: string;
+  openingBalanceMemberRoleCode?: string;
+};
+
 type SetupApp = {
   modules?: Record<string, SetupModuleConfig>;
+  statusMappings?: Record<string, StatusMapping>;
+  defaults?: SetupDefaults;
   updatedAt?: any;
   updatedBy?: string;
 };
@@ -194,7 +222,7 @@ function statusLabel(statusKey: string): string {
   const m: Record<string, string> = {
     status_aktywny: "Aktywny",
     status_zawieszony: "Zawieszony",
-    status_pending: "Pending",
+    status_skreslony: "Skreślony",
   };
   return m[statusKey] || statusKey || "";
 }
@@ -302,15 +330,12 @@ async function syncMemberToSheet(uid: string): Promise<void> {
     patch
   );
 
-  await db.collection("users_active").doc(uid).set(
-    {
-      "service.sheetSyncedAt": admin.firestore.FieldValue.serverTimestamp(),
-      "service.sheetRowNumber": result.rowNumber,
-      "service.sheetAction": result.action,
-      "updatedAt": admin.firestore.FieldValue.serverTimestamp(),
-    },
-    {merge: true}
-  );
+  await db.collection("users_active").doc(uid).update({
+    "service.sheetSyncedAt": admin.firestore.FieldValue.serverTimestamp(),
+    "service.sheetRowNumber": result.rowNumber,
+    "service.sheetAction": result.action,
+    "updatedAt": admin.firestore.FieldValue.serverTimestamp(),
+  });
 }
 
 /**
@@ -483,6 +508,8 @@ export const updateGearReservation = onRequest({invoker: "private"}, async (req,
   return handleGearReservationUpdate(req, res, {
     db,
     sendPreflight,
+
+
     requireAllowedHost,
     setCorsHeaders,
     corsHandler,
@@ -495,6 +522,255 @@ export const updateGearReservation = onRequest({invoker: "private"}, async (req,
  */
 export const cancelGearReservation = onRequest({invoker: "private"}, async (req, res) => {
   return handleGearReservationCancel(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * GET /api/gear/favorites?category=kayaks (authenticated)
+ */
+export const getGearFavorites = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetGearFavorites(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * POST /api/gear/favorites/toggle (authenticated)
+ */
+export const gearFavoriteToggle = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGearFavoriteToggle(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * Kolejkuje zadanie serwisowe zapisu godzinek do Google Sheets.
+ * Fire-and-forget — nie blokuje odpowiedzi na zgłoszenie.
+ */
+async function enqueueGodzinkiSheetWrite(recordId: string, uid: string): Promise<void> {
+  const jobRef = db.collection("service_jobs").doc();
+  await jobRef.set({
+    id: jobRef.id,
+    taskId: "godzinki.writeToSheet",
+    payload: {recordId, uid},
+    status: "queued",
+    attempts: 0,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+}
+
+/**
+ * GET /api/godzinki (authenticated)
+ */
+export const getGodzinki = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetGodzinki(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * GET /api/gear/kayak-reservations?kayakId=X (authenticated)
+ * Zwraca aktywne rezerwacje danego kajaka z nazwami użytkowników.
+ */
+export const getKayakReservations = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetKayakReservations(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * POST /api/godzinki/submit (authenticated)
+ */
+export const submitGodzinki = onRequest({invoker: "private"}, async (req, res) => {
+  return handleSubmitGodzinki(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    enqueueGodzinkiSheetWrite,
+  });
+});
+
+/**
+ * Kolejkuje zadanie serwisowe zapisu imprezy do Google Sheets.
+ */
+async function enqueueEventSheetWrite(eventId: string, uid: string): Promise<void> {
+  const jobRef = db.collection("service_jobs").doc();
+  await jobRef.set({
+    id: jobRef.id,
+    taskId: "events.writeToSheet",
+    payload: {eventId, uid},
+    status: "queued",
+    attempts: 0,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+}
+
+/**
+ * GET /api/events (authenticated)
+ */
+export const getEvents = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetEvents(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * POST /api/events/submit (authenticated, role: czlonek/zarzad/kr)
+ */
+export const submitEvent = onRequest({invoker: "private"}, async (req, res) => {
+  return handleSubmitEvent(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    enqueueEventSheetWrite,
+  });
+});
+
+/**
+ * Kolejkuje powiadomienie o anulowaniu sesji basenowej.
+ */
+async function enqueueBasenSessionCancelledNotify(sessionId: string): Promise<void> {
+  const jobRef = db.collection("service_jobs").doc();
+  await jobRef.set({
+    id: jobRef.id,
+    taskId: "basen.notifySessionCancelled",
+    payload: {sessionId},
+    status: "queued",
+    attempts: 0,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+}
+
+/**
+ * GET /api/basen/sessions (authenticated)
+ */
+export const getBasenSessions = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetBasenSessions(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * POST /api/basen/enroll (authenticated, role: czlonek/zarzad/kr)
+ */
+export const basenEnroll = onRequest({invoker: "private"}, async (req, res) => {
+  return handleBasenEnroll(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * POST /api/basen/cancel-enrollment (authenticated)
+ */
+export const basenCancelEnrollment = onRequest({invoker: "private"}, async (req, res) => {
+  return handleBasenCancelEnrollment(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * GET /api/basen/karnety (authenticated)
+ */
+export const getBasenKarnety = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetBasenKarnety(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * POST /api/basen/sessions/create (authenticated, role: zarzad/kr)
+ */
+export const basenCreateSession = onRequest({invoker: "private"}, async (req, res) => {
+  return handleBasenCreateSession(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * POST /api/basen/sessions/cancel (authenticated, role: zarzad/kr)
+ */
+export const basenCancelSession = onRequest({invoker: "private"}, async (req, res) => {
+  return handleBasenCancelSession(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    enqueueBasenSessionCancelledNotify,
+  });
+});
+
+/**
+ * POST /api/basen/karnety/grant (authenticated, role: zarzad/kr)
+ */
+export const basenGrantKarnet = onRequest({invoker: "private"}, async (req, res) => {
+  return handleBasenGrantKarnet(req, res, {
     db,
     sendPreflight,
     requireAllowedHost,

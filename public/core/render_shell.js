@@ -3,9 +3,17 @@ import { canSeeModule } from "/core/access_control.js";
 import { setHash, parseHash } from "/core/router.js";
 import { apiPostJson, apiGetJson } from "/core/api_client.js";
 
+export function spinnerHtml(text = "Morzkulc myśli") {
+  return `<div class="thinking">${escapeHtml(text)}<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></div>`;
+}
+
 const REGISTER_URL = "/api/register";
 const MY_RESERVATIONS_URL = "/api/gear/my-reservations";
 const KAYAKS_URL = "/api/gear/kayaks";
+const CANCEL_RESERVATION_URL = "/api/gear/reservations/cancel";
+const GODZINKI_URL = "/api/godzinki";
+const EVENTS_URL = "/api/events";
+const BASEN_SESSIONS_URL = "/api/basen/sessions";
 
 export function renderNav({ navEl, ctx }) {
   navEl.innerHTML = "";
@@ -16,7 +24,7 @@ export function renderNav({ navEl, ctx }) {
   navEl.appendChild(homeBtn);
 
   const modules = Array.isArray(ctx.modules) ? ctx.modules : [];
-  const visible = modules.filter((m) => canSeeModule({ ctx, module: m }));
+  const visible = modules.filter((m) => canSeeModule({ ctx, module: m }) && m.id !== "my_reservations");
 
   for (const m of visible) {
     const btn = document.createElement("button");
@@ -27,6 +35,9 @@ export function renderNav({ navEl, ctx }) {
 }
 
 export async function renderView({ viewEl, ctx }) {
+  // Zawsze resetuj overflow — modal mógł być otwarty gdy użytkownik zmienił widok
+  document.body.style.overflow = "";
+
   const { moduleId, routeId } = parseHash();
 
   if (!ctx.session?.profileComplete) {
@@ -52,6 +63,8 @@ export async function renderView({ viewEl, ctx }) {
     return;
   }
 
+  viewEl.innerHTML = spinnerHtml();
+
   try {
     await mod.render({ viewEl, routeId, ctx });
   } catch (e) {
@@ -71,8 +84,7 @@ async function renderHomeDashboard({ viewEl, ctx }) {
   const hoursValue = getHoursValue(ctx);
   const membershipPaidUntil = getMembershipPaidUntil(ctx);
 
-  const reservationsSectionHtml = await buildHomeReservationsSection(ctx);
-
+  // Render struktury natychmiast — rezerwacje ładujemy asynchronicznie
   viewEl.innerHTML = `
     <div class="dashboard dashboardStart">
       <section class="startTop">
@@ -81,36 +93,45 @@ async function renderHomeDashboard({ viewEl, ctx }) {
 
           <div class="startStats">
             <div class="startStatRow">
-              <span class="startStatKey">Rola</span>
+              <span class="startStatKey">Rola:</span>
               <strong class="startStatVal">${escapeHtml(roleLabel)}</strong>
             </div>
 
             <div class="startStatRow">
-              <span class="startStatKey">Status</span>
+              <span class="startStatKey">Status:</span>
               <strong class="startStatVal">${escapeHtml(statusLabel)}</strong>
             </div>
 
             <div class="startStatRow">
-              <span class="startStatKey">Godzinki</span>
-              <strong class="startStatVal">${escapeHtml(hoursValue || "Dostępne wkrótce")}</strong>
+              <span class="startStatKey">Godzinki:</span>
+              <span id="homeHoursCell">
+                <strong class="startStatVal">${escapeHtml(hoursValue || "…")}</strong>
+              </span>
             </div>
 
             <div class="startStatRow">
-              <span class="startStatKey">Składka</span>
+              <span class="startStatKey">Składka:</span>
               <strong class="startStatVal">${escapeHtml(membershipPaidUntil ? formatDatePL(membershipPaidUntil) : "Dostępne wkrótce")}</strong>
             </div>
           </div>
         </div>
 
         <div class="startTopActions">
-          <button type="button" class="startActionBtn primary" data-home-action="reserve-gear">
+          <button type="button" class="startTile primary" data-home-action="reserve-gear">
             <span class="startTileTitle">Rezerwuj sprzęt</span>
-            <span class="startTileMeta">Przejdź do listy sprzętu</span>
           </button>
 
-          <button type="button" class="startActionBtn" data-home-action="open-my-reservations">
-            <span class="startTileTitle">Moje rezerwacje</span>
-            <span class="startTileMeta">Zobacz i zmieniaj swoje terminy</span>
+          <button type="button" class="startTile" data-home-action="add-hours">
+            <span class="startTileTitle">Dodaj godzinki</span>
+          </button>
+
+          <button type="button" class="startTile" data-home-action="report-repair">
+            <span class="startTileTitle">Zgłoś naprawę</span>
+            <span class="startTileMeta">Dostępne wkrótce</span>
+          </button>
+
+          <button type="button" class="startTile" data-home-action="add-event">
+            <span class="startTileTitle">Dodaj imprezę</span>
           </button>
         </div>
       </section>
@@ -118,11 +139,10 @@ async function renderHomeDashboard({ viewEl, ctx }) {
       <section class="dashCard startSection">
         <div class="dashCardHead">
           <h3>Moje rezerwacje</h3>
-          <button type="button" class="ghost" data-home-action="my-reservations">Zobacz wszystkie</button>
         </div>
 
-        <div class="startList">
-          ${reservationsSectionHtml}
+        <div class="startList" id="homeReservationsList">
+          ${spinnerHtml("Ładowanie rezerwacji...")}
         </div>
       </section>
 
@@ -132,46 +152,26 @@ async function renderHomeDashboard({ viewEl, ctx }) {
           <button type="button" class="ghost" data-home-action="events">Zobacz wszystkie</button>
         </div>
 
-        <div class="startList">
-          <div class="startListItem">
-            <div class="startListMain">
-              <div class="startListTitle">Nadchodzące wydarzenia klubowe</div>
-              <div class="startListMeta">Tutaj pokażemy 2–3 najbliższe imprezy.</div>
-            </div>
-            <div class="startListSide">Dostępne wkrótce</div>
-          </div>
+        <div class="startList" id="homeEventsList">
+          ${spinnerHtml("Ładowanie imprez...")}
         </div>
       </section>
 
-      <section class="startTiles">
-        <button type="button" class="startTile primary" data-home-action="reserve-gear-bottom">
-          <span class="startTileTitle">Rezerwuj sprzęt</span>
-          <span class="startTileMeta">Przejdź do listy sprzętu</span>
-        </button>
+      <section class="dashCard startSection" id="homeBasenSection" style="display:none;">
+        <div class="dashCardHead">
+          <h3>Zajęcia basenowe</h3>
+          <button type="button" class="ghost" data-home-action="basen">Zobacz wszystkie</button>
+        </div>
 
-        <button type="button" class="startTile" data-home-action="my-reservations-bottom">
-          <span class="startTileTitle">Moje rezerwacje</span>
-          <span class="startTileMeta">Osobny widok użytkownika</span>
-        </button>
-
-        <button type="button" class="startTile" data-home-action="report-hours-bottom">
-          <span class="startTileTitle">Zgłoś godzinki</span>
-          <span class="startTileMeta">Dostępne wkrótce</span>
-        </button>
-
-        <button type="button" class="startTile" data-home-action="report-repair">
-          <span class="startTileTitle">Zgłoś naprawę</span>
-          <span class="startTileMeta">Dostępne wkrótce</span>
-        </button>
+        <div class="startList" id="homeBasenList">
+          ${spinnerHtml("Ładowanie sesji...")}
+        </div>
       </section>
+
     </div>
   `;
 
-  const reserveBtnTop = viewEl.querySelector("[data-home-action='reserve-gear']");
-  const reserveBtnBottom = viewEl.querySelector("[data-home-action='reserve-gear-bottom']");
-  const myReservationsBtn = viewEl.querySelector("[data-home-action='my-reservations']");
-  const myReservationsBtnTop = viewEl.querySelector("[data-home-action='open-my-reservations']");
-  const myReservationsBtnBottom = viewEl.querySelector("[data-home-action='my-reservations-bottom']");
+  const reserveBtn = viewEl.querySelector("[data-home-action='reserve-gear']");
   const eventsBtn = viewEl.querySelector("[data-home-action='events']");
 
   const openGear = () => {
@@ -179,21 +179,215 @@ async function renderHomeDashboard({ viewEl, ctx }) {
     setHash(gearTarget.moduleId, gearTarget.routeId);
   };
 
-  const openMyReservations = () => {
-    setHash("my_reservations", "list");
-  };
-
-  if (reserveBtnTop) reserveBtnTop.addEventListener("click", openGear);
-  if (reserveBtnBottom) reserveBtnBottom.addEventListener("click", openGear);
-  if (myReservationsBtn) myReservationsBtn.addEventListener("click", openMyReservations);
-  if (myReservationsBtnTop) myReservationsBtnTop.addEventListener("click", openMyReservations);
-  if (myReservationsBtnBottom) myReservationsBtnBottom.addEventListener("click", openMyReservations);
+  if (reserveBtn) reserveBtn.addEventListener("click", openGear);
 
   if (eventsBtn) {
     eventsBtn.addEventListener("click", () => {
-      const eventsTarget = getModuleRouteByLabelOrId(ctx, ["imprezy", "modul_4"]);
+      const eventsTarget = getModuleRouteByLabelOrId(ctx, ["imprezy"]);
       setHash(eventsTarget.moduleId, eventsTarget.routeId);
     });
+  }
+
+  const basenBtn = viewEl.querySelector("[data-home-action='basen']");
+  if (basenBtn) {
+    basenBtn.addEventListener("click", () => {
+      const basenTarget = getModuleRouteByLabelOrId(ctx, ["basen"]);
+      setHash(basenTarget.moduleId, basenTarget.routeId);
+    });
+  }
+
+  const addEventBtn = viewEl.querySelector("[data-home-action='add-event']");
+  if (addEventBtn) {
+    addEventBtn.addEventListener("click", () => {
+      const eventsTarget = getModuleRouteByLabelOrId(ctx, ["imprezy"]);
+      if (eventsTarget.moduleId !== "home") {
+        setHash(eventsTarget.moduleId, "submit");
+      }
+    });
+  }
+
+  const addHoursBtn = viewEl.querySelector("[data-home-action='add-hours']");
+  if (addHoursBtn) {
+    addHoursBtn.addEventListener("click", () => {
+      const godzinkiTarget = getModuleRouteByLabelOrId(ctx, ["godzinki"]);
+      if (godzinkiTarget.moduleId !== "home") {
+        setHash(godzinkiTarget.moduleId, "submit");
+      }
+    });
+  }
+
+  // Ładuj rezerwacje asynchronicznie po wyrenderowaniu dashboardu
+  buildHomeReservationsSection(ctx).then((html) => {
+    const listEl = viewEl.querySelector("#homeReservationsList");
+    if (!listEl) return;
+    listEl.innerHTML = html;
+    listEl.addEventListener("click", async (ev) => {
+      const editBtn = ev.target.closest("[data-home-rsv-edit]");
+      if (editBtn) {
+        const rsvId = String(editBtn.getAttribute("data-home-rsv-edit") || "");
+        if (rsvId) setHash("my_reservations", rsvId);
+        return;
+      }
+      const cancelBtn = ev.target.closest("[data-home-rsv-cancel]");
+      if (cancelBtn && !cancelBtn.disabled) {
+        const rsvId = String(cancelBtn.getAttribute("data-home-rsv-cancel") || "");
+        if (!rsvId) return;
+        if (!window.confirm("Na pewno anulować tę rezerwację?")) return;
+        cancelBtn.disabled = true;
+        try {
+          await apiPostJson({
+            url: CANCEL_RESERVATION_URL,
+            idToken: ctx.idToken,
+            body: { reservationId: rsvId }
+          });
+          setHash("home", "home");
+        } catch (e) {
+          cancelBtn.disabled = false;
+          window.alert("Nie udało się anulować: " + (e?.message || "Spróbuj ponownie."));
+        }
+      }
+    });
+  }).catch(() => {
+    const listEl = viewEl.querySelector("#homeReservationsList");
+    if (listEl) listEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać rezerwacji.</div></div></div>`;
+  });
+
+  // Ładuj saldo godzinek asynchronicznie
+  if (ctx?.idToken) {
+    buildHomeHoursCell(ctx).then((html) => {
+      const cell = viewEl.querySelector("#homeHoursCell");
+      if (cell) cell.innerHTML = html;
+    }).catch(() => {
+      // cicha porażka — komórka zostaje z placeholder "…"
+    });
+  }
+
+  // Ładuj nadchodzące imprezy asynchronicznie
+  buildHomeEventsSection(ctx).then((html) => {
+    const listEl = viewEl.querySelector("#homeEventsList");
+    if (listEl) listEl.innerHTML = html;
+  }).catch(() => {
+    const listEl = viewEl.querySelector("#homeEventsList");
+    if (listEl) listEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać imprez.</div></div></div>`;
+  });
+
+  // Ładuj zajęcia basenowe — sekcja widoczna tylko jeśli moduł "Basen" dostępny
+  const basenModule = (ctx.modules || []).find((m) =>
+    String(m?.label || "").trim().toLowerCase() === "basen" && m.enabled
+  );
+  if (basenModule) {
+    const basenSection = viewEl.querySelector("#homeBasenSection");
+    if (basenSection) basenSection.style.display = "";
+
+    buildHomeBasenSection(ctx).then((html) => {
+      const listEl = viewEl.querySelector("#homeBasenList");
+      if (listEl) listEl.innerHTML = html;
+    }).catch(() => {
+      const listEl = viewEl.querySelector("#homeBasenList");
+      if (listEl) listEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać sesji.</div></div></div>`;
+    });
+  }
+}
+
+async function buildHomeHoursCell(ctx) {
+  if (!ctx?.idToken) return `<strong class="startStatVal">—</strong>`;
+
+  try {
+    const data = await apiGetJson({ url: GODZINKI_URL + "?view=home", idToken: ctx.idToken });
+    const balance = Number(data?.balance ?? 0);
+    const nextExpiry = data?.nextExpiryMonthYear || null;
+    const sign = balance > 0 ? "+" : "";
+    const cls = balance < 0 ? "startStatValNeg" : "";
+
+    return `
+      <strong class="startStatVal ${escapeHtml(cls)}">${escapeHtml(sign + balance)} h</strong>
+      ${nextExpiry ? `<span class="startStatExpiry">wygasa ${escapeHtml(nextExpiry)}</span>` : ""}
+    `;
+  } catch {
+    return `<strong class="startStatVal">—</strong>`;
+  }
+}
+
+async function buildHomeEventsSection(ctx) {
+  if (!ctx?.idToken) {
+    return `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Brak sesji.</div></div></div>`;
+  }
+
+  try {
+    const data = await apiGetJson({ url: EVENTS_URL, idToken: ctx.idToken });
+    const events = Array.isArray(data?.events) ? data.events : [];
+    const upcoming = events.slice(0, 3);
+
+    if (!upcoming.length) {
+      return `
+        <div class="startListItem">
+          <div class="startListMain">
+            <div class="startListTitle">Brak nadchodzących imprez</div>
+          </div>
+        </div>
+      `;
+    }
+
+    return upcoming.map((ev) => {
+      const start = formatDatePL(String(ev?.startDate || ""));
+      const end = formatDatePL(String(ev?.endDate || ""));
+      const dateRange = ev.startDate === ev.endDate ? start : `${start} – ${end}`;
+      return `
+        <div class="startListItem">
+          <div class="startListMain">
+            <div class="startListTitle">${escapeHtml(String(ev?.name || "Impreza"))}</div>
+            <div class="startListMeta">${escapeHtml(String(ev?.location || ""))}${ev?.location ? " · " : ""}${escapeHtml(dateRange)}</div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  } catch {
+    return `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać imprez.</div></div></div>`;
+  }
+}
+
+async function buildHomeBasenSection(ctx) {
+  if (!ctx?.idToken) {
+    return `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Brak sesji.</div></div></div>`;
+  }
+
+  try {
+    const data = await apiGetJson({ url: BASEN_SESSIONS_URL, idToken: ctx.idToken });
+    const sessions = Array.isArray(data?.sessions) ? data.sessions : [];
+    const upcoming = sessions.slice(0, 3);
+
+    if (!upcoming.length) {
+      return `
+        <div class="startListItem">
+          <div class="startListMain">
+            <div class="startListTitle">Brak nadchodzących zajęć</div>
+          </div>
+        </div>
+      `;
+    }
+
+    return upcoming.map((s) => {
+      const days = ["niedz.", "pon.", "wt.", "śr.", "czw.", "pt.", "sob."];
+      const d = new Date(`${s.date}T12:00:00`);
+      const dayName = days[d.getDay()] || "";
+      const m = String(s.date || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      const dateStr = m ? `${m[3]}.${m[2]} (${dayName})` : String(s.date || "");
+      const spotsLeft = s.capacity - s.enrolledCount;
+      const spotsLabel = s.userEnrolled
+        ? "Zapisany/a"
+        : spotsLeft > 0 ? `${spotsLeft} miejsc` : "Brak miejsc";
+
+      return `
+        <div class="startListItem">
+          <div class="startListMain">
+            <div class="startListTitle">${escapeHtml(dateStr)} ${escapeHtml(s.timeStart || "")}–${escapeHtml(s.timeEnd || "")}</div>
+            <div class="startListMeta">${escapeHtml(spotsLabel)}${s.instructorName ? " · " + escapeHtml(String(s.instructorName)) : ""}</div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  } catch {
+    return `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać zajęć.</div></div></div>`;
   }
 }
 
@@ -245,20 +439,35 @@ async function buildHomeReservationsSection(ctx) {
       `;
     }
 
+    const todayIso = new Date().toISOString().slice(0, 10);
+
     return activeReservations
       .map((rsv) => {
         const kayakTitles = getReservationKayakTitles(rsv, kayakMap);
         const mainTitle = kayakTitles.join(", ") || "Rezerwacja";
+        const rsvId = escapeHtml(String(rsv?.id || ""));
+        const blockStart = String(rsv?.blockStartIso || "");
+        const blockEnd = String(rsv?.blockEndIso || "");
+        const canCancel = blockStart && todayIso < blockStart;
+        const startDate = String(rsv?.startDate || "");
+        const endDate = String(rsv?.endDate || "");
+        const days = countReservationDays(startDate, endDate);
+        const dateLabel = `${formatDayMonth(blockStart || startDate)} – ${formatDayMonth(blockEnd || endDate)} (${pluralizeDays(days)})`;
 
         return `
           <div class="startListItem">
             <div class="startListMain">
               <div class="startListTitle">${escapeHtml(mainTitle)}</div>
-              <div class="startListMeta">
-                ${escapeHtml(formatDatePL(String(rsv?.startDate || "")))} → ${escapeHtml(formatDatePL(String(rsv?.endDate || "")))}
-              </div>
+              <div class="startListMeta">${escapeHtml(dateLabel)}</div>
             </div>
-            <div class="startListSide">aktywna</div>
+            <div class="startListSide" style="display:flex;gap:4px;align-items:center;">
+              <button type="button" class="ghost" style="padding:4px 6px;line-height:1;" title="Edytuj" data-home-rsv-edit="${rsvId}" aria-label="Edytuj rezerwację">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button type="button" class="ghost" style="padding:4px 6px;line-height:1;" title="Anuluj rezerwację" data-home-rsv-cancel="${rsvId}" aria-label="Anuluj rezerwację"${canCancel ? "" : " disabled"}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+              </button>
+            </div>
           </div>
         `;
       })
@@ -419,7 +628,7 @@ function renderProfileForm({ viewEl, ctx }) {
 }
 
 function getGearRoute(ctx) {
-  return getModuleRouteByLabelOrId(ctx, ["sprzęt", "modul_2"]);
+  return getModuleRouteByLabelOrId(ctx, ["sprzęt"]);
 }
 
 function getModuleRouteByLabelOrId(ctx, names) {
@@ -446,11 +655,11 @@ function getHelloName(ctx) {
   const sessionNickname = String(ctx?.session?.nickname || "").trim();
   if (sessionNickname) return sessionNickname;
 
+  const sessionFirstName = String(ctx?.session?.firstName || ctx?.session?.first_name || "").trim();
+  if (sessionFirstName) return sessionFirstName;
+
   const userDisplayName = String(ctx?.user?.displayName || "").trim();
   if (userDisplayName) return userDisplayName;
-
-  const sessionFirstName = String(ctx?.session?.first_name || "").trim();
-  if (sessionFirstName) return sessionFirstName;
 
   return "";
 }
@@ -504,7 +713,7 @@ function statusKeyToLabel(statusKey) {
   const k = String(statusKey || "").trim();
   if (k === "status_aktywny") return "Aktywny";
   if (k === "status_zawieszony") return "Zawieszony";
-  if (k === "status_pending") return "Pending";
+  if (k === "status_skreslony") return "Skreślony";
   return k || "-";
 }
 
@@ -554,6 +763,26 @@ function fieldErrorToPl(field, code) {
   if (code === "cannot_be_future") return `${label}: nie może być w przyszłości`;
   if (code === "must_be_true") return `${label}: musisz zaakceptować`;
   return `${label}: błąd (${code})`;
+}
+
+function formatDayMonth(iso) {
+  const months = ["stycznia","lutego","marca","kwietnia","maja","czerwca","lipca","sierpnia","września","października","listopada","grudnia"];
+  const m = String(iso || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return iso || "—";
+  return `${parseInt(m[3], 10)} ${months[parseInt(m[2], 10) - 1] || m[2]}`;
+}
+
+function countReservationDays(startDate, endDate) {
+  try {
+    const diff = Math.round((new Date(endDate + "T12:00:00") - new Date(startDate + "T12:00:00")) / 86400000) + 1;
+    return diff > 0 ? diff : 1;
+  } catch {
+    return 1;
+  }
+}
+
+function pluralizeDays(n) {
+  return n === 1 ? "1 dzień" : `${n} dni`;
 }
 
 function formatDatePL(iso) {

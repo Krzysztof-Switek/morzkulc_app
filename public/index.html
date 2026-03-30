@@ -5,7 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SKK Morzkulc</title>
 
-  <link rel="stylesheet" href="/styles/app.css" />
+  <!-- PWA: manifest i ikony -->
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16.png" />
+  <link rel="apple-touch-icon" href="/icons/icon-180.png" />
+
+  <!-- PWA: meta dla iOS / Android -->
+  <meta name="theme-color" content="#0b0f17" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Morzkulc" />
+  <meta name="description" content="Aplikacja SKK Morzkulc — sprzęt, rezerwacje, godzinki." />
+
+  <link rel="stylesheet" href="/styles/app.css?v=3" />
 </head>
 <body>
   <header>
@@ -13,7 +27,7 @@
       <h1>SKK Morzkulc</h1>
       <div class="headerActions">
         <button id="themeToggle" class="iconBtn ghost" type="button" aria-label="Przełącz motyw">☀️</button>
-        <button id="loginBtn" type="button">Zaloguj przez Google</button>
+        <button id="loginBtn" type="button">Zaloguj</button>
         <button id="logoutBtn" class="hidden" type="button">Wyloguj</button>
       </div>
     </div>
@@ -25,7 +39,7 @@
     <div id="view"></div>
   </div>
 
-  <details id="debugPanel" open>
+  <details id="debugPanel">
     <summary>Debug</summary>
     <p class="muted">Sekcja do testów.</p>
 

@@ -1,5 +1,6 @@
 import { apiGetJson, apiPostJson } from "/core/api_client.js";
 import { mapUserFacingApiError } from "/core/user_error_messages.js";
+import { setHash } from "/core/router.js";
 
 const MY_RESERVATIONS_URL = "/api/gear/my-reservations";
 const KAYAKS_URL = "/api/gear/kayaks";
@@ -18,16 +19,6 @@ export function createMyReservationsModule({ id, label, defaultRoute, order, ena
     async render({ viewEl, routeId, ctx }) {
       const r = String(routeId || "").trim() || "list";
 
-      if (r !== "list") {
-        viewEl.innerHTML = `
-          <div class="card center">
-            <h2>${escapeHtml(label)}</h2>
-            <p>Nieznana podstrona: <strong>${escapeHtml(r)}</strong></p>
-          </div>
-        `;
-        return;
-      }
-
       if (!ctx?.idToken) {
         viewEl.innerHTML = `
           <div class="card center">
@@ -37,6 +28,14 @@ export function createMyReservationsModule({ id, label, defaultRoute, order, ena
         `;
         return;
       }
+
+      // Jeśli routeId to ID rezerwacji (nie "list") — renderuj dedykowany widok edycji
+      if (r !== "list") {
+        await renderDedicatedEditView({ viewEl, reservationId: r, ctx });
+        return;
+      }
+
+      // ── Widok listy ──────────────────────────────────────────────────────────
 
       viewEl.innerHTML = `
         <div class="card wide">
@@ -161,12 +160,19 @@ export function createMyReservationsModule({ id, label, defaultRoute, order, ena
       };
 
       const renderReservations = () => {
-        if (!reservations.length) {
-          listEl.innerHTML = `<div class="hint">Nie masz jeszcze żadnych rezerwacji.</div>`;
+        // Ukryj aktywne rezerwacje których data zakończenia minęła
+        const todayIso = new Date().toISOString().slice(0, 10);
+        const visible = reservations.filter((rsv) => {
+          if (String(rsv?.status || "") !== "active") return true;
+          return String(rsv?.endDate || "") >= todayIso;
+        });
+
+        if (!visible.length) {
+          listEl.innerHTML = `<div class="hint">Nie masz żadnych aktywnych rezerwacji.</div>`;
           return;
         }
 
-        listEl.innerHTML = reservations
+        listEl.innerHTML = visible
           .map((rsv) => {
             const status = String(rsv?.status || "");
             const badge =
@@ -185,29 +191,12 @@ export function createMyReservationsModule({ id, label, defaultRoute, order, ena
                     <div class="gearTitleWrap">
                       <div class="gearTitle">${escapeHtml(kayakTitles.join(", ") || "Rezerwacja")}</div>
                       <div class="gearSubtitle">
-                        Termin: ${escapeHtml(formatDatePL(String(rsv?.startDate || "")))} → ${escapeHtml(formatDatePL(String(rsv?.endDate || "")))}
-                      </div>
-                      <div class="gearSubtitle">
-                        Blokada: ${escapeHtml(formatDatePL(String(rsv?.blockStartIso || "")))} → ${escapeHtml(formatDatePL(String(rsv?.blockEndIso || "")))}
+                        ${escapeHtml(formatDayMonth(String(rsv?.blockStartIso || rsv?.startDate || "")))} – ${escapeHtml(formatDayMonth(String(rsv?.blockEndIso || rsv?.endDate || "")))} (${escapeHtml(pluralizeDays(countReservationDays(String(rsv?.startDate || ""), String(rsv?.endDate || ""))))})
+                        · <strong>${escapeHtml(String(rsv?.costHours ?? "—"))} godz.</strong>
                       </div>
                     </div>
                     <div class="gearBadges">
                       ${badge}
-                    </div>
-                  </div>
-
-                  <div class="gearMeta">
-                    <div class="gearMetaRow">
-                      <div class="gearMetaKey">Kajaki</div>
-                      <div class="gearMetaVal">${escapeHtml(kayakTitles.join(", ") || "-")}</div>
-                    </div>
-                    <div class="gearMetaRow">
-                      <div class="gearMetaKey">Godzinki</div>
-                      <div class="gearMetaVal">${escapeHtml(String(rsv?.costHours ?? "-"))}</div>
-                    </div>
-                    <div class="gearMetaRow">
-                      <div class="gearMetaKey">Notatka</div>
-                      <div class="gearMetaVal">${escapeHtml(String(rsv?.note || "-"))}</div>
                     </div>
                   </div>
 
@@ -354,11 +343,13 @@ export function createMyReservationsModule({ id, label, defaultRoute, order, ena
         }
       });
 
+      const keyAbort = new AbortController();
+      new MutationObserver(() => keyAbort.abort()).observe(viewEl, { childList: true });
       window.addEventListener("keydown", (ev) => {
         if (ev.key === "Escape" && !editModalEl.classList.contains("hidden")) {
           closeEditModal();
         }
-      });
+      }, { signal: keyAbort.signal });
 
       reloadBtn.addEventListener("click", loadReservations);
       editSaveBtn.addEventListener("click", submitUpdateReservation);
@@ -367,6 +358,164 @@ export function createMyReservationsModule({ id, label, defaultRoute, order, ena
     }
   };
 }
+
+// ── Dedykowany widok edycji (bez listy, bez modalu) ───────────────────────────
+// Renderowany gdy routeId to ID rezerwacji, np. po kliknięciu "Edytuj" na dashboardzie.
+// Po zapisie lub anulowaniu wraca na Start (#/home/home).
+
+async function renderDedicatedEditView({ viewEl, reservationId, ctx }) {
+  viewEl.innerHTML = `<div class="card center"><p class="hint">Ładowanie rezerwacji…</p></div>`;
+
+  let rsv = null;
+  let kayakMap = new Map();
+
+  try {
+    const [rsvResp, kayaksResp] = await Promise.all([
+      apiGetJson({ url: MY_RESERVATIONS_URL, idToken: ctx.idToken }),
+      apiGetJson({ url: KAYAKS_URL, idToken: ctx.idToken })
+    ]);
+
+    const reservations = Array.isArray(rsvResp?.items) ? rsvResp.items : [];
+    rsv = reservations.find((x) => String(x?.id || "") === String(reservationId || "")) || null;
+
+    const kayaks = Array.isArray(kayaksResp?.kayaks) ? kayaksResp.kayaks : [];
+    kayakMap = new Map(kayaks.map((k) => [String(k?.id || ""), buildKayakTitle(k)]));
+  } catch (e) {
+    viewEl.innerHTML = `
+      <div class="card center">
+        <p class="err">Błąd ładowania: ${escapeHtml(e?.message || String(e))}</p>
+        <button type="button" class="ghost" id="editBackBtn" style="margin-top:12px;">Wróć</button>
+      </div>
+    `;
+    viewEl.querySelector("#editBackBtn")?.addEventListener("click", () => setHash("home", "home"));
+    return;
+  }
+
+  if (!rsv) {
+    viewEl.innerHTML = `
+      <div class="card center">
+        <p>Nie znaleziono rezerwacji.</p>
+        <button type="button" class="ghost" id="editBackBtn" style="margin-top:12px;">Wróć</button>
+      </div>
+    `;
+    viewEl.querySelector("#editBackBtn")?.addEventListener("click", () => setHash("home", "home"));
+    return;
+  }
+
+  const kayakTitles = getReservationKayakTitles(rsv, kayakMap);
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const blockStart = String(rsv?.blockStartIso || "");
+  const canCancelReservation = blockStart && todayIso < blockStart;
+
+  viewEl.innerHTML = `
+    <div class="card center" style="max-width:480px;">
+      <h2>Edytuj rezerwację</h2>
+      <p class="hint" style="margin-bottom:16px;">${escapeHtml(kayakTitles.join(", ") || "—")}</p>
+
+      <div class="row">
+        <label for="dedEditStartDate">Data od</label>
+        <input id="dedEditStartDate" type="date" value="${escapeAttr(String(rsv.startDate || ""))}" />
+      </div>
+
+      <div class="row" style="margin-top:8px;">
+        <label for="dedEditEndDate">Data do</label>
+        <input id="dedEditEndDate" type="date" value="${escapeAttr(String(rsv.endDate || ""))}" />
+      </div>
+
+      <div id="dedEditErr" class="err hidden" style="margin-top:8px;"></div>
+      <div id="dedEditOk" class="ok hidden" style="margin-top:8px;"></div>
+
+      <div class="actions" style="margin-top:16px;">
+        <button id="dedEditSaveBtn" type="button" class="primary">Zapisz zmiany</button>
+        <button id="dedEditCancelBtn" type="button" class="ghost">Anuluj</button>
+      </div>
+
+      <hr style="margin:20px 0;border:none;border-top:1px solid var(--border,#e5e7eb);">
+
+      <div id="dedCancelRsvErr" class="err hidden" style="margin-bottom:8px;"></div>
+
+      <button id="dedCancelRsvBtn" type="button" class="ghost"${canCancelReservation ? "" : " disabled"}>
+        Anuluj rezerwację
+      </button>
+      ${!canCancelReservation
+        ? `<p class="hint" style="margin-top:6px;color:var(--muted,#6b7280);font-size:0.85em;">Nie można anulować — blokada już trwa (od ${escapeHtml(formatDatePL(blockStart))}).</p>`
+        : ""}
+    </div>
+  `;
+
+  const saveBtn = viewEl.querySelector("#dedEditSaveBtn");
+  const cancelBtn = viewEl.querySelector("#dedEditCancelBtn");
+  const errEl = viewEl.querySelector("#dedEditErr");
+  const okEl = viewEl.querySelector("#dedEditOk");
+  const startDateEl = viewEl.querySelector("#dedEditStartDate");
+  const endDateEl = viewEl.querySelector("#dedEditEndDate");
+  const cancelRsvBtn = viewEl.querySelector("#dedCancelRsvBtn");
+  const cancelRsvErrEl = viewEl.querySelector("#dedCancelRsvErr");
+
+  const setErr = (msg) => {
+    errEl.textContent = String(msg || "");
+    errEl.classList.toggle("hidden", !errEl.textContent);
+  };
+
+  const setCancelRsvErr = (msg) => {
+    cancelRsvErrEl.textContent = String(msg || "");
+    cancelRsvErrEl.classList.toggle("hidden", !cancelRsvErrEl.textContent);
+  };
+
+  cancelBtn.addEventListener("click", () => setHash("home", "home"));
+
+  if (cancelRsvBtn && canCancelReservation) {
+    cancelRsvBtn.addEventListener("click", async () => {
+      setCancelRsvErr("");
+      if (!window.confirm("Na pewno anulować tę rezerwację? Tej operacji nie można cofnąć.")) return;
+      cancelRsvBtn.disabled = true;
+      try {
+        await apiPostJson({
+          url: CANCEL_RESERVATION_URL,
+          idToken: ctx.idToken,
+          body: { reservationId: String(rsv.id || "") }
+        });
+        setHash("home", "home");
+      } catch (e) {
+        cancelRsvBtn.disabled = false;
+        setCancelRsvErr(mapUserFacingApiError(e, "Nie udało się anulować rezerwacji."));
+      }
+    });
+  }
+
+  saveBtn.addEventListener("click", async () => {
+    setErr("");
+    const startDate = String(startDateEl.value || "").trim();
+    const endDate = String(endDateEl.value || "").trim();
+
+    if (!startDate || !endDate) {
+      setErr("Wybierz datę od i do.");
+      return;
+    }
+
+    saveBtn.disabled = true;
+    cancelBtn.disabled = true;
+
+    try {
+      const resp = await apiPostJson({
+        url: UPDATE_RESERVATION_URL,
+        idToken: ctx.idToken,
+        body: { reservationId: String(rsv.id || ""), startDate, endDate }
+      });
+
+      okEl.textContent = `Zapisano. Godzinki: ${String(resp?.costHours || 0)}`;
+      okEl.classList.remove("hidden");
+
+      window.setTimeout(() => setHash("home", "home"), 1000);
+    } catch (e) {
+      setErr(mapUserFacingApiError(e, "Nie udało się zmienić rezerwacji."));
+      saveBtn.disabled = false;
+      cancelBtn.disabled = false;
+    }
+  });
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function getReservationKayakTitles(rsv, kayakMap) {
   const kayakIds = Array.isArray(rsv?.kayakIds) ? rsv.kayakIds.map(String) : [];
@@ -380,6 +529,26 @@ function buildKayakTitle(k) {
 
   const core = [brand, model].filter(Boolean).join(" ").trim() || "Kajak";
   return number ? `${core} (nr ${number})` : core;
+}
+
+function formatDayMonth(iso) {
+  const months = ["stycznia","lutego","marca","kwietnia","maja","czerwca","lipca","sierpnia","września","października","listopada","grudnia"];
+  const m = String(iso || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return iso || "—";
+  return `${parseInt(m[3], 10)} ${months[parseInt(m[2], 10) - 1] || m[2]}`;
+}
+
+function countReservationDays(startDate, endDate) {
+  try {
+    const diff = Math.round((new Date(endDate + "T12:00:00") - new Date(startDate + "T12:00:00")) / 86400000) + 1;
+    return diff > 0 ? diff : 1;
+  } catch {
+    return 1;
+  }
+}
+
+function pluralizeDays(n) {
+  return n === 1 ? "1 dzień" : `${n} dni`;
 }
 
 function formatDatePL(iso) {

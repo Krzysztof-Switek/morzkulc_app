@@ -4,12 +4,27 @@ import {
   authLogout,
   authGetIdToken,
   authGetBasicUser,
-  isDev
+  authHandleRedirectResult
 } from "/core/firebase_client.js";
-
-import { apiPostJson, apiGetJson } from "/core/api_client.js";
+import { apiPostJson, apiGetJson, setApiTokenGetter } from "/core/api_client.js";
 import { buildModulesFromSetup } from "/core/modules_registry.js";
-import { renderNav, renderView } from "/core/render_shell.js";
+import { renderNav, renderView, spinnerHtml } from "/core/render_shell.js";
+
+// ── Service Worker registration + nasłuch aktualizacji ───────────────────────
+let swUpdatePending = false;
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js").catch((err) => {
+    // Rejestracja SW nie jest krytyczna — aplikacja działa bez niego
+    console.warn("SW registration failed:", err?.message);
+  });
+
+  navigator.serviceWorker.addEventListener("message", (event) => {
+    if (event.data?.type === "SW_UPDATED") {
+      swUpdatePending = true;
+    }
+  });
+}
 
 const REGISTER_URL = "/api/register";
 const SETUP_URL = "/api/setup";
@@ -29,11 +44,6 @@ if (!appRoot || !navEl || !viewEl) {
   console.error("Missing DOM nodes: appRoot/nav/view. Check public/index.html ids.");
 }
 
-const debugPanel = document.getElementById("debugPanel");
-if (debugPanel && !isDev) {
-  debugPanel.remove();
-}
-
 const ctx = {
   user: null,
   session: null,
@@ -46,6 +56,11 @@ const ctx = {
 window.__APP_CTX__ = ctx;
 
 loginBtn.addEventListener("click", async () => {
+  if (swUpdatePending) {
+    // Jest nowa wersja aplikacji — przeładuj przed logowaniem
+    location.reload();
+    return;
+  }
   await authLoginPopup();
 });
 
@@ -59,10 +74,38 @@ window.addEventListener("hashchange", async () => {
   await renderView({ viewEl, ctx });
 });
 
-authOnChange(async (user) => {
-  if (!user) {
-    hardResetUi();
-    return;
+const SESSION_MAX_MS = 24 * 60 * 60 * 1000; // 24 godziny
+
+// ── Startup — redirect result najpierw, potem listener ───────────────────────
+// Czekamy na getRedirectResult PRZED rejestracją onAuthStateChanged.
+// Dzięki temu gdy listener po raz pierwszy odpali się, stan auth jest już ustawiony
+// (user jest zalogowany po redirect). Bez tego: listener odpalał się z null →
+// hardResetUi → ekran logowania, a potem ewentualnie ponownie z userem — race condition.
+(async () => {
+  let redirectError = null;
+  try {
+    await authHandleRedirectResult();
+  } catch (e) {
+    redirectError = e?.message || String(e || "Błąd logowania");
+    console.error("[Auth] getRedirectResult error:", e?.code, e?.message);
+  }
+
+  authOnChange(async (user) => {
+    if (!user) {
+      hardResetUi();
+      if (redirectError) {
+        showAuthError(redirectError);
+        redirectError = null;
+      }
+      return;
+    }
+
+    // Sprawdź czy sesja nie wygasła (24h od zalogowania)
+  const sessionStarted = Number(sessionStorage.getItem("morzkulc_session_started") || 0);
+  if (sessionStarted && Date.now() - sessionStarted > SESSION_MAX_MS) {
+    sessionStorage.removeItem("morzkulc_session_started");
+    await authLogout();
+    return; // authOnChange odpali się ponownie z user=null → hardResetUi
   }
 
   loginBtn.classList.add("hidden");
@@ -72,13 +115,19 @@ authOnChange(async (user) => {
   ctx.user = user;
   window.__APP_CTX__ = ctx;
 
-  if (userData) userData.textContent = JSON.stringify(authGetBasicUser(user), null, 2);
+  userData.textContent = JSON.stringify(authGetBasicUser(user), null, 2);
+
+  viewEl.innerHTML = spinnerHtml();
 
   try {
-    if (registerData) registerData.textContent = "Rejestracja: wysyłam token do backendu...";
+    registerData.textContent = "Rejestracja: wysyłam token do backendu...";
     const idToken = await authGetIdToken(user, true);
     ctx.idToken = idToken;
     window.__APP_CTX__ = ctx;
+
+    // Ustaw getter świeżego tokenu — Firebase SDK auto-odświeża przed wygaśnięciem (1h).
+    // Wszystkie moduły korzystają z api_client.js, który wywołuje ten getter automatycznie.
+    setApiTokenGetter(() => authGetIdToken(ctx.user, false));
 
     const session = await apiPostJson({
       url: REGISTER_URL,
@@ -89,7 +138,12 @@ authOnChange(async (user) => {
     ctx.session = session;
     window.__APP_CTX__ = ctx;
 
-    if (registerData) registerData.textContent = JSON.stringify(session, null, 2);
+    registerData.textContent = JSON.stringify(session, null, 2);
+
+    // Zapisz timestamp startu sesji (tylko przy świeżym logowaniu)
+    if (!sessionStorage.getItem("morzkulc_session_started")) {
+      sessionStorage.setItem("morzkulc_session_started", String(Date.now()));
+    }
 
     // setup jest opcjonalny (może jeszcze nie istnieć)
     ctx.setup = null;
@@ -121,19 +175,53 @@ authOnChange(async (user) => {
       );
     }
   } catch (e) {
-    if (registerData) registerData.textContent = "Błąd rejestracji: " + (e?.message || e);
+    registerData.textContent = "Błąd: " + (e?.message || e);
     ctx.session = null;
     window.__APP_CTX__ = ctx;
+
+    // ⚠️  Wyczyść spinner — bez tego UI zawisa na "Morzkulc myśli..." na zawsze
+    viewEl.innerHTML = `
+      <div class="card center" style="max-width:360px;margin:40px auto;text-align:center;">
+        <h2>Nie można załadować aplikacji</h2>
+        <p class="muted">Sprawdź połączenie z internetem i spróbuj ponownie.</p>
+        <button id="startupRetryBtn" class="primary" type="button" style="margin-top:8px;">
+          Odśwież stronę
+        </button>
+        <br />
+        <button id="startupLogoutBtn" class="ghost" type="button" style="margin-top:8px;">
+          Wyloguj i zaloguj ponownie
+        </button>
+      </div>`;
+    document.getElementById("startupRetryBtn")
+      ?.addEventListener("click", () => location.reload());
+    document.getElementById("startupLogoutBtn")
+      ?.addEventListener("click", async () => {
+        await authLogout();
+        hardResetUi();
+      });
   }
-});
+  });
+})();
+
+function showAuthError(msg) {
+  let el = document.getElementById("loginAuthError");
+  if (!el) {
+    el = document.createElement("p");
+    el.id = "loginAuthError";
+    el.style.cssText = "color:var(--err,#f87171);text-align:center;margin:8px auto 0;font-size:0.9em;max-width:320px;";
+    loginBtn.insertAdjacentElement("afterend", el);
+  }
+  el.textContent = String(msg || "Błąd logowania. Spróbuj ponownie.");
+  el.hidden = false;
+}
 
 function hardResetUi() {
   loginBtn.classList.remove("hidden");
   logoutBtn.classList.add("hidden");
   appRoot.classList.add("hidden");
 
-  if (userData) userData.textContent = "";
-  if (registerData) registerData.textContent = "";
+  userData.textContent = "";
+  registerData.textContent = "";
   if (modulesData) modulesData.textContent = "";
 
   navEl.innerHTML = "";
@@ -144,6 +232,12 @@ function hardResetUi() {
   ctx.idToken = null;
   ctx.setup = null;
   ctx.modules = [];
+
+  sessionStorage.removeItem("morzkulc_session_started");
+  setApiTokenGetter(null);
+
+  const loginErr = document.getElementById("loginAuthError");
+  if (loginErr) loginErr.hidden = true;
 
   window.__APP_CTX__ = ctx;
 

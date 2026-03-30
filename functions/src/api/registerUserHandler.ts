@@ -3,6 +3,7 @@
 
 import type {Request, Response} from "express";
 import type * as admin from "firebase-admin";
+import {creditOpeningBalance} from "../modules/hours/godzinki_service";
 
 type TokenCheck =
   | {error: string}
@@ -10,6 +11,12 @@ type TokenCheck =
 
 type SetupApp = {
   modules?: Record<string, any>;
+  defaults?: {
+    newUserRoleCode?: string;
+    newUserStatusCode?: string;
+    openingBalanceMemberField?: string;
+    openingBalanceMemberRoleCode?: string;
+  };
 };
 
 export type RegisterUserDeps = {
@@ -187,28 +194,65 @@ function validateIncomingProfile(incoming: ProfileInput): ValidationResult {
   return {ok: Object.keys(fields).length === 0, fields};
 }
 
-function computeRoleKeyFromOpeningBalance(obData: any): "rola_czlonek" | "rola_sympatyk" {
-  if (obData && obData["członek stowarzyszenia"] === true) return "rola_czlonek";
-  return "rola_sympatyk";
+/**
+ * Odczytuje ilość godzinek z dokumentu bilansu otwarcia.
+ * Nazwa pola zawiera datę (np. "Godzinki Bilans otwarcia01.04.2026"),
+ * dlatego szukamy po prefiksie "Godzinki" (case-insensitive).
+ */
+function getObHours(obData: any): number {
+  if (!obData) return 0;
+  const key = Object.keys(obData).find((k) => k.toLowerCase().startsWith("godzinki"));
+  if (!key) return 0;
+  return Number(obData[key] ?? 0) || 0;
 }
 
-async function findOpeningBalanceByEmail(db: FirebaseFirestore.Firestore, email: string) {
-  if (!email || !email.includes("@")) return {openingMatch: false, obData: null as any};
+function computeRoleKeyFromOpeningBalance(
+  obData: any,
+  memberField: string,
+  memberRoleCode: string,
+  defaultRoleCode: string
+): string {
+  if (obData && obData[memberField] === true) return memberRoleCode;
+  return defaultRoleCode;
+}
 
-  const normalizedEmail = String(email).trim().toLowerCase();
-
+async function findOpeningBalance(
+  db: FirebaseFirestore.Firestore,
+  email: string,
+  firstName?: string,
+  lastName?: string
+): Promise<{openingMatch: boolean; obData: any; matchMethod: "email" | "name" | null}> {
   const snap = await db.collection("users_opening_balance_26").get();
+
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  const normalizedFirst = normalizeStr(firstName).toLowerCase();
+  const normalizedLast = normalizeStr(lastName).toLowerCase();
+
+  let nameMatch: {openingMatch: boolean; obData: any; matchMethod: "name"} | null = null;
 
   for (const doc of snap.docs) {
     const data = doc.data() as any;
-    const rowEmail = String(data["e-mail"] || "").trim().toLowerCase();
 
-    if (rowEmail && rowEmail === normalizedEmail) {
-      return {openingMatch: true, obData: data};
+    // 1. Dopasowanie po e-mailu (priorytet)
+    if (normalizedEmail && normalizedEmail.includes("@")) {
+      const rowEmail = String(data["e-mail"] || "").trim().toLowerCase();
+      if (rowEmail && rowEmail === normalizedEmail) {
+        return {openingMatch: true, obData: data, matchMethod: "email"};
+      }
+    }
+
+    // 2. Zbierz kandydatów po imieniu i nazwisku (fallback)
+    if (!nameMatch && normalizedFirst && normalizedLast) {
+      const rowFirst = normalizeStr(data["imię"] || data["imie"] || "").toLowerCase();
+      const rowLast = normalizeStr(data["nazwisko"] || "").toLowerCase();
+      if (rowFirst && rowLast && rowFirst === normalizedFirst && rowLast === normalizedLast) {
+        nameMatch = {openingMatch: true, obData: data, matchMethod: "name"};
+      }
     }
   }
 
-  return {openingMatch: false, obData: null as any};
+  if (nameMatch) return nameMatch;
+  return {openingMatch: false, obData: null, matchMethod: null};
 }
 
 export async function handleRegisterUser(req: Request, res: Response, deps: RegisterUserDeps) {
@@ -238,6 +282,15 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
         return;
       }
 
+      const setupApp = await getSetupApp();
+      const setupDefaults = setupApp?.defaults || {};
+      const newUserRoleCode = normalizeStr(setupDefaults.newUserRoleCode) || "rola_sympatyk";
+      const newUserStatusCode = normalizeStr(setupDefaults.newUserStatusCode) || "status_aktywny";
+      const obMemberField = normalizeStr(setupDefaults.openingBalanceMemberField) || "członek stowarzyszenia";
+      const obMemberRoleCode = normalizeStr(setupDefaults.openingBalanceMemberRoleCode) || "rola_czlonek";
+      // Godzinki z bilansu otwarcia wygasają 2028-01-01 (wymóg biznesowy)
+      const OB_HOURS_EXPIRES_AT = new Date(Date.UTC(2028, 0, 1));
+
       const decoded = tokenCheck.decoded;
       const uid = decoded.uid;
       const email = String(decoded.email || "").trim().toLowerCase();
@@ -264,8 +317,43 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
       // =========================
       if (existing.exists) {
         const data = existing.data() || {};
-        const roleKey = String((data as any).role_key || "rola_sympatyk");
-        const statusKey = String((data as any).status_key || "status_aktywny");
+        let roleKey = String((data as any).role_key || newUserRoleCode);
+        const statusKey = String((data as any).status_key || newUserStatusCode);
+
+        // Jednorazowy fallback po imieniu+nazwisku (tylko gdy nie ma jeszcze trafienia z BO26)
+        if (
+          !(data as any).openingMatch &&
+          incomingProfile.firstName &&
+          incomingProfile.lastName
+        ) {
+          const nameFound = await findOpeningBalance(
+            db,
+            email,
+            incomingProfile.firstName,
+            incomingProfile.lastName
+          );
+          if (nameFound.openingMatch && nameFound.obData) {
+            roleKey = computeRoleKeyFromOpeningBalance(nameFound.obData, obMemberField, obMemberRoleCode, newUserRoleCode);
+            await userRef.set(
+              {
+                role_key: roleKey,
+                openingMatch: true,
+                openingMatchMethod: nameFound.matchMethod,
+                openingBalance: nameFound.obData,
+                openingMatchedAt: admin.firestore.FieldValue.serverTimestamp(),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              },
+              {merge: true}
+            );
+            // Kredytuj godzinki z bilansu otwarcia (fire-and-forget, idempotentne przez marker)
+            const obHours = getObHours(nameFound.obData);
+            if (obHours > 0 && !data.service?.openingBalanceHoursCredited) {
+              creditOpeningBalance(db, uid, obHours, OB_HOURS_EXPIRES_AT)
+                .then(() => userRef.set({"service.openingBalanceHoursCredited": true}, {merge: true}))
+                .catch((e: any) => console.error("creditOpeningBalance (existing user) failed", {uid, message: e?.message}));
+            }
+          }
+        }
 
         let profileComplete = isProfileComplete((data as any).profile);
 
@@ -300,11 +388,21 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
             ...incomingProfile,
           });
 
-          // ✅ jeśli po tym profilu jest komplet → sync do arkusza
+          // jeśli po tym profilu jest komplet → sync do arkusza (fire-and-forget, nie blokuje odpowiedzi)
           if (profileComplete) {
-            await syncMemberToSheet(uid);
+            syncMemberToSheet(uid).catch((sheetErr: any) => {
+              console.error("syncMemberToSheet failed (existing user)", {
+                uid,
+                message: sheetErr?.message || String(sheetErr),
+              });
+            });
           }
         }
+
+        const mergedProfile = {
+          ...((data as any).profile || {}),
+          ...(Object.keys(incomingProfile).length > 0 ? incomingProfile : {}),
+        };
 
         res.status(200).json({
           ok: true,
@@ -314,9 +412,11 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
           role_key: roleKey,
           status_key: statusKey,
           screen: defaultScreenForRoleKey(roleKey),
-          setupMissing: (await getSetupApp()) ? false : true,
+          setupMissing: !setupApp,
           openingMatch: Boolean((data as any).openingMatch),
           profileComplete,
+          nickname: normalizeStr(mergedProfile.nickname) || null,
+          firstName: normalizeStr(mergedProfile.firstName) || null,
         });
         return;
       }
@@ -324,14 +424,19 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
       // =========================
       // NEW USER (BOOTSTRAP FROM BO26)
       // =========================
-      const found = await findOpeningBalanceByEmail(db, email);
+      const found = await findOpeningBalance(
+        db,
+        email,
+        incomingProfile.firstName,
+        incomingProfile.lastName
+      );
 
-      let roleKey: "rola_czlonek" | "rola_sympatyk" = "rola_sympatyk";
+      let roleKey: string = newUserRoleCode;
       if (found.openingMatch && found.obData) {
-        roleKey = computeRoleKeyFromOpeningBalance(found.obData);
+        roleKey = computeRoleKeyFromOpeningBalance(found.obData, obMemberField, obMemberRoleCode, newUserRoleCode);
       }
 
-      const statusKey = "status_aktywny";
+      const statusKey = newUserStatusCode;
       const openingMatch = Boolean(found.openingMatch);
 
       const docToCreate: any = {
@@ -341,13 +446,13 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
         role_key: roleKey,
         status_key: statusKey,
         openingMatch,
-        openingMatchMethod: "email",
         firstLoginAt: admin.firestore.FieldValue.serverTimestamp(),
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       };
 
       if (openingMatch && found.obData) {
+        docToCreate.openingMatchMethod = found.matchMethod;
         docToCreate.openingBalance = found.obData;
         docToCreate.openingMatchedAt = admin.firestore.FieldValue.serverTimestamp();
       }
@@ -371,11 +476,26 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
 
       await userRef.set(docToCreate);
 
+      // Kredytuj godzinki z bilansu otwarcia (fire-and-forget, idempotentne przez marker)
+      if (openingMatch && found.obData) {
+        const obHours = getObHours(found.obData);
+        if (obHours > 0) {
+          creditOpeningBalance(db, uid, obHours, OB_HOURS_EXPIRES_AT)
+            .then(() => userRef.set({"service.openingBalanceHoursCredited": true}, {merge: true}))
+            .catch((e: any) => console.error("creditOpeningBalance (new user) failed", {uid, message: e?.message}));
+        }
+      }
+
       const profileComplete = isProfileComplete(incomingProfile);
 
-      // ✅ jeśli user już podał komplet profilu → sync do arkusza
+      // jeśli user już podał komplet profilu → sync do arkusza (fire-and-forget, nie blokuje odpowiedzi)
       if (profileComplete) {
-        await syncMemberToSheet(uid);
+        syncMemberToSheet(uid).catch((sheetErr: any) => {
+          console.error("syncMemberToSheet failed (new user)", {
+            uid,
+            message: sheetErr?.message || String(sheetErr),
+          });
+        });
       }
 
       res.status(200).json({
@@ -386,9 +506,11 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
         role_key: roleKey,
         status_key: statusKey,
         screen: defaultScreenForRoleKey(roleKey),
-        setupMissing: (await getSetupApp()) ? false : true,
+        setupMissing: !setupApp,
         openingMatch,
         profileComplete,
+        nickname: normalizeStr(incomingProfile.nickname) || null,
+        firstName: normalizeStr(incomingProfile.firstName) || null,
       });
     } catch (err: any) {
       res.status(500).json({error: "Server error", message: err?.message || String(err)});

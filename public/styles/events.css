@@ -1,0 +1,143 @@
+/* public/styles/events.css */
+/* ================= IMPREZY ================= */
+
+.imprezaTabs {
+  display: flex;
+  gap: 6px;
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
+
+.imprezaTab {
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.imprezaTab.active,
+.imprezaTab:hover {
+  background: var(--accent, #3b82f6);
+  color: #fff;
+  border-color: transparent;
+}
+
+.imprezaEmpty {
+  margin-top: 16px;
+}
+
+/* ─── Lista imprez ─── */
+
+.imprezaList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.imprezaCard {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+:root[data-theme="light"] .imprezaCard {
+  background: rgba(12, 18, 32, 0.02);
+}
+
+.imprezaCardHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.imprezaName {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.imprezaDates {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent, #3b82f6);
+  white-space: nowrap;
+}
+
+.imprezaMeta {
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.imprezaDesc {
+  font-size: 13px;
+  color: var(--text-muted, #888);
+  margin-top: 6px;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.imprezaFooter {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(230, 232, 238, 0.12);
+}
+
+:root[data-theme="light"] .imprezaFooter {
+  border-top-color: rgba(12, 18, 32, 0.10);
+}
+
+.imprezaContact {
+  font-size: 12px;
+  color: var(--text-muted, #888);
+}
+
+.imprezaLink {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent, #3b82f6);
+  text-decoration: none;
+}
+
+.imprezaLink:hover {
+  text-decoration: underline;
+}
+
+/* ─── Formularz dodawania ─── */
+
+.imprezaForm {
+  margin-top: 12px;
+}
+
+.imprezaFormSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 560px;
+}
+
+.imprezaDateRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+@media (max-width: 480px) {
+  .imprezaDateRow {
+    grid-template-columns: 1fr;
+  }
+}

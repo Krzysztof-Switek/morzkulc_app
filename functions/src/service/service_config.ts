@@ -5,6 +5,7 @@ export interface ServiceConfig {
   jobsCollection: string;
 
   listaGroupEmail: string;
+  membersGroupEmail: string;
   privilegedPosterGroups: string[];
 
   welcomeFromEmail: string;
@@ -36,12 +37,30 @@ export interface ServiceConfig {
     kayaksSpreadsheetId: string;
     kayaksTabName: string;
   };
+
+  // ✅ NEW: Godzinki sheets config
+  godzinki: {
+    spreadsheetId: string;
+    tabName: string;
+  };
+
+  // ✅ NEW: Events (imprezy) sheets config
+  events: {
+    spreadsheetId: string;
+    tabName: string;
+  };
+
+  // ✅ NEW: Basen (pool) config
+  basen: {
+    adminEmail: string;
+  };
 }
 
 export function getServiceConfig(): ServiceConfig {
   const envName = process.env.ENV_NAME || "prod";
 
   const listaGroupEmail = process.env.SVC_LISTA_GROUP_EMAIL || "lista@morzkulc.pl";
+  const membersGroupEmail = process.env.SVC_MEMBERS_GROUP_EMAIL || "czlonkowie@morzkulc.pl";
 
   const privilegedPosterGroupsRaw =
     process.env.SVC_PRIV_POSTER_GROUPS || "zarzad_skk@morzkulc.pl,kr@morzkulc.pl,czlonkowie@morzkulc.pl";
@@ -62,11 +81,20 @@ export function getServiceConfig(): ServiceConfig {
     process.env.SVC_GEAR_KAYAKS_SHEET_ID || "1eUjW_hyhHBlv4lRTNYS3wcltUarV5G6FiH_b5kujgRI";
   const kayaksTabName = process.env.SVC_GEAR_KAYAKS_TAB || "Kajaki";
 
+  // ✅ godzinki defaults — domyślnie ten sam arkusz co członkowie, zakładka "Godzinki"
+  const godzinkiSpreadsheetId = process.env.SVC_GODZINKI_SHEET_ID || membersSpreadsheetId;
+  const godzinkiTabName = process.env.SVC_GODZINKI_SHEET_TAB || "Godzinki";
+
+  // ✅ events defaults — ten sam arkusz co członkowie, zakładka "imprezy"
+  const eventsSpreadsheetId = process.env.SVC_EVENTS_SHEET_ID || membersSpreadsheetId;
+  const eventsTabName = process.env.SVC_EVENTS_SHEET_TAB || "imprezy";
+
   const cfg: ServiceConfig = {
     envName,
     jobsCollection: "service_jobs",
 
     listaGroupEmail,
+    membersGroupEmail,
     privilegedPosterGroups: privilegedPosterGroupsRaw.split(",").map((s) => s.trim()).filter(Boolean),
 
     welcomeFromEmail,
@@ -125,6 +153,20 @@ export function getServiceConfig(): ServiceConfig {
     gear: {
       kayaksSpreadsheetId,
       kayaksTabName,
+    },
+
+    godzinki: {
+      spreadsheetId: godzinkiSpreadsheetId,
+      tabName: godzinkiTabName,
+    },
+
+    events: {
+      spreadsheetId: eventsSpreadsheetId,
+      tabName: eventsTabName,
+    },
+
+    basen: {
+      adminEmail: process.env.SVC_BASEN_ADMIN_EMAIL || "",
     },
   };
 
