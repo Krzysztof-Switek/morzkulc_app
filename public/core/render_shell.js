@@ -138,7 +138,6 @@ async function renderHomeDashboard({ viewEl, ctx }) {
       <section class="dashCard startSection">
         <div class="dashCardHead">
           <h3>Moje rezerwacje</h3>
-          <button type="button" class="ghost" data-home-action="my-reservations">Zobacz wszystkie</button>
         </div>
 
         <div class="startList" id="homeReservationsList">
@@ -172,7 +171,6 @@ async function renderHomeDashboard({ viewEl, ctx }) {
   `;
 
   const reserveBtn = viewEl.querySelector("[data-home-action='reserve-gear']");
-  const myReservationsBtn = viewEl.querySelector("[data-home-action='my-reservations']");
   const eventsBtn = viewEl.querySelector("[data-home-action='events']");
 
   const openGear = () => {
@@ -181,10 +179,6 @@ async function renderHomeDashboard({ viewEl, ctx }) {
   };
 
   if (reserveBtn) reserveBtn.addEventListener("click", openGear);
-
-  if (myReservationsBtn) {
-    myReservationsBtn.addEventListener("click", () => setHash("my_reservations", "list"));
-  }
 
   if (eventsBtn) {
     eventsBtn.addEventListener("click", () => {
@@ -224,7 +218,15 @@ async function renderHomeDashboard({ viewEl, ctx }) {
   // Ładuj rezerwacje asynchronicznie po wyrenderowaniu dashboardu
   buildHomeReservationsSection(ctx).then((html) => {
     const listEl = viewEl.querySelector("#homeReservationsList");
-    if (listEl) listEl.innerHTML = html;
+    if (!listEl) return;
+    listEl.innerHTML = html;
+    // Delegacja kliknięcia przycisku "Edytuj" przy rezerwacji
+    listEl.addEventListener("click", (ev) => {
+      const btn = ev.target.closest("[data-home-rsv-edit]");
+      if (!btn) return;
+      const rsvId = String(btn.getAttribute("data-home-rsv-edit") || "");
+      if (rsvId) setHash("my_reservations", rsvId);
+    });
   }).catch(() => {
     const listEl = viewEl.querySelector("#homeReservationsList");
     if (listEl) listEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać rezerwacji.</div></div></div>`;
@@ -421,6 +423,7 @@ async function buildHomeReservationsSection(ctx) {
       .map((rsv) => {
         const kayakTitles = getReservationKayakTitles(rsv, kayakMap);
         const mainTitle = kayakTitles.join(", ") || "Rezerwacja";
+        const rsvId = escapeHtml(String(rsv?.id || ""));
 
         return `
           <div class="startListItem">
@@ -430,7 +433,9 @@ async function buildHomeReservationsSection(ctx) {
                 ${escapeHtml(formatDatePL(String(rsv?.startDate || "")))} → ${escapeHtml(formatDatePL(String(rsv?.endDate || "")))}
               </div>
             </div>
-            <div class="startListSide">aktywna</div>
+            <div class="startListSide">
+              <button type="button" class="ghost" style="font-size:0.85em;" data-home-rsv-edit="${rsvId}">Edytuj</button>
+            </div>
           </div>
         `;
       })

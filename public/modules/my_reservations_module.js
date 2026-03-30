@@ -1,5 +1,6 @@
 import { apiGetJson, apiPostJson } from "/core/api_client.js";
 import { mapUserFacingApiError } from "/core/user_error_messages.js";
+import { setHash } from "/core/router.js";
 
 const MY_RESERVATIONS_URL = "/api/gear/my-reservations";
 const KAYAKS_URL = "/api/gear/kayaks";
@@ -18,16 +19,6 @@ export function createMyReservationsModule({ id, label, defaultRoute, order, ena
     async render({ viewEl, routeId, ctx }) {
       const r = String(routeId || "").trim() || "list";
 
-      if (r !== "list") {
-        viewEl.innerHTML = `
-          <div class="card center">
-            <h2>${escapeHtml(label)}</h2>
-            <p>Nieznana podstrona: <strong>${escapeHtml(r)}</strong></p>
-          </div>
-        `;
-        return;
-      }
-
       if (!ctx?.idToken) {
         viewEl.innerHTML = `
           <div class="card center">
@@ -37,6 +28,14 @@ export function createMyReservationsModule({ id, label, defaultRoute, order, ena
         `;
         return;
       }
+
+      // Jeśli routeId to ID rezerwacji (nie "list") — renderuj dedykowany widok edycji
+      if (r !== "list") {
+        await renderDedicatedEditView({ viewEl, reservationId: r, ctx });
+        return;
+      }
+
+      // ── Widok listy ──────────────────────────────────────────────────────────
 
       viewEl.innerHTML = `
         <div class="card wide">
@@ -362,6 +361,124 @@ export function createMyReservationsModule({ id, label, defaultRoute, order, ena
     }
   };
 }
+
+// ── Dedykowany widok edycji (bez listy, bez modalu) ───────────────────────────
+// Renderowany gdy routeId to ID rezerwacji, np. po kliknięciu "Edytuj" na dashboardzie.
+// Po zapisie lub anulowaniu wraca na Start (#/home/home).
+
+async function renderDedicatedEditView({ viewEl, reservationId, ctx }) {
+  viewEl.innerHTML = `<div class="card center"><p class="hint">Ładowanie rezerwacji…</p></div>`;
+
+  let rsv = null;
+  let kayakMap = new Map();
+
+  try {
+    const [rsvResp, kayaksResp] = await Promise.all([
+      apiGetJson({ url: MY_RESERVATIONS_URL, idToken: ctx.idToken }),
+      apiGetJson({ url: KAYAKS_URL, idToken: ctx.idToken })
+    ]);
+
+    const reservations = Array.isArray(rsvResp?.items) ? rsvResp.items : [];
+    rsv = reservations.find((x) => String(x?.id || "") === String(reservationId || "")) || null;
+
+    const kayaks = Array.isArray(kayaksResp?.kayaks) ? kayaksResp.kayaks : [];
+    kayakMap = new Map(kayaks.map((k) => [String(k?.id || ""), buildKayakTitle(k)]));
+  } catch (e) {
+    viewEl.innerHTML = `
+      <div class="card center">
+        <p class="err">Błąd ładowania: ${escapeHtml(e?.message || String(e))}</p>
+        <button type="button" class="ghost" id="editBackBtn" style="margin-top:12px;">Wróć</button>
+      </div>
+    `;
+    viewEl.querySelector("#editBackBtn")?.addEventListener("click", () => setHash("home", "home"));
+    return;
+  }
+
+  if (!rsv) {
+    viewEl.innerHTML = `
+      <div class="card center">
+        <p>Nie znaleziono rezerwacji.</p>
+        <button type="button" class="ghost" id="editBackBtn" style="margin-top:12px;">Wróć</button>
+      </div>
+    `;
+    viewEl.querySelector("#editBackBtn")?.addEventListener("click", () => setHash("home", "home"));
+    return;
+  }
+
+  const kayakTitles = getReservationKayakTitles(rsv, kayakMap);
+
+  viewEl.innerHTML = `
+    <div class="card center" style="max-width:480px;">
+      <h2>Edytuj rezerwację</h2>
+      <p class="hint" style="margin-bottom:16px;">${escapeHtml(kayakTitles.join(", ") || "—")}</p>
+
+      <div class="row">
+        <label for="dedEditStartDate">Data od</label>
+        <input id="dedEditStartDate" type="date" value="${escapeAttr(String(rsv.startDate || ""))}" />
+      </div>
+
+      <div class="row" style="margin-top:8px;">
+        <label for="dedEditEndDate">Data do</label>
+        <input id="dedEditEndDate" type="date" value="${escapeAttr(String(rsv.endDate || ""))}" />
+      </div>
+
+      <div id="dedEditErr" class="err hidden" style="margin-top:8px;"></div>
+      <div id="dedEditOk" class="ok hidden" style="margin-top:8px;"></div>
+
+      <div class="actions" style="margin-top:16px;">
+        <button id="dedEditSaveBtn" type="button" class="primary">Zapisz zmiany</button>
+        <button id="dedEditCancelBtn" type="button" class="ghost">Anuluj</button>
+      </div>
+    </div>
+  `;
+
+  const saveBtn = viewEl.querySelector("#dedEditSaveBtn");
+  const cancelBtn = viewEl.querySelector("#dedEditCancelBtn");
+  const errEl = viewEl.querySelector("#dedEditErr");
+  const okEl = viewEl.querySelector("#dedEditOk");
+  const startDateEl = viewEl.querySelector("#dedEditStartDate");
+  const endDateEl = viewEl.querySelector("#dedEditEndDate");
+
+  const setErr = (msg) => {
+    errEl.textContent = String(msg || "");
+    errEl.classList.toggle("hidden", !errEl.textContent);
+  };
+
+  cancelBtn.addEventListener("click", () => setHash("home", "home"));
+
+  saveBtn.addEventListener("click", async () => {
+    setErr("");
+    const startDate = String(startDateEl.value || "").trim();
+    const endDate = String(endDateEl.value || "").trim();
+
+    if (!startDate || !endDate) {
+      setErr("Wybierz datę od i do.");
+      return;
+    }
+
+    saveBtn.disabled = true;
+    cancelBtn.disabled = true;
+
+    try {
+      const resp = await apiPostJson({
+        url: UPDATE_RESERVATION_URL,
+        idToken: ctx.idToken,
+        body: { reservationId: String(rsv.id || ""), startDate, endDate }
+      });
+
+      okEl.textContent = `Zapisano. Godzinki: ${String(resp?.costHours || 0)}`;
+      okEl.classList.remove("hidden");
+
+      window.setTimeout(() => setHash("home", "home"), 1000);
+    } catch (e) {
+      setErr(mapUserFacingApiError(e, "Nie udało się zmienić rezerwacji."));
+      saveBtn.disabled = false;
+      cancelBtn.disabled = false;
+    }
+  });
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function getReservationKayakTitles(rsv, kayakMap) {
   const kayakIds = Array.isArray(rsv?.kayakIds) ? rsv.kayakIds.map(String) : [];
