@@ -729,10 +729,14 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         }
       });
 
+      // AbortController: listener jest automatycznie usuwany gdy viewEl dostaje nową treść
+      // (MutationObserver na firstChild) — zapobiega akumulacji listenerów przy nawigacji
+      const keyAbort = new AbortController();
+      new MutationObserver(() => keyAbort.abort()).observe(viewEl, { childList: true });
       window.addEventListener("keydown", (ev) => {
         if (ev.key === "Escape" && !modalEl.classList.contains("hidden")) closeModal();
         if (ev.key === "Escape" && !reservationModalEl.classList.contains("hidden")) closeReservationModal();
-      });
+      }, { signal: keyAbort.signal });
 
       modalTopBtn.addEventListener("click", () => {
         if (!currentImgTop) return;

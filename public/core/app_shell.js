@@ -6,7 +6,7 @@ import {
   authGetBasicUser,
   authHandleRedirectResult
 } from "/core/firebase_client.js";
-import { apiPostJson, apiGetJson } from "/core/api_client.js";
+import { apiPostJson, apiGetJson, setApiTokenGetter } from "/core/api_client.js";
 import { buildModulesFromSetup } from "/core/modules_registry.js";
 import { renderNav, renderView, spinnerHtml } from "/core/render_shell.js";
 
@@ -125,6 +125,10 @@ const SESSION_MAX_MS = 24 * 60 * 60 * 1000; // 24 godziny
     ctx.idToken = idToken;
     window.__APP_CTX__ = ctx;
 
+    // Ustaw getter świeżego tokenu — Firebase SDK auto-odświeża przed wygaśnięciem (1h).
+    // Wszystkie moduły korzystają z api_client.js, który wywołuje ten getter automatycznie.
+    setApiTokenGetter(() => authGetIdToken(ctx.user, false));
+
     const session = await apiPostJson({
       url: REGISTER_URL,
       idToken,
@@ -230,6 +234,7 @@ function hardResetUi() {
   ctx.modules = [];
 
   sessionStorage.removeItem("morzkulc_session_started");
+  setApiTokenGetter(null);
 
   const loginErr = document.getElementById("loginAuthError");
   if (loginErr) loginErr.hidden = true;

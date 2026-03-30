@@ -347,11 +347,13 @@ export function createMyReservationsModule({ id, label, defaultRoute, order, ena
         }
       });
 
+      const keyAbort = new AbortController();
+      new MutationObserver(() => keyAbort.abort()).observe(viewEl, { childList: true });
       window.addEventListener("keydown", (ev) => {
         if (ev.key === "Escape" && !editModalEl.classList.contains("hidden")) {
           closeEditModal();
         }
-      });
+      }, { signal: keyAbort.signal });
 
       reloadBtn.addEventListener("click", loadReservations);
       editSaveBtn.addEventListener("click", submitUpdateReservation);

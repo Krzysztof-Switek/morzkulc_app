@@ -34,6 +34,9 @@ export function renderNav({ navEl, ctx }) {
 }
 
 export async function renderView({ viewEl, ctx }) {
+  // Zawsze resetuj overflow — modal mógł być otwarty gdy użytkownik zmienił widok
+  document.body.style.overflow = "";
+
   const { moduleId, routeId } = parseHash();
 
   if (!ctx.session?.profileComplete) {
