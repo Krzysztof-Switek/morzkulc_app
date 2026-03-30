@@ -191,11 +191,8 @@ export function createMyReservationsModule({ id, label, defaultRoute, order, ena
                     <div class="gearTitleWrap">
                       <div class="gearTitle">${escapeHtml(kayakTitles.join(", ") || "Rezerwacja")}</div>
                       <div class="gearSubtitle">
-                        Moja rezerwacja: ${escapeHtml(formatDatePL(String(rsv?.startDate || "")))} – ${escapeHtml(formatDatePL(String(rsv?.endDate || "")))}
+                        ${escapeHtml(formatDayMonth(String(rsv?.blockStartIso || rsv?.startDate || "")))} – ${escapeHtml(formatDayMonth(String(rsv?.blockEndIso || rsv?.endDate || "")))} (${escapeHtml(pluralizeDays(countReservationDays(String(rsv?.startDate || ""), String(rsv?.endDate || ""))))})
                         · <strong>${escapeHtml(String(rsv?.costHours ?? "—"))} godz.</strong>
-                      </div>
-                      <div class="gearSubtitle muted">
-                        Sprzęt niedostępny: ${escapeHtml(formatDatePL(String(rsv?.blockStartIso || "")))} – ${escapeHtml(formatDatePL(String(rsv?.blockEndIso || "")))}
                       </div>
                     </div>
                     <div class="gearBadges">
@@ -406,6 +403,9 @@ async function renderDedicatedEditView({ viewEl, reservationId, ctx }) {
   }
 
   const kayakTitles = getReservationKayakTitles(rsv, kayakMap);
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const blockStart = String(rsv?.blockStartIso || "");
+  const canCancelReservation = blockStart && todayIso < blockStart;
 
   viewEl.innerHTML = `
     <div class="card center" style="max-width:480px;">
@@ -429,6 +429,17 @@ async function renderDedicatedEditView({ viewEl, reservationId, ctx }) {
         <button id="dedEditSaveBtn" type="button" class="primary">Zapisz zmiany</button>
         <button id="dedEditCancelBtn" type="button" class="ghost">Anuluj</button>
       </div>
+
+      <hr style="margin:20px 0;border:none;border-top:1px solid var(--border,#e5e7eb);">
+
+      <div id="dedCancelRsvErr" class="err hidden" style="margin-bottom:8px;"></div>
+
+      <button id="dedCancelRsvBtn" type="button" class="ghost"${canCancelReservation ? "" : " disabled"}>
+        Anuluj rezerwację
+      </button>
+      ${!canCancelReservation
+        ? `<p class="hint" style="margin-top:6px;color:var(--muted,#6b7280);font-size:0.85em;">Nie można anulować — blokada już trwa (od ${escapeHtml(formatDatePL(blockStart))}).</p>`
+        : ""}
     </div>
   `;
 
@@ -438,13 +449,39 @@ async function renderDedicatedEditView({ viewEl, reservationId, ctx }) {
   const okEl = viewEl.querySelector("#dedEditOk");
   const startDateEl = viewEl.querySelector("#dedEditStartDate");
   const endDateEl = viewEl.querySelector("#dedEditEndDate");
+  const cancelRsvBtn = viewEl.querySelector("#dedCancelRsvBtn");
+  const cancelRsvErrEl = viewEl.querySelector("#dedCancelRsvErr");
 
   const setErr = (msg) => {
     errEl.textContent = String(msg || "");
     errEl.classList.toggle("hidden", !errEl.textContent);
   };
 
+  const setCancelRsvErr = (msg) => {
+    cancelRsvErrEl.textContent = String(msg || "");
+    cancelRsvErrEl.classList.toggle("hidden", !cancelRsvErrEl.textContent);
+  };
+
   cancelBtn.addEventListener("click", () => setHash("home", "home"));
+
+  if (cancelRsvBtn && canCancelReservation) {
+    cancelRsvBtn.addEventListener("click", async () => {
+      setCancelRsvErr("");
+      if (!window.confirm("Na pewno anulować tę rezerwację? Tej operacji nie można cofnąć.")) return;
+      cancelRsvBtn.disabled = true;
+      try {
+        await apiPostJson({
+          url: CANCEL_RESERVATION_URL,
+          idToken: ctx.idToken,
+          body: { reservationId: String(rsv.id || "") }
+        });
+        setHash("home", "home");
+      } catch (e) {
+        cancelRsvBtn.disabled = false;
+        setCancelRsvErr(mapUserFacingApiError(e, "Nie udało się anulować rezerwacji."));
+      }
+    });
+  }
 
   saveBtn.addEventListener("click", async () => {
     setErr("");
@@ -492,6 +529,26 @@ function buildKayakTitle(k) {
 
   const core = [brand, model].filter(Boolean).join(" ").trim() || "Kajak";
   return number ? `${core} (nr ${number})` : core;
+}
+
+function formatDayMonth(iso) {
+  const months = ["stycznia","lutego","marca","kwietnia","maja","czerwca","lipca","sierpnia","września","października","listopada","grudnia"];
+  const m = String(iso || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return iso || "—";
+  return `${parseInt(m[3], 10)} ${months[parseInt(m[2], 10) - 1] || m[2]}`;
+}
+
+function countReservationDays(startDate, endDate) {
+  try {
+    const diff = Math.round((new Date(endDate + "T12:00:00") - new Date(startDate + "T12:00:00")) / 86400000) + 1;
+    return diff > 0 ? diff : 1;
+  } catch {
+    return 1;
+  }
+}
+
+function pluralizeDays(n) {
+  return n === 1 ? "1 dzień" : `${n} dni`;
 }
 
 function formatDatePL(iso) {

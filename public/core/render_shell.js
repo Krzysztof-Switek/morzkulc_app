@@ -10,6 +10,7 @@ export function spinnerHtml(text = "Morzkulc myśli") {
 const REGISTER_URL = "/api/register";
 const MY_RESERVATIONS_URL = "/api/gear/my-reservations";
 const KAYAKS_URL = "/api/gear/kayaks";
+const CANCEL_RESERVATION_URL = "/api/gear/reservations/cancel";
 const GODZINKI_URL = "/api/godzinki";
 const EVENTS_URL = "/api/events";
 const BASEN_SESSIONS_URL = "/api/basen/sessions";
@@ -220,12 +221,31 @@ async function renderHomeDashboard({ viewEl, ctx }) {
     const listEl = viewEl.querySelector("#homeReservationsList");
     if (!listEl) return;
     listEl.innerHTML = html;
-    // Delegacja kliknięcia przycisku "Edytuj" przy rezerwacji
-    listEl.addEventListener("click", (ev) => {
-      const btn = ev.target.closest("[data-home-rsv-edit]");
-      if (!btn) return;
-      const rsvId = String(btn.getAttribute("data-home-rsv-edit") || "");
-      if (rsvId) setHash("my_reservations", rsvId);
+    listEl.addEventListener("click", async (ev) => {
+      const editBtn = ev.target.closest("[data-home-rsv-edit]");
+      if (editBtn) {
+        const rsvId = String(editBtn.getAttribute("data-home-rsv-edit") || "");
+        if (rsvId) setHash("my_reservations", rsvId);
+        return;
+      }
+      const cancelBtn = ev.target.closest("[data-home-rsv-cancel]");
+      if (cancelBtn && !cancelBtn.disabled) {
+        const rsvId = String(cancelBtn.getAttribute("data-home-rsv-cancel") || "");
+        if (!rsvId) return;
+        if (!window.confirm("Na pewno anulować tę rezerwację?")) return;
+        cancelBtn.disabled = true;
+        try {
+          await apiPostJson({
+            url: CANCEL_RESERVATION_URL,
+            idToken: ctx.idToken,
+            body: { reservationId: rsvId }
+          });
+          setHash("home", "home");
+        } catch (e) {
+          cancelBtn.disabled = false;
+          window.alert("Nie udało się anulować: " + (e?.message || "Spróbuj ponownie."));
+        }
+      }
     });
   }).catch(() => {
     const listEl = viewEl.querySelector("#homeReservationsList");
@@ -419,22 +439,34 @@ async function buildHomeReservationsSection(ctx) {
       `;
     }
 
+    const todayIso = new Date().toISOString().slice(0, 10);
+
     return activeReservations
       .map((rsv) => {
         const kayakTitles = getReservationKayakTitles(rsv, kayakMap);
         const mainTitle = kayakTitles.join(", ") || "Rezerwacja";
         const rsvId = escapeHtml(String(rsv?.id || ""));
+        const blockStart = String(rsv?.blockStartIso || "");
+        const blockEnd = String(rsv?.blockEndIso || "");
+        const canCancel = blockStart && todayIso < blockStart;
+        const startDate = String(rsv?.startDate || "");
+        const endDate = String(rsv?.endDate || "");
+        const days = countReservationDays(startDate, endDate);
+        const dateLabel = `${formatDayMonth(blockStart || startDate)} – ${formatDayMonth(blockEnd || endDate)} (${pluralizeDays(days)})`;
 
         return `
           <div class="startListItem">
             <div class="startListMain">
               <div class="startListTitle">${escapeHtml(mainTitle)}</div>
-              <div class="startListMeta">
-                ${escapeHtml(formatDatePL(String(rsv?.startDate || "")))} → ${escapeHtml(formatDatePL(String(rsv?.endDate || "")))}
-              </div>
+              <div class="startListMeta">${escapeHtml(dateLabel)}</div>
             </div>
-            <div class="startListSide">
-              <button type="button" class="ghost" style="font-size:0.85em;" data-home-rsv-edit="${rsvId}">Edytuj</button>
+            <div class="startListSide" style="display:flex;gap:4px;align-items:center;">
+              <button type="button" class="ghost" style="padding:4px 6px;line-height:1;" title="Edytuj" data-home-rsv-edit="${rsvId}" aria-label="Edytuj rezerwację">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button type="button" class="ghost" style="padding:4px 6px;line-height:1;" title="Anuluj rezerwację" data-home-rsv-cancel="${rsvId}" aria-label="Anuluj rezerwację"${canCancel ? "" : " disabled"}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+              </button>
             </div>
           </div>
         `;
@@ -731,6 +763,26 @@ function fieldErrorToPl(field, code) {
   if (code === "cannot_be_future") return `${label}: nie może być w przyszłości`;
   if (code === "must_be_true") return `${label}: musisz zaakceptować`;
   return `${label}: błąd (${code})`;
+}
+
+function formatDayMonth(iso) {
+  const months = ["stycznia","lutego","marca","kwietnia","maja","czerwca","lipca","sierpnia","września","października","listopada","grudnia"];
+  const m = String(iso || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return iso || "—";
+  return `${parseInt(m[3], 10)} ${months[parseInt(m[2], 10) - 1] || m[2]}`;
+}
+
+function countReservationDays(startDate, endDate) {
+  try {
+    const diff = Math.round((new Date(endDate + "T12:00:00") - new Date(startDate + "T12:00:00")) / 86400000) + 1;
+    return diff > 0 ? diff : 1;
+  } catch {
+    return 1;
+  }
+}
+
+function pluralizeDays(n) {
+  return n === 1 ? "1 dzień" : `${n} dni`;
 }
 
 function formatDatePL(iso) {
