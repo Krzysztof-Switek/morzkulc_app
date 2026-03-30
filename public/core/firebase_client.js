@@ -4,6 +4,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   signInWithRedirect,
+  getRedirectResult,
   signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -16,7 +17,7 @@ import {
 
 const DEV_CONFIG = {
   apiKey: "AIzaSyCzWcAgskiyp1AyibbiPLeAfCUfr7e3gtg",
-  authDomain: "sprzet-skk-morzkulc.firebaseapp.com",
+  authDomain: "sprzet-skk-morzkulc.web.app",
   projectId: "sprzet-skk-morzkulc",
   storageBucket: "sprzet-skk-morzkulc.firebasestorage.app",
   messagingSenderId: "867472588411",
@@ -25,7 +26,7 @@ const DEV_CONFIG = {
 
 const PROD_CONFIG = {
   apiKey: "AIzaSyDp8Gyd45RkSS6cdJ32oczHGe6Fb9RrWeo",
-  authDomain: "morzkulc-e9df7.firebaseapp.com",
+  authDomain: "morzkulc-e9df7.web.app",
   projectId: "morzkulc-e9df7",
   storageBucket: "morzkulc-e9df7.firebasestorage.app",
   messagingSenderId: "137214816080",
@@ -60,20 +61,36 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
+// getRedirectResult jest wywoływane przez app_shell.js w starcie (authHandleRedirectResult),
+// PRZED rejestracją onAuthStateChanged — dzięki temu stan auth jest ustawiony
+// zanim listener po raz pierwszy się odpali.
+
 export function authOnChange(cb) {
   return onAuthStateChanged(auth, cb);
 }
 
-function isMobileOrPWA() {
-  return (
-    /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
-    window.matchMedia("(display-mode: standalone)").matches ||
-    window.matchMedia("(display-mode: fullscreen)").matches
-  );
+// Przetwarza wynik redirect po powrocie ze strony OAuth Google.
+// Musi być wywołane i oczekiwane PRZED rejestracją onAuthStateChanged,
+// żeby stan auth był już ustawiony gdy listener odpali się po raz pierwszy.
+// Zwraca user lub null. Rzuca wyjątek tylko przy realnym błędzie auth.
+export async function authHandleRedirectResult() {
+  const result = await getRedirectResult(auth);
+  return result?.user ?? null;
+}
+
+function needsRedirectAuth() {
+  const ua = navigator.userAgent;
+  // Wszystkie przeglądarki na iOS (Safari, Chrome/CriOS, Firefox/FxiOS, Edge/EdgiOS)
+  // wymagają redirect — popup otwiera się jako osobna karta bez window.opener,
+  // więc Firebase nie może przekazać wyniku auth z powrotem do oryginalnej karty.
+  const isIOS = /iPhone|iPad|iPod/i.test(ua);
+  const isStandalone = window.matchMedia("(display-mode: standalone)").matches ||
+    window.matchMedia("(display-mode: fullscreen)").matches;
+  return isIOS || isStandalone;
 }
 
 export async function authLoginPopup() {
-  if (isMobileOrPWA()) {
+  if (needsRedirectAuth()) {
     await signInWithRedirect(auth, provider);
   } else {
     await signInWithPopup(auth, provider);

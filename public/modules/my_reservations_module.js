@@ -161,12 +161,19 @@ export function createMyReservationsModule({ id, label, defaultRoute, order, ena
       };
 
       const renderReservations = () => {
-        if (!reservations.length) {
-          listEl.innerHTML = `<div class="hint">Nie masz jeszcze żadnych rezerwacji.</div>`;
+        // Ukryj aktywne rezerwacje których data zakończenia minęła
+        const todayIso = new Date().toISOString().slice(0, 10);
+        const visible = reservations.filter((rsv) => {
+          if (String(rsv?.status || "") !== "active") return true;
+          return String(rsv?.endDate || "") >= todayIso;
+        });
+
+        if (!visible.length) {
+          listEl.innerHTML = `<div class="hint">Nie masz żadnych aktywnych rezerwacji.</div>`;
           return;
         }
 
-        listEl.innerHTML = reservations
+        listEl.innerHTML = visible
           .map((rsv) => {
             const status = String(rsv?.status || "");
             const badge =
@@ -185,25 +192,15 @@ export function createMyReservationsModule({ id, label, defaultRoute, order, ena
                     <div class="gearTitleWrap">
                       <div class="gearTitle">${escapeHtml(kayakTitles.join(", ") || "Rezerwacja")}</div>
                       <div class="gearSubtitle">
-                        Termin: ${escapeHtml(formatDatePL(String(rsv?.startDate || "")))} → ${escapeHtml(formatDatePL(String(rsv?.endDate || "")))}
+                        Moja rezerwacja: ${escapeHtml(formatDatePL(String(rsv?.startDate || "")))} – ${escapeHtml(formatDatePL(String(rsv?.endDate || "")))}
+                        · <strong>${escapeHtml(String(rsv?.costHours ?? "—"))} godz.</strong>
                       </div>
-                      <div class="gearSubtitle">
-                        Blokada: ${escapeHtml(formatDatePL(String(rsv?.blockStartIso || "")))} → ${escapeHtml(formatDatePL(String(rsv?.blockEndIso || "")))}
+                      <div class="gearSubtitle muted">
+                        Sprzęt niedostępny: ${escapeHtml(formatDatePL(String(rsv?.blockStartIso || "")))} – ${escapeHtml(formatDatePL(String(rsv?.blockEndIso || "")))}
                       </div>
                     </div>
                     <div class="gearBadges">
                       ${badge}
-                    </div>
-                  </div>
-
-                  <div class="gearMeta">
-                    <div class="gearMetaRow">
-                      <div class="gearMetaKey">Kajaki</div>
-                      <div class="gearMetaVal">${escapeHtml(kayakTitles.join(", ") || "-")}</div>
-                    </div>
-                    <div class="gearMetaRow">
-                      <div class="gearMetaKey">Godzinki</div>
-                      <div class="gearMetaVal">${escapeHtml(String(rsv?.costHours ?? "-"))}</div>
                     </div>
                   </div>
 

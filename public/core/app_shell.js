@@ -3,7 +3,8 @@ import {
   authLoginPopup,
   authLogout,
   authGetIdToken,
-  authGetBasicUser
+  authGetBasicUser,
+  authHandleRedirectResult
 } from "/core/firebase_client.js";
 import { apiPostJson, apiGetJson } from "/core/api_client.js";
 import { buildModulesFromSetup } from "/core/modules_registry.js";
@@ -75,13 +76,31 @@ window.addEventListener("hashchange", async () => {
 
 const SESSION_MAX_MS = 24 * 60 * 60 * 1000; // 24 godziny
 
-authOnChange(async (user) => {
-  if (!user) {
-    hardResetUi();
-    return;
+// ── Startup — redirect result najpierw, potem listener ───────────────────────
+// Czekamy na getRedirectResult PRZED rejestracją onAuthStateChanged.
+// Dzięki temu gdy listener po raz pierwszy odpali się, stan auth jest już ustawiony
+// (user jest zalogowany po redirect). Bez tego: listener odpalał się z null →
+// hardResetUi → ekran logowania, a potem ewentualnie ponownie z userem — race condition.
+(async () => {
+  let redirectError = null;
+  try {
+    await authHandleRedirectResult();
+  } catch (e) {
+    redirectError = e?.message || String(e || "Błąd logowania");
+    console.error("[Auth] getRedirectResult error:", e?.code, e?.message);
   }
 
-  // Sprawdź czy sesja nie wygasła (24h od zalogowania)
+  authOnChange(async (user) => {
+    if (!user) {
+      hardResetUi();
+      if (redirectError) {
+        showAuthError(redirectError);
+        redirectError = null;
+      }
+      return;
+    }
+
+    // Sprawdź czy sesja nie wygasła (24h od zalogowania)
   const sessionStarted = Number(sessionStorage.getItem("morzkulc_session_started") || 0);
   if (sessionStarted && Date.now() - sessionStarted > SESSION_MAX_MS) {
     sessionStorage.removeItem("morzkulc_session_started");
@@ -177,7 +196,20 @@ authOnChange(async (user) => {
         hardResetUi();
       });
   }
-});
+  });
+})();
+
+function showAuthError(msg) {
+  let el = document.getElementById("loginAuthError");
+  if (!el) {
+    el = document.createElement("p");
+    el.id = "loginAuthError";
+    el.style.cssText = "color:var(--err,#f87171);text-align:center;margin:8px auto 0;font-size:0.9em;max-width:320px;";
+    loginBtn.insertAdjacentElement("afterend", el);
+  }
+  el.textContent = String(msg || "Błąd logowania. Spróbuj ponownie.");
+  el.hidden = false;
+}
 
 function hardResetUi() {
   loginBtn.classList.remove("hidden");
@@ -198,6 +230,9 @@ function hardResetUi() {
   ctx.modules = [];
 
   sessionStorage.removeItem("morzkulc_session_started");
+
+  const loginErr = document.getElementById("loginAuthError");
+  if (loginErr) loginErr.hidden = true;
 
   window.__APP_CTX__ = ctx;
 
