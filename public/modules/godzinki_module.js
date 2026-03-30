@@ -293,7 +293,7 @@ function renderSubmitView(viewEl, ctx) {
 
 // ─── główny render ────────────────────────────────────────────────────────────
 
-async function renderGodzinkiView(viewEl, routeId, ctx) {
+async function renderGodzinkiView(viewEl, routeId, ctx, moduleId) {
   const activeTab = TABS.find(t => t.id === routeId)?.id || "balance";
 
   if (!ctx?.idToken) {
@@ -316,7 +316,7 @@ async function renderGodzinkiView(viewEl, routeId, ctx) {
     btn.addEventListener("click", () => {
       const tab = btn.dataset.godzinkiTab;
       import("/core/router.js").then(({ setHash }) => {
-        setHash("modul_3", tab);
+        setHash(moduleId, tab);
       });
     });
   });
@@ -343,7 +343,7 @@ export function createGodzinkiModule({ id, label, defaultRoute, order, enabled, 
     access,
 
     async render({ viewEl, routeId, ctx }) {
-      await renderGodzinkiView(viewEl, routeId || "balance", ctx);
+      await renderGodzinkiView(viewEl, routeId || "balance", ctx, id);
     },
   };
 }

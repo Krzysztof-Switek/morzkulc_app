@@ -1313,8 +1313,8 @@ function renderReservationsSimple(reservations) {
     return `<div class="gearReservNoData">Brak aktywnych rezerwacji.</div>`;
   }
   return reservations.map((r) => {
-    const start = formatDatePLFromIso(r.startDate);
-    const end = formatDatePLFromIso(r.endDate);
+    const start = formatDatePLFromIso(r.blockStartIso || r.startDate);
+    const end = formatDatePLFromIso(r.blockEndIso || r.endDate);
     return `
       <div class="gearReservSimpleRow">
         <div class="gearReservSimpleDates">Zajęty: ${escapeHtml(start)} – ${escapeHtml(end)}</div>

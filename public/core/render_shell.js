@@ -185,7 +185,7 @@ async function renderHomeDashboard({ viewEl, ctx }) {
 
   if (eventsBtn) {
     eventsBtn.addEventListener("click", () => {
-      const eventsTarget = getModuleRouteByLabelOrId(ctx, ["imprezy", "modul_4"]);
+      const eventsTarget = getModuleRouteByLabelOrId(ctx, ["imprezy"]);
       setHash(eventsTarget.moduleId, eventsTarget.routeId);
     });
   }
@@ -193,7 +193,7 @@ async function renderHomeDashboard({ viewEl, ctx }) {
   const basenBtn = viewEl.querySelector("[data-home-action='basen']");
   if (basenBtn) {
     basenBtn.addEventListener("click", () => {
-      const basenTarget = getModuleRouteByLabelOrId(ctx, ["basen", "modul_5"]);
+      const basenTarget = getModuleRouteByLabelOrId(ctx, ["basen"]);
       setHash(basenTarget.moduleId, basenTarget.routeId);
     });
   }
@@ -201,11 +201,9 @@ async function renderHomeDashboard({ viewEl, ctx }) {
   const addEventBtn = viewEl.querySelector("[data-home-action='add-event']");
   if (addEventBtn) {
     addEventBtn.addEventListener("click", () => {
-      const eventsTarget = getModuleRouteByLabelOrId(ctx, ["imprezy", "modul_4"]);
+      const eventsTarget = getModuleRouteByLabelOrId(ctx, ["imprezy"]);
       if (eventsTarget.moduleId !== "home") {
         setHash(eventsTarget.moduleId, "submit");
-      } else {
-        setHash("modul_4", "submit");
       }
     });
   }
@@ -213,11 +211,9 @@ async function renderHomeDashboard({ viewEl, ctx }) {
   const addHoursBtn = viewEl.querySelector("[data-home-action='add-hours']");
   if (addHoursBtn) {
     addHoursBtn.addEventListener("click", () => {
-      const godzinkiTarget = getModuleRouteByLabelOrId(ctx, ["godzinki", "modul_3"]);
+      const godzinkiTarget = getModuleRouteByLabelOrId(ctx, ["godzinki"]);
       if (godzinkiTarget.moduleId !== "home") {
         setHash(godzinkiTarget.moduleId, "submit");
-      } else {
-        setHash("modul_3", "submit");
       }
     });
   }
@@ -250,8 +246,10 @@ async function renderHomeDashboard({ viewEl, ctx }) {
     if (listEl) listEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać imprez.</div></div></div>`;
   });
 
-  // Ładuj zajęcia basenowe — sekcja widoczna tylko jeśli modul_5 dostępny
-  const basenModule = (ctx.modules || []).find((m) => m.id === "modul_5" && m.enabled);
+  // Ładuj zajęcia basenowe — sekcja widoczna tylko jeśli moduł "Basen" dostępny
+  const basenModule = (ctx.modules || []).find((m) =>
+    String(m?.label || "").trim().toLowerCase() === "basen" && m.enabled
+  );
   if (basenModule) {
     const basenSection = viewEl.querySelector("#homeBasenSection");
     if (basenSection) basenSection.style.display = "";
@@ -590,7 +588,7 @@ function renderProfileForm({ viewEl, ctx }) {
 }
 
 function getGearRoute(ctx) {
-  return getModuleRouteByLabelOrId(ctx, ["sprzęt", "modul_2"]);
+  return getModuleRouteByLabelOrId(ctx, ["sprzęt"]);
 }
 
 function getModuleRouteByLabelOrId(ctx, names) {

@@ -19,6 +19,7 @@ export function buildModulesFromSetup(setup) {
   }
 
   const modules = Object.entries(modulesCfg).map(([id, cfg]) => {
+    const labelLower = String(cfg?.label || "").trim().toLowerCase();
     const base = {
       id,
       label: String(cfg?.label || id),
@@ -28,28 +29,28 @@ export function buildModulesFromSetup(setup) {
       access: cfg?.access || {}
     };
 
-    if (id === "modul_2") {
+    if (labelLower === "sprzęt") {
       return createGearModule({
         ...base,
         defaultRoute: base.defaultRoute === "home" ? "kayaks" : base.defaultRoute
       });
     }
 
-    if (id === "modul_3") {
+    if (labelLower === "godzinki") {
       return createGodzinkiModule({
         ...base,
         defaultRoute: base.defaultRoute === "home" ? "balance" : base.defaultRoute
       });
     }
 
-    if (id === "modul_4") {
+    if (labelLower === "imprezy") {
       return createImprezaModule({
         ...base,
         defaultRoute: base.defaultRoute === "home" ? "list" : base.defaultRoute
       });
     }
 
-    if (id === "modul_5") {
+    if (labelLower === "basen") {
       return createBasenModule({
         ...base,
         defaultRoute: base.defaultRoute === "home" ? "sessions" : base.defaultRoute
@@ -59,7 +60,7 @@ export function buildModulesFromSetup(setup) {
     return createGenericModule(base);
   });
 
-  const gearModule = modules.find((m) => String(m?.id || "") === "modul_2") || null;
+  const gearModule = modules.find((m) => String(m?.label || "").trim().toLowerCase() === "sprzęt") || null;
 
   if (gearModule) {
     modules.push(
