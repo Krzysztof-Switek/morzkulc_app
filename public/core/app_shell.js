@@ -9,11 +9,19 @@ import { apiPostJson, apiGetJson } from "/core/api_client.js";
 import { buildModulesFromSetup } from "/core/modules_registry.js";
 import { renderNav, renderView, spinnerHtml } from "/core/render_shell.js";
 
-// ── Service Worker registration ───────────────────────────────────────────────
+// ── Service Worker registration + nasłuch aktualizacji ───────────────────────
+let swUpdatePending = false;
+
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/sw.js").catch((err) => {
     // Rejestracja SW nie jest krytyczna — aplikacja działa bez niego
     console.warn("SW registration failed:", err?.message);
+  });
+
+  navigator.serviceWorker.addEventListener("message", (event) => {
+    if (event.data?.type === "SW_UPDATED") {
+      swUpdatePending = true;
+    }
   });
 }
 
@@ -47,6 +55,11 @@ const ctx = {
 window.__APP_CTX__ = ctx;
 
 loginBtn.addEventListener("click", async () => {
+  if (swUpdatePending) {
+    // Jest nowa wersja aplikacji — przeładuj przed logowaniem
+    location.reload();
+    return;
+  }
   await authLoginPopup();
 });
 
@@ -60,10 +73,20 @@ window.addEventListener("hashchange", async () => {
   await renderView({ viewEl, ctx });
 });
 
+const SESSION_MAX_MS = 24 * 60 * 60 * 1000; // 24 godziny
+
 authOnChange(async (user) => {
   if (!user) {
     hardResetUi();
     return;
+  }
+
+  // Sprawdź czy sesja nie wygasła (24h od zalogowania)
+  const sessionStarted = Number(sessionStorage.getItem("morzkulc_session_started") || 0);
+  if (sessionStarted && Date.now() - sessionStarted > SESSION_MAX_MS) {
+    sessionStorage.removeItem("morzkulc_session_started");
+    await authLogout();
+    return; // authOnChange odpali się ponownie z user=null → hardResetUi
   }
 
   loginBtn.classList.add("hidden");
@@ -93,6 +116,11 @@ authOnChange(async (user) => {
     window.__APP_CTX__ = ctx;
 
     registerData.textContent = JSON.stringify(session, null, 2);
+
+    // Zapisz timestamp startu sesji (tylko przy świeżym logowaniu)
+    if (!sessionStorage.getItem("morzkulc_session_started")) {
+      sessionStorage.setItem("morzkulc_session_started", String(Date.now()));
+    }
 
     // setup jest opcjonalny (może jeszcze nie istnieć)
     ctx.setup = null;
@@ -168,6 +196,8 @@ function hardResetUi() {
   ctx.idToken = null;
   ctx.setup = null;
   ctx.modules = [];
+
+  sessionStorage.removeItem("morzkulc_session_started");
 
   window.__APP_CTX__ = ctx;
 

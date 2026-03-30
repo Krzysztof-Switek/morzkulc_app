@@ -13,7 +13,7 @@
  * Stary cache jest automatycznie czyszczony w activate.
  */
 
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 const STATIC_CACHE  = `morzkulc-static-${CACHE_VERSION}`;
 
 // Pliki precachowane przy instalacji SW
@@ -37,11 +37,15 @@ const PRECACHE_URLS = [
   "/modules/gear_module.js",
   "/modules/my_reservations_module.js",
   "/modules/godzinki_module.js",
+  "/modules/impreza_module.js",
+  "/modules/basen_module.js",
   "/styles/app.css",
   "/styles/base.css",
   "/styles/dashboard.css",
   "/styles/gear.css",
   "/styles/start.css",
+  "/styles/events.css",
+  "/styles/basen.css",
 ];
 
 // ── Instalacja ────────────────────────────────────────────────────────────────
@@ -60,19 +64,29 @@ self.addEventListener("install", (event) => {
   );
 });
 
-// ── Aktywacja — czyszczenie starych cache'y ───────────────────────────────────
+// ── Aktywacja — czyszczenie starych cache'y + powiadomienie o aktualizacji ────
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((k) => k.startsWith("morzkulc-") && k !== STATIC_CACHE)
-          .map((k) => {
-            console.info("[SW] deleting old cache:", k);
-            return caches.delete(k);
-          })
+    caches.keys().then((keys) => {
+      const oldCaches = keys.filter((k) => k.startsWith("morzkulc-") && k !== STATIC_CACHE);
+      const isUpdate = oldCaches.length > 0;
+
+      return Promise.all(
+        oldCaches.map((k) => {
+          console.info("[SW] deleting old cache:", k);
+          return caches.delete(k);
+        })
       )
-    ).then(() => self.clients.claim())
+        .then(() => self.clients.claim())
+        .then(() => {
+          // Powiadamiaj otwarte karty tylko przy aktualizacji (nie przy pierwszej instalacji)
+          if (isUpdate) {
+            return self.clients.matchAll({ type: "window" }).then((clients) => {
+              clients.forEach((client) => client.postMessage({ type: "SW_UPDATED" }));
+            });
+          }
+        });
+    })
   );
 });
 

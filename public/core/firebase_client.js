@@ -3,6 +3,7 @@ import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
   signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -63,8 +64,20 @@ export function authOnChange(cb) {
   return onAuthStateChanged(auth, cb);
 }
 
+function isMobileOrPWA() {
+  return (
+    /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.matchMedia("(display-mode: fullscreen)").matches
+  );
+}
+
 export async function authLoginPopup() {
-  await signInWithPopup(auth, provider);
+  if (isMobileOrPWA()) {
+    await signInWithRedirect(auth, provider);
+  } else {
+    await signInWithPopup(auth, provider);
+  }
 }
 
 export async function authLogout() {
