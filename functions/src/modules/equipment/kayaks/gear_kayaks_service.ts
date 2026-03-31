@@ -1,6 +1,8 @@
 import {computeBlockIso, overlapsIso, maxEndIsoByWeeks, todayIsoUTC} from "../../calendar/calendar_utils";
 import {getGearVars, roleMaxItems, roleMaxWeeks} from "../../setup/setup_gear_vars";
 import {quoteKayaksCostHours} from "../../hours/hours_quote";
+import {deductHours, refundHoursForReservation, creditReservationAdjustment} from "../../hours/godzinki_service";
+import {getGodzinkiVars} from "../../hours/godzinki_vars";
 
 type ReservationStatus = "active" | "cancelled";
 
@@ -196,6 +198,33 @@ export async function createReservation(
   };
 
   await ref.set(doc);
+
+  // Odlicz godzinki z konta użytkownika (jeśli rola nie jest zwolniona z kosztów)
+  if (costHours > 0) {
+    const godzinkiVars = await getGodzinkiVars(db);
+    const deductResult = await deductHours(
+      db,
+      args.uid,
+      {
+        amount: costHours,
+        reason: `Rezerwacja ${kayakIds.length === 1 ? "kajaka" : kayakIds.length + " kajaków"} (${args.startDate}–${args.endDate})`,
+        reservationId: ref.id,
+      },
+      godzinkiVars,
+      now
+    );
+
+    if (!deductResult.ok) {
+      // Rollback rezerwacji — godzinki nie wystarczyły
+      await ref.delete();
+      return {
+        ok: false,
+        code: deductResult.code || "hours_deduction_failed",
+        message: deductResult.message || "Insufficient hours",
+      } as const;
+    }
+  }
+
   return {ok: true, reservationId: ref.id, costHours, blockStartIso, blockEndIso} as const;
 }
 
@@ -214,9 +243,31 @@ export async function cancelReservation(db: FirebaseFirestore.Firestore, args: {
   const todayIso = todayIsoUTC();
   const blockStartIso = String(r?.blockStartIso || "");
 
-  // ✅ anulowanie tylko przed startem offsetu
+  // Anulowanie tylko przed startem okresu blokady (offset)
   if (!(todayIso < blockStartIso)) {
     return {ok: false, code: "cancel_blocked", message: "Cannot cancel after offset start"} as const;
+  }
+
+  // Zwróć godzinki przed anulowaniem rezerwacji
+  const costHours = Number(r?.costHours || 0);
+  if (costHours > 0) {
+    const godzinkiVars = await getGodzinkiVars(db);
+    const refundResult = await refundHoursForReservation(
+      db,
+      args.uid,
+      rid,
+      costHours,
+      godzinkiVars,
+      new Date()
+    );
+
+    if (!refundResult.ok) {
+      return {
+        ok: false,
+        code: refundResult.code || "refund_failed",
+        message: refundResult.message || "Cannot refund hours for this reservation",
+      } as const;
+    }
   }
 
   await ref.set({status: "cancelled", cancelledAt: new Date(), updatedAt: new Date()}, {merge: true});
@@ -250,7 +301,7 @@ export async function updateReservationDates(
   const todayIso = todayIsoUTC();
   const oldBlockStart = String(r?.blockStartIso || "");
 
-  // ✅ jeśli offset już wystartował → tylko skrócenie do minimum 1 dzień na wodzie (start=end=OLD start)
+  // Po starcie offsetu → tylko skrócenie do 1 dnia (start=end=oryginalny start)
   if (!(todayIso < oldBlockStart)) {
     if (!(args.startDate === oldStart && args.endDate === oldStart)) {
       return {
@@ -262,7 +313,6 @@ export async function updateReservationDates(
     }
   }
 
-  // przed offsetem: wolno modyfikować (shorten/extend), ale z limitami i bez kolizji
   const roleKey = user.roleKey;
   const maxWeeks = roleMaxWeeks(vars, roleKey);
   const maxItems = roleMaxItems(vars, roleKey);
@@ -274,7 +324,6 @@ export async function updateReservationDates(
 
   const {blockStartIso, blockEndIso} = computeBlockIso(args.startDate, args.endDate, vars.offsetDays);
 
-  // limit items: liczymy inne rezerwacje nakładające się + ta rezerwacja (wykluczamy ją w count)
   const already = await countMyOverlappingItems(db, args.uid, blockStartIso, blockEndIso, rid);
   if (already + kayakIds.length > maxItems) {
     return {
@@ -290,7 +339,46 @@ export async function updateReservationDates(
     return {ok: false, code: "conflict", message: "Not available", details: {conflictKayakIds: conflicts}} as const;
   }
 
-  const costHours = quoteKayaksCostHours(vars, roleKey, args.startDate, args.endDate, kayakIds.length);
+  const newCostHours = quoteKayaksCostHours(vars, roleKey, args.startDate, args.endDate, kayakIds.length);
+  const oldCostHours = Number(r?.costHours ?? 0);
+  const delta = newCostHours - oldCostHours;
+  const now = new Date();
+
+  // Korekta godzinek dla delty różnicy kosztów
+  if (delta > 0) {
+    // Nowa data droższa — dodeduktuj różnicę
+    const godzinkiVars = await getGodzinkiVars(db);
+    const deductResult = await deductHours(
+      db,
+      args.uid,
+      {
+        amount: delta,
+        reason: `Korekta rezerwacji ${rid} (${oldCostHours}h → ${newCostHours}h)`,
+        reservationId: rid,
+      },
+      godzinkiVars,
+      now
+    );
+
+    if (!deductResult.ok) {
+      return {
+        ok: false,
+        code: deductResult.code || "hours_deduction_failed",
+        message: deductResult.message || "Insufficient hours for updated reservation",
+      } as const;
+    }
+  } else if (delta < 0) {
+    // Nowa data tańsza — zwróć różnicę jako pre-zatwierdzoną pulę earn
+    const godzinkiVars = await getGodzinkiVars(db);
+    await creditReservationAdjustment(
+      db,
+      args.uid,
+      Math.abs(delta),
+      rid,
+      godzinkiVars.expiryYears,
+      now
+    );
+  }
 
   await ref.set(
     {
@@ -298,12 +386,12 @@ export async function updateReservationDates(
       endDate: args.endDate,
       blockStartIso,
       blockEndIso,
-      costHours,
+      costHours: newCostHours,
       updatedAt: new Date(),
       modifiedFrom: {startDate: oldStart, endDate: oldEnd},
     },
     {merge: true}
   );
 
-  return {ok: true, costHours, blockStartIso, blockEndIso} as const;
+  return {ok: true, costHours: newCostHours, blockStartIso, blockEndIso} as const;
 }

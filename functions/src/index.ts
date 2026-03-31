@@ -18,6 +18,7 @@ import {handleGetGearFavorites} from "./api/getGearFavoritesHandler";
 import {handleGearFavoriteToggle} from "./api/gearFavoriteToggleHandler";
 import {handleGetGodzinki} from "./api/getGodzinkiHandler";
 import {handleSubmitGodzinki} from "./api/submitGodzinkiHandler";
+import {handleGodzinkiPurchase} from "./api/godzinkiPurchaseHandler";
 import {handleGetKayakReservations} from "./api/getKayakReservationsHandler";
 import {handleGetEvents} from "./api/getEventsHandler";
 import {handleSubmitEvent} from "./api/submitEventHandler";
@@ -610,6 +611,22 @@ export const getKayakReservations = onRequest({invoker: "private"}, async (req, 
  */
 export const submitGodzinki = onRequest({invoker: "private"}, async (req, res) => {
   return handleSubmitGodzinki(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    enqueueGodzinkiSheetWrite,
+  });
+});
+
+/**
+ * POST /api/godzinki/purchase (authenticated)
+ * Zgłasza wniosek o wykup salda ujemnego (pending → zatwierdza admin przez Sheets).
+ */
+export const purchaseGodzinki = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGodzinkiPurchase(req, res, {
     db,
     sendPreflight,
     requireAllowedHost,

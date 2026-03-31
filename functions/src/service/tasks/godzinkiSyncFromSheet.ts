@@ -195,8 +195,19 @@ export const godzinkiWriteToSheetTask: ServiceTask<WritePayload> = {
 
     const grantedAt = data?.grantedAt?.toDate?.();
     const grantedAtStr = grantedAt ? grantedAt.toISOString().slice(0, 10) : "";
+    const recordType = String(data?.type || "earn");
 
-    const rowPatch: Record<string, any> = {
+    // Wykup salda ujemnego zapisujemy z pustą datą pracy i etykietą w Opis
+    const rowPatch: Record<string, any> = recordType === "purchase" ? {
+      "ID": payload.recordId,
+      "UID": payload.uid,
+      "Imię": firstName,
+      "Nazwisko": lastName,
+      "Godzinki": String(data?.amount ?? ""),
+      "Data pracy": "",
+      "Opis": "WYKUP SALDA UJEMNEGO",
+      "Zatwierdzone": "NIE",
+    } : {
       "ID": payload.recordId,
       "UID": payload.uid,
       "Imię": firstName,

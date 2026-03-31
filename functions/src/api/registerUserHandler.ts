@@ -288,8 +288,8 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
       const newUserStatusCode = normalizeStr(setupDefaults.newUserStatusCode) || "status_aktywny";
       const obMemberField = normalizeStr(setupDefaults.openingBalanceMemberField) || "członek stowarzyszenia";
       const obMemberRoleCode = normalizeStr(setupDefaults.openingBalanceMemberRoleCode) || "rola_czlonek";
-      // Godzinki z bilansu otwarcia wygasają 2028-01-01 (wymóg biznesowy)
-      const OB_HOURS_EXPIRES_AT = new Date(Date.UTC(2028, 0, 1));
+      // Godzinki z bilansu otwarcia wygasają 31.12.2029 (wymóg biznesowy)
+      const OB_HOURS_EXPIRES_AT = new Date(Date.UTC(2029, 11, 31));
 
       const decoded = tokenCheck.decoded;
       const uid = decoded.uid;
