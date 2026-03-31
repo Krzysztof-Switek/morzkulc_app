@@ -84,6 +84,11 @@ async function renderHomeDashboard({ viewEl, ctx }) {
   const hoursValue = getHoursValue(ctx);
   const membershipPaidUntil = getMembershipPaidUntil(ctx);
 
+  // Basen tile: zawsze widoczny, disabled gdy moduł nieaktywny w setup
+  const basenEnabledTile = (ctx.modules || []).find((m) =>
+    String(m?.label || "").trim().toLowerCase() === "basen"
+  )?.enabled === true;
+
   // Render struktury natychmiast — rezerwacje ładujemy asynchronicznie
   viewEl.innerHTML = `
     <div class="dashboard dashboardStart">
@@ -91,48 +96,53 @@ async function renderHomeDashboard({ viewEl, ctx }) {
         <div class="startHero">
           <h2>Cześć${helloName ? `, ${escapeHtml(helloName)}` : ""}</h2>
 
-          <div class="startStats">
-            <div class="startStatRow">
-              <span class="startStatKey">Rola:</span>
-              <strong class="startStatVal">${escapeHtml(roleLabel)}</strong>
+          <div class="startHeroBody">
+            <div class="startStats">
+              <div class="startStatRow">
+                <span class="startStatKey">Rola:</span>
+                <strong class="startStatVal">${escapeHtml(roleLabel)}</strong>
+              </div>
+
+              <div class="startStatRow">
+                <span class="startStatKey">Status:</span>
+                <strong class="startStatVal">${escapeHtml(statusLabel)}</strong>
+              </div>
+
+              <div class="startStatRow">
+                <span class="startStatKey">Godzinki:</span>
+                <span id="homeHoursCell">
+                  <strong class="startStatVal">${escapeHtml(hoursValue || "…")}</strong>
+                </span>
+              </div>
+
+              <div class="startStatRow">
+                <span class="startStatKey">Składka:</span>
+                <strong class="startStatVal">${escapeHtml(membershipPaidUntil ? formatDatePL(membershipPaidUntil) : "Dostępne wkrótce")}</strong>
+              </div>
             </div>
 
-            <div class="startStatRow">
-              <span class="startStatKey">Status:</span>
-              <strong class="startStatVal">${escapeHtml(statusLabel)}</strong>
-            </div>
+            <div class="startTopActions">
+              <button type="button" class="startTile primary" data-home-action="reserve-gear">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/></svg>
+                <span class="startTileTitle">Sprzęt</span>
+              </button>
 
-            <div class="startStatRow">
-              <span class="startStatKey">Godzinki:</span>
-              <span id="homeHoursCell">
-                <strong class="startStatVal">${escapeHtml(hoursValue || "…")}</strong>
-              </span>
-            </div>
+              <button type="button" class="startTile" data-home-action="add-hours">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span class="startTileTitle">Godzinki</span>
+              </button>
 
-            <div class="startStatRow">
-              <span class="startStatKey">Składka:</span>
-              <strong class="startStatVal">${escapeHtml(membershipPaidUntil ? formatDatePL(membershipPaidUntil) : "Dostępne wkrótce")}</strong>
+              <button type="button" class="startTile" data-home-action="add-event">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg>
+                <span class="startTileTitle">Impreza</span>
+              </button>
+
+              <button type="button" class="startTile" data-home-action="basen"${basenEnabledTile ? "" : " disabled"}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>
+                <span class="startTileTitle">Basen</span>
+              </button>
             </div>
           </div>
-        </div>
-
-        <div class="startTopActions">
-          <button type="button" class="startTile primary" data-home-action="reserve-gear">
-            <span class="startTileTitle">Rezerwuj sprzęt</span>
-          </button>
-
-          <button type="button" class="startTile" data-home-action="add-hours">
-            <span class="startTileTitle">Dodaj godzinki</span>
-          </button>
-
-          <button type="button" class="startTile" data-home-action="report-repair">
-            <span class="startTileTitle">Zgłoś naprawę</span>
-            <span class="startTileMeta">Dostępne wkrótce</span>
-          </button>
-
-          <button type="button" class="startTile" data-home-action="add-event">
-            <span class="startTileTitle">Dodaj imprezę</span>
-          </button>
         </div>
       </section>
 
@@ -188,13 +198,12 @@ async function renderHomeDashboard({ viewEl, ctx }) {
     });
   }
 
-  const basenBtn = viewEl.querySelector("[data-home-action='basen']");
-  if (basenBtn) {
-    basenBtn.addEventListener("click", () => {
+  viewEl.querySelectorAll("[data-home-action='basen']").forEach((btn) => {
+    btn.addEventListener("click", () => {
       const basenTarget = getModuleRouteByLabelOrId(ctx, ["basen"]);
       setHash(basenTarget.moduleId, basenTarget.routeId);
     });
-  }
+  });
 
   const addEventBtn = viewEl.querySelector("[data-home-action='add-event']");
   if (addEventBtn) {
