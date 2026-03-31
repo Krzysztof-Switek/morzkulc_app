@@ -144,8 +144,7 @@ p { margin: 0 0 var(--space-2) 0; color: var(--text-muted); }
 /* Container */
 body > header,
 #appRoot,
-#appShell,
-#debugPanel {
+#appShell {
   width: 100%;
   max-width: 980px;
   margin: 0 auto;
@@ -409,42 +408,11 @@ textarea {
   background: rgba(12,18,32,0.04);
 }
 
-/* --- Debug panel --- */
-#debugPanel {
-  margin-top: var(--space-5);
-  border-top: 1px dashed var(--border);
-  padding-top: var(--space-3);
-  padding-bottom: var(--space-5);
-}
-
-#debugPanel summary {
-  cursor: pointer;
-  font-weight: 800;
-  color: var(--text);
-  list-style: none;
-}
-
-#debugPanel summary::-webkit-details-marker { display: none; }
-#debugPanel .muted { color: var(--text-muted); font-size: 12px; }
-
-#debugPanel pre {
-  background: rgba(0,0,0,0.25);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 12px;
-  border-radius: 14px;
-  overflow: auto;
-}
-
-:root[data-theme="light"] #debugPanel pre {
-  background: rgba(12,18,32,0.04);
-}
 
 @media (max-width: 380px) {
   body > header,
   #appRoot,
-  #appShell,
-  #debugPanel {
+  #appShell {
     padding-left: var(--space-2);
     padding-right: var(--space-2);
   }

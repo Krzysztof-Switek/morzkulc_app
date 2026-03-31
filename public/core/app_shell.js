@@ -31,9 +31,6 @@ const SETUP_URL = "/api/setup";
 
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
-const userData = document.getElementById("userData");
-const registerData = document.getElementById("registerData");
-const modulesData = document.getElementById("modulesData");
 
 const appRoot = document.getElementById("appRoot");
 const navEl = document.getElementById("nav");
@@ -115,12 +112,9 @@ const SESSION_MAX_MS = 24 * 60 * 60 * 1000; // 24 godziny
   ctx.user = user;
   window.__APP_CTX__ = ctx;
 
-  userData.textContent = JSON.stringify(authGetBasicUser(user), null, 2);
-
   viewEl.innerHTML = spinnerHtml();
 
   try {
-    registerData.textContent = "Rejestracja: wysyłam token do backendu...";
     const idToken = await authGetIdToken(user, true);
     ctx.idToken = idToken;
     window.__APP_CTX__ = ctx;
@@ -137,8 +131,6 @@ const SESSION_MAX_MS = 24 * 60 * 60 * 1000; // 24 godziny
 
     ctx.session = session;
     window.__APP_CTX__ = ctx;
-
-    registerData.textContent = JSON.stringify(session, null, 2);
 
     // Zapisz timestamp startu sesji (tylko przy świeżym logowaniu)
     if (!sessionStorage.getItem("morzkulc_session_started")) {
@@ -166,16 +158,8 @@ const SESSION_MAX_MS = 24 * 60 * 60 * 1000; // 24 godziny
     if (!location.hash) location.hash = "#/home/home";
     await renderView({ viewEl, ctx });
 
-    // debug
-    if (modulesData) {
-      modulesData.textContent = JSON.stringify(
-        { ok: true, modules: ctx.modules.map((m) => m.id) },
-        null,
-        2
-      );
-    }
+
   } catch (e) {
-    registerData.textContent = "Błąd: " + (e?.message || e);
     ctx.session = null;
     window.__APP_CTX__ = ctx;
 
@@ -219,10 +203,6 @@ function hardResetUi() {
   loginBtn.classList.remove("hidden");
   logoutBtn.classList.add("hidden");
   appRoot.classList.add("hidden");
-
-  userData.textContent = "";
-  registerData.textContent = "";
-  if (modulesData) modulesData.textContent = "";
 
   navEl.innerHTML = "";
   viewEl.innerHTML = "";

@@ -123,7 +123,7 @@ async function renderHomeDashboard({ viewEl, ctx }) {
 
             <div class="startTopActions">
               <button type="button" class="startTile primary" data-home-action="reserve-gear">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12 C4 8 8 7 12 7 C16 7 20 8 22 12 C20 16 16 17 12 17 C8 17 4 16 2 12 Z"/><ellipse cx="12" cy="11" rx="3.5" ry="1.5"/></svg>
                 <span class="startTileTitle">Sprzęt</span>
               </button>
 
@@ -134,7 +134,7 @@ async function renderHomeDashboard({ viewEl, ctx }) {
 
               <button type="button" class="startTile" data-home-action="add-event">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg>
-                <span class="startTileTitle">Impreza</span>
+                <span class="startTileTitle">Imprezy</span>
               </button>
 
               <button type="button" class="startTile" data-home-action="basen"${basenEnabledTile ? "" : " disabled"}>
@@ -149,6 +149,7 @@ async function renderHomeDashboard({ viewEl, ctx }) {
       <section class="dashCard startSection">
         <div class="dashCardHead">
           <h3>Moje rezerwacje</h3>
+          <button type="button" class="ghost" data-home-action="all-reservations">Zobacz wszystkie</button>
         </div>
 
         <div class="startList" id="homeReservationsList">
@@ -180,6 +181,11 @@ async function renderHomeDashboard({ viewEl, ctx }) {
 
     </div>
   `;
+
+  const allReservationsBtn = viewEl.querySelector("[data-home-action='all-reservations']");
+  if (allReservationsBtn) {
+    allReservationsBtn.addEventListener("click", () => setHash("my_reservations", "list"));
+  }
 
   const reserveBtn = viewEl.querySelector("[data-home-action='reserve-gear']");
   const eventsBtn = viewEl.querySelector("[data-home-action='events']");
