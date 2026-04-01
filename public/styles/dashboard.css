@@ -1,6 +1,51 @@
 /* public/styles/dashboard.css */
 /* ================= DASHBOARD ================= */
 
+/* ── Nagłówek modułu z nawigacją ── */
+.moduleHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.moduleHeader h2 {
+  margin: 0;
+}
+
+.moduleNav {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.moduleNavBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.moduleNavBtn:hover {
+  background: var(--surface-2);
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.moduleNavBtn svg {
+  display: block;
+  flex-shrink: 0;
+}
+
 .dashboardHeader {
   margin-bottom: var(--space-4);
 }

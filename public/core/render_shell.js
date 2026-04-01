@@ -438,8 +438,9 @@ async function buildHomeReservationsSection(ctx) {
       kayaks.map((k) => [String(k?.id || ""), buildKayakTitle(k)])
     );
 
+    const todayIso = new Date().toISOString().slice(0, 10);
     const activeReservations = reservations
-      .filter((r) => String(r?.status || "") === "active")
+      .filter((r) => String(r?.status || "") === "active" && String(r?.endDate || "") >= todayIso)
       .slice(0, 3);
 
     if (!activeReservations.length) {
@@ -453,8 +454,6 @@ async function buildHomeReservationsSection(ctx) {
         </div>
       `;
     }
-
-    const todayIso = new Date().toISOString().slice(0, 10);
 
     return activeReservations
       .map((rsv) => {

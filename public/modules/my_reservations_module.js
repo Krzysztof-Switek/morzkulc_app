@@ -2,6 +2,9 @@ import { apiGetJson, apiPostJson } from "/core/api_client.js";
 import { mapUserFacingApiError } from "/core/user_error_messages.js";
 import { setHash } from "/core/router.js";
 
+const NAV_BACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`;
+const NAV_HOME_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
+
 const MY_RESERVATIONS_URL = "/api/gear/my-reservations";
 const KAYAKS_URL = "/api/gear/kayaks";
 const UPDATE_RESERVATION_URL = "/api/gear/reservations/update";
@@ -39,7 +42,13 @@ export function createMyReservationsModule({ id, label, defaultRoute, order, ena
 
       viewEl.innerHTML = `
         <div class="card wide">
-          <h2>${escapeHtml(label)}</h2>
+          <div class="moduleHeader">
+            <h2>${escapeHtml(label)}</h2>
+            <div class="moduleNav">
+              <button type="button" class="moduleNavBtn" data-mod-back title="Wróć">${NAV_BACK_SVG}</button>
+              <button type="button" class="moduleNavBtn" data-mod-home title="Strona główna">${NAV_HOME_SVG}</button>
+            </div>
+          </div>
 
           <div class="actions" style="margin-top:12px; justify-content:space-between;">
             <div class="hint">Tutaj są tylko Twoje rezerwacje. Sprzęt został od tego oddzielony.</div>
@@ -89,6 +98,9 @@ export function createMyReservationsModule({ id, label, defaultRoute, order, ena
           </div>
         </div>
       `;
+
+      viewEl.querySelector("[data-mod-home]")?.addEventListener("click", () => setHash("home", "home"));
+      viewEl.querySelector("[data-mod-back]")?.addEventListener("click", () => setHash("home", "home"));
 
       const listEl = viewEl.querySelector("#myReservationsList");
       const errEl = viewEl.querySelector("#myReservationsErr");
@@ -409,7 +421,13 @@ async function renderDedicatedEditView({ viewEl, reservationId, ctx }) {
 
   viewEl.innerHTML = `
     <div class="card center" style="max-width:480px;">
-      <h2>Edytuj rezerwację</h2>
+      <div class="moduleHeader">
+        <h2>Edytuj rezerwację</h2>
+        <div class="moduleNav">
+          <button type="button" class="moduleNavBtn" data-mod-back title="Wróć">${NAV_BACK_SVG}</button>
+          <button type="button" class="moduleNavBtn" data-mod-home title="Strona główna">${NAV_HOME_SVG}</button>
+        </div>
+      </div>
       <p class="hint" style="margin-bottom:16px;">${escapeHtml(kayakTitles.join(", ") || "—")}</p>
 
       <div class="row">
@@ -442,6 +460,9 @@ async function renderDedicatedEditView({ viewEl, reservationId, ctx }) {
         : ""}
     </div>
   `;
+
+  viewEl.querySelector("[data-mod-home]")?.addEventListener("click", () => setHash("home", "home"));
+  viewEl.querySelector("[data-mod-back]")?.addEventListener("click", () => setHash("my_reservations", "list"));
 
   const saveBtn = viewEl.querySelector("#dedEditSaveBtn");
   const cancelBtn = viewEl.querySelector("#dedEditCancelBtn");

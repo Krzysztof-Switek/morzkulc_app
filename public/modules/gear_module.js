@@ -2,6 +2,9 @@ import { apiGetJson, apiPostJson } from "/core/api_client.js";
 import { mapUserFacingApiError } from "/core/user_error_messages.js";
 import { storageFetchKayakCoverUrl, storageFetchKayakGalleryUrls } from "/core/firebase_client.js";
 
+const NAV_BACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`;
+const NAV_HOME_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
+
 const GEAR_URL = "/api/gear/kayaks";
 const CREATE_RESERVATION_URL = "/api/gear/reservations/create";
 const GEAR_FAVORITES_URL = "/api/gear/favorites";
@@ -47,7 +50,13 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
 
       viewEl.innerHTML = `
         <div class="card wide">
-          <h2>${escapeHtml(label)} – ${escapeHtml(activeTabLabel)}</h2>
+          <div class="moduleHeader">
+            <h2>${escapeHtml(label)} – ${escapeHtml(activeTabLabel)}</h2>
+            <div class="moduleNav">
+              <button type="button" class="moduleNavBtn" data-mod-back title="Wróć">${NAV_BACK_SVG}</button>
+              <button type="button" class="moduleNavBtn" data-mod-home title="Strona główna">${NAV_HOME_SVG}</button>
+            </div>
+          </div>
 
           <div class="gearTabs" role="tablist" aria-label="Kategorie sprzętu">
             ${GEAR_TABS.map((tab) => `
@@ -217,6 +226,13 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
           if (!tabId || tabId === activeTab) return;
           window.location.hash = `#${id}/${tabId}`;
         });
+      });
+
+      viewEl.querySelector("[data-mod-home]")?.addEventListener("click", () => {
+        window.location.hash = "#home/home";
+      });
+      viewEl.querySelector("[data-mod-back]")?.addEventListener("click", () => {
+        window.location.hash = "#home/home";
       });
 
       const errEl = viewEl.querySelector("#gearErr");

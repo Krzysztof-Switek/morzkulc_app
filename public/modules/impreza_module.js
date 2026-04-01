@@ -3,6 +3,9 @@ import { apiGetJson, apiPostJson } from "/core/api_client.js";
 const EVENTS_URL = "/api/events";
 const SUBMIT_URL = "/api/events/submit";
 
+const NAV_BACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`;
+const NAV_HOME_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
+
 const SUBMIT_ROLES = new Set(["rola_czlonek", "rola_zarzad", "rola_kr"]);
 const ADMIN_ROLES = new Set(["rola_zarzad", "rola_kr"]);
 
@@ -240,13 +243,30 @@ export function createImprezaModule({ id, label, defaultRoute, order, enabled, a
 
       viewEl.innerHTML = `
         <div class="card wide">
-          <h2>${esc(label)}</h2>
+          <div class="moduleHeader">
+            <h2>${esc(label)}</h2>
+            <div class="moduleNav">
+              <button type="button" class="moduleNavBtn" data-mod-back title="Wróć">${NAV_BACK_SVG}</button>
+              <button type="button" class="moduleNavBtn" data-mod-home title="Strona główna">${NAV_HOME_SVG}</button>
+            </div>
+          </div>
           ${renderTabsHtml(activeTab, canSubmit)}
           <div id="imprezaInner"></div>
         </div>
       `;
 
       const innerEl = viewEl.querySelector("#imprezaInner");
+
+      viewEl.querySelector("[data-mod-home]")?.addEventListener("click", () => {
+        window.location.hash = "#home/home";
+      });
+      viewEl.querySelector("[data-mod-back]")?.addEventListener("click", () => {
+        if (activeTab !== "list") {
+          window.location.hash = `#${id}/list`;
+        } else {
+          window.location.hash = "#home/home";
+        }
+      });
 
       viewEl.querySelector(".imprezaTabs")?.addEventListener("click", (ev) => {
         const btn = ev.target.closest("[data-impreza-tab]");
