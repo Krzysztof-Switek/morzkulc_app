@@ -42,6 +42,11 @@ export type GodzinkiRecord = {
   refundedAt?: FirebaseFirestore.Timestamp | null;
   earnDeductions?: {earnId: string; amount: number}[];
 
+  // Typ źródłowy dla rekordów earn tworzonych przez system (nie przez użytkownika):
+  //   "adjustment" = korekta zwrotna z aktualizacji dat rezerwacji (creditReservationAdjustment)
+  // Rekord z sourceType="adjustment" musi być zerowany przy anulowaniu rezerwacji.
+  sourceType?: "adjustment";
+
   reason: string;
   submittedBy: string;
   createdAt: FirebaseFirestore.Timestamp;
@@ -506,6 +511,24 @@ export async function refundHoursForReservation(
     };
   }
 
+  // Znajdź rekordy earn będące korektami tej rezerwacji (sourceType="adjustment").
+  // Powstają przy skróceniu rezerwacji (creditReservationAdjustment) i muszą być
+  // wyzerowane przy anulowaniu — inaczej użytkownik dostałby podwójny zwrot.
+  const adjustmentEarnSnap = await db
+    .collection(COLLECTION)
+    .where("uid", "==", uid)
+    .where("type", "==", "earn")
+    .get();
+
+  const adjustmentEarnDocs = adjustmentEarnSnap.docs.filter((d) => {
+    const data = d.data() as any;
+    return (
+      data.sourceType === "adjustment" &&
+      String(data.reservationId || "") === reservationId &&
+      Number(data.remaining ?? 0) > 0
+    );
+  });
+
   // Wszystko OK — wykonaj refund w transakcji
   await db.runTransaction(async (tx) => {
     // Przywróć earn.remaining dla wszystkich pul FIFO
@@ -540,6 +563,17 @@ export async function refundHoursForReservation(
         submittedBy: "system",
         reservationId,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    }
+
+    // Wyzeruj earn korekty tej rezerwacji (zapobiega podwójnemu zwrotowi przy update+cancel)
+    for (const adjDoc of adjustmentEarnDocs) {
+      const adjRef = db.collection(COLLECTION).doc(adjDoc.id);
+      const adjSnap = await tx.get(adjRef);
+      if (!adjSnap.exists) continue;
+      tx.update(adjRef, {
+        remaining: 0,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
     }
@@ -585,6 +619,7 @@ export async function creditReservationAdjustment(
     approved: true,
     approvedAt: admin.firestore.FieldValue.serverTimestamp(),
     approvedBy: "refund",
+    sourceType: "adjustment",
     reason: "Zwrot godzinek z korekty rezerwacji",
     submittedBy: "system",
     reservationId,

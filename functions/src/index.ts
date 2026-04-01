@@ -804,3 +804,19 @@ export {onUsersActiveCreated} from "./service/triggers/onUsersActiveCreated";
 export {onServiceJobCreated} from "./service/worker/onJobCreatedWorker";
 export {serviceFallbackDaily} from "./service/worker/fallbackDailyWorker";
 export {adminRunServiceTask} from "./service/admin/adminRunTask";
+
+/**
+ * SCHEDULER: Miesięczna opłata za przechowywanie prywatnych kajaków w klubie.
+ * Uruchamiany 1. dnia każdego miesiąca o 04:00 czasu warszawskiego.
+ */
+import {onSchedule} from "firebase-functions/v2/scheduler";
+import {runTaskById} from "./service/runner";
+
+export const gearPrivateStorageMonthly = onSchedule(
+  {schedule: "0 4 1 * *", timeZone: "Europe/Warsaw"},
+  async () => {
+    logger.info("gearPrivateStorageMonthly: start");
+    const result = await runTaskById("gear.chargePrivateStorage", {});
+    logger.info("gearPrivateStorageMonthly: done", result as unknown as Record<string, unknown>);
+  }
+);

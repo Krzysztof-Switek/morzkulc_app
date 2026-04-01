@@ -8,6 +8,10 @@ export type GearVars = {
   hoursPerKayakPerDay: number;
   boardDoesNotPay: boolean;
 
+  // Miesięczna opłata za przechowywanie prywatnego kajaka w klubie (w godzinkach).
+  // Wartość z Firestore: setup/vars_gear.vars.godzinki_za_sprzęt_prywatny.value
+  hoursPerPrivateKayakPerMonth: number;
+
   maxWeeksByRole: Record<string, number>;
   maxItemsByRole: Record<string, number>;
 };
@@ -34,6 +38,7 @@ export async function getGearVars(db: FirebaseFirestore.Firestore): Promise<Gear
   const offsetDays = toNumber(getVar(raw, "offset_rezerwacji"), 1);
   const hoursPerKayakPerDay = toNumber(getVar(raw, "godzinki_za_kajak"), 10);
   const boardDoesNotPay = toBool(getVar(raw, "zarzad_nie_płaci_za_sprzet"), false);
+  const hoursPerPrivateKayakPerMonth = toNumber(getVar(raw, "godzinki_za_sprzęt_prywatny"), 0);
 
   const maxWeeksByRole: Record<string, number> = {
     rola_zarzad: toNumber(getVar(raw, "zarząd_max_time"), 4),
@@ -53,6 +58,7 @@ export async function getGearVars(db: FirebaseFirestore.Firestore): Promise<Gear
     offsetDays,
     hoursPerKayakPerDay,
     boardDoesNotPay,
+    hoursPerPrivateKayakPerMonth,
     maxWeeksByRole,
     maxItemsByRole,
   };
