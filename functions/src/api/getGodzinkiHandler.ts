@@ -113,14 +113,18 @@ export async function handleGetGodzinki(req: Request, res: Response, deps: GetGo
       }
 
       // view === "full"
-      const [vars, history, recentEarnings] = await Promise.all([
+      // Bilans i wygasanie liczymy ze WSZYSTKICH rekordów (bez limitu) — inaczej przy >200 wpisach
+      // stare pule earn wypadałyby z okna i bilans byłby zaniżony.
+      // Historia do wyświetlenia jest ograniczona do 200 najnowszych rekordów.
+      const [vars, allRecords, history, recentEarnings] = await Promise.all([
         getGodzinkiVars(db),
+        getAllRecords(db, uid),
         getHistory(db, uid, 200),
         getRecentEarnings(db, uid, 5),
       ]);
 
-      const balance = computeBalance(history, now);
-      const nextExpiry = computeNextExpiry(history, now);
+      const balance = computeBalance(allRecords, now);
+      const nextExpiry = computeNextExpiry(allRecords, now);
 
       const nextExpiryMonthYear = nextExpiry ?
         String(nextExpiry.getMonth() + 1).padStart(2, "0") + "-" + nextExpiry.getFullYear() :
