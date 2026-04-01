@@ -1,12 +1,12 @@
 import type {Request, Response} from "express";
 import {isIsoDateYYYYMMDD} from "../modules/calendar/calendar_utils";
-import {updateGearReservationDates} from "../modules/equipment/bundle/gear_bundle_service";
+import {getItemsWithAvailability, isSupportedBundleCategory} from "../modules/equipment/bundle/gear_bundle_service";
 
 type TokenCheck =
   | {error: string}
   | {decoded: {uid: string; email?: string; name?: string}};
 
-export type GearReservationUpdateDeps = {
+export type GetGearItemAvailabilityDeps = {
   db: FirebaseFirestore.Firestore;
   sendPreflight: (req: Request, res: Response) => boolean;
   requireAllowedHost: (req: Request, res: Response) => boolean;
@@ -15,11 +15,17 @@ export type GearReservationUpdateDeps = {
   requireIdToken: (req: Request) => Promise<TokenCheck>;
 };
 
-function norm(v: any): string {
-  return String(v || "").trim();
+function getQueryString(req: Request, key: string): string {
+  const raw = req.query?.[key];
+  if (Array.isArray(raw)) return String(raw[0] || "").trim();
+  return String(raw || "").trim();
 }
 
-export async function handleGearReservationUpdate(req: Request, res: Response, deps: GearReservationUpdateDeps) {
+export async function handleGetGearItemAvailability(
+  req: Request,
+  res: Response,
+  deps: GetGearItemAvailabilityDeps
+) {
   const {db, sendPreflight, requireAllowedHost, setCorsHeaders, corsHandler, requireIdToken} = deps;
 
   if (sendPreflight(req, res)) return;
@@ -28,19 +34,27 @@ export async function handleGearReservationUpdate(req: Request, res: Response, d
 
   corsHandler(req, res, async () => {
     try {
+      if (req.method !== "GET") {
+        res.status(405).json({error: "Method not allowed"});
+        return;
+      }
+
       const tokenCheck = await requireIdToken(req);
       if ("error" in tokenCheck) {
         res.status(401).json({error: tokenCheck.error});
         return;
       }
 
-      const body = (req.body || {}) as any;
-      const reservationId = norm(body.reservationId);
-      const startDate = norm(body.startDate);
-      const endDate = norm(body.endDate);
+      const category = getQueryString(req, "category").toLowerCase();
+      const startDate = getQueryString(req, "startDate");
+      const endDate = getQueryString(req, "endDate");
 
-      if (!reservationId) {
-        res.status(400).json({ok: false, code: "validation_failed", message: "Missing reservationId"});
+      if (!category) {
+        res.status(400).json({ok: false, code: "validation_failed", message: "Missing category"});
+        return;
+      }
+      if (!isSupportedBundleCategory(category)) {
+        res.status(400).json({ok: false, code: "validation_failed", message: `Unsupported category: ${category}`});
         return;
       }
       if (!isIsoDateYYYYMMDD(startDate) || !isIsoDateYYYYMMDD(endDate) || startDate > endDate) {
@@ -48,19 +62,18 @@ export async function handleGearReservationUpdate(req: Request, res: Response, d
         return;
       }
 
-      const out = await updateGearReservationDates(db, {
-        uid: tokenCheck.decoded.uid,
-        reservationId,
+      const offsetDays = 1;
+      const result = await getItemsWithAvailability(db, category, startDate, endDate, offsetDays);
+      const items = result.items;
+
+      res.status(200).json({
+        ok: true,
+        category,
         startDate,
         endDate,
+        count: items.length,
+        items,
       });
-
-      if (!out.ok) {
-        res.status(400).json(out);
-        return;
-      }
-
-      res.status(200).json(out);
     } catch (err: any) {
       res.status(500).json({error: "Server error", message: err?.message || String(err)});
     }

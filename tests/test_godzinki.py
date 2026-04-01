@@ -16,6 +16,62 @@ Godzinki wygasają 4 lata od daty przyznania (grantedAt).
 import unittest
 from datetime import datetime, timezone, timedelta
 from copy import deepcopy
+import json
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# DEBUG / LOGGING
+# ──────────────────────────────────────────────────────────────────────────────
+
+DEBUG_TEST_OUTPUT = True
+
+
+def _to_debug_value(value):
+    """Konwertuje obiekty do formatu czytelnego w konsoli."""
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, list):
+        return [_to_debug_value(v) for v in value]
+    if isinstance(value, dict):
+        return {k: _to_debug_value(v) for k, v in value.items()}
+    return value
+
+
+def _debug_dump(label, value):
+    """Czytelny print JSON do konsoli."""
+    if not DEBUG_TEST_OUTPUT:
+        return
+    print(f"{label}:")
+    print(json.dumps(_to_debug_value(value), ensure_ascii=False, indent=2, sort_keys=True))
+
+
+def _debug_line(text=""):
+    if not DEBUG_TEST_OUTPUT:
+        return
+    try:
+        print(text)
+    except UnicodeEncodeError:
+        import sys
+        print(str(text).encode(sys.stdout.encoding or "utf-8", errors="replace").decode(sys.stdout.encoding or "utf-8"))
+
+
+class VerboseBusinessTestCase(unittest.TestCase):
+    """Bazowa klasa testowa — dodaje komentarz do każdego testu."""
+
+    def setUp(self):
+        if DEBUG_TEST_OUTPUT:
+            _debug_line("\n" + "=" * 100)
+            _debug_line(f"TEST: {self.id()}")
+            doc = self.shortDescription()
+            if doc:
+                _debug_line("OPIS TESTU:")
+                _debug_line(doc.strip())
+            _debug_line("=" * 100)
+
+    def tearDown(self):
+        if DEBUG_TEST_OUTPUT:
+            _debug_line(f"WYNIK TESTU: ZAKOŃCZONO {self.id()}")
+            _debug_line("=" * 100 + "\n")
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -44,7 +100,7 @@ def make_earn(amount, granted_at, approved=True, remaining=None, expiry_years=EX
         expires_at = None
         r = 0
 
-    return {
+    rec = {
         "type": "earn",
         "amount": amount,
         "remaining": r,
@@ -52,6 +108,17 @@ def make_earn(amount, granted_at, approved=True, remaining=None, expiry_years=EX
         "expires_at": expires_at,
         "approved": approved,
     }
+
+    _debug_line("TWORZENIE REKORDU EARN")
+    _debug_dump("WEJŚCIE", {
+        "amount": amount,
+        "granted_at": granted_at,
+        "approved": approved,
+        "remaining": remaining,
+        "expiry_years": expiry_years,
+    })
+    _debug_dump("WYJŚCIE", rec)
+    return rec
 
 
 def make_spend(amount, from_earn=None, overdraft=None, refunded=False):
@@ -68,13 +135,23 @@ def make_spend(amount, from_earn=None, overdraft=None, refunded=False):
     elif from_earn is None:
         from_earn = amount - overdraft
 
-    return {
+    rec = {
         "type": "spend",
         "amount": amount,
         "from_earn": from_earn,
         "overdraft": overdraft,
         "refunded": refunded,
     }
+
+    _debug_line("TWORZENIE REKORDU SPEND")
+    _debug_dump("WEJŚCIE", {
+        "amount": amount,
+        "from_earn": from_earn,
+        "overdraft": overdraft,
+        "refunded": refunded,
+    })
+    _debug_dump("WYJŚCIE", rec)
+    return rec
 
 
 def make_purchase(amount, approved=True):
@@ -87,6 +164,13 @@ def make_purchase(amount, approved=True):
     rec = {"type": "purchase", "amount": amount}
     if approved is not None:
         rec["approved"] = approved
+
+    _debug_line("TWORZENIE REKORDU PURCHASE")
+    _debug_dump("WEJŚCIE", {
+        "amount": amount,
+        "approved": approved,
+    })
+    _debug_dump("WYJŚCIE", rec)
     return rec
 
 
@@ -102,6 +186,10 @@ def compute_balance(records, now=None):
     if now is None:
         now = datetime.now(timezone.utc)
 
+    _debug_line("SPRAWDZAM: compute_balance")
+    _debug_dump("WEJŚCIE.records", records)
+    _debug_dump("WEJŚCIE.now", now)
+
     positive = 0.0
     net_overdraft = 0.0
 
@@ -112,24 +200,30 @@ def compute_balance(records, now=None):
                 if exp and exp > now:
                     positive += r.get("remaining", 0)
         elif r["type"] == "spend":
-            # Pomiń zrefundowane rekordy (anulowane rezerwacje).
-            # Brak pola "refunded" (None/missing) → stary rekord → liczymy (kompatybilność).
             if r.get("refunded") is not True:
                 net_overdraft += r.get("overdraft", 0)
         elif r["type"] == "purchase":
-            # Pomiń niezatwierdzone wykupy (oczekujące na zatwierdzenie admina).
-            # approved=False → pending → pomijamy.
-            # Brak pola "approved" (None/missing) → stary rekord → liczymy (kompatybilność).
             if r.get("approved") is not False:
                 net_overdraft -= r.get("amount", 0)
 
-    return positive - net_overdraft
+    result = positive - net_overdraft
+
+    _debug_dump("WYJŚCIE", {
+        "positive_balance": positive,
+        "net_overdraft": net_overdraft,
+        "balance": result,
+    })
+    return result
 
 
 def compute_next_expiry(records, now=None):
     """Zwraca datę najbliższego wygaśnięcia godzinek (najstarsza pula z remaining > 0)."""
     if now is None:
         now = datetime.now(timezone.utc)
+
+    _debug_line("SPRAWDZAM: compute_next_expiry")
+    _debug_dump("WEJŚCIE.records", records)
+    _debug_dump("WEJŚCIE.now", now)
 
     candidates = []
     for r in records:
@@ -143,7 +237,12 @@ def compute_next_expiry(records, now=None):
         if exp and exp > now:
             candidates.append(exp)
 
-    return min(candidates) if candidates else None
+    result = min(candidates) if candidates else None
+    _debug_dump("WYJŚCIE", {
+        "candidates": candidates,
+        "next_expiry": result,
+    })
+    return result
 
 
 def deduct_hours(records, amount, vars_config, now=None):
@@ -156,24 +255,43 @@ def deduct_hours(records, amount, vars_config, now=None):
     if now is None:
         now = datetime.now(timezone.utc)
 
+    _debug_line("SPRAWDZAM: deduct_hours")
+    _debug_dump("WEJŚCIE.records", records)
+    _debug_dump("WEJŚCIE.amount", amount)
+    _debug_dump("WEJŚCIE.vars_config", vars_config)
+    _debug_dump("WEJŚCIE.now", now)
+
     records = deepcopy(records)
 
     negative_limit = vars_config.get("negativeBalanceLimit", 20)
 
-    # Oblicz bieżące saldo
     current_balance = compute_balance(records, now)
     new_balance = current_balance - amount
 
+    _debug_dump("ETAP: wstępne saldo", {
+        "current_balance": current_balance,
+        "amount_to_deduct": amount,
+        "new_balance": new_balance,
+        "negative_limit": negative_limit,
+    })
+
     if new_balance < -negative_limit:
-        return (
+        result = (
             False,
             "negative_limit_exceeded",
             f"Saldo zejdzie poniżej limitu -{negative_limit}. Aktualny balans: {current_balance:.1f}, próba odliczenia: {amount}",
             records,
             None,
         )
+        _debug_dump("WYJŚCIE", {
+            "ok": result[0],
+            "code": result[1],
+            "message": result[2],
+            "updated_records": result[3],
+            "spend_record": result[4],
+        })
+        return result
 
-    # Posortuj earn FIFO (najstarsze najpierw)
     earn_records = sorted(
         [r for r in records
          if r["type"] == "earn"
@@ -184,6 +302,8 @@ def deduct_hours(records, amount, vars_config, now=None):
         key=lambda r: r["granted_at"],
     )
 
+    _debug_dump("ETAP: pule FIFO po sortowaniu", earn_records)
+
     remaining_to_deduct = amount
     from_earn = 0
 
@@ -192,15 +312,37 @@ def deduct_hours(records, amount, vars_config, now=None):
             break
         available = earn["remaining"]
         take = min(available, remaining_to_deduct)
+
+        _debug_dump("ETAP: zużycie z puli", {
+            "pool_before": earn,
+            "available": available,
+            "take": take,
+            "remaining_to_deduct_before": remaining_to_deduct,
+        })
+
         earn["remaining"] -= take
         from_earn += take
         remaining_to_deduct -= take
+
+        _debug_dump("ETAP: pula po zużyciu", {
+            "pool_after": earn,
+            "from_earn_accumulated": from_earn,
+            "remaining_to_deduct_after": remaining_to_deduct,
+        })
 
     overdraft = remaining_to_deduct
     spend_record = make_spend(amount, from_earn=from_earn, overdraft=overdraft)
     records.append(spend_record)
 
-    return (True, None, None, records, spend_record)
+    result = (True, None, None, records, spend_record)
+    _debug_dump("WYJŚCIE", {
+        "ok": result[0],
+        "code": result[1],
+        "message": result[2],
+        "updated_records": result[3],
+        "spend_record": result[4],
+    })
+    return result
 
 
 def purchase_negative_balance(records, amount, now=None):
@@ -211,23 +353,54 @@ def purchase_negative_balance(records, amount, now=None):
     if now is None:
         now = datetime.now(timezone.utc)
 
+    _debug_line("SPRAWDZAM: purchase_negative_balance")
+    _debug_dump("WEJŚCIE.records", records)
+    _debug_dump("WEJŚCIE.amount", amount)
+    _debug_dump("WEJŚCIE.now", now)
+
     records = deepcopy(records)
     current_balance = compute_balance(records, now)
 
+    _debug_dump("ETAP: saldo przed wykupem", {
+        "current_balance": current_balance,
+    })
+
     if current_balance >= 0:
-        return (False, "balance_not_negative", "Saldo nie jest ujemne — nie można wykupić.", records)
+        result = (False, "balance_not_negative", "Saldo nie jest ujemne — nie można wykupić.", records)
+        _debug_dump("WYJŚCIE", {
+            "ok": result[0],
+            "code": result[1],
+            "message": result[2],
+            "updated_records": result[3],
+        })
+        return result
 
     max_purchase = abs(current_balance)
     if amount > max_purchase:
-        return (
+        result = (
             False,
             "purchase_exceeds_debt",
             f"Wykup przeniósłby saldo na plus. Maksymalna dozwolona kwota: {max_purchase:.1f}",
             records,
         )
+        _debug_dump("WYJŚCIE", {
+            "ok": result[0],
+            "code": result[1],
+            "message": result[2],
+            "updated_records": result[3],
+        })
+        return result
 
     records.append(make_purchase(amount))
-    return (True, None, None, records)
+    result = (True, None, None, records)
+
+    _debug_dump("WYJŚCIE", {
+        "ok": result[0],
+        "code": result[1],
+        "message": result[2],
+        "updated_records": result[3],
+    })
+    return result
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -238,7 +411,7 @@ NOW = _dt(2026, 3, 28)  # dziś w testach
 VARS = {"negativeBalanceLimit": 20}
 
 
-class TestBilansApproval(unittest.TestCase):
+class TestBilansApproval(VerboseBusinessTestCase):
     """Testy zatwierdzania godzinek (approved)."""
 
     def test_niezatwierdzone_nie_licza_sie_do_bilansu(self):
@@ -287,10 +460,13 @@ class TestBilansApproval(unittest.TestCase):
         records[0]["remaining"] = records[0]["amount"]
         records[0]["expires_at"] = _dt(2030, 1, 1)  # +4 lata
 
+        _debug_line("SYMULACJA SYNCHRONIZACJI / APPROVAL")
+        _debug_dump("RECORD PO ZMIANIE", records[0])
+
         self.assertEqual(compute_balance(records, NOW), 10)
 
 
-class TestWygasanie(unittest.TestCase):
+class TestWygasanie(VerboseBusinessTestCase):
     """Testy wygasania godzinek po 4 latach."""
 
     def test_wygasle_rekordy_nie_licza_sie(self):
@@ -298,7 +474,6 @@ class TestWygasanie(unittest.TestCase):
         OCZEKIWANE: Godzinki przyznane 5 lat temu (wygasłe 1 rok temu) mają wartość 0 w bilansie.
         """
         records = [make_earn(20, _dt(2020, 1, 1), approved=True)]
-        # expires_at = 2024-01-01, co jest przed NOW=2026
         self.assertLess(records[0]["expires_at"], NOW)
         self.assertEqual(compute_balance(records, NOW), 0)
 
@@ -315,9 +490,7 @@ class TestWygasanie(unittest.TestCase):
         OCZEKIWANE: Godzinki wygasające dziś (expiresAt == NOW) NIE są liczone — warunek strict >now.
         """
         records = [make_earn(10, _dt(2022, 3, 28), approved=True)]
-        # expires_at = 2026-03-28 == NOW
         self.assertEqual(records[0]["expires_at"], NOW)
-        # strict > NOW: równe nie przechodzi
         self.assertEqual(compute_balance(records, NOW), 0)
 
     def test_mix_wygasle_i_aktualne(self):
@@ -366,7 +539,7 @@ class TestWygasanie(unittest.TestCase):
         self.assertIsNone(compute_next_expiry(records, NOW))
 
 
-class TestFIFO(unittest.TestCase):
+class TestFIFO(VerboseBusinessTestCase):
     """Testy wydawania FIFO — najstarsze pule zużywane najpierw."""
 
     def test_fifo_jedna_pula_pelne_zuzycie(self):
@@ -403,7 +576,7 @@ class TestFIFO(unittest.TestCase):
         """
         pula_a = make_earn(10, _dt(2024, 1, 1), approved=True)  # starsza
         pula_b = make_earn(10, _dt(2025, 1, 1), approved=True)  # nowsza
-        records = [pula_b, pula_a]  # celowo w odwrotnej kolejności — FIFO ma je posortować
+        records = [pula_b, pula_a]
 
         ok, _, _, updated, spend = deduct_hours(records, 15, VARS, NOW)
 
@@ -464,7 +637,7 @@ class TestFIFO(unittest.TestCase):
         OCZEKIWANE: FIFO nie tknrze niezatwierdzonych rekordów earn. Wydanie ze swobodnych pul tylko.
         """
         niezatwierdzone = make_earn(100, _dt(2025, 1, 1), approved=False)
-        zatwierdzone    = make_earn(10,  _dt(2025, 6, 1), approved=True)
+        zatwierdzone = make_earn(10, _dt(2025, 6, 1), approved=True)
 
         ok, _, _, updated, spend = deduct_hours([niezatwierdzone, zatwierdzone], 10, VARS, NOW)
 
@@ -478,8 +651,8 @@ class TestFIFO(unittest.TestCase):
         OCZEKIWANE: FIFO nie używa wygasłych rekordów earn.
         Wygasła pula 50h + aktualna 5h. Wydanie 5h → overdraft=0, zużyte z aktualnej.
         """
-        wygasla  = make_earn(50, _dt(2019, 1, 1), approved=True)  # wygasła w 2023
-        aktualna = make_earn(5,  _dt(2025, 1, 1), approved=True)
+        wygasla = make_earn(50, _dt(2019, 1, 1), approved=True)
+        aktualna = make_earn(5, _dt(2025, 1, 1), approved=True)
 
         ok, _, _, updated, spend = deduct_hours([wygasla, aktualna], 5, VARS, NOW)
 
@@ -488,7 +661,7 @@ class TestFIFO(unittest.TestCase):
         self.assertEqual(spend["from_earn"], 5)
 
 
-class TestSaldoUjemne(unittest.TestCase):
+class TestSaldoUjemne(VerboseBusinessTestCase):
     """Testy salda ujemnego — limit, blokada, dopuszczalne schodzenie na minus."""
 
     def test_schodzenie_na_minus_dozwolone_do_limitu(self):
@@ -530,12 +703,10 @@ class TestSaldoUjemne(unittest.TestCase):
         Bilans = -19, próba wydania 2h → nowe saldo = -21 > limit(-20) → BLOKADA.
         """
         records = [make_earn(1, _dt(2025, 1, 1), approved=True)]
-        # Wydaj 20h (saldo = 1 - 20 = -19, ok)
         ok1, _, _, records, _ = deduct_hours(records, 20, {"negativeBalanceLimit": 20}, NOW)
         self.assertTrue(ok1)
         self.assertEqual(compute_balance(records, NOW), -19)
 
-        # Teraz spróbuj wydać jeszcze 2h → saldo = -21 > limit → BLOKADA
         ok2, code, _, _, _ = deduct_hours(records, 2, {"negativeBalanceLimit": 20}, NOW)
         self.assertFalse(ok2)
         self.assertEqual(code, "negative_limit_exceeded")
@@ -554,7 +725,7 @@ class TestSaldoUjemne(unittest.TestCase):
         self.assertEqual(code2, "negative_limit_exceeded")
 
 
-class TestWykup(unittest.TestCase):
+class TestWykup(VerboseBusinessTestCase):
     """Testy wykupu salda ujemnego."""
 
     def test_wykup_przy_ujemnym_saldzie(self):
@@ -631,9 +802,8 @@ class TestWykup(unittest.TestCase):
             make_earn(5, _dt(2025, 1, 1), approved=True),
             make_spend(10, from_earn=5, overdraft=5),
         ]
-        self.assertEqual(compute_balance(records, NOW), 0)  # 5 - 5 = 0
+        self.assertEqual(compute_balance(records, NOW), 0)
 
-        # Teraz dodaj jeszcze wydanie żeby saldo było ujemne
         records2 = [
             make_earn(5, _dt(2025, 1, 1), approved=True, remaining=0),
             make_spend(10, from_earn=5, overdraft=5),
@@ -645,7 +815,7 @@ class TestWykup(unittest.TestCase):
         self.assertEqual(compute_balance(updated, NOW), -2)
 
 
-class TestWarunkiBrzegowe(unittest.TestCase):
+class TestWarunkiBrzegowe(VerboseBusinessTestCase):
     """Testy warunków brzegowych."""
 
     def test_brak_rekordow_bilans_zero(self):
@@ -666,7 +836,7 @@ class TestWarunkiBrzegowe(unittest.TestCase):
         """
         records = [
             make_earn(100, _dt(2018, 1, 1), approved=True),
-            make_earn(50,  _dt(2019, 6, 1), approved=True),
+            make_earn(50, _dt(2019, 6, 1), approved=True),
         ]
         self.assertEqual(compute_balance(records, NOW), 0)
 
@@ -721,11 +891,10 @@ class TestWarunkiBrzegowe(unittest.TestCase):
         BEZ FIFO błąd: bilans = B.amount(10) - spend(12) = -2.
         Z FIFO poprawnie: bilans = B.remaining(8) = 8.
         """
-        past_now = _dt(2025, 6, 1)  # obie pule jeszcze aktywne
-        pula_a = make_earn(10, _dt(2022, 1, 1), approved=True)  # wygasa 2026-01-01 (aktywna w past_now)
-        pula_b = make_earn(10, _dt(2025, 1, 1), approved=True)  # wygasa 2029-01-01
+        past_now = _dt(2025, 6, 1)
+        pula_a = make_earn(10, _dt(2022, 1, 1), approved=True)
+        pula_b = make_earn(10, _dt(2025, 1, 1), approved=True)
 
-        # Krok 1: Wydanie 12h zanim A wygaśnie
         ok, _, _, updated, spend = deduct_hours([pula_a, pula_b], 12, VARS, past_now)
         self.assertTrue(ok, "Wydanie 12h powinno się udać gdy obie pule są aktywne")
         self.assertEqual(spend["overdraft"], 0, "Całe 12h z earn — brak overdraftu")
@@ -735,9 +904,7 @@ class TestWarunkiBrzegowe(unittest.TestCase):
         self.assertEqual(a["remaining"], 0, "Starsza pula A wyczerpana przez FIFO")
         self.assertEqual(b["remaining"], 8, "Nowsza pula B ma remaining=8 po zużyciu 2h")
 
-        # Krok 2: Sprawdź bilans PO wygaśnięciu A (NOW = 2026-03-28 > expiresAt A = 2026-01-01)
         balance_after_expiry = compute_balance(updated, NOW)
-        # A wygasła (remaining=0 i tak), B.remaining=8 → bilans=8
         self.assertEqual(balance_after_expiry, 8, "Bilans po wygaśnięciu A = B.remaining = 8 (FIFO poprawne)")
 
     def test_pełna_ścieżka_submit_approve_spend_expiry(self):
@@ -748,36 +915,32 @@ class TestWarunkiBrzegowe(unittest.TestCase):
         3. Wydanie 7h FIFO — bilans=3
         4. Wygaśnięcie po 4 latach — bilans=0 (remaining=3 ale wygasłe)
         """
-        # 1. Zgłoszenie
         records = [make_earn(10, _dt(2022, 1, 1), approved=False)]
         self.assertEqual(compute_balance(records, NOW), 0)
 
-        # 2. Zatwierdzenie (sync ustawia approved=True, remaining=amount, expiresAt=+4lat)
         records[0]["approved"] = True
         records[0]["remaining"] = 10
-        records[0]["expires_at"] = _dt(2026, 1, 1)  # wygaśnie 2026-01-01 < NOW(2026-03-28)
+        records[0]["expires_at"] = _dt(2026, 1, 1)
 
-        # Uwaga: expires_at = 2026-01-01 < NOW = 2026-03-28 — te godzinki już wygasły!
-        # Normalnie approved ustawia expiresAt = grantedAt + 4 lata = 2026-01-01
+        _debug_line("SYMULACJA ZATWIERDZENIA W PEŁNEJ ŚCIEŻCE")
+        _debug_dump("RECORD PO APPROVAL", records[0])
+
         self.assertLess(records[0]["expires_at"], NOW)
         balance_approved = compute_balance(records, NOW)
         self.assertEqual(balance_approved, 0, "Już wygasłe po zatwierdzeniu — bilans=0")
 
-        # Test z niewygasłymi: grantedAt=2024, expires=2028
-        records2 = [make_earn(10, _dt(2024, 1, 1), approved=True)]  # expires 2028
+        records2 = [make_earn(10, _dt(2024, 1, 1), approved=True)]
         self.assertEqual(compute_balance(records2, NOW), 10)
 
-        # 3. Wydanie 7h
         ok, _, _, records3, _ = deduct_hours(records2, 7, VARS, NOW)
         self.assertTrue(ok)
         self.assertEqual(compute_balance(records3, NOW), 3)
 
-        # 4. Wygaśnięcie: symuluj upływ czasu ponad 4 lata
-        future_now = _dt(2029, 1, 2)  # po wygaśnięciu
+        future_now = _dt(2029, 1, 2)
         self.assertEqual(compute_balance(records3, future_now), 0)
 
 
-class TestRefundowaneIWykupApproval(unittest.TestCase):
+class TestRefundowaneIWykupApproval(VerboseBusinessTestCase):
     """
     Testy kompatybilności wstecznej i flag refunded/approved.
     Pokrywają logikę której brakowało w poprzedniej wersji testów.
@@ -794,8 +957,7 @@ class TestRefundowaneIWykupApproval(unittest.TestCase):
             make_earn(10, _dt(2025, 1, 1), approved=True),
             make_spend(10, from_earn=10, overdraft=0, refunded=True),
         ]
-        self.assertEqual(compute_balance(records, NOW), 10,
-            "Zrefundowany spend nie może obciążać bilansu")
+        self.assertEqual(compute_balance(records, NOW), 10, "Zrefundowany spend nie może obciążać bilansu")
 
     def test_niezrefundowany_spend_liczy_sie(self):
         """
@@ -807,8 +969,6 @@ class TestRefundowaneIWykupApproval(unittest.TestCase):
         records = [make_earn(10, _dt(2025, 1, 1), approved=True)]
         ok, _, _, records, spend = deduct_hours(records, 7, VARS, NOW)
         self.assertTrue(ok)
-        # spend ma refunded=False domyślnie w make_spend, ale deduct_hours nie ustawia refunded
-        # Weryfikujemy że saldo = 3 (earn.remaining=3, overdraft=0)
         self.assertEqual(compute_balance(records, NOW), 3)
 
     def test_stary_spend_bez_pola_refunded_liczy_sie(self):
@@ -817,9 +977,8 @@ class TestRefundowaneIWykupApproval(unittest.TestCase):
         traktowany jak refunded=False (obciąża bilans).
         CEL: Nie możemy zepsuć istniejących danych w Firestore.
         """
-        spend_legacy = {"type": "spend", "amount": 5, "overdraft": 5}  # brak klucza refunded
-        self.assertEqual(compute_balance([spend_legacy], NOW), -5,
-            "Stary rekord bez pola refunded musi obciążać bilans")
+        spend_legacy = {"type": "spend", "amount": 5, "overdraft": 5}
+        self.assertEqual(compute_balance([spend_legacy], NOW), -5, "Stary rekord bez pola refunded musi obciążać bilans")
 
     def test_niezatwierdzony_purchase_nie_liczy_sie(self):
         """
@@ -832,8 +991,7 @@ class TestRefundowaneIWykupApproval(unittest.TestCase):
             make_spend(10, from_earn=0, overdraft=10),
             make_purchase(10, approved=False),
         ]
-        self.assertEqual(compute_balance(records, NOW), -10,
-            "Niezatwierdzony wykup nie może zmieniać bilansu")
+        self.assertEqual(compute_balance(records, NOW), -10, "Niezatwierdzony wykup nie może zmieniać bilansu")
 
     def test_zatwierdzony_purchase_redukuje_overdraft(self):
         """
@@ -852,10 +1010,9 @@ class TestRefundowaneIWykupApproval(unittest.TestCase):
         SPRAWDZAM: kompatybilność wsteczna — stary rekord purchase bez pola 'approved'
         traktowany jak approved=True (redukuje overdraft).
         """
-        purchase_legacy = {"type": "purchase", "amount": 5}  # brak klucza approved
+        purchase_legacy = {"type": "purchase", "amount": 5}
         spend = make_spend(5, from_earn=0, overdraft=5)
-        self.assertEqual(compute_balance([spend, purchase_legacy], NOW), 0,
-            "Stary rekord purchase bez pola approved musi redukować overdraft")
+        self.assertEqual(compute_balance([spend, purchase_legacy], NOW), 0, "Stary rekord purchase bez pola approved musi redukować overdraft")
 
     def test_mix_refunded_i_aktywnych_spend(self):
         """
@@ -873,7 +1030,6 @@ class TestRefundowaneIWykupApproval(unittest.TestCase):
             make_spend(5, from_earn=5, overdraft=0, refunded=False),
             make_spend(8, from_earn=8, overdraft=0, refunded=True),
         ]
-        # Bilans = earn.remaining(15) - overdraft aktywnych(0) = 15
         self.assertEqual(compute_balance(records, NOW), 15)
 
     def test_mix_approved_i_pending_purchase(self):
@@ -890,7 +1046,7 @@ class TestRefundowaneIWykupApproval(unittest.TestCase):
         self.assertEqual(compute_balance(records, NOW), -10)
 
 
-class TestKorekcjaRezerwacji(unittest.TestCase):
+class TestKorekcjaRezerwacji(VerboseBusinessTestCase):
     """
     Testy logiki korekty i anulowania rezerwacji.
     Pokrywają BUG #1: skrócenie rezerwacji + późniejsze anulowanie.
@@ -903,15 +1059,18 @@ class TestKorekcjaRezerwacji(unittest.TestCase):
         """
         records = list(records)
         expires_at = granted_at.replace(year=granted_at.year + expiry_years)
-        records.append({
+        adjustment = {
             "type": "earn",
             "amount": amount,
             "remaining": amount,
             "granted_at": granted_at,
             "expires_at": expires_at,
             "approved": True,
-            "source_type": "adjustment",  # kluczowe pole
-        })
+            "source_type": "adjustment",
+        }
+        records.append(adjustment)
+        _debug_line("SYMULACJA CREDIT ADJUSTMENT")
+        _debug_dump("DODANY RECORD", adjustment)
         return records
 
     def _simulate_refund_with_adjustment_revocation(self, records, reservation_earn_deductions, overdraft=0):
@@ -920,26 +1079,25 @@ class TestKorekcjaRezerwacji(unittest.TestCase):
         - Przywraca earn.remaining dla FIFO pul
         - Zeruje earn records z source_type='adjustment' (korekty tej rezerwacji)
         - Tworzy nowy earn dla overdraft (jeśli był)
-
-        Parametry:
-          reservation_earn_deductions: lista (earn_idx, amount) — które earn przywrócić
-          overdraft: kwota do zwrotu jako nowa pula earn
         """
+        _debug_line("SYMULACJA REFUND Z REVOKE ADJUSTMENT")
+        _debug_dump("WEJŚCIE.records", records)
+        _debug_dump("WEJŚCIE.reservation_earn_deductions", reservation_earn_deductions)
+        _debug_dump("WEJŚCIE.overdraft", overdraft)
+
         records = deepcopy(records)
 
-        # Przywróć earn pools
         for earn_idx, restore_amount in reservation_earn_deductions:
             records[earn_idx]["remaining"] += restore_amount
 
-        # Wyzeruj earn adjustment records (poprawka BUG #1)
         for r in records:
             if r.get("type") == "earn" and r.get("source_type") == "adjustment":
                 r["remaining"] = 0
 
-        # Dodaj earn za overdraft jeśli był
         if overdraft > 0:
             records.append(make_earn(overdraft, NOW, approved=True))
 
+        _debug_dump("WYJŚCIE.records", records)
         return records
 
     def test_skrocenie_i_anulowanie_bilans_prawidlowy(self):
@@ -957,33 +1115,24 @@ class TestKorekcjaRezerwacji(unittest.TestCase):
 
         OCZEKIWANE PO POPRAWCE: bilans = 20h (powrót do punktu startowego)
         """
-        # Bilans startowy: 20h
         records = [make_earn(20, _dt(2024, 1, 1), approved=True)]
         self.assertEqual(compute_balance(records, NOW), 20)
 
-        # Krok 1: Rezerwacja 10h — earn[0].remaining: 20 → 10, spend(10h) z earn
         ok, _, _, records, spend = deduct_hours(records, 10, VARS, NOW)
         self.assertTrue(ok)
-        self.assertEqual(compute_balance(records, NOW), 10,
-            "Po rezerwacji: bilans = 20 - 10 = 10h")
+        self.assertEqual(compute_balance(records, NOW), 10, "Po rezerwacji: bilans = 20 - 10 = 10h")
 
-        # Krok 2: Skrócenie rezerwacji (delta=-5) → credit adjustment earn +5h
         records = self._simulate_credit_adjustment(records, 5, NOW)
-        self.assertEqual(compute_balance(records, NOW), 15,
-            "Po skróceniu: bilans = 10 + 5 = 15h")
+        self.assertEqual(compute_balance(records, NOW), 15, "Po skróceniu: bilans = 10 + 5 = 15h")
 
-        # Krok 3: Anulowanie z poprawką BUG #1
-        # earn[0] miał remaining=10 po dedukcji, przywracamy 10h
-        earn_idx = next(i for i, r in enumerate(records) if r["type"] == "earn"
-                        and r.get("source_type") != "adjustment")
+        earn_idx = next(i for i, r in enumerate(records) if r["type"] == "earn" and r.get("source_type") != "adjustment")
         records = self._simulate_refund_with_adjustment_revocation(
             records,
             reservation_earn_deductions=[(earn_idx, 10)],
             overdraft=0,
         )
         final_balance = compute_balance(records, NOW)
-        self.assertEqual(final_balance, 20,
-            f"Po anulowaniu z poprawką: bilans musi wrócić do 20h, jest {final_balance}h")
+        self.assertEqual(final_balance, 20, f"Po anulowaniu z poprawką: bilans musi wrócić do 20h, jest {final_balance}h")
 
     def test_skrocenie_bez_anulowania_bilans_prawidlowy(self):
         """
@@ -1018,27 +1167,19 @@ class TestKorekcjaRezerwacji(unittest.TestCase):
 
         ok2, _, _, records, _ = deduct_hours(records, 5, VARS, NOW)
         self.assertTrue(ok2)
-        self.assertEqual(compute_balance(records, NOW), 5,
-            "Po wydłużeniu: bilans = 10 - 5 = 5h")
+        self.assertEqual(compute_balance(records, NOW), 5, "Po wydłużeniu: bilans = 10 - 5 = 5h")
 
-        # Anulowanie — zerujemy wszystkie spend (brak adjustment earn w tym scenariuszu)
-        for r in records:
-            if r["type"] == "spend":
-                earn_restore = r.get("from_earn", 0)
-                # uproszczona symulacja: przywróć earn records
-        # Użyj bezpośredniej symulacji — oba spend mają overdraft=0, from_earn=suma
-        # Po dedukcji earn[0].remaining: 20 → 10 → 5
-        # Przywróć: +10 + +5 = 15, ale earn[0].remaining=5 → +15 = 20 ✓
         records_refunded = deepcopy(records)
         earn_rec = next(r for r in records_refunded if r["type"] == "earn")
-        # remaining=5 + 15(oba spend) = 20
         earn_rec["remaining"] = 20
         for r in records_refunded:
             if r["type"] == "spend":
                 r["refunded"] = True
 
-        self.assertEqual(compute_balance(records_refunded, NOW), 20,
-            "Po anulowaniu wydłużonej rezerwacji bilans musi wrócić do 20h")
+        _debug_line("SYMULACJA ANULOWANIA WYDŁUŻONEJ REZERWACJI")
+        _debug_dump("RECORDS PO REFUND", records_refunded)
+
+        self.assertEqual(compute_balance(records_refunded, NOW), 20, "Po anulowaniu wydłużonej rezerwacji bilans musi wrócić do 20h")
 
     def test_wielokrotne_skrocenia_i_anulowanie(self):
         """
@@ -1057,21 +1198,18 @@ class TestKorekcjaRezerwacji(unittest.TestCase):
 
         records = self._simulate_credit_adjustment(records, 2, NOW)
         records = self._simulate_credit_adjustment(records, 3, NOW)
-        self.assertEqual(compute_balance(records, NOW), 15,
-            "Po dwóch skróceniach: bilans = 10 + 2 + 3 = 15h")
+        self.assertEqual(compute_balance(records, NOW), 15, "Po dwóch skróceniach: bilans = 10 + 2 + 3 = 15h")
 
-        earn_idx = next(i for i, r in enumerate(records)
-                        if r["type"] == "earn" and r.get("source_type") != "adjustment")
+        earn_idx = next(i for i, r in enumerate(records) if r["type"] == "earn" and r.get("source_type") != "adjustment")
         records = self._simulate_refund_with_adjustment_revocation(
             records,
             reservation_earn_deductions=[(earn_idx, 10)],
             overdraft=0,
         )
-        self.assertEqual(compute_balance(records, NOW), 20,
-            "Po anulowaniu: bilans musi wrócić do 20h")
+        self.assertEqual(compute_balance(records, NOW), 20, "Po anulowaniu: bilans musi wrócić do 20h")
 
 
-class TestWyswietlanieHistorii(unittest.TestCase):
+class TestWyswietlanieHistorii(VerboseBusinessTestCase):
     """Testy poprawności danych do wyświetlenia historii."""
 
     def test_historia_zawiera_wszystkie_typy_rekordow(self):
@@ -1081,7 +1219,7 @@ class TestWyswietlanieHistorii(unittest.TestCase):
         """
         records = [
             make_earn(10, _dt(2025, 1, 1), approved=True),
-            make_earn(5,  _dt(2025, 6, 1), approved=False),  # niezatwierdzone
+            make_earn(5, _dt(2025, 6, 1), approved=False),
             make_spend(3, from_earn=3, overdraft=0),
             make_purchase(2),
         ]
@@ -1099,7 +1237,7 @@ class TestWyswietlanieHistorii(unittest.TestCase):
         OCZEKIWANE: Funkcja compute_next_expiry zwraca datę, którą UI formatuje jako MM-RRRR.
         Np. 2028-06-01 → '06-2028'.
         """
-        records = [make_earn(10, _dt(2024, 6, 1), approved=True)]  # wygasa 2028-06-01
+        records = [make_earn(10, _dt(2024, 6, 1), approved=True)]
         next_exp = compute_next_expiry(records, NOW)
 
         self.assertIsNotNone(next_exp)
@@ -1113,13 +1251,12 @@ class TestWyswietlanieHistorii(unittest.TestCase):
         """
         records = [
             make_earn(10, _dt(2025, 1, 1), approved=True),
-            make_earn(20, _dt(2026, 1, 1), approved=False),  # czeka
+            make_earn(20, _dt(2026, 1, 1), approved=False),
         ]
 
         balance = compute_balance(records, NOW)
         self.assertEqual(balance, 10, "Saldo = 10h (zatwierdzone), nie 30h (z niezatwierdzonym)")
 
-        # W historii widoczne oba
         all_earn = [r for r in records if r["type"] == "earn"]
         self.assertEqual(len(all_earn), 2)
 
@@ -1127,7 +1264,7 @@ class TestWyswietlanieHistorii(unittest.TestCase):
         self.assertEqual(len(pending), 1)
 
 
-class TestStorageMiesieczna(unittest.TestCase):
+class TestStorageMiesieczna(VerboseBusinessTestCase):
     """
     Testy logiki naliczania miesięcznej opłaty za prywatne kajaki (gear.chargePrivateStorage).
     Pokrywają:
@@ -1135,32 +1272,36 @@ class TestStorageMiesieczna(unittest.TestCase):
       - Integrację z deduct_hours: naliczenie odlicza godzinki, niedobór schodzi na minus
     """
 
-    # ---- Pomocnicze odpowiedniki funkcji z gearPrivateStorage.ts ----
-
     def _first_chargeable_month(self, private_since_iso):
         """Mirrors firstChargeableMonth() — zwraca 'YYYY-MM' pierwszego naliczalnego miesiąca."""
         import re
         if not private_since_iso or not re.match(r"^\d{4}-\d{2}-\d{2}", private_since_iso):
+            _debug_dump("first_chargeable_month.INVALID_INPUT", {"private_since_iso": private_since_iso, "result": None})
             return None
         try:
             d = datetime.strptime(private_since_iso[:10], "%Y-%m-%d")
         except ValueError:
+            _debug_dump("first_chargeable_month.INVALID_DATE", {"private_since_iso": private_since_iso, "result": None})
             return None
-        # Następny pełny miesiąc
         if d.month == 12:
             nxt = datetime(d.year + 1, 1, 1)
         else:
             nxt = datetime(d.year, d.month + 1, 1)
-        return f"{nxt.year}-{nxt.month:02d}"
+        result = f"{nxt.year}-{nxt.month:02d}"
+        _debug_dump("first_chargeable_month.RESULT", {"private_since_iso": private_since_iso, "result": result})
+        return result
 
     def _is_chargeable_this_month(self, private_since_iso, current_month):
         """Mirrors isChargeableThisMonth() — true jeśli current_month >= firstChargeableMonth."""
         first = self._first_chargeable_month(private_since_iso)
-        if not first:
-            return False
-        return current_month >= first
-
-    # ---- Testy firstChargeableMonth ----
+        result = bool(first and current_month >= first)
+        _debug_dump("is_chargeable_this_month.RESULT", {
+            "private_since_iso": private_since_iso,
+            "current_month": current_month,
+            "first_chargeable_month": first,
+            "result": result,
+        })
+        return result
 
     def test_wejscie_drugiego_marca_pierwszy_miesiąc_kwiecień(self):
         """Kajak wszedł 02.03 → marzec niepełny → pierwszy naliczany = kwiecień."""
@@ -1184,8 +1325,6 @@ class TestStorageMiesieczna(unittest.TestCase):
         self.assertIsNone(self._first_chargeable_month(None))
         self.assertIsNone(self._first_chargeable_month("nie-data"))
 
-    # ---- Testy isChargeableThisMonth (harmonogram) ----
-
     def test_scheduler_01_04_dla_kajaka_z_02_03_nalicza(self):
         """Scheduler działa 01.04 — kajak wszedł 02.03 — naliczamy (2025-04 >= 2025-04)."""
         self.assertTrue(self._is_chargeable_this_month("2025-03-02", "2025-04"))
@@ -1204,11 +1343,9 @@ class TestStorageMiesieczna(unittest.TestCase):
 
     def test_pierwszy_naliczany_miesiac_dokladnie(self):
         """Bieżący miesiąc == firstChargeableMonth → granica — naliczamy."""
-        first = self._first_chargeable_month("2025-06-10")  # = "2025-07"
+        first = self._first_chargeable_month("2025-06-10")
         self.assertEqual(first, "2025-07")
         self.assertTrue(self._is_chargeable_this_month("2025-06-10", "2025-07"))
-
-    # ---- Testy integracji z deduct_hours ----
 
     def test_oplata_storage_odlicza_godzinki(self):
         """
@@ -1221,8 +1358,7 @@ class TestStorageMiesieczna(unittest.TestCase):
         ok, _, _, records, spend = deduct_hours(records, cost, VARS, NOW)
         self.assertTrue(ok, "Dedukcja opłaty storage musi się udać")
         self.assertEqual(spend.get("overdraft", 0), 0, "Brak overdraft przy wystarczającym saldzie")
-        self.assertEqual(compute_balance(records, NOW), 25,
-            "Po naliczeniu: bilans = 30 - 5 = 25h")
+        self.assertEqual(compute_balance(records, NOW), 25, "Po naliczeniu: bilans = 30 - 5 = 25h")
 
     def test_oplata_storage_przy_niewystarczajacym_saldzie_schodzi_na_minus(self):
         """
@@ -1235,8 +1371,7 @@ class TestStorageMiesieczna(unittest.TestCase):
         ok, _, _, records, spend = deduct_hours(records, cost, VARS, NOW)
         self.assertTrue(ok, "Dedukcja w overdraft musi się udać (system nie blokuje przy storage)")
         self.assertEqual(spend.get("overdraft", 0), 3, "Overdraft = 5 - 2 = 3h")
-        self.assertEqual(compute_balance(records, NOW), -3,
-            "Bilans ujemny = -3h po naliczeniu ponad saldo")
+        self.assertEqual(compute_balance(records, NOW), -3, "Bilans ujemny = -3h po naliczeniu ponad saldo")
 
     def test_oplata_storage_blokada_przy_przekroczeniu_limitu(self):
         """
@@ -1246,13 +1381,11 @@ class TestStorageMiesieczna(unittest.TestCase):
         """
         vars_low_limit = dict(VARS)
         vars_low_limit["max_overdraft"] = 50
-        # Symuluj istniejący overdraft 100h
         records = [make_spend(100, from_earn=0, overdraft=100)]
         cost = 5
         ok, code, _, _, _ = deduct_hours(records, cost, vars_low_limit, NOW)
         self.assertFalse(ok, "Przekroczenie limitu overdraft musi blokować naliczenie")
-        self.assertEqual(code, "negative_limit_exceeded",
-            "Kod błędu musi być negative_limit_exceeded przy przekroczeniu limitu")
+        self.assertEqual(code, "negative_limit_exceeded", "Kod błędu musi być negative_limit_exceeded przy przekroczeniu limitu")
 
 
 if __name__ == "__main__":

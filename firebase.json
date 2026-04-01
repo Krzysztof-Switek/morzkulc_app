@@ -144,6 +144,20 @@
         }
       },
       {
+        "source": "/api/gear/reservations/create-bundle",
+        "function": {
+          "functionId": "createBundleGearReservation",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/gear/items/availability",
+        "function": {
+          "functionId": "getGearItemAvailability",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "/api/gear/reservations/update",
         "function": {
           "functionId": "updateGearReservation",

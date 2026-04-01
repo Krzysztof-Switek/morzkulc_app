@@ -12,6 +12,8 @@ import {handleGetGearKayaks} from "./api/getGearKayaksHandler";
 import {handleGetGearItems} from "./api/getGearItemsHandler";
 import {handleGearMyReservations} from "./api/gearMyReservationsHandler";
 import {handleGearReservationCreate} from "./api/gearReservationCreateHandler";
+import {handleGearBundleReservationCreate} from "./api/gearBundleReservationCreateHandler";
+import {handleGetGearItemAvailability} from "./api/getGearItemAvailabilityHandler";
 import {handleGearReservationUpdate} from "./api/gearReservationUpdateHandler";
 import {handleGearReservationCancel} from "./api/gearReservationCancelHandler";
 import {handleGetGearFavorites} from "./api/getGearFavoritesHandler";
@@ -493,6 +495,34 @@ export const getGearMyReservations = onRequest({invoker: "private"}, async (req,
  */
 export const createGearReservation = onRequest({invoker: "private"}, async (req, res) => {
   return handleGearReservationCreate(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * POST /api/gear/reservations/create-bundle (authenticated)
+ */
+export const createBundleGearReservation = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGearBundleReservationCreate(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * GET /api/gear/items/availability?category=X&startDate=YYYY-MM-DD&endDate=YYYY-MM-DD (authenticated)
+ */
+export const getGearItemAvailability = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetGearItemAvailability(req, res, {
     db,
     sendPreflight,
     requireAllowedHost,

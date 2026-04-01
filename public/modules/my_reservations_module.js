@@ -539,6 +539,13 @@ async function renderDedicatedEditView({ viewEl, reservationId, ctx }) {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function getReservationKayakTitles(rsv, kayakMap) {
+  // Bundle reservations: use items[] for rich labels, fall back to kayakIds[] for legacy.
+  if (Array.isArray(rsv?.items) && rsv.items.length > 0) {
+    return rsv.items.map((item) => {
+      const label = String(item?.itemLabel || item?.itemNumber || item?.itemId || "?");
+      return label;
+    });
+  }
   const kayakIds = Array.isArray(rsv?.kayakIds) ? rsv.kayakIds.map(String) : [];
   return kayakIds.map((id) => kayakMap.get(id) || `Kajak ID ${id}`);
 }

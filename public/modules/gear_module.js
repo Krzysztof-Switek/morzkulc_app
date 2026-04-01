@@ -7,6 +7,8 @@ const NAV_HOME_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height=
 
 const GEAR_URL = "/api/gear/kayaks";
 const CREATE_RESERVATION_URL = "/api/gear/reservations/create";
+const CREATE_BUNDLE_RESERVATION_URL = "/api/gear/reservations/create-bundle";
+const GEAR_ITEM_AVAILABILITY_URL = "/api/gear/items/availability";
 const GEAR_FAVORITES_URL = "/api/gear/favorites";
 const GEAR_FAVORITES_TOGGLE_URL = "/api/gear/favorites/toggle";
 const KAYAK_RESERVATIONS_URL = "/api/gear/kayak-reservations";
@@ -167,53 +169,104 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
           </div>
         </div>
 
-        <div id="gearReservationModal" class="gearModal hidden" aria-hidden="true">
-          <div class="gearModalBackdrop" data-gear-reservation-close="1"></div>
-          <div class="gearModalCard" role="dialog" aria-modal="true" aria-label="Rezerwacja kajaka">
-            <div class="gearModalTop">
-              <div class="gearModalTitle" id="gearReservationTitle">Rezerwacja</div>
-              <button class="gearModalClose" type="button" data-gear-reservation-close="1" aria-label="Zamknij">✕</button>
+        <div id=”gearReservationModal” class=”gearModal hidden” aria-hidden=”true”>
+          <div class=”gearModalBackdrop” data-gear-reservation-close=”1”></div>
+          <div class=”gearModalCard” role=”dialog” aria-modal=”true” aria-label=”Rezerwacja kajaka”>
+            <div class=”gearModalTop”>
+              <div class=”gearModalTitle” id=”gearReservationTitle”>Rezerwacja</div>
+              <button class=”gearModalClose” type=”button” data-gear-reservation-close=”1” aria-label=”Zamknij”>✕</button>
             </div>
 
-            <div class="gearModalBody">
-              <div style="width:100%; max-width:520px;">
-                <div id="reservationInfo" class="hint" style="margin-bottom:10px;">
+            <div class=”gearModalBody”>
+              <div style=”width:100%; max-width:520px;”>
+                <div id=”reservationInfo” class=”hint” style=”margin-bottom:10px;”>
                   Wybierz kajak i kliknij „Rezerwuj”.
                 </div>
 
-                <div id="reservationOk" class="ok hidden" style="margin-bottom:10px;"></div>
-                <div id="reservationErr" class="err hidden" style="margin-bottom:10px;"></div>
+                <div id=”reservationOk” class=”ok hidden” style=”margin-bottom:10px;”></div>
+                <div id=”reservationErr” class=”err hidden” style=”margin-bottom:10px;”></div>
 
-                <div class="row" style="margin:0;">
-                  <label for="reservationSelectedKayak">Wybrany kajak</label>
-                  <input id="reservationSelectedKayak" type="text" value="" readonly />
+                <div class=”row” style=”margin:0;”>
+                  <label for=”reservationSelectedKayak”>Wybrany kajak</label>
+                  <input id=”reservationSelectedKayak” type=”text” value=”” readonly />
                 </div>
 
-                <div class="row" style="margin-top:10px;">
-                  <label for="reservationStartDate">Data od</label>
-                  <input id="reservationStartDate" type="date" />
+                <div class=”row” style=”margin-top:10px;”>
+                  <label for=”reservationStartDate”>Data od</label>
+                  <input id=”reservationStartDate” type=”date” />
                 </div>
 
-                <div class="row" style="margin-top:10px;">
-                  <label for="reservationEndDate">Data do</label>
-                  <input id="reservationEndDate" type="date" />
+                <div class=”row” style=”margin-top:10px;”>
+                  <label for=”reservationEndDate”>Data do</label>
+                  <input id=”reservationEndDate” type=”date” />
                 </div>
 
-                <div class="hint" style="margin-top:10px;">
+                <div class=”hint” style=”margin-top:10px;”>
                   Rezerwacja blokuje sprzęt dla innych użytkowników. Koszt godzinek i konflikty terminów sprawdza backend.
                 </div>
 
-                <div id="reservationExistingSection" class="gearReservModalSection hidden">
-                  <div class="gearReservModalTitle">Kiedy zajęty?</div>
-                  <div id="reservationExistingContent"></div>
+                <div id=”reservationExistingSection” class=”gearReservModalSection hidden”>
+                  <div class=”gearReservModalTitle”>Kiedy zajęty?</div>
+                  <div id=”reservationExistingContent”></div>
                 </div>
               </div>
             </div>
 
-            <div class="gearModalActions">
-              <button id="reservationCreateBtn" type="button" class="primary">Zapisz rezerwację</button>
-              <button id="reservationClearBtn" type="button" class="ghost">Wyczyść</button>
-              <button type="button" class="ghost" data-gear-reservation-close="1">Zamknij</button>
+            <div class=”gearModalActions”>
+              <button id=”reservationCreateBtn” type=”button” class=”primary”>Zapisz rezerwację</button>
+              <button id=”reservationClearBtn” type=”button” class=”ghost”>Wyczyść</button>
+              <button type=”button” class=”ghost” data-gear-reservation-close=”1”>Zamknij</button>
+            </div>
+          </div>
+        </div>
+
+        <div id=”gearBundleModal” class=”gearModal hidden” aria-hidden=”true”>
+          <div class=”gearModalBackdrop” data-gear-bundle-close=”1”></div>
+          <div class=”gearModalCard” role=”dialog” aria-modal=”true” aria-label=”Rezerwacja sprzętu”>
+            <div class=”gearModalTop”>
+              <div class=”gearModalTitle” id=”gearBundleTitle”>Rezerwacja sprzętu</div>
+              <button class=”gearModalClose” type=”button” data-gear-bundle-close=”1” aria-label=”Zamknij”>✕</button>
+            </div>
+
+            <div class=”gearModalBody”>
+              <div style=”width:100%; max-width:520px;”>
+                <div id=”bundleInfo” class=”hint” style=”margin-bottom:10px;”>
+                  Wybierz termin i zarezerwuj sprzęt.
+                </div>
+
+                <div id=”bundleOk” class=”ok hidden” style=”margin-bottom:10px;”></div>
+                <div id=”bundleErr” class=”err hidden” style=”margin-bottom:10px;”></div>
+
+                <div class=”row” style=”margin:0;”>
+                  <label for=”bundleStartDate”>Data od</label>
+                  <input id=”bundleStartDate” type=”date” />
+                </div>
+
+                <div class=”row” style=”margin-top:10px;”>
+                  <label for=”bundleEndDate”>Data do</label>
+                  <input id=”bundleEndDate” type=”date” />
+                </div>
+
+                <div class=”hint” style=”margin-top:10px;”>
+                  Rezerwacja blokuje sprzęt dla innych użytkowników. Backend sprawdza dostępność i konflikty terminów.
+                </div>
+
+                <div id=”bundleItemsSection” style=”margin-top:14px;”>
+                  <div style=”font-weight:600; margin-bottom:6px;”>Zarezerwowany sprzęt:</div>
+                  <div id=”bundleItemsList” style=”display:flex; flex-wrap:wrap; gap:6px;”></div>
+                </div>
+
+                <div id=”bundleAvailabilitySection” class=”hidden” style=”margin-top:14px;”>
+                  <div style=”font-weight:600; margin-bottom:6px;” id=”bundleAvailabilityTitle”>Dostępność w wybranym terminie:</div>
+                  <div id=”bundleAvailabilityList” style=”display:flex; flex-wrap:wrap; gap:6px;”></div>
+                </div>
+              </div>
+            </div>
+
+            <div class=”gearModalActions”>
+              <button id=”bundleCheckBtn” type=”button” class=”ghost”>Sprawdź dostępność</button>
+              <button id=”bundleCreateBtn” type=”button” class=”primary”>Zapisz rezerwację</button>
+              <button type=”button” class=”ghost” data-gear-bundle-close=”1”>Zamknij</button>
             </div>
           </div>
         </div>
@@ -259,6 +312,26 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
       const reservationClearBtn = viewEl.querySelector("#reservationClearBtn");
       const reservationExistingSectionEl = viewEl.querySelector("#reservationExistingSection");
       const reservationExistingContentEl = viewEl.querySelector("#reservationExistingContent");
+
+      const bundleModalEl = viewEl.querySelector("#gearBundleModal");
+      const bundleTitleEl = viewEl.querySelector("#gearBundleTitle");
+      const bundleInfoEl = viewEl.querySelector("#bundleInfo");
+      const bundleOkEl = viewEl.querySelector("#bundleOk");
+      const bundleErrEl = viewEl.querySelector("#bundleErr");
+      const bundleStartDateEl = viewEl.querySelector("#bundleStartDate");
+      const bundleEndDateEl = viewEl.querySelector("#bundleEndDate");
+      const bundleItemsListEl = viewEl.querySelector("#bundleItemsList");
+      const bundleAvailabilitySectionEl = viewEl.querySelector("#bundleAvailabilitySection");
+      const bundleAvailabilityTitleEl = viewEl.querySelector("#bundleAvailabilityTitle");
+      const bundleAvailabilityListEl = viewEl.querySelector("#bundleAvailabilityList");
+      const bundleCheckBtn = viewEl.querySelector("#bundleCheckBtn");
+      const bundleCreateBtn = viewEl.querySelector("#bundleCreateBtn");
+
+      // Bundle state: starter item + accumulated items to reserve
+      let bundleStarterCategory = "";
+      let bundleStarterItemId = "";
+      // Each entry: { itemId, category, label }
+      let bundleItems = [];
 
       const modalEl = viewEl.querySelector("#gearImgModal");
       const modalImgEl = viewEl.querySelector("#gearModalImg");
@@ -340,6 +413,202 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         document.body.style.overflow = "";
         clearReservationForm();
       };
+
+      // ── Bundle modal helpers ────────────────────────────────────────────────
+
+      function renderBundleItemsList() {
+        bundleItemsListEl.innerHTML = bundleItems.map((bi) => `
+          <div class="bundleItemChip">
+            <span>${escapeHtml(bi.label)}</span>
+            <button
+              type="button"
+              class="bundleItemRemoveBtn"
+              data-bundle-remove-id="${escapeAttr(bi.itemId)}"
+              data-bundle-remove-cat="${escapeAttr(bi.category)}"
+              aria-label="Usuń ${escapeAttr(bi.label)}"
+            >✕</button>
+          </div>
+        `).join("") || `<span class="hint">Brak pozycji.</span>`;
+      }
+
+      const clearBundleModal = () => {
+        bundleStarterCategory = "";
+        bundleStarterItemId = "";
+        bundleItems = [];
+        if (bundleStartDateEl) bundleStartDateEl.value = "";
+        if (bundleEndDateEl) bundleEndDateEl.value = "";
+        if (bundleOkEl) { bundleOkEl.textContent = ""; bundleOkEl.classList.add("hidden"); }
+        if (bundleErrEl) { bundleErrEl.textContent = ""; bundleErrEl.classList.add("hidden"); }
+        if (bundleAvailabilitySectionEl) bundleAvailabilitySectionEl.classList.add("hidden");
+        if (bundleAvailabilityListEl) bundleAvailabilityListEl.innerHTML = "";
+        renderBundleItemsList();
+      };
+
+      const openBundleModal = () => {
+        bundleModalEl.classList.remove("hidden");
+        bundleModalEl.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+      };
+
+      const closeBundleModal = () => {
+        bundleModalEl.classList.add("hidden");
+        bundleModalEl.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+        clearBundleModal();
+      };
+
+      const startBundleForItem = (itemId, category, label) => {
+        clearBundleModal();
+        bundleStarterCategory = String(category || "");
+        bundleStarterItemId = String(itemId || "");
+        bundleItems = [{ itemId: String(itemId || ""), category: String(category || ""), label: String(label || itemId || "?") }];
+        if (bundleTitleEl) bundleTitleEl.textContent = `Rezerwacja – ${label}`;
+        if (bundleInfoEl) bundleInfoEl.textContent = "Wybierz termin i zapisz rezerwację.";
+        renderBundleItemsList();
+        openBundleModal();
+        if (bundleStartDateEl) bundleStartDateEl.focus();
+      };
+
+      const checkBundleAvailability = async () => {
+        const startDate = String(bundleStartDateEl?.value || "").trim();
+        const endDate = String(bundleEndDateEl?.value || "").trim();
+        if (!startDate || !endDate) {
+          if (bundleErrEl) { bundleErrEl.textContent = "Wybierz datę od i do."; bundleErrEl.classList.remove("hidden"); }
+          return;
+        }
+        if (bundleErrEl) { bundleErrEl.textContent = ""; bundleErrEl.classList.add("hidden"); }
+        if (bundleAvailabilitySectionEl) bundleAvailabilitySectionEl.classList.remove("hidden");
+        if (bundleAvailabilityTitleEl) bundleAvailabilityTitleEl.textContent = "Sprawdzam dostępność...";
+        if (bundleAvailabilityListEl) bundleAvailabilityListEl.innerHTML = "";
+        bundleCheckBtn.disabled = true;
+
+        try {
+          const url = `${GEAR_ITEM_AVAILABILITY_URL}?category=${encodeURIComponent(bundleStarterCategory)}&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`;
+          const resp = await apiGetJson({ url, idToken: ctx.idToken });
+          const items = Array.isArray(resp?.items) ? resp.items : [];
+          if (bundleAvailabilityTitleEl) bundleAvailabilityTitleEl.textContent = `Dostępność (${items.length} szt.):`;
+          bundleAvailabilityListEl.innerHTML = items.map((it) => {
+            const available = it?.isAvailableForRange !== false;
+            const alreadySelected = bundleItems.some((bi) => bi.itemId === String(it?.id || "") && bi.category === bundleStarterCategory);
+            const chipClass = available ? "bundleAvailChip bundleAvailChipOk" : "bundleAvailChip bundleAvailChipTaken";
+            const label = String(it?.number || it?.id || "?");
+            if (!available) {
+              return `<div class="${chipClass}">${escapeHtml(label)} – zajęty</div>`;
+            }
+            if (alreadySelected) {
+              return `<div class="${chipClass} bundleAvailChipSelected">${escapeHtml(label)} – dodany</div>`;
+            }
+            return `<button
+              type="button"
+              class="${chipClass}"
+              data-bundle-avail-add-id="${escapeAttr(String(it?.id || ""))}"
+              data-bundle-avail-add-cat="${escapeAttr(bundleStarterCategory)}"
+              data-bundle-avail-add-label="${escapeAttr(label)}"
+            >${escapeHtml(label)} – dostępny ✓</button>`;
+          }).join("") || `<span class="hint">Brak wyników.</span>`;
+        } catch (e) {
+          if (bundleAvailabilityTitleEl) bundleAvailabilityTitleEl.textContent = "Błąd sprawdzania dostępności.";
+          if (bundleAvailabilityListEl) bundleAvailabilityListEl.innerHTML = `<span class="err">${escapeHtml(mapUserFacingApiError(e, "Nie udało się sprawdzić dostępności."))}</span>`;
+        } finally {
+          bundleCheckBtn.disabled = false;
+        }
+      };
+
+      const submitBundleReservation = async () => {
+        if (bundleOkEl) { bundleOkEl.textContent = ""; bundleOkEl.classList.add("hidden"); }
+        if (bundleErrEl) { bundleErrEl.textContent = ""; bundleErrEl.classList.add("hidden"); }
+
+        const startDate = String(bundleStartDateEl?.value || "").trim();
+        const endDate = String(bundleEndDateEl?.value || "").trim();
+
+        if (!startDate || !endDate) {
+          if (bundleErrEl) { bundleErrEl.textContent = "Wybierz datę od i do."; bundleErrEl.classList.remove("hidden"); }
+          return;
+        }
+
+        if (!bundleItems.length) {
+          if (bundleErrEl) { bundleErrEl.textContent = "Brak pozycji do zarezerwowania."; bundleErrEl.classList.remove("hidden"); }
+          return;
+        }
+
+        bundleCreateBtn.disabled = true;
+
+        try {
+          const resp = await apiPostJson({
+            url: CREATE_BUNDLE_RESERVATION_URL,
+            idToken: ctx.idToken,
+            body: {
+              startDate,
+              endDate,
+              items: bundleItems.map(({ itemId, category }) => ({ itemId, category })),
+              starterCategory: bundleStarterCategory,
+              starterItemId: bundleStarterItemId,
+            }
+          });
+
+          if (bundleOkEl) {
+            bundleOkEl.textContent = `Rezerwacja zapisana.${resp?.costHours ? ` Godzinki: ${resp.costHours}` : ""}`;
+            bundleOkEl.classList.remove("hidden");
+          }
+
+          // Refresh the current tab
+          await loadGear(activeTab);
+
+          window.setTimeout(() => closeBundleModal(), 800);
+        } catch (e) {
+          if (bundleErrEl) {
+            bundleErrEl.textContent = mapUserFacingApiError(e, "Nie udało się zapisać rezerwacji.");
+            bundleErrEl.classList.remove("hidden");
+          }
+        } finally {
+          bundleCreateBtn.disabled = false;
+        }
+      };
+
+      bundleModalEl.addEventListener("click", (ev) => {
+        const t = ev.target;
+        if (!t) return;
+
+        if (t.getAttribute && t.getAttribute("data-gear-bundle-close") === "1") {
+          closeBundleModal();
+          return;
+        }
+
+        const removeBtn = t.closest && t.closest("[data-bundle-remove-id]");
+        if (removeBtn) {
+          const removeId = String(removeBtn.getAttribute("data-bundle-remove-id") || "");
+          const removeCat = String(removeBtn.getAttribute("data-bundle-remove-cat") || "");
+          bundleItems = bundleItems.filter((bi) => !(bi.itemId === removeId && bi.category === removeCat));
+          renderBundleItemsList();
+          return;
+        }
+
+        const addBtn = t.closest && t.closest("[data-bundle-avail-add-id]");
+        if (addBtn) {
+          const addId = String(addBtn.getAttribute("data-bundle-avail-add-id") || "");
+          const addCat = String(addBtn.getAttribute("data-bundle-avail-add-cat") || "");
+          const addLabel = String(addBtn.getAttribute("data-bundle-avail-add-label") || addId);
+          if (!bundleItems.some((bi) => bi.itemId === addId && bi.category === addCat)) {
+            bundleItems.push({ itemId: addId, category: addCat, label: addLabel });
+            renderBundleItemsList();
+            // Re-render availability to mark this item as added
+            bundleAvailabilityListEl.querySelectorAll(`[data-bundle-avail-add-id="${addId}"]`).forEach((btn) => {
+              btn.className = "bundleAvailChip bundleAvailChipOk bundleAvailChipSelected";
+              btn.textContent = `${addLabel} – dodany`;
+              btn.removeAttribute("data-bundle-avail-add-id");
+            });
+          }
+          return;
+        }
+      });
+
+      bundleCheckBtn.addEventListener("click", async () => {
+        await checkBundleAvailability();
+      });
+
+      bundleCreateBtn.addEventListener("click", async () => {
+        await submitBundleReservation();
+      });
 
       const populateTypeFilter = (items) => {
         if (!filterTypeSelectEl) return;
@@ -752,6 +1021,7 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
       window.addEventListener("keydown", (ev) => {
         if (ev.key === "Escape" && !modalEl.classList.contains("hidden")) closeModal();
         if (ev.key === "Escape" && !reservationModalEl.classList.contains("hidden")) closeReservationModal();
+        if (ev.key === "Escape" && !bundleModalEl.classList.contains("hidden")) closeBundleModal();
       }, { signal: keyAbort.signal });
 
       modalTopBtn.addEventListener("click", () => {
@@ -848,6 +1118,18 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         if (reserveBtn) {
           const kayakId = String(reserveBtn.getAttribute("data-gear-reserve") || "");
           await startCreateForKayak(kayakId);
+          return;
+        }
+
+        const bundleReserveBtn = el.closest("[data-gear-bundle-reserve]");
+        if (bundleReserveBtn) {
+          const itemId = String(bundleReserveBtn.getAttribute("data-gear-bundle-reserve") || "");
+          const category = String(bundleReserveBtn.getAttribute("data-gear-bundle-category") || "");
+          const found = all.find((it) => String(it?.id || "") === itemId);
+          const label = found
+            ? String(found.number || found.brand || found.model || itemId).trim() || itemId
+            : itemId;
+          startBundleForItem(itemId, category, label);
           return;
         }
 
@@ -1138,6 +1420,12 @@ function renderGenericGearCard(item, isFav = false) {
         </div>
 
         <div class="actions gearCardActions">
+          <button
+            type="button"
+            class="primary gearBundleReserveBtn"
+            data-gear-bundle-reserve="${escapeAttr(String(item?.id || ""))}"
+            data-gear-bundle-category="${escapeAttr(String(item?.gearCategory || ""))}"
+          >Rezerwuj</button>
           <button type="button" class="ghost gearMoreBtn">Więcej</button>
         </div>
 

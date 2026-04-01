@@ -85,8 +85,11 @@ async function countMyOverlappingItems(
 
     if (!overlapsIso(rStart, rEnd, blockStartIso, blockEndIso)) continue;
 
-    const ids = Array.isArray(r?.kayakIds) ? r.kayakIds.map(String) : [];
-    count += ids.length;
+    // For bundle reservations use items[].length; fall back to kayakIds[] for legacy reservations.
+    const itemCount = Array.isArray(r?.items) && r.items.length > 0 ?
+      r.items.length :
+      (Array.isArray(r?.kayakIds) ? r.kayakIds.length : 0);
+    count += itemCount;
   }
 
   return count;
