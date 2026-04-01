@@ -256,6 +256,11 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
                   <div id=”bundleItemsList” style=”display:flex; flex-wrap:wrap; gap:6px;”></div>
                 </div>
 
+                <div id=”bundleAddSection” style=”margin-top:14px;”>
+                  <div style=”font-weight:600; margin-bottom:6px;”>Dodaj sprzęt z kategorii:</div>
+                  <div id=”bundleAddCatBtns” style=”display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px;”></div>
+                </div>
+
                 <div id=”bundleAvailabilitySection” class=”hidden” style=”margin-top:14px;”>
                   <div style=”font-weight:600; margin-bottom:6px;” id=”bundleAvailabilityTitle”>Dostępność w wybranym terminie:</div>
                   <div id=”bundleAvailabilityList” style=”display:flex; flex-wrap:wrap; gap:6px;”></div>
@@ -321,6 +326,7 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
       const bundleStartDateEl = viewEl.querySelector("#bundleStartDate");
       const bundleEndDateEl = viewEl.querySelector("#bundleEndDate");
       const bundleItemsListEl = viewEl.querySelector("#bundleItemsList");
+      const bundleAddCatBtnsEl = viewEl.querySelector("#bundleAddCatBtns");
       const bundleAvailabilitySectionEl = viewEl.querySelector("#bundleAvailabilitySection");
       const bundleAvailabilityTitleEl = viewEl.querySelector("#bundleAvailabilityTitle");
       const bundleAvailabilityListEl = viewEl.querySelector("#bundleAvailabilityList");
@@ -330,6 +336,8 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
       // Bundle state: starter item + accumulated items to reserve
       let bundleStarterCategory = "";
       let bundleStarterItemId = "";
+      // Category currently shown in the availability panel
+      let bundleAvailabilityCategory = "";
       // Each entry: { itemId, category, label }
       let bundleItems = [];
 
@@ -416,7 +424,20 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
 
       // ── Bundle modal helpers ────────────────────────────────────────────────
 
+      function renderBundleCatButtons() {
+        if (!bundleAddCatBtnsEl) return;
+        bundleAddCatBtnsEl.innerHTML = GEAR_TABS.map((tab) => `
+          <button
+            type="button"
+            class="gearTab${tab.id === bundleAvailabilityCategory ? " active" : ""}"
+            data-bundle-cat-btn="${escapeAttr(tab.id)}"
+            style="font-size:0.8em; padding:4px 10px;"
+          >${escapeHtml(tab.label)}</button>
+        `).join("");
+      }
+
       function renderBundleItemsList() {
+        if (!bundleItemsListEl) return;
         bundleItemsListEl.innerHTML = bundleItems.map((bi) => `
           <div class="bundleItemChip">
             <span>${escapeHtml(bi.label)}</span>
@@ -434,6 +455,7 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
       const clearBundleModal = () => {
         bundleStarterCategory = "";
         bundleStarterItemId = "";
+        bundleAvailabilityCategory = "";
         bundleItems = [];
         if (bundleStartDateEl) bundleStartDateEl.value = "";
         if (bundleEndDateEl) bundleEndDateEl.value = "";
@@ -442,15 +464,18 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         if (bundleAvailabilitySectionEl) bundleAvailabilitySectionEl.classList.add("hidden");
         if (bundleAvailabilityListEl) bundleAvailabilityListEl.innerHTML = "";
         renderBundleItemsList();
+        renderBundleCatButtons();
       };
 
       const openBundleModal = () => {
+        if (!bundleModalEl) return;
         bundleModalEl.classList.remove("hidden");
         bundleModalEl.setAttribute("aria-hidden", "false");
         document.body.style.overflow = "hidden";
       };
 
       const closeBundleModal = () => {
+        if (!bundleModalEl) return;
         bundleModalEl.classList.add("hidden");
         bundleModalEl.setAttribute("aria-hidden", "true");
         document.body.style.overflow = "";
@@ -461,10 +486,12 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         clearBundleModal();
         bundleStarterCategory = String(category || "");
         bundleStarterItemId = String(itemId || "");
+        bundleAvailabilityCategory = String(category || "");
         bundleItems = [{ itemId: String(itemId || ""), category: String(category || ""), label: String(label || itemId || "?") }];
         if (bundleTitleEl) bundleTitleEl.textContent = `Rezerwacja – ${label}`;
         if (bundleInfoEl) bundleInfoEl.textContent = "Wybierz termin i zapisz rezerwację.";
         renderBundleItemsList();
+        renderBundleCatButtons();
         openBundleModal();
         if (bundleStartDateEl) bundleStartDateEl.focus();
       };
@@ -476,20 +503,25 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
           if (bundleErrEl) { bundleErrEl.textContent = "Wybierz datę od i do."; bundleErrEl.classList.remove("hidden"); }
           return;
         }
+        if (!bundleAvailabilityCategory) {
+          if (bundleErrEl) { bundleErrEl.textContent = "Wybierz kategorię sprzętu."; bundleErrEl.classList.remove("hidden"); }
+          return;
+        }
         if (bundleErrEl) { bundleErrEl.textContent = ""; bundleErrEl.classList.add("hidden"); }
         if (bundleAvailabilitySectionEl) bundleAvailabilitySectionEl.classList.remove("hidden");
-        if (bundleAvailabilityTitleEl) bundleAvailabilityTitleEl.textContent = "Sprawdzam dostępność...";
+        const catLabel = GEAR_TABS.find((t) => t.id === bundleAvailabilityCategory)?.label || bundleAvailabilityCategory;
+        if (bundleAvailabilityTitleEl) bundleAvailabilityTitleEl.textContent = `Sprawdzam dostępność (${catLabel})...`;
         if (bundleAvailabilityListEl) bundleAvailabilityListEl.innerHTML = "";
-        bundleCheckBtn.disabled = true;
+        if (bundleCheckBtn) bundleCheckBtn.disabled = true;
 
         try {
-          const url = `${GEAR_ITEM_AVAILABILITY_URL}?category=${encodeURIComponent(bundleStarterCategory)}&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`;
+          const url = `${GEAR_ITEM_AVAILABILITY_URL}?category=${encodeURIComponent(bundleAvailabilityCategory)}&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`;
           const resp = await apiGetJson({ url, idToken: ctx.idToken });
           const items = Array.isArray(resp?.items) ? resp.items : [];
-          if (bundleAvailabilityTitleEl) bundleAvailabilityTitleEl.textContent = `Dostępność (${items.length} szt.):`;
-          bundleAvailabilityListEl.innerHTML = items.map((it) => {
+          if (bundleAvailabilityTitleEl) bundleAvailabilityTitleEl.textContent = `Dostępność – ${escapeHtml(catLabel)} (${items.length} szt.):`;
+          if (bundleAvailabilityListEl) bundleAvailabilityListEl.innerHTML = items.map((it) => {
             const available = it?.isAvailableForRange !== false;
-            const alreadySelected = bundleItems.some((bi) => bi.itemId === String(it?.id || "") && bi.category === bundleStarterCategory);
+            const alreadySelected = bundleItems.some((bi) => bi.itemId === String(it?.id || "") && bi.category === bundleAvailabilityCategory);
             const chipClass = available ? "bundleAvailChip bundleAvailChipOk" : "bundleAvailChip bundleAvailChipTaken";
             const label = String(it?.number || it?.id || "?");
             if (!available) {
@@ -502,7 +534,7 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
               type="button"
               class="${chipClass}"
               data-bundle-avail-add-id="${escapeAttr(String(it?.id || ""))}"
-              data-bundle-avail-add-cat="${escapeAttr(bundleStarterCategory)}"
+              data-bundle-avail-add-cat="${escapeAttr(bundleAvailabilityCategory)}"
               data-bundle-avail-add-label="${escapeAttr(label)}"
             >${escapeHtml(label)} – dostępny ✓</button>`;
           }).join("") || `<span class="hint">Brak wyników.</span>`;
@@ -510,7 +542,7 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
           if (bundleAvailabilityTitleEl) bundleAvailabilityTitleEl.textContent = "Błąd sprawdzania dostępności.";
           if (bundleAvailabilityListEl) bundleAvailabilityListEl.innerHTML = `<span class="err">${escapeHtml(mapUserFacingApiError(e, "Nie udało się sprawdzić dostępności."))}</span>`;
         } finally {
-          bundleCheckBtn.disabled = false;
+          if (bundleCheckBtn) bundleCheckBtn.disabled = false;
         }
       };
 
@@ -531,7 +563,7 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
           return;
         }
 
-        bundleCreateBtn.disabled = true;
+        if (bundleCreateBtn) bundleCreateBtn.disabled = true;
 
         try {
           const resp = await apiPostJson({
@@ -561,11 +593,11 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
             bundleErrEl.classList.remove("hidden");
           }
         } finally {
-          bundleCreateBtn.disabled = false;
+          if (bundleCreateBtn) bundleCreateBtn.disabled = false;
         }
       };
 
-      bundleModalEl.addEventListener("click", (ev) => {
+      bundleModalEl?.addEventListener("click", async (ev) => {
         const t = ev.target;
         if (!t) return;
 
@@ -583,6 +615,24 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
           return;
         }
 
+        const catBtn = t.closest && t.closest("[data-bundle-cat-btn]");
+        if (catBtn) {
+          const newCat = String(catBtn.getAttribute("data-bundle-cat-btn") || "");
+          if (newCat && newCat !== bundleAvailabilityCategory) {
+            bundleAvailabilityCategory = newCat;
+            renderBundleCatButtons();
+          }
+          const startDate = String(bundleStartDateEl?.value || "").trim();
+          const endDate = String(bundleEndDateEl?.value || "").trim();
+          if (startDate && endDate) {
+            await checkBundleAvailability();
+          } else {
+            if (bundleAvailabilitySectionEl) bundleAvailabilitySectionEl.classList.add("hidden");
+            if (bundleAvailabilityListEl) bundleAvailabilityListEl.innerHTML = "";
+          }
+          return;
+        }
+
         const addBtn = t.closest && t.closest("[data-bundle-avail-add-id]");
         if (addBtn) {
           const addId = String(addBtn.getAttribute("data-bundle-avail-add-id") || "");
@@ -592,21 +642,23 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
             bundleItems.push({ itemId: addId, category: addCat, label: addLabel });
             renderBundleItemsList();
             // Re-render availability to mark this item as added
-            bundleAvailabilityListEl.querySelectorAll(`[data-bundle-avail-add-id="${addId}"]`).forEach((btn) => {
-              btn.className = "bundleAvailChip bundleAvailChipOk bundleAvailChipSelected";
-              btn.textContent = `${addLabel} – dodany`;
-              btn.removeAttribute("data-bundle-avail-add-id");
-            });
+            if (bundleAvailabilityListEl) {
+              bundleAvailabilityListEl.querySelectorAll(`[data-bundle-avail-add-id="${CSS.escape(addId)}"]`).forEach((btn) => {
+                btn.className = "bundleAvailChip bundleAvailChipOk bundleAvailChipSelected";
+                btn.textContent = `${addLabel} – dodany`;
+                btn.removeAttribute("data-bundle-avail-add-id");
+              });
+            }
           }
           return;
         }
       });
 
-      bundleCheckBtn.addEventListener("click", async () => {
+      bundleCheckBtn?.addEventListener("click", async () => {
         await checkBundleAvailability();
       });
 
-      bundleCreateBtn.addEventListener("click", async () => {
+      bundleCreateBtn?.addEventListener("click", async () => {
         await submitBundleReservation();
       });
 
@@ -1021,7 +1073,7 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
       window.addEventListener("keydown", (ev) => {
         if (ev.key === "Escape" && !modalEl.classList.contains("hidden")) closeModal();
         if (ev.key === "Escape" && !reservationModalEl.classList.contains("hidden")) closeReservationModal();
-        if (ev.key === "Escape" && !bundleModalEl.classList.contains("hidden")) closeBundleModal();
+        if (ev.key === "Escape" && bundleModalEl && !bundleModalEl.classList.contains("hidden")) closeBundleModal();
       }, { signal: keyAbort.signal });
 
       modalTopBtn.addEventListener("click", () => {
