@@ -169,109 +169,109 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
           </div>
         </div>
 
-        <div id=”gearReservationModal” class=”gearModal hidden” aria-hidden=”true”>
-          <div class=”gearModalBackdrop” data-gear-reservation-close=”1”></div>
-          <div class=”gearModalCard” role=”dialog” aria-modal=”true” aria-label=”Rezerwacja kajaka”>
-            <div class=”gearModalTop”>
-              <div class=”gearModalTitle” id=”gearReservationTitle”>Rezerwacja</div>
-              <button class=”gearModalClose” type=”button” data-gear-reservation-close=”1” aria-label=”Zamknij”>✕</button>
+        <div id="gearReservationModal" class="gearModal hidden" aria-hidden="true">
+          <div class="gearModalBackdrop" data-gear-reservation-close="1"></div>
+          <div class="gearModalCard" role="dialog" aria-modal="true" aria-label="Rezerwacja kajaka">
+            <div class="gearModalTop">
+              <div class="gearModalTitle" id="gearReservationTitle">Rezerwacja</div>
+              <button class="gearModalClose" type="button" data-gear-reservation-close="1" aria-label="Zamknij">✕</button>
             </div>
 
-            <div class=”gearModalBody”>
-              <div style=”width:100%; max-width:520px;”>
-                <div id=”reservationInfo” class=”hint” style=”margin-bottom:10px;”>
+            <div class="gearModalBody">
+              <div style="width:100%; max-width:520px;">
+                <div id="reservationInfo" class="hint" style="margin-bottom:10px;">
                   Wybierz kajak i kliknij „Rezerwuj”.
                 </div>
 
-                <div id=”reservationOk” class=”ok hidden” style=”margin-bottom:10px;”></div>
-                <div id=”reservationErr” class=”err hidden” style=”margin-bottom:10px;”></div>
+                <div id="reservationOk" class="ok hidden" style="margin-bottom:10px;"></div>
+                <div id="reservationErr" class="err hidden" style="margin-bottom:10px;"></div>
 
-                <div class=”row” style=”margin:0;”>
-                  <label for=”reservationSelectedKayak”>Wybrany kajak</label>
-                  <input id=”reservationSelectedKayak” type=”text” value=”” readonly />
+                <div class="row" style="margin:0;">
+                  <label for="reservationSelectedKayak">Wybrany kajak</label>
+                  <input id="reservationSelectedKayak" type="text" value="" readonly />
                 </div>
 
-                <div class=”row” style=”margin-top:10px;”>
-                  <label for=”reservationStartDate”>Data od</label>
-                  <input id=”reservationStartDate” type=”date” />
+                <div class="row" style="margin-top:10px;">
+                  <label for="reservationStartDate">Data od</label>
+                  <input id="reservationStartDate" type="date" />
                 </div>
 
-                <div class=”row” style=”margin-top:10px;”>
-                  <label for=”reservationEndDate”>Data do</label>
-                  <input id=”reservationEndDate” type=”date” />
+                <div class="row" style="margin-top:10px;">
+                  <label for="reservationEndDate">Data do</label>
+                  <input id="reservationEndDate" type="date" />
                 </div>
 
-                <div class=”hint” style=”margin-top:10px;”>
+                <div class="hint" style="margin-top:10px;">
                   Rezerwacja blokuje sprzęt dla innych użytkowników. Koszt godzinek i konflikty terminów sprawdza backend.
                 </div>
 
-                <div id=”reservationExistingSection” class=”gearReservModalSection hidden”>
-                  <div class=”gearReservModalTitle”>Kiedy zajęty?</div>
-                  <div id=”reservationExistingContent”></div>
+                <div id="reservationExistingSection" class="gearReservModalSection hidden">
+                  <div class="gearReservModalTitle">Kiedy zajęty?</div>
+                  <div id="reservationExistingContent"></div>
                 </div>
               </div>
             </div>
 
-            <div class=”gearModalActions”>
-              <button id=”reservationCreateBtn” type=”button” class=”primary”>Zapisz rezerwację</button>
-              <button id=”reservationClearBtn” type=”button” class=”ghost”>Wyczyść</button>
-              <button type=”button” class=”ghost” data-gear-reservation-close=”1”>Zamknij</button>
+            <div class="gearModalActions">
+              <button id="reservationCreateBtn" type="button" class="primary">Zapisz rezerwację</button>
+              <button id="reservationClearBtn" type="button" class="ghost">Wyczyść</button>
+              <button type="button" class="ghost" data-gear-reservation-close="1">Zamknij</button>
             </div>
           </div>
         </div>
 
-        <div id=”gearBundleModal” class=”gearModal hidden” aria-hidden=”true”>
-          <div class=”gearModalBackdrop” data-gear-bundle-close=”1”></div>
-          <div class=”gearModalCard” role=”dialog” aria-modal=”true” aria-label=”Rezerwacja sprzętu”>
-            <div class=”gearModalTop”>
-              <div class=”gearModalTitle” id=”gearBundleTitle”>Rezerwacja sprzętu</div>
-              <button class=”gearModalClose” type=”button” data-gear-bundle-close=”1” aria-label=”Zamknij”>✕</button>
+        <div id="gearBundleModal" class="gearModal hidden" aria-hidden="true">
+          <div class="gearModalBackdrop" data-gear-bundle-close="1"></div>
+          <div class="gearModalCard" role="dialog" aria-modal="true" aria-label="Rezerwacja sprzętu">
+            <div class="gearModalTop">
+              <div class="gearModalTitle" id="gearBundleTitle">Rezerwacja sprzętu</div>
+              <button class="gearModalClose" type="button" data-gear-bundle-close="1" aria-label="Zamknij">✕</button>
             </div>
 
-            <div class=”gearModalBody”>
-              <div style=”width:100%; max-width:520px;”>
-                <div id=”bundleInfo” class=”hint” style=”margin-bottom:10px;”>
+            <div class="gearModalBody">
+              <div style="width:100%; max-width:520px;">
+                <div id="bundleInfo" class="hint" style="margin-bottom:10px;">
                   Wybierz termin i zarezerwuj sprzęt.
                 </div>
 
-                <div id=”bundleOk” class=”ok hidden” style=”margin-bottom:10px;”></div>
-                <div id=”bundleErr” class=”err hidden” style=”margin-bottom:10px;”></div>
+                <div id="bundleOk" class="ok hidden" style="margin-bottom:10px;"></div>
+                <div id="bundleErr" class="err hidden" style="margin-bottom:10px;"></div>
 
-                <div class=”row” style=”margin:0;”>
-                  <label for=”bundleStartDate”>Data od</label>
-                  <input id=”bundleStartDate” type=”date” />
+                <div class="row" style="margin:0;">
+                  <label for="bundleStartDate">Data od</label>
+                  <input id="bundleStartDate" type="date" />
                 </div>
 
-                <div class=”row” style=”margin-top:10px;”>
-                  <label for=”bundleEndDate”>Data do</label>
-                  <input id=”bundleEndDate” type=”date” />
+                <div class="row" style="margin-top:10px;">
+                  <label for="bundleEndDate">Data do</label>
+                  <input id="bundleEndDate" type="date" />
                 </div>
 
-                <div class=”hint” style=”margin-top:10px;”>
+                <div class="hint" style="margin-top:10px;">
                   Rezerwacja blokuje sprzęt dla innych użytkowników. Backend sprawdza dostępność i konflikty terminów.
                 </div>
 
-                <div id=”bundleItemsSection” style=”margin-top:14px;”>
-                  <div style=”font-weight:600; margin-bottom:6px;”>Zarezerwowany sprzęt:</div>
-                  <div id=”bundleItemsList” style=”display:flex; flex-wrap:wrap; gap:6px;”></div>
+                <div id="bundleItemsSection" style="margin-top:14px;">
+                  <div style="font-weight:600; margin-bottom:6px;">Zarezerwowany sprzęt:</div>
+                  <div id="bundleItemsList" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
                 </div>
 
-                <div id=”bundleAddSection” style=”margin-top:14px;”>
-                  <div style=”font-weight:600; margin-bottom:6px;”>Dodaj sprzęt z kategorii:</div>
-                  <div id=”bundleAddCatBtns” style=”display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px;”></div>
+                <div id="bundleAddSection" style="margin-top:14px;">
+                  <div style="font-weight:600; margin-bottom:6px;">Dodaj sprzęt z kategorii:</div>
+                  <div id="bundleAddCatBtns" style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px;"></div>
                 </div>
 
-                <div id=”bundleAvailabilitySection” class=”hidden” style=”margin-top:14px;”>
-                  <div style=”font-weight:600; margin-bottom:6px;” id=”bundleAvailabilityTitle”>Dostępność w wybranym terminie:</div>
-                  <div id=”bundleAvailabilityList” style=”display:flex; flex-wrap:wrap; gap:6px;”></div>
+                <div id="bundleAvailabilitySection" class="hidden" style="margin-top:14px;">
+                  <div style="font-weight:600; margin-bottom:6px;" id="bundleAvailabilityTitle">Dostępność w wybranym terminie:</div>
+                  <div id="bundleAvailabilityList" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
                 </div>
               </div>
             </div>
 
-            <div class=”gearModalActions”>
-              <button id=”bundleCheckBtn” type=”button” class=”ghost”>Sprawdź dostępność</button>
-              <button id=”bundleCreateBtn” type=”button” class=”primary”>Zapisz rezerwację</button>
-              <button type=”button” class=”ghost” data-gear-bundle-close=”1”>Zamknij</button>
+            <div class="gearModalActions">
+              <button id="bundleCheckBtn" type="button" class="ghost">Sprawdź dostępność</button>
+              <button id="bundleCreateBtn" type="button" class="primary">Zapisz rezerwację</button>
+              <button type="button" class="ghost" data-gear-bundle-close="1">Zamknij</button>
             </div>
           </div>
         </div>
@@ -1059,7 +1059,7 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         }
       });
 
-      reservationModalEl.addEventListener("click", (ev) => {
+      reservationModalEl?.addEventListener("click", (ev) => {
         const t = ev.target;
         if (t && t.getAttribute && t.getAttribute("data-gear-reservation-close") === "1") {
           closeReservationModal();
@@ -1179,7 +1179,7 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
           const category = String(bundleReserveBtn.getAttribute("data-gear-bundle-category") || "");
           const found = all.find((it) => String(it?.id || "") === itemId);
           const label = found
-            ? String(found.number || found.brand || found.model || itemId).trim() || itemId
+            ? (category === "kayaks" ? buildKayakTitle(found) : String(found.number || found.brand || found.model || itemId).trim() || itemId)
             : itemId;
           startBundleForItem(itemId, category, label);
           return;
@@ -1347,7 +1347,9 @@ function renderKayakCard(k, isFav = false) {
         <div class="actions gearCardActions">
           <button
             type="button"
-            data-gear-reserve="${escapeAttr(String(k?.id || ""))}"
+            class="primary gearBundleReserveBtn"
+            data-gear-bundle-reserve="${escapeAttr(String(k?.id || ""))}"
+            data-gear-bundle-category="kayaks"
             ${canReserve ? "" : "disabled"}>
             Rezerwuj
           </button>
@@ -1363,8 +1365,9 @@ function renderKayakCard(k, isFav = false) {
           </div>
           <button
             type="button"
-            class="gearMiniReserveBtn"
-            data-gear-reserve="${escapeAttr(String(k?.id || ""))}"
+            class="gearMiniReserveBtn gearBundleReserveBtn"
+            data-gear-bundle-reserve="${escapeAttr(String(k?.id || ""))}"
+            data-gear-bundle-category="kayaks"
             ${canReserve ? "" : "disabled"}>Rezerwuj</button>
         </div>
 

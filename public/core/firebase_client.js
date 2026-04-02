@@ -124,24 +124,21 @@ function kayakStorageNumber(number) {
   return { n, padded };
 }
 
-// Cover: próbuje thumbnail (mały, szybki), fallback na oryginał
-// Thumbnail generowany przez Firebase "Resize Images" extension:
-//   GEAR/KAJAKS/013/COVER/13_cover_thumb.jpg
-// Oryginał:
-//   GEAR/KAJAKS/013/COVER/13_cover.jpg
+// Cover: listuje katalog COVER i pobiera URL pierwszego pliku.
+// Preferuje thumbnail (plik z "_thumb" w nazwie), fallback na pierwszy dostępny.
+// Działa niezależnie od rozszerzenia (.jpg, .webp, .png itp.).
+//   GEAR/KAJAKS/013/COVER/
 export async function storageFetchKayakCoverUrl(number) {
-  const { n, padded } = kayakStorageNumber(number);
-  const thumbPath = `GEAR/KAJAKS/${padded}/COVER/${n}_cover_thumb.jpg`;
-  const fullPath = `GEAR/KAJAKS/${padded}/COVER/${n}_cover.jpg`;
+  const { padded } = kayakStorageNumber(number);
   try {
-    return await getDownloadURL(ref(storage, thumbPath));
+    const coverRef = ref(storage, `GEAR/KAJAKS/${padded}/COVER`);
+    const listing = await listAll(coverRef);
+    if (!listing.items.length) return null;
+    const thumb = listing.items.find((item) => item.name.includes("_thumb"));
+    const target = thumb || listing.items[0];
+    return await getDownloadURL(target);
   } catch {
-    // brak thumbnailа — fallback na pełne zdjęcie
-    try {
-      return await getDownloadURL(ref(storage, fullPath));
-    } catch {
-      return null;
-    }
+    return null;
   }
 }
 
