@@ -1,5 +1,6 @@
 import type {Request, Response} from "express";
 import {enrollInSession, getActiveKarnet, getBasenVars} from "../modules/basen/basen_service";
+import {isUserStatusBlocked} from "../modules/users/userStatusCheck";
 
 const ENROLL_ROLES = new Set(["rola_czlonek", "rola_zarzad", "rola_kr"]);
 
@@ -40,6 +41,12 @@ export async function handleBasenEnroll(req: Request, res: Response, deps: Deps)
 
       const userData = userSnap.data() as any;
       const roleKey = String(userData?.role_key || "");
+      const statusKey = String(userData?.status_key || "");
+
+      if (await isUserStatusBlocked(deps.db, statusKey)) {
+        res.status(403).json({ok: false, code: "forbidden", error: "Konto zawieszone."});
+        return;
+      }
 
       if (!ENROLL_ROLES.has(roleKey)) {
         res.status(403).json({error: "Brak uprawnień. Wymagana rola: członek, zarząd lub KR."});

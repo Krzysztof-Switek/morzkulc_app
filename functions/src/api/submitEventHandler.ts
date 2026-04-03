@@ -4,6 +4,7 @@
 import type {Request, Response} from "express";
 import {logger} from "firebase-functions/v2";
 import {createEvent} from "../modules/calendar/events_service";
+import {isUserStatusBlocked} from "../modules/users/userStatusCheck";
 
 type TokenCheck =
   | {error: string}
@@ -63,7 +64,15 @@ export async function handleSubmitEvent(req: Request, res: Response, deps: Submi
         return;
       }
 
-      const roleKey = norm((userSnap.data() as any)?.role_key);
+      const userData = userSnap.data() as any;
+      const roleKey = norm(userData?.role_key);
+      const statusKey = norm(userData?.status_key);
+
+      if (await isUserStatusBlocked(db, statusKey)) {
+        res.status(403).json({ok: false, code: "forbidden", message: "Konto zawieszone."});
+        return;
+      }
+
       if (!ALLOWED_ROLES.has(roleKey)) {
         res.status(403).json({ok: false, code: "forbidden", message: "Role not allowed"});
         return;

@@ -3,6 +3,7 @@ import {getGearVars, roleMaxItems, roleMaxWeeks} from "../../setup/setup_gear_va
 import {quoteKayaksCostHours} from "../../hours/hours_quote";
 import {deductHours, creditReservationAdjustment} from "../../hours/godzinki_service";
 import {getGodzinkiVars} from "../../hours/godzinki_vars";
+import {isUserStatusBlocked} from "../../users/userStatusCheck";
 import {updateReservationDates} from "../kayaks/gear_kayaks_service";
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -415,6 +416,10 @@ export async function createBundleReservation(
 ) {
   const user = await getUserRole(db, args.uid);
   if (!user) return {ok: false, code: "forbidden", message: "User not registered"} as const;
+
+  if (await isUserStatusBlocked(db, user.statusKey)) {
+    return {ok: false, code: "forbidden", message: "Access blocked"} as const;
+  }
 
   const roleKey = user.roleKey;
   if (roleKey === "rola_sympatyk") {
