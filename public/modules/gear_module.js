@@ -154,17 +154,18 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
           <div class="gearModalCard" role="dialog" aria-modal="true" aria-label="Zdjęcie sprzętu">
             <div class="gearModalTop">
               <div class="gearModalTitle" id="gearModalTitle">Zdjęcie</div>
-              <button class="gearModalClose" type="button" data-gear-modal-close="1" aria-label="Zamknij">✕</button>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span id="gearModalCounter" class="hint" style="font-size:13px;"></span>
+                <button class="gearModalClose" type="button" data-gear-modal-close="1" aria-label="Zamknij">✕</button>
+              </div>
             </div>
             <div class="gearModalBody">
-              <img id="gearModalImg" alt="Zdjęcie sprzętu" />
-            </div>
-            <div id="gearModalThumbs" class="gearModalThumbs hidden"></div>
-            <div class="gearModalActions">
-              <button id="gearModalTopBtn" type="button" class="ghost">Zdjęcie 1</button>
-              <button id="gearModalSideBtn" type="button" class="ghost">Zdjęcie 2</button>
-              <button id="gearModalAllBtn" type="button" class="ghost hidden">Więcej zdjęć</button>
-              <span class="hint" id="gearModalHint"></span>
+              <div class="gearImgViewer">
+                <button id="gearModalPrevBtn" type="button" class="gearImgNavBtn gearImgNavPrev hidden" aria-label="Poprzednie zdjęcie">&#8249;</button>
+                <img id="gearModalImg" alt="Zdjęcie sprzętu" />
+                <button id="gearModalNextBtn" type="button" class="gearImgNavBtn gearImgNavNext hidden" aria-label="Następne zdjęcie">&#8250;</button>
+              </div>
+              <span class="hint" id="gearModalHint" style="text-align:center; display:block; margin-top:6px; min-height:16px;"></span>
             </div>
           </div>
         </div>
@@ -345,10 +346,9 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
       const modalImgEl = viewEl.querySelector("#gearModalImg");
       const modalTitleEl = viewEl.querySelector("#gearModalTitle");
       const modalHintEl = viewEl.querySelector("#gearModalHint");
-      const modalTopBtn = viewEl.querySelector("#gearModalTopBtn");
-      const modalSideBtn = viewEl.querySelector("#gearModalSideBtn");
-      const modalThumbsEl = viewEl.querySelector("#gearModalThumbs");
-      const modalAllBtn = viewEl.querySelector("#gearModalAllBtn");
+      const modalCounterEl = viewEl.querySelector("#gearModalCounter");
+      const modalPrevBtn = viewEl.querySelector("#gearModalPrevBtn");
+      const modalNextBtn = viewEl.querySelector("#gearModalNextBtn");
 
       let all = [];
       let favSet = new Set();
@@ -930,10 +930,27 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         }
       };
 
-      let currentImgTop = "";
-      let currentImgSide = "";
+      let allPhotoUrls = [];
+      let currentPhotoIdx = 0;
       let currentTitle = "";
-      let currentKayakNumber = null;
+
+      function showPhotoAtIdx(idx) {
+        if (!allPhotoUrls.length) return;
+        currentPhotoIdx = Math.max(0, Math.min(idx, allPhotoUrls.length - 1));
+        modalImgEl.setAttribute("src", allPhotoUrls[currentPhotoIdx]);
+        modalHintEl.textContent = "";
+        if (allPhotoUrls.length > 1) {
+          modalCounterEl.textContent = `${currentPhotoIdx + 1} / ${allPhotoUrls.length}`;
+          modalPrevBtn.disabled = currentPhotoIdx === 0;
+          modalNextBtn.disabled = currentPhotoIdx === allPhotoUrls.length - 1;
+          modalPrevBtn.classList.remove("hidden");
+          modalNextBtn.classList.remove("hidden");
+        } else {
+          modalCounterEl.textContent = "";
+          modalPrevBtn.classList.add("hidden");
+          modalNextBtn.classList.add("hidden");
+        }
+      }
 
       modalImgEl.onerror = () => {
         const currentSrc = String(modalImgEl.getAttribute("src") || "");
@@ -945,40 +962,25 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
 
       function openModal({ title, topUrl, sideUrl, prefer }) {
         currentTitle = String(title || "Zdjęcie");
-        currentImgTop = String(topUrl || "");
-        currentImgSide = String(sideUrl || "");
-        currentKayakNumber = null;
+        allPhotoUrls = [topUrl, sideUrl].filter(Boolean);
+        currentPhotoIdx = 0;
 
         modalTitleEl.textContent = currentTitle;
         modalHintEl.textContent = "";
+        modalCounterEl.textContent = "";
 
-        // Reset kayak-only elements
-        modalThumbsEl.innerHTML = "";
-        modalThumbsEl.classList.add("hidden");
-        modalAllBtn.classList.add("hidden");
-        modalTopBtn.classList.remove("hidden");
-        modalSideBtn.classList.remove("hidden");
-
-        const hasTop = Boolean(currentImgTop);
-        const hasSide = Boolean(currentImgSide);
-
-        modalTopBtn.disabled = !hasTop;
-        modalSideBtn.disabled = !hasSide;
-
-        modalTopBtn.textContent = "Zdjęcie 1";
-        modalSideBtn.textContent = "Zdjęcie 2";
-
-        const choice = prefer === "side" ? "side" : "top";
-        const start =
-          choice === "side"
-            ? (hasSide ? currentImgSide : currentImgTop)
-            : (hasTop ? currentImgTop : currentImgSide);
-
-        if (!start) {
-          modalHintEl.textContent = "Brak zdjęcia.";
+        if (!allPhotoUrls.length) {
           modalImgEl.setAttribute("src", PLACEHOLDER_SVG);
+          modalHintEl.textContent = "Brak zdjęcia.";
+          modalPrevBtn.classList.add("hidden");
+          modalNextBtn.classList.add("hidden");
         } else {
-          modalImgEl.setAttribute("src", start);
+          let startIdx = 0;
+          if (prefer === "side" && sideUrl) {
+            const idx = allPhotoUrls.indexOf(sideUrl);
+            if (idx >= 0) startIdx = idx;
+          }
+          showPhotoAtIdx(startIdx);
         }
 
         modalEl.classList.remove("hidden");
@@ -987,50 +989,54 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
       }
 
       async function openKayakPhotoModal({ number, title, preloadedUrl }) {
-        currentKayakNumber = String(number || "");
-        currentImgTop = "";
-        currentImgSide = "";
+        const kayakNumber = String(number || "");
         currentTitle = String(title || "Zdjęcia");
+        allPhotoUrls = preloadedUrl ? [preloadedUrl] : [];
+        currentPhotoIdx = 0;
 
         modalTitleEl.textContent = currentTitle;
-        modalThumbsEl.innerHTML = "";
-        modalThumbsEl.classList.add("hidden");
-
-        // Show kayak-only elements, hide generic ones
-        modalTopBtn.classList.add("hidden");
-        modalSideBtn.classList.add("hidden");
-        modalAllBtn.classList.remove("hidden");
-        modalAllBtn.disabled = false;
-        modalAllBtn.textContent = "Więcej zdjęć";
+        modalHintEl.textContent = preloadedUrl ? "" : "Ładuję...";
+        modalCounterEl.textContent = "";
+        modalPrevBtn.classList.add("hidden");
+        modalNextBtn.classList.add("hidden");
 
         if (preloadedUrl) {
-          // Zdjęcie już załadowane w karcie — użyj bez ponownego fetcha
           modalImgEl.setAttribute("src", preloadedUrl);
-          modalHintEl.textContent = "";
         } else {
           modalImgEl.removeAttribute("src");
-          modalHintEl.textContent = "Ładuję...";
         }
 
         modalEl.classList.remove("hidden");
         modalEl.setAttribute("aria-hidden", "false");
         document.body.style.overflow = "hidden";
 
-        if (!preloadedUrl) {
-          try {
-            const url = await storageFetchKayakCoverUrl(currentKayakNumber);
-            if (url) {
-              modalImgEl.setAttribute("src", url);
-              modalHintEl.textContent = "";
-            } else {
-              modalImgEl.setAttribute("src", PLACEHOLDER_SVG);
-              modalHintEl.textContent = "Brak zdjęcia okładkowego.";
-              console.warn("[Storage] brak cover dla kajaka nr", currentKayakNumber);
-            }
-          } catch (err) {
+        // Ładuj cover + galerię równocześnie
+        try {
+          const [coverUrl, galleryUrls] = await Promise.all([
+            preloadedUrl ? Promise.resolve(preloadedUrl) : storageFetchKayakCoverUrl(kayakNumber),
+            storageFetchKayakGalleryUrls(kayakNumber),
+          ]);
+
+          const seen = new Set();
+          const urls = [];
+          if (coverUrl) { urls.push(coverUrl); seen.add(coverUrl); }
+          for (const u of galleryUrls) {
+            if (!seen.has(u)) { urls.push(u); seen.add(u); }
+          }
+
+          if (!urls.length) {
             modalImgEl.setAttribute("src", PLACEHOLDER_SVG);
-            modalHintEl.textContent = "Nie udało się załadować zdjęcia.";
-            console.error("[Storage] błąd cover dla kajaka nr", currentKayakNumber, err);
+            modalHintEl.textContent = "Brak zdjęć.";
+            return;
+          }
+
+          allPhotoUrls = urls;
+          showPhotoAtIdx(0);
+        } catch (err) {
+          console.error("[Storage] błąd ładowania zdjęć dla kajaka nr", kayakNumber, err);
+          if (!preloadedUrl) {
+            modalImgEl.setAttribute("src", PLACEHOLDER_SVG);
+            modalHintEl.textContent = "Nie udało się załadować zdjęć.";
           }
         }
       }
@@ -1040,16 +1046,13 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         modalEl.setAttribute("aria-hidden", "true");
         document.body.style.overflow = "";
         modalImgEl.removeAttribute("src");
-        currentImgTop = "";
-        currentImgSide = "";
+        allPhotoUrls = [];
+        currentPhotoIdx = 0;
         currentTitle = "";
-        currentKayakNumber = null;
         modalHintEl.textContent = "";
-        modalThumbsEl.innerHTML = "";
-        modalThumbsEl.classList.add("hidden");
-        modalAllBtn.classList.add("hidden");
-        modalTopBtn.classList.remove("hidden");
-        modalSideBtn.classList.remove("hidden");
+        modalCounterEl.textContent = "";
+        modalPrevBtn.classList.add("hidden");
+        modalNextBtn.classList.add("hidden");
       }
 
       modalEl.addEventListener("click", (ev) => {
@@ -1074,53 +1077,26 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         if (ev.key === "Escape" && !modalEl.classList.contains("hidden")) closeModal();
         if (ev.key === "Escape" && !reservationModalEl.classList.contains("hidden")) closeReservationModal();
         if (ev.key === "Escape" && bundleModalEl && !bundleModalEl.classList.contains("hidden")) closeBundleModal();
+        if (!modalEl.classList.contains("hidden")) {
+          if (ev.key === "ArrowLeft") { showPhotoAtIdx(currentPhotoIdx - 1); ev.preventDefault(); }
+          if (ev.key === "ArrowRight") { showPhotoAtIdx(currentPhotoIdx + 1); ev.preventDefault(); }
+        }
       }, { signal: keyAbort.signal });
 
-      modalTopBtn.addEventListener("click", () => {
-        if (!currentImgTop) return;
-        modalHintEl.textContent = "";
-        modalImgEl.setAttribute("src", currentImgTop);
-      });
+      modalPrevBtn.addEventListener("click", () => showPhotoAtIdx(currentPhotoIdx - 1));
+      modalNextBtn.addEventListener("click", () => showPhotoAtIdx(currentPhotoIdx + 1));
 
-      modalSideBtn.addEventListener("click", () => {
-        if (!currentImgSide) return;
-        modalHintEl.textContent = "";
-        modalImgEl.setAttribute("src", currentImgSide);
-      });
-
-      modalAllBtn.addEventListener("click", async () => {
-        if (!currentKayakNumber) return;
-        modalAllBtn.disabled = true;
-        modalHintEl.textContent = "Ładuję galerię...";
-
-        try {
-          const urls = await storageFetchKayakGalleryUrls(currentKayakNumber);
-          if (!urls.length) {
-            modalHintEl.textContent = "Brak zdjęć w galerii.";
-            modalAllBtn.disabled = false;
-            return;
-          }
-          modalThumbsEl.innerHTML = urls
-            .map((url) => `<button class="gearThumbBtn" type="button" data-thumb-url="${escapeAttr(url)}"><img src="${escapeAttr(url)}" alt="" loading="lazy" /></button>`)
-            .join("");
-          modalThumbsEl.classList.remove("hidden");
-          modalAllBtn.classList.add("hidden");
-          modalHintEl.textContent = `${urls.length} zdjęć`;
-          if (urls.length > 0) {
-            modalImgEl.setAttribute("src", urls[0]);
-          }
-        } catch {
-          modalHintEl.textContent = "Nie udało się załadować galerii.";
-          modalAllBtn.disabled = false;
+      let _touchStartX = 0;
+      modalEl.addEventListener("touchstart", (ev) => {
+        _touchStartX = ev.touches[0].clientX;
+      }, { passive: true });
+      modalEl.addEventListener("touchend", (ev) => {
+        const dx = ev.changedTouches[0].clientX - _touchStartX;
+        if (Math.abs(dx) > 40) {
+          if (dx < 0) showPhotoAtIdx(currentPhotoIdx + 1);
+          else showPhotoAtIdx(currentPhotoIdx - 1);
         }
-      });
-
-      modalThumbsEl.addEventListener("click", (ev) => {
-        const btn = ev.target.closest("[data-thumb-url]");
-        if (!btn) return;
-        const url = String(btn.getAttribute("data-thumb-url") || "");
-        if (url) modalImgEl.setAttribute("src", url);
-      });
+      }, { passive: true });
 
       listEl.addEventListener("click", async (ev) => {
         const el = ev.target;
