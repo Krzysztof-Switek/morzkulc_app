@@ -1,6 +1,6 @@
 import { apiGetJson, apiPostJson } from "/core/api_client.js";
 import { mapUserFacingApiError } from "/core/user_error_messages.js";
-import { storageFetchKayakCoverUrl, storageFetchKayakGalleryUrls } from "/core/firebase_client.js";
+import { storageFetchKayakCoverUrl, storageFetchKayakGalleryUrls, storageFetchLifejacketUrl, storageFetchHelmetUrl, storageFetchHelmetFrontUrl } from "/core/firebase_client.js";
 
 const NAV_BACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`;
 const NAV_HOME_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
@@ -25,9 +25,10 @@ const GEAR_TABS = [
   { id: "sprayskirts", label: "Fartuchy" }
 ];
 
-export function createGearModule({ id, label, defaultRoute, order, enabled, access }) {
+export function createGearModule({ id, type, label, defaultRoute, order, enabled, access }) {
   return {
     id,
+    type,
     label,
     defaultRoute,
     order,
@@ -39,6 +40,8 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
       const activeTab = GEAR_TABS.find((t) => t.id === requestedRoute)?.id || "kayaks";
       const activeTabLabel = GEAR_TABS.find((t) => t.id === activeTab)?.label || "Kajaki";
       const isKayaksView = activeTab === "kayaks";
+      const isLifejacketsView = activeTab === "lifejackets";
+      const isHelmetsView = activeTab === "helmets";
 
       if (!ctx?.idToken) {
         viewEl.innerHTML = `
@@ -741,7 +744,11 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
 
         const cards = isKayaksView
           ? items.map((k) => renderKayakCard(k, favSet.has(String(k?.id || "")))).join("")
-          : items.map((item) => renderGenericGearCard(item, favSet.has(String(item?.id || "")))).join("");
+          : isLifejacketsView
+            ? items.map((item) => renderLifejacketCard(item, favSet.has(String(item?.id || "")))).join("")
+            : isHelmetsView
+              ? items.map((item) => renderHelmetCard(item, favSet.has(String(item?.id || "")))).join("")
+              : items.map((item) => renderGenericGearCard(item, favSet.has(String(item?.id || "")))).join("");
 
         listEl.innerHTML = `
           <div class="gearGrid">
@@ -780,6 +787,42 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
                 }
               })
               .catch((err) => console.error("[Storage] cover load failed for", num, err));
+          });
+        }
+
+        if (isLifejacketsView) {
+          listEl.querySelectorAll("img[data-lifejacket-number]").forEach((imgEl) => {
+            const num = String(imgEl.getAttribute("data-lifejacket-number") || "");
+            if (!num) return;
+            storageFetchLifejacketUrl(num)
+              .then((url) => {
+                if (!url) return;
+                imgEl.src = url;
+                imgEl.classList.add("gearCoverLoaded");
+                const btn = imgEl.closest("[data-gear-lifejacket-cover]");
+                if (btn) btn.setAttribute("data-loaded-cover-url", url);
+              })
+              .catch(() => {});
+          });
+        }
+
+        if (isHelmetsView) {
+          listEl.querySelectorAll("img[data-helmet-number]").forEach((imgEl) => {
+            const num = String(imgEl.getAttribute("data-helmet-number") || "");
+            if (!num) return;
+            Promise.all([
+              storageFetchHelmetUrl(num),
+              storageFetchHelmetFrontUrl(num),
+            ]).then(([bokUrl, frontUrl]) => {
+              if (!bokUrl) return;
+              imgEl.src = bokUrl;
+              imgEl.classList.add("gearCoverLoaded");
+              const btn = imgEl.closest("[data-gear-helmet-cover]");
+              if (btn) {
+                btn.setAttribute("data-loaded-cover-url", bokUrl);
+                if (frontUrl) btn.setAttribute("data-loaded-front-url", frontUrl);
+              }
+            }).catch(() => {});
           });
         }
       };
@@ -1246,6 +1289,23 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
           return;
         }
 
+        const lifejacketCoverBtn = el.closest("[data-gear-lifejacket-cover]");
+        if (lifejacketCoverBtn) {
+          const title = String(lifejacketCoverBtn.getAttribute("data-gear-title") || "Zdjęcie");
+          const preloadedUrl = lifejacketCoverBtn.getAttribute("data-loaded-cover-url") || "";
+          openModal({ title, topUrl: preloadedUrl, sideUrl: "", prefer: "top" });
+          return;
+        }
+
+        const helmetCoverBtn = el.closest("[data-gear-helmet-cover]");
+        if (helmetCoverBtn) {
+          const title = String(helmetCoverBtn.getAttribute("data-gear-title") || "Zdjęcie");
+          const bokUrl = helmetCoverBtn.getAttribute("data-loaded-cover-url") || "";
+          const frontUrl = helmetCoverBtn.getAttribute("data-loaded-front-url") || "";
+          openModal({ title, topUrl: bokUrl, sideUrl: frontUrl, prefer: "top" });
+          return;
+        }
+
         const imgBtn = el.closest("[data-gear-img]");
         if (imgBtn) {
           const prefer = String(imgBtn.getAttribute("data-gear-img") || "top");
@@ -1322,13 +1382,16 @@ function renderKayakCard(k, isFav = false) {
   const type = String(k?.type || "").trim();
   const color = String(k?.color || "").trim();
 
+  const storageVal = String(k?.storage || k?.storedAt || "").trim().toLowerCase();
+  const isPool = storageVal === "basen";
+
   const working = isWorking(k);
   const reservedNow = k?.isReservedNow === true;
 
   const isPrivate = toBool(k?.isPrivate);
   const privateRent = toBool(k?.privateForRent) || toBool(k?.isPrivateRentable);
 
-  const canReserve = working && (!isPrivate || privateRent);
+  const canReserve = working && (!isPrivate || privateRent) && !isPool;
 
   const workingBadge = working
     ? `<span class="badge ok">sprawny</span>`
@@ -1337,6 +1400,10 @@ function renderKayakCard(k, isFav = false) {
   const availabilityBadge = reservedNow
     ? `<span class="badge danger">rezerwacja</span>`
     : `<span class="badge soft">wolny</span>`;
+
+  const poolBadge = isPool
+    ? `<span class="badge pool">Basen</span>`
+    : "";
 
   const typeBadge = type
     ? `<span class="badge soft">${escapeHtml(type)}</span>`
@@ -1349,7 +1416,7 @@ function renderKayakCard(k, isFav = false) {
   const detailsRows = buildKayakDetailsRows(k);
 
   return `
-    <div class="gearCard ${working ? "gearOk" : "gearBad"}" data-gear-card-id="${escapeAttr(String(k?.id || ""))}">
+    <div class="gearCard ${working ? "gearOk" : "gearBad"}${isPool ? " gearPool" : ""}" data-gear-card-id="${escapeAttr(String(k?.id || ""))}">
       <div class="gearCardInner">
 
         <div class="gearHead">
@@ -1372,7 +1439,7 @@ function renderKayakCard(k, isFav = false) {
             >${heartSvg(isFav)}</button>
             <div class="gearBadges gearBadgesStack">
               ${workingBadge}
-              ${availabilityBadge}
+              ${poolBadge || availabilityBadge}
               ${typeBadge}
             </div>
           </div>
@@ -1439,6 +1506,86 @@ function renderKayakCard(k, isFav = false) {
   `;
 }
 
+// Wiersz 2 karty kasku: "3 / czerwony (M)" — numer + kolor + rozmiar w nawiasie
+function buildHelmetLine2(item) {
+  const color = String(item?.color || "").trim();
+  const size = String(item?.size || "").trim();
+  const parts = [];
+  if (color) parts.push(`kolor: ${color}`);
+  if (size) parts.push(`rozm. ${size}`);
+  return parts.join("  ·  ");
+}
+
+// Wiersz 3 karty kasku: "uwagi: ..." lub pusty
+function buildHelmetLine3(item) {
+  const notes = String(item?.notes || "").trim();
+  return notes ? `uwagi: ${notes}` : "";
+}
+
+function renderHelmetCard(item, isFav = false) {
+  const number = String(item?.number || "").trim();
+  const brand = String(item?.brand || "").trim();
+  const model = String(item?.model || "").trim();
+
+  const title = buildGenericGearTitle(item);
+  const line2 = buildHelmetLine2(item);
+  const line3 = buildHelmetLine3(item);
+
+  return `
+    <div class="gearCard gearOk" data-gear-card-id="${escapeAttr(String(item?.id || ""))}">
+      <div class="gearCardInner">
+
+        <div class="gearHead">
+          <div class="gearTitleWrap">
+            <div class="gearTitleLine">
+              <span class="gearTitle">${escapeHtml(brand || "Kask")}</span><span class="gearModel"> ${escapeHtml(model || "")}</span>${number ? `<span class="gearNrInline"> nr. ${escapeHtml(number)}</span>` : ""}
+            </div>
+            ${line2 ? `<div class="gearNrColorMobile">${escapeHtml(line2)}</div>` : ""}
+            ${line3 ? `<div class="gearMiniType">${escapeHtml(line3)}</div>` : ""}
+          </div>
+
+          <div class="gearHeadSide">
+            <button
+              class="gearFavBtn${isFav ? " active" : ""}"
+              type="button"
+              data-gear-fav="${escapeAttr(String(item?.id || ""))}"
+              aria-label="${isFav ? "Usuń z ulubionych" : "Dodaj do ulubionych"}"
+            >${heartSvg(isFav)}</button>
+          </div>
+        </div>
+
+        <div class="gearImgs gearImgsSingle">
+          <button
+            class="gearImgBtn"
+            type="button"
+            data-gear-helmet-cover="${escapeAttr(number)}"
+            data-gear-title="${escapeAttr(title)}">
+            <div class="gearImgPh">
+              <img
+                alt=""
+                src="${escapeAttr(PLACEHOLDER_SVG)}"
+                data-helmet-number="${escapeAttr(number)}"
+                loading="lazy"
+              />
+              <div class="gearImgLabel">Zdjęcie</div>
+            </div>
+          </button>
+        </div>
+
+        <div class="gearMiniBar">
+          <button
+            type="button"
+            class="gearMiniReserveBtn gearBundleReserveBtn"
+            data-gear-bundle-reserve="${escapeAttr(String(item?.id || ""))}"
+            data-gear-bundle-category="helmets"
+          >Rezerwuj</button>
+        </div>
+
+      </div>
+    </div>
+  `;
+}
+
 function renderGenericGearCard(item, isFav = false) {
   const number = String(item?.number || "").trim();
   const brand = String(item?.brand || "").trim();
@@ -1457,7 +1604,6 @@ function renderGenericGearCard(item, isFav = false) {
   const secondaryImg = imgSide || "";
 
   const title = buildGenericGearTitle(item);
-  const detailsRows = buildGenericGearDetailsRows(item);
 
   const typeBadge = type
     ? `<span class="badge soft">${escapeHtml(type)}</span>`
@@ -1534,15 +1680,7 @@ function renderGenericGearCard(item, isFav = false) {
             data-gear-bundle-reserve="${escapeAttr(String(item?.id || ""))}"
             data-gear-bundle-category="${escapeAttr(String(item?.gearCategory || ""))}"
           >Rezerwuj</button>
-          <button type="button" class="ghost gearMoreBtn">Więcej</button>
         </div>
-
-        <details class="gearDetails">
-          <summary class="gearDetailsSummary">Więcej</summary>
-          <div class="gearMeta">
-            ${detailsRows}
-          </div>
-        </details>
 
       </div>
     </div>
@@ -1638,6 +1776,86 @@ function buildGenericGearTitle(item) {
 
   const core = [brand, model].filter(Boolean).join(" ").trim() || category || "Sprzęt";
   return number ? `${core} (nr ${number})` : core;
+}
+
+// Wiersz 2 karty kamizelki: "27 / czerwony" — numer + kolor
+function buildLifejacketLine2(item) {
+  const color = String(item?.color || "").trim();
+  return color ? `kolor: ${color}` : "";
+}
+
+// Wiersz 3 karty kamizelki: "asekuracyjna / M (50N)" — typ + rozmiar + wyporność
+function buildLifejacketLine3(item) {
+  const type = String(item?.type || "").trim();
+  const size = String(item?.size || "").trim();
+  const buoyancy = String(item?.meta?.buoyancy || "").trim();
+  const typeSizePart = [type, size].filter(Boolean).join(" / ");
+  const buoyancyPart = buoyancy ? `(${buoyancy})` : "";
+  return [typeSizePart, buoyancyPart].filter(Boolean).join(" ");
+}
+
+function renderLifejacketCard(item, isFav = false) {
+  const number = String(item?.number || "").trim();
+  const brand = String(item?.brand || "").trim();
+  const model = String(item?.model || "").trim();
+
+  const title = buildGenericGearTitle(item);
+  const line2 = buildLifejacketLine2(item);
+  const line3 = buildLifejacketLine3(item);
+
+  return `
+    <div class="gearCard gearOk" data-gear-card-id="${escapeAttr(String(item?.id || ""))}">
+      <div class="gearCardInner">
+
+        <div class="gearHead">
+          <div class="gearTitleWrap">
+            <div class="gearTitleLine">
+              <span class="gearTitle">${escapeHtml(brand || "Kamizelka")}</span><span class="gearModel"> ${escapeHtml(model || "")}</span>${number ? `<span class="gearNrInline"> nr. ${escapeHtml(number)}</span>` : ""}
+            </div>
+            ${line3 ? `<div class="gearMiniType">${escapeHtml(line3)}</div>` : ""}
+            ${line2 ? `<div class="gearNrColorMobile">${escapeHtml(line2)}</div>` : ""}
+          </div>
+
+          <div class="gearHeadSide">
+            <button
+              class="gearFavBtn${isFav ? " active" : ""}"
+              type="button"
+              data-gear-fav="${escapeAttr(String(item?.id || ""))}"
+              aria-label="${isFav ? "Usuń z ulubionych" : "Dodaj do ulubionych"}"
+            >${heartSvg(isFav)}</button>
+          </div>
+        </div>
+
+        <div class="gearImgs gearImgsSingle">
+          <button
+            class="gearImgBtn"
+            type="button"
+            data-gear-lifejacket-cover="${escapeAttr(number)}"
+            data-gear-title="${escapeAttr(title)}">
+            <div class="gearImgPh">
+              <img
+                alt=""
+                src="${escapeAttr(PLACEHOLDER_SVG)}"
+                data-lifejacket-number="${escapeAttr(number)}"
+                loading="lazy"
+              />
+              <div class="gearImgLabel">Zdjęcie</div>
+            </div>
+          </button>
+        </div>
+
+        <div class="gearMiniBar">
+          <button
+            type="button"
+            class="gearMiniReserveBtn gearBundleReserveBtn"
+            data-gear-bundle-reserve="${escapeAttr(String(item?.id || ""))}"
+            data-gear-bundle-category="lifejackets"
+          >Rezerwuj</button>
+        </div>
+
+      </div>
+    </div>
+  `;
 }
 
 function normalizeTypeValue(v) {

@@ -356,9 +356,10 @@ async function renderGodzinkiView(viewEl, routeId, ctx, moduleId) {
 
 // ─── export ───────────────────────────────────────────────────────────────────
 
-export function createGodzinkiModule({ id, label, defaultRoute, order, enabled, access }) {
+export function createGodzinkiModule({ id, type, label, defaultRoute, order, enabled, access }) {
   return {
     id,
+    type,
     label,
     defaultRoute: defaultRoute === "home" ? "balance" : (defaultRoute || "balance"),
     order,

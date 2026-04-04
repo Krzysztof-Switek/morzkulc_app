@@ -220,9 +220,10 @@ async function bindSubmitForm(innerEl, ctx) {
 
 // ─── moduł ───────────────────────────────────────────────────────────────────
 
-export function createImprezaModule({ id, label, defaultRoute, order, enabled, access }) {
+export function createImprezaModule({ id, type, label, defaultRoute, order, enabled, access }) {
   return {
     id,
+    type,
     label,
     defaultRoute,
     order,

@@ -10,9 +10,10 @@ const KAYAKS_URL = "/api/gear/kayaks";
 const UPDATE_RESERVATION_URL = "/api/gear/reservations/update";
 const CANCEL_RESERVATION_URL = "/api/gear/reservations/cancel";
 
-export function createMyReservationsModule({ id, label, defaultRoute, order, enabled, access }) {
+export function createMyReservationsModule({ id, type, label, defaultRoute, order, enabled, access }) {
   return {
     id,
+    type,
     label,
     defaultRoute,
     order,

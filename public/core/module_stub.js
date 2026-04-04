@@ -1,6 +1,7 @@
-export function createGenericModule({ id, label, defaultRoute, order, enabled, access }) {
+export function createGenericModule({ id, type, label, defaultRoute, order, enabled, access }) {
   return {
     id,
+    type,
     label,
     defaultRoute,
     order,

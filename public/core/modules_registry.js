@@ -8,15 +8,18 @@ import { createBasenModule } from "/modules/basen_module.js";
 /**
  * Resolves the module component type from setup config.
  *
- * Priority: explicit `type` field → derived from PL label (backwards compatibility).
+ * Priority: explicit `type` field (only if it matches a known type) → derived from PL label.
  * Returns a stable lowercase type string or null for unknown/generic modules.
  *
  * Known types: "gear" | "godzinki" | "imprezy" | "basen"
  */
-function resolveModuleType(cfg) {
-  if (cfg?.type) return String(cfg.type).trim().toLowerCase();
+const KNOWN_MODULE_TYPES = new Set(["gear", "godzinki", "imprezy", "basen"]);
 
-  // Backwards compatibility: derive type from PL label
+function resolveModuleType(cfg) {
+  const typeField = String(cfg?.type || "").trim().toLowerCase();
+  if (typeField && KNOWN_MODULE_TYPES.has(typeField)) return typeField;
+
+  // Fallback: derive type from PL label (backwards compatibility, or when type is missing/unrecognized)
   const label = String(cfg?.label || "").trim().toLowerCase();
   if (label === "sprzęt") return "gear";
   if (label === "godzinki") return "godzinki";

@@ -214,6 +214,15 @@ export async function fetchItemDetails(
 
     // Category-specific checks
     if (cat === "kayaks") {
+      const storageVal = norm(found?.storage || found?.storedAt).toLowerCase();
+      if (storageVal === "basen") {
+        return {
+          ok: false,
+          code: "item_not_reservable",
+          message: `Kajak ${iid} jest przypisany do basenu i nie może być rezerwowany w module Sprzęt`,
+          details: {itemId: iid, category: cat},
+        };
+      }
       if (found.isOperational !== true) {
         return {
           ok: false,

@@ -150,3 +150,38 @@ export async function storageFetchKayakGalleryUrls(number) {
   if (!result.items.length) return [];
   return Promise.all(result.items.map((item) => getDownloadURL(item)));
 }
+
+// Zdjęcie boczne kasku: GEAR/HELMETS/<number>_bok.webp
+// Bezpośredni URL — nazwa pliku jest deterministyczna.
+export async function storageFetchHelmetUrl(number) {
+  const n = String(number || "").trim();
+  if (!n) return null;
+  try {
+    return await getDownloadURL(ref(storage, `GEAR/HELMETS/${n}_bok.webp`));
+  } catch {
+    return null;
+  }
+}
+
+// Zdjęcie frontalne kasku: GEAR/HELMETS/<number>.webp
+export async function storageFetchHelmetFrontUrl(number) {
+  const n = String(number || "").trim();
+  if (!n) return null;
+  try {
+    return await getDownloadURL(ref(storage, `GEAR/HELMETS/${n}.webp`));
+  } catch {
+    return null;
+  }
+}
+
+// Pojedyncze zdjęcie kamizelki: GEAR/LIFEJACKETS/<number>.webp
+// Bezpośredni URL — nazwa pliku jest deterministyczna.
+export async function storageFetchLifejacketUrl(number) {
+  const n = String(number || "").trim();
+  if (!n) return null;
+  try {
+    return await getDownloadURL(ref(storage, `GEAR/LIFEJACKETS/${n}.webp`));
+  } catch {
+    return null;
+  }
+}

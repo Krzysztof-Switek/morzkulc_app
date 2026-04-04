@@ -150,6 +150,17 @@ export async function createReservation(
   const kayakIds = uniq(args.kayakIds);
   if (!kayakIds.length) return {ok: false, code: "no_items", message: "No kayaks selected"} as const;
 
+  // Block pool kayaks (storage/storedAt === "basen")
+  for (const kayakId of kayakIds) {
+    const kayakSnap = await db.collection("gear_kayaks").doc(kayakId).get();
+    if (!kayakSnap.exists) continue;
+    const kData = kayakSnap.data() as any;
+    const storageVal = norm(kData?.storage || kData?.storedAt).toLowerCase();
+    if (storageVal === "basen") {
+      return {ok: false, code: "item_not_reservable", message: "Kajak jest przypisany do basenu i nie może być rezerwowany"} as const;
+    }
+  }
+
   const maxWeeks = roleMaxWeeks(vars, roleKey);
   const maxItems = roleMaxItems(vars, roleKey);
   if (maxWeeks <= 0 || maxItems <= 0) return {ok: false, code: "forbidden", message: "Role not allowed"} as const;
