@@ -86,7 +86,7 @@ async function renderHomeDashboard({ viewEl, ctx }) {
 
   // Basen tile: zawsze widoczny, disabled gdy moduł nieaktywny w setup
   const basenEnabledTile = (ctx.modules || []).find((m) =>
-    String(m?.label || "").trim().toLowerCase() === "basen"
+    m?.type === "basen"
   )?.enabled === true;
 
   // Render struktury natychmiast — rezerwacje ładujemy asynchronicznie
@@ -199,14 +199,14 @@ async function renderHomeDashboard({ viewEl, ctx }) {
 
   if (eventsBtn) {
     eventsBtn.addEventListener("click", () => {
-      const eventsTarget = getModuleRouteByLabelOrId(ctx, ["imprezy"]);
+      const eventsTarget = getModuleRouteByType(ctx, "imprezy");
       setHash(eventsTarget.moduleId, eventsTarget.routeId);
     });
   }
 
   viewEl.querySelectorAll("[data-home-action='basen']").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const basenTarget = getModuleRouteByLabelOrId(ctx, ["basen"]);
+      const basenTarget = getModuleRouteByType(ctx, "basen");
       setHash(basenTarget.moduleId, basenTarget.routeId);
     });
   });
@@ -214,7 +214,7 @@ async function renderHomeDashboard({ viewEl, ctx }) {
   const addEventBtn = viewEl.querySelector("[data-home-action='add-event']");
   if (addEventBtn) {
     addEventBtn.addEventListener("click", () => {
-      const eventsTarget = getModuleRouteByLabelOrId(ctx, ["imprezy"]);
+      const eventsTarget = getModuleRouteByType(ctx, "imprezy");
       if (eventsTarget.moduleId !== "home") {
         setHash(eventsTarget.moduleId, "submit");
       }
@@ -224,7 +224,7 @@ async function renderHomeDashboard({ viewEl, ctx }) {
   const addHoursBtn = viewEl.querySelector("[data-home-action='add-hours']");
   if (addHoursBtn) {
     addHoursBtn.addEventListener("click", () => {
-      const godzinkiTarget = getModuleRouteByLabelOrId(ctx, ["godzinki"]);
+      const godzinkiTarget = getModuleRouteByType(ctx, "godzinki");
       if (godzinkiTarget.moduleId !== "home") {
         setHash(godzinkiTarget.moduleId, "submit");
       }
@@ -288,7 +288,7 @@ async function renderHomeDashboard({ viewEl, ctx }) {
 
   // Ładuj zajęcia basenowe — sekcja widoczna tylko jeśli moduł "Basen" dostępny
   const basenModule = (ctx.modules || []).find((m) =>
-    String(m?.label || "").trim().toLowerCase() === "basen" && m.enabled
+    m?.type === "basen" && m.enabled
   );
   if (basenModule) {
     const basenSection = viewEl.querySelector("#homeBasenSection");
@@ -642,7 +642,21 @@ function renderProfileForm({ viewEl, ctx }) {
 }
 
 function getGearRoute(ctx) {
-  return getModuleRouteByLabelOrId(ctx, ["sprzęt"]);
+  return getModuleRouteByType(ctx, "gear");
+}
+
+function getModuleRouteByType(ctx, moduleType) {
+  const modules = Array.isArray(ctx?.modules) ? ctx.modules : [];
+  const found = modules.find((m) => m?.type === moduleType) || null;
+
+  if (!found) {
+    return { moduleId: "home", routeId: "home" };
+  }
+
+  return {
+    moduleId: String(found.id || "home"),
+    routeId: String(found.defaultRoute || "home")
+  };
 }
 
 function getModuleRouteByLabelOrId(ctx, names) {

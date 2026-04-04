@@ -1,5 +1,6 @@
 import type {Request, Response} from "express";
 import {submitPurchaseRequest} from "../modules/hours/godzinki_service";
+import {isUserStatusBlocked} from "../modules/users/userStatusCheck";
 
 type TokenCheck =
   | {error: string}
@@ -45,6 +46,19 @@ export async function handleGodzinkiPurchase(req: Request, res: Response, deps: 
       }
 
       const uid = tokenCheck.decoded.uid;
+
+      const userSnap = await db.collection("users_active").doc(uid).get();
+      if (!userSnap.exists) {
+        res.status(403).json({ok: false, code: "forbidden", error: "User not registered"});
+        return;
+      }
+
+      const statusKey = String((userSnap.data() as any)?.status_key || "");
+      if (await isUserStatusBlocked(db, statusKey)) {
+        res.status(403).json({ok: false, code: "forbidden", error: "Konto zawieszone."});
+        return;
+      }
+
       const body = (req.body || {}) as any;
       const amount = Number(body.amount);
 

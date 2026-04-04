@@ -59,6 +59,28 @@ export class GoogleWorkspaceProvider {
     }
   }
 
+  async removeMemberFromGroup(
+    groupEmail: string,
+    memberEmail: string
+  ): Promise<"removed" | "not_member"> {
+    const directory = await this.getDirectoryClient();
+
+    const g = normalizeEmail(groupEmail);
+    const m = normalizeEmail(memberEmail);
+    assertLooksLikeEmail("groupEmail", g);
+    assertLooksLikeEmail("memberEmail", m);
+
+    try {
+      await directory.members.delete({groupKey: g, memberKey: m});
+      return "removed";
+    } catch (e: any) {
+      const code = e?.code || e?.response?.status;
+      if (code === 404) return "not_member";
+      const msg = e?.message || String(e);
+      throw new Error(`Directory.members.delete failed for group="${g}" member="${m}": ${msg}`);
+    }
+  }
+
   async addMemberToGroup(
     groupEmail: string,
     memberEmail: string,

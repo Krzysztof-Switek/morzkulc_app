@@ -300,6 +300,10 @@ export async function updateReservationDates(
   const user = await getUserRole(db, args.uid);
   if (!user) return {ok: false, code: "forbidden", message: "User not registered"} as const;
 
+  if (await isUserStatusBlocked(db, user.statusKey)) {
+    return {ok: false, code: "forbidden", message: "Access blocked"} as const;
+  }
+
   const vars = await getGearVars(db);
 
   const oldStart = String(r?.startDate || "");

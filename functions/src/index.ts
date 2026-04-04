@@ -152,6 +152,7 @@ type ModuleAccess = {
 
 type SetupModuleConfig = {
   label?: string;
+  type?: string; // e.g. "gear" | "godzinki" | "imprezy" | "basen" — used by frontend to resolve component
   defaultRoute?: string;
   order?: number;
   enabled?: boolean;
@@ -161,6 +162,11 @@ type SetupModuleConfig = {
 type StatusMapping = {
   label: string;
   blocksAccess?: boolean;
+};
+
+type RoleMapping = {
+  label: string;
+  groups?: string[]; // Google Group email addresses for users with this role
 };
 
 type SetupDefaults = {
@@ -173,6 +179,7 @@ type SetupDefaults = {
 type SetupApp = {
   modules?: Record<string, SetupModuleConfig>;
   statusMappings?: Record<string, StatusMapping>;
+  roleMappings?: Record<string, RoleMapping>;
   defaults?: SetupDefaults;
   updatedAt?: any;
   updatedBy?: string;
@@ -342,8 +349,79 @@ async function syncMemberToSheet(uid: string): Promise<void> {
 }
 
 /**
+ * Filters setup.modules to only those the given user can see.
+ *
+ * Filtering rules (must match canSeeModule in access_control.js):
+ *   - module.enabled !== true                        → hidden
+ *   - statusMappings[statusKey].blocksAccess === true → all modules hidden
+ *   - access.mode === "off"                          → hidden
+ *   - uid/email in access.usersBlock                 → hidden
+ *   - access.mode === "test" and uid/email not in testUsersAllow → hidden
+ *   - access.mode === "prod" and rolesAllowed empty  → hidden
+ *   - access.mode === "prod" and roleKey not in rolesAllowed → hidden
+ *
+ * Sensitive fields (testUsersAllow, usersBlock) are stripped from each module's
+ * access object before returning so they do not leak to the client.
+ */
+function filterSetupForUser(
+  setup: SetupApp,
+  uid: string,
+  email: string,
+  roleKey: string,
+  statusKey: string
+): SetupApp {
+  const statusBlocked =
+    setup.statusMappings?.[statusKey]?.blocksAccess === true;
+
+  const filteredModules: Record<string, SetupModuleConfig> = {};
+
+  for (const [id, cfg] of Object.entries(setup.modules || {})) {
+    if (!cfg.enabled) continue;
+    if (statusBlocked) continue;
+
+    const access = cfg.access || {};
+    const mode = String(access.mode || "prod");
+
+    if (mode === "off") continue;
+
+    const usersBlock = Array.isArray(access.usersBlock) ?
+      access.usersBlock.map(String) :
+      [];
+    if (usersBlock.includes(uid) || usersBlock.includes(email)) continue;
+
+    if (mode === "test") {
+      const testAllow = Array.isArray(access.testUsersAllow) ?
+        access.testUsersAllow.map(String) :
+        [];
+      if (!testAllow.includes(uid) && !testAllow.includes(email)) continue;
+    } else {
+      // prod
+      const rolesAllowed = Array.isArray(access.rolesAllowed) ?
+        access.rolesAllowed.map(String) :
+        [];
+      if (rolesAllowed.length === 0) continue;
+      if (!rolesAllowed.includes(roleKey)) continue;
+    }
+
+    // Moduł widoczny — pomiń wrażliwe pola z access przed zwróceniem
+    const safeAccess: ModuleAccess = {
+      mode: access.mode,
+      rolesAllowed: access.rolesAllowed,
+    };
+
+    filteredModules[id] = {...cfg, access: safeAccess};
+  }
+
+  return {
+    ...setup,
+    modules: filteredModules,
+  };
+}
+
+/**
  * GET /api/setup (authenticated)
- * Returns single setup shape: { setup: { modules: {...} } }
+ * Returns setup filtered to modules visible for the requesting user.
+ * Sensitive access fields (testUsersAllow, usersBlock) are stripped from the response.
  */
 export const getSetup = onRequest({invoker: "private"}, async (req, res) => {
   if (sendPreflight(req, res)) return;
@@ -359,8 +437,26 @@ export const getSetup = onRequest({invoker: "private"}, async (req, res) => {
         return;
       }
 
-      const setup = await getSetupApp();
-      res.status(200).json({ok: true, setup, setupMissing: setup ? false : true});
+      const uid = tokenCheck.decoded.uid;
+      const email = String(tokenCheck.decoded.email || "").trim().toLowerCase();
+
+      const [setup, userSnap] = await Promise.all([
+        getSetupApp(),
+        db.collection("users_active").doc(uid).get(),
+      ]);
+
+      if (!setup) {
+        res.status(200).json({ok: true, setup: null, setupMissing: true});
+        return;
+      }
+
+      const userData = userSnap.exists ? (userSnap.data() as any) : null;
+      const roleKey = String(userData?.role_key || "");
+      const statusKey = String(userData?.status_key || "");
+
+      const filteredSetup = filterSetupForUser(setup, uid, email, roleKey, statusKey);
+
+      res.status(200).json({ok: true, setup: filteredSetup, setupMissing: false});
     } catch (err) {
       const e = err as {message?: string; code?: string; stack?: string};
       logger.error("getSetup failed", {message: e?.message, code: e?.code, stack: e?.stack});
