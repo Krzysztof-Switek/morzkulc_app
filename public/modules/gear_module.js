@@ -353,6 +353,8 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
       let all = [];
       let favSet = new Set();
       let selectedKayak = null;
+      // Per-card photo state for in-list swipe: Map<kayakNumber, { urls: string[], idx: number, loaded: boolean }>
+      const photoState = new Map();
 
       const setErr = (msg) => {
         errEl.textContent = String(msg || "");
@@ -756,10 +758,26 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
             storageFetchKayakCoverUrl(num)
               .then((url) => {
                 if (!url) return;
-                imgEl.src = url;
+                // Track photo state for in-list swipe
+                if (!photoState.has(num)) {
+                  photoState.set(num, { urls: [url], idx: 0, loaded: false });
+                } else {
+                  const s = photoState.get(num);
+                  if (!s.urls.includes(url)) s.urls[0] = url;
+                }
+                // Restore last-viewed photo index if list was re-rendered mid-swipe
+                const s = photoState.get(num);
+                const displayUrl = s.urls[s.idx] || url;
+                imgEl.src = displayUrl;
                 imgEl.classList.add("gearCoverLoaded");
                 const btn = imgEl.closest("[data-gear-kayak-cover]");
                 if (btn) btn.setAttribute("data-loaded-cover-url", url);
+                // Show counter if already has multiple photos
+                const counter = btn && btn.querySelector(".gearImgCounter");
+                if (counter && s.urls.length > 1) {
+                  counter.textContent = `${s.idx + 1}/${s.urls.length}`;
+                  counter.hidden = false;
+                }
               })
               .catch((err) => console.error("[Storage] cover load failed for", num, err));
           });
@@ -1098,6 +1116,64 @@ export function createGearModule({ id, label, defaultRoute, order, enabled, acce
         }
       }, { passive: true });
 
+      // ── In-list photo swipe (horizontal swipe on card photo = cycle photos) ───
+      let _listSwipeStartX = 0;
+      let _listSwipeStartY = 0;
+      let _listSwipeBtn = null;
+
+      listEl.addEventListener("touchstart", (ev) => {
+        if (ev.touches.length !== 1) return;
+        _listSwipeStartX = ev.touches[0].clientX;
+        _listSwipeStartY = ev.touches[0].clientY;
+        _listSwipeBtn = ev.target.closest ? ev.target.closest("[data-gear-kayak-cover]") : null;
+      }, { passive: true });
+
+      listEl.addEventListener("touchend", async (ev) => {
+        const btn = _listSwipeBtn;
+        _listSwipeBtn = null;
+        if (!btn) return;
+
+        const dx = ev.changedTouches[0].clientX - _listSwipeStartX;
+        const dy = ev.changedTouches[0].clientY - _listSwipeStartY;
+        const isHorizontal = Math.abs(dx) >= 40 && Math.abs(dx) > Math.abs(dy) * 1.5;
+        if (!isHorizontal) return; // treat as tap → click handler opens modal
+
+        ev.preventDefault(); // prevent the click that would open the modal
+
+        const number = String(btn.getAttribute("data-gear-kayak-cover") || "");
+        if (!number) return;
+
+        let state = photoState.get(number);
+        if (!state) return;
+
+        // Lazy-load gallery on first swipe
+        if (!state.loaded) {
+          state.loaded = true;
+          try {
+            const galleryUrls = await storageFetchKayakGalleryUrls(number);
+            const seen = new Set(state.urls);
+            for (const u of galleryUrls) {
+              if (!seen.has(u)) { state.urls.push(u); seen.add(u); }
+            }
+          } catch { /* ignore — use cover only */ }
+        }
+
+        if (state.urls.length <= 1) return; // only one photo, nothing to cycle
+
+        state.idx = ((state.idx + (dx < 0 ? 1 : -1)) + state.urls.length) % state.urls.length;
+
+        const imgEl = btn.querySelector("img");
+        if (imgEl) {
+          imgEl.src = state.urls[state.idx];
+          imgEl.classList.add("gearCoverLoaded");
+        }
+        const counter = btn.querySelector(".gearImgCounter");
+        if (counter) {
+          counter.textContent = `${state.idx + 1}/${state.urls.length}`;
+          counter.hidden = false;
+        }
+      }, { passive: false });
+
       listEl.addEventListener("click", async (ev) => {
         const el = ev.target;
         if (!el || !el.closest) return;
@@ -1315,6 +1391,7 @@ function renderKayakCard(k, isFav = false) {
                 data-cover-number="${escapeAttr(number)}"
                 loading="lazy"
               />
+              <span class="gearImgCounter" hidden></span>
               <div class="gearImgLabel">Zdjecia</div>
             </div>
           </button>
