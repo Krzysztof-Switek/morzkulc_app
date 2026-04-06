@@ -1,8 +1,6 @@
 import type {Request, Response} from "express";
 import {cancelSession} from "../modules/basen/basen_service";
 
-const ADMIN_ROLES = new Set(["rola_zarzad", "rola_kr"]);
-
 type Deps = {
   db: FirebaseFirestore.Firestore;
   sendPreflight: (req: Request, res: Response) => boolean;
@@ -11,6 +9,7 @@ type Deps = {
   corsHandler: (req: Request, res: Response, next: () => void) => void;
   requireIdToken: (req: Request) => Promise<{error: string} | {decoded: any}>;
   enqueueBasenSessionCancelledNotify: (sessionId: string) => Promise<void>;
+  adminRoleKeys: string[];
 };
 
 export async function handleBasenCancelSession(req: Request, res: Response, deps: Deps): Promise<void> {
@@ -42,7 +41,7 @@ export async function handleBasenCancelSession(req: Request, res: Response, deps
       const userData = userSnap.data() as any;
       const roleKey = String(userData?.role_key || "");
 
-      if (!ADMIN_ROLES.has(roleKey)) {
+      if (!deps.adminRoleKeys.includes(roleKey)) {
         res.status(403).json({error: "Brak uprawnień. Wymagana rola: zarząd lub KR."});
         return;
       }

@@ -18,9 +18,8 @@ export type SubmitEventDeps = {
   corsHandler: any;
   requireIdToken: (req: Request) => Promise<TokenCheck>;
   enqueueEventSheetWrite: (eventId: string, uid: string) => Promise<void>;
+  memberRoleKeys: string[];
 };
-
-const ALLOWED_ROLES = new Set(["rola_czlonek", "rola_zarzad", "rola_kr"]);
 
 function norm(v: any): string {
   return String(v || "").trim();
@@ -35,6 +34,7 @@ export async function handleSubmitEvent(req: Request, res: Response, deps: Submi
     corsHandler,
     requireIdToken,
     enqueueEventSheetWrite,
+    memberRoleKeys,
   } = deps;
 
   if (sendPreflight(req, res)) return;
@@ -73,7 +73,7 @@ export async function handleSubmitEvent(req: Request, res: Response, deps: Submi
         return;
       }
 
-      if (!ALLOWED_ROLES.has(roleKey)) {
+      if (!memberRoleKeys.includes(roleKey)) {
         res.status(403).json({ok: false, code: "forbidden", message: "Role not allowed"});
         return;
       }

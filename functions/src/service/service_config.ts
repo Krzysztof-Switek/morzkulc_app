@@ -14,6 +14,7 @@ export interface ServiceConfig {
   welcomeBodyText: (displayName: string | null, userEmail: string) => string;
 
   adminRoleKeys: string[];
+  memberRoleKeys: string[];
 
   worker: {
     eventLockSeconds: number;
@@ -71,6 +72,7 @@ export function getServiceConfig(): ServiceConfig {
   const delegatedSubject = process.env.SVC_WORKSPACE_DELEGATED_SUBJECT || "admin@morzkulc.pl";
 
   const adminRoleKeysRaw = process.env.SVC_ADMIN_ROLE_KEYS || "rola_zarzad,rola_kr";
+  const memberRoleKeysRaw = process.env.SVC_MEMBER_ROLE_KEYS || "rola_czlonek,rola_zarzad,rola_kr";
 
   const membersSpreadsheetId =
     process.env.SVC_MEMBERS_SHEET_ID || "1lF5eDF9B6ip4G497qG1QGePXqrXdLPS8kt-3pX-ZBsM";
@@ -132,6 +134,7 @@ export function getServiceConfig(): ServiceConfig {
     },
 
     adminRoleKeys: adminRoleKeysRaw.split(",").map((s) => s.trim()).filter(Boolean),
+    memberRoleKeys: memberRoleKeysRaw.split(",").map((s) => s.trim()).filter(Boolean),
 
     worker: {
       eventLockSeconds: Number(process.env.SVC_WORKER_EVENT_LOCK_SECONDS || 120),

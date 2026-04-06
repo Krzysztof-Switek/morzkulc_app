@@ -1,6 +1,7 @@
 import type {Request, Response} from "express";
 import {isIsoDateYYYYMMDD} from "../modules/calendar/calendar_utils";
 import {createBundleReservation, BundleItemInput} from "../modules/equipment/bundle/gear_bundle_service";
+import {isUserStatusBlocked} from "../modules/users/userStatusCheck";
 
 type TokenCheck =
   | {error: string}
@@ -56,6 +57,20 @@ export async function handleGearBundleReservationCreate(
         return;
       }
 
+      const uid = tokenCheck.decoded.uid;
+
+      const userSnap = await db.collection("users_active").doc(uid).get();
+      if (!userSnap.exists) {
+        res.status(403).json({ok: false, code: "forbidden", message: "User not registered"});
+        return;
+      }
+
+      const statusKey = String((userSnap.data() as any)?.status_key || "");
+      if (await isUserStatusBlocked(db, statusKey)) {
+        res.status(403).json({ok: false, code: "forbidden", message: "Konto zawieszone."});
+        return;
+      }
+
       const body = (req.body || {}) as any;
       const startDate = norm(body.startDate);
       const endDate = norm(body.endDate);
@@ -74,7 +89,7 @@ export async function handleGearBundleReservationCreate(
       }
 
       const out = await createBundleReservation(db, {
-        uid: tokenCheck.decoded.uid,
+        uid,
         startDate,
         endDate,
         items,

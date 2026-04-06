@@ -32,13 +32,15 @@ import {handleBasenCreateSession} from "./api/basenCreateSessionHandler";
 import {handleBasenCancelSession} from "./api/basenCancelSessionHandler";
 import {handleBasenGrantKarnet} from "./api/basenGrantKarnetHandler";
 import {getServiceConfig} from "./service/service_config";
-import {GoogleSheetsProvider} from "./service/providers/googleSheetsProvider";
 
 setGlobalOptions({region: "us-central1"});
 
 admin.initializeApp();
 const db = admin.firestore();
 db.settings({ignoreUndefinedProperties: true});
+
+const svcCfg = getServiceConfig();
+const {adminRoleKeys, memberRoleKeys} = svcCfg;
 
 const ALLOWED_HOSTS = new Set<string>([
   "morzkulc-e9df7.web.app",
@@ -216,137 +218,6 @@ function requireAdminEmail(email: string): boolean {
   return String(email || "").toLowerCase() === "admin@morzkulc.pl";
 }
 
-function roleLabel(roleKey: string): string {
-  const m: Record<string, string> = {
-    rola_zarzad: "Zarząd",
-    rola_kr: "KR",
-    rola_czlonek: "Członek",
-    rola_kandydat: "Kandydat",
-    rola_sympatyk: "Sympatyk",
-    rola_kursant: "Kursant",
-  };
-  return m[roleKey] || roleKey || "";
-}
-
-function statusLabel(statusKey: string): string {
-  const m: Record<string, string> = {
-    status_aktywny: "Aktywny",
-    status_zawieszony: "Zawieszony",
-    status_skreslony: "Skreślony",
-  };
-  return m[statusKey] || statusKey || "";
-}
-
-function formatDatePL(d: Date): string {
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const yyyy = String(d.getFullYear());
-  return `${dd}-${mm}-${yyyy}`;
-}
-
-function toDateSafe(v: any): Date | null {
-  if (!v) return null;
-  if (typeof v?.toDate === "function") return v.toDate();
-  const d = new Date(v);
-  if (Number.isNaN(d.getTime())) return null;
-  return d;
-}
-
-async function ensureMemberId(uid: string): Promise<number> {
-  const userRef = db.collection("users_active").doc(uid);
-  const counterRef = db.collection("counters").doc("members");
-
-  const out = await db.runTransaction(async (tx) => {
-    const userSnap = await tx.get(userRef);
-    if (!userSnap.exists) throw new Error("users_active missing for uid=" + uid);
-
-    const data = userSnap.data() as any;
-    const existingId = Number(data?.memberId || 0);
-    if (existingId > 0) return existingId;
-
-    const counterSnap = await tx.get(counterRef);
-    let nextId = 1;
-    if (counterSnap.exists) {
-      const c = counterSnap.data() as any;
-      const stored = Number(c?.nextId || 1);
-      nextId = stored > 0 ? stored : 1;
-    }
-
-    tx.set(
-      userRef,
-      {
-        memberId: nextId,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      },
-      {merge: true}
-    );
-
-    tx.set(counterRef, {nextId: nextId + 1}, {merge: true});
-
-    return nextId;
-  });
-
-  return out;
-}
-
-async function syncMemberToSheet(uid: string): Promise<void> {
-  const cfg = getServiceConfig();
-  const delegated = cfg.workspace.delegatedSubject;
-
-  const snap = await db.collection("users_active").doc(uid).get();
-  if (!snap.exists) return;
-
-  const data = snap.data() as any;
-  const email = String(data?.email || "").trim().toLowerCase();
-  const profile = data?.profile || {};
-  const roleKey = String(data?.role_key || "");
-  const statusKey = String(data?.status_key || "");
-
-  const firstName = String(profile?.firstName || "").trim();
-  const lastName = String(profile?.lastName || "").trim();
-  const nickname = String(profile?.nickname || "").trim();
-  const phone = String(profile?.phone || "").trim();
-  const dateOfBirth = String(profile?.dateOfBirth || "").trim();
-
-  const consentRodo = profile?.consentRodo === true;
-  const consentStatute = profile?.consentStatute === true;
-
-  if (!email || !firstName || !lastName || !phone || !dateOfBirth) return;
-  if (!consentRodo || !consentStatute) return;
-
-  const memberId = await ensureMemberId(uid);
-
-  const sheets = new GoogleSheetsProvider(delegated);
-
-  const createdAt = toDateSafe(data?.createdAt) || new Date();
-  const registrationDatePL = formatDatePL(createdAt);
-
-  const patch: Record<string, any> = {
-    "ID": String(memberId),
-    "e-mail": email,
-    "imię": firstName,
-    "nazwisko": lastName,
-    "ksywa": nickname,
-    "telefon": phone,
-    "data urodzenia": dateOfBirth,
-    "Rola": roleLabel(roleKey),
-    "Status": statusLabel(statusKey),
-    "Zgody RODO": "TAK",
-    "data rejestracji": registrationDatePL,
-  };
-
-  const result = await sheets.upsertMemberRowById(
-    {spreadsheetId: cfg.sheets.membersSpreadsheetId, tabName: cfg.sheets.membersTabName},
-    patch
-  );
-
-  await db.collection("users_active").doc(uid).update({
-    "service.sheetSyncedAt": admin.firestore.FieldValue.serverTimestamp(),
-    "service.sheetRowNumber": result.rowNumber,
-    "service.sheetAction": result.action,
-    "updatedAt": admin.firestore.FieldValue.serverTimestamp(),
-  });
-}
 
 /**
  * Filters setup.modules to only those the given user can see.
@@ -539,7 +410,7 @@ export const registerUser = onRequest({invoker: "private"}, async (req, res) => 
     requireIdToken,
     getSetupApp,
     defaultScreenForRoleKey,
-    syncMemberToSheet,
+    enqueueMemberSheetSync,
   });
 });
 
@@ -764,6 +635,23 @@ export const purchaseGodzinki = onRequest({invoker: "private"}, async (req, res)
 });
 
 /**
+ * Kolejkuje zadanie serwisowe synchronizacji członka z Google Sheets.
+ * Zastępuje fire-and-forget syncMemberToSheet — umożliwia retry.
+ */
+async function enqueueMemberSheetSync(uid: string): Promise<void> {
+  const jobRef = db.collection("service_jobs").doc();
+  await jobRef.set({
+    id: jobRef.id,
+    taskId: "members.syncToSheet",
+    payload: {uid},
+    status: "queued",
+    attempts: 0,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+}
+
+/**
  * Kolejkuje zadanie serwisowe zapisu imprezy do Google Sheets.
  */
 async function enqueueEventSheetWrite(eventId: string, uid: string): Promise<void> {
@@ -805,6 +693,7 @@ export const submitEvent = onRequest({invoker: "private"}, async (req, res) => {
     corsHandler,
     requireIdToken,
     enqueueEventSheetWrite,
+    memberRoleKeys,
   });
 });
 
@@ -849,6 +738,7 @@ export const basenEnroll = onRequest({invoker: "private"}, async (req, res) => {
     setCorsHeaders,
     corsHandler,
     requireIdToken,
+    memberRoleKeys,
   });
 });
 
@@ -891,6 +781,7 @@ export const basenCreateSession = onRequest({invoker: "private"}, async (req, re
     setCorsHeaders,
     corsHandler,
     requireIdToken,
+    adminRoleKeys,
   });
 });
 
@@ -906,6 +797,7 @@ export const basenCancelSession = onRequest({invoker: "private"}, async (req, re
     corsHandler,
     requireIdToken,
     enqueueBasenSessionCancelledNotify,
+    adminRoleKeys,
   });
 });
 
@@ -920,6 +812,7 @@ export const basenGrantKarnet = onRequest({invoker: "private"}, async (req, res)
     setCorsHeaders,
     corsHandler,
     requireIdToken,
+    adminRoleKeys,
   });
 });
 

@@ -1,8 +1,6 @@
 import type {Request, Response} from "express";
 import {grantKarnet, getBasenVars} from "../modules/basen/basen_service";
 
-const ADMIN_ROLES = new Set(["rola_zarzad", "rola_kr"]);
-
 type Deps = {
   db: FirebaseFirestore.Firestore;
   sendPreflight: (req: Request, res: Response) => boolean;
@@ -10,6 +8,7 @@ type Deps = {
   setCorsHeaders: (req: Request, res: Response) => void;
   corsHandler: (req: Request, res: Response, next: () => void) => void;
   requireIdToken: (req: Request) => Promise<{error: string} | {decoded: any}>;
+  adminRoleKeys: string[];
 };
 
 export async function handleBasenGrantKarnet(req: Request, res: Response, deps: Deps): Promise<void> {
@@ -39,7 +38,7 @@ export async function handleBasenGrantKarnet(req: Request, res: Response, deps: 
       }
 
       const adminData = adminSnap.data() as any;
-      if (!ADMIN_ROLES.has(String(adminData?.role_key || ""))) {
+      if (!deps.adminRoleKeys.includes(String(adminData?.role_key || ""))) {
         res.status(403).json({error: "Brak uprawnień. Wymagana rola: zarząd lub KR."});
         return;
       }

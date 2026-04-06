@@ -2,8 +2,6 @@ import type {Request, Response} from "express";
 import {enrollInSession, getActiveKarnet, getBasenVars} from "../modules/basen/basen_service";
 import {isUserStatusBlocked} from "../modules/users/userStatusCheck";
 
-const ENROLL_ROLES = new Set(["rola_czlonek", "rola_zarzad", "rola_kr"]);
-
 type Deps = {
   db: FirebaseFirestore.Firestore;
   sendPreflight: (req: Request, res: Response) => boolean;
@@ -11,6 +9,7 @@ type Deps = {
   setCorsHeaders: (req: Request, res: Response) => void;
   corsHandler: (req: Request, res: Response, next: () => void) => void;
   requireIdToken: (req: Request) => Promise<{error: string} | {decoded: any}>;
+  memberRoleKeys: string[];
 };
 
 export async function handleBasenEnroll(req: Request, res: Response, deps: Deps): Promise<void> {
@@ -48,7 +47,7 @@ export async function handleBasenEnroll(req: Request, res: Response, deps: Deps)
         return;
       }
 
-      if (!ENROLL_ROLES.has(roleKey)) {
+      if (!deps.memberRoleKeys.includes(roleKey)) {
         res.status(403).json({error: "Brak uprawnień. Wymagana rola: członek, zarząd lub KR."});
         return;
       }

@@ -6,6 +6,7 @@ import { eventsSyncFromSheetTask, eventsWriteToSheetTask } from "./tasks/eventsS
 import { basenNotifySessionCancelledTask } from "./tasks/basenNotifySessionCancelled";
 import { gearPrivateStorageTask } from "./tasks/gearPrivateStorage";
 import { usersSyncRolesFromSheetTask } from "./tasks/usersSyncRolesFromSheet";
+import { membersSyncToSheetTask } from "./tasks/membersSyncToSheet";
 
 const tasks: ServiceTask[] = [
   onUserRegisteredWelcomeTask,
@@ -17,6 +18,7 @@ const tasks: ServiceTask[] = [
   basenNotifySessionCancelledTask,
   gearPrivateStorageTask,
   usersSyncRolesFromSheetTask,
+  membersSyncToSheetTask,
 ];
 
 export function getTaskRegistry(): Map<string, ServiceTask> {

@@ -53,6 +53,7 @@ export const onUserRegisteredWelcomeTask: ServiceTask<OnUserRegisteredPayload> =
     const welcomeEmailSentAt = service.welcomeEmailSentAt || null;
     const addedToListaGroupAt = service.addedToListaGroupAt || null;
     const addedToRoleGroupAt = service.addedToRoleGroupAt || null;
+    const roleGroupsMappingsSyncedAt = service.roleGroupsMappingsSyncedAt || null;
 
     // B) Add to lista@ group (everyone) - idempotent
     if (!addedToListaGroupAt) {
@@ -186,6 +187,64 @@ export const onUserRegisteredWelcomeTask: ServiceTask<OnUserRegisteredPayload> =
       }
     } else {
       logger.info("Skip: welcome email already sent", { uid });
+    }
+
+    // D) Sync Workspace groups based on roleMappings from setup/app (if configured)
+    //    This covers groups beyond the hardcoded membersGroup above.
+    //    Idempotent: only runs once per user via roleGroupsMappingsSyncedAt marker.
+    if (!roleGroupsMappingsSyncedAt) {
+      const setupSnap = await firestore.collection("setup").doc("app").get();
+      const roleMappings: Record<string, { groups?: string[] }> = (setupSnap.exists ? setupSnap.data() : null as any)?.roleMappings || {};
+
+      const allManagedGroups = new Set<string>();
+      for (const entry of Object.values(roleMappings)) {
+        for (const g of (entry.groups || [])) {
+          const gn = g.trim().toLowerCase();
+          if (gn && gn.includes("@")) allManagedGroups.add(gn);
+        }
+      }
+
+      if (allManagedGroups.size > 0) {
+        const targetGroups = new Set<string>(
+          (roleMappings[roleKey]?.groups || []).map((g) => g.trim().toLowerCase()).filter((g) => g.includes("@"))
+        );
+
+        logger.info("WelcomeTask: step D syncRoleMappingGroups", { uid, roleKey, targetGroups: [...targetGroups], allManagedGroups: [...allManagedGroups] });
+
+        let stepDOk = true;
+        for (const groupEmail of allManagedGroups) {
+          const shouldBeIn = targetGroups.has(groupEmail);
+          if (dryRun) {
+            logger.info("DRYRUN: step D", { uid, groupEmail, action: shouldBeIn ? "add" : "remove" });
+            continue;
+          }
+          try {
+            if (shouldBeIn) {
+              await workspace.addMemberToGroup(groupEmail, userEmail, "MEMBER");
+              logger.info("WelcomeTask: step D addMember", { uid, groupEmail });
+            } else {
+              await workspace.removeMemberFromGroup(groupEmail, userEmail);
+              logger.info("WelcomeTask: step D removeMember", { uid, groupEmail });
+            }
+          } catch (e) {
+            const err = asErr(e);
+            logger.error("WelcomeTask: step D FAILED for group", { uid, groupEmail, message: err?.message, code: err?.code });
+            stepDOk = false;
+          }
+        }
+
+        if (stepDOk && !dryRun) {
+          await userRef.update({ "service.roleGroupsMappingsSyncedAt": new Date() });
+          logger.info("WelcomeTask: step D marker set", { uid });
+        }
+      } else {
+        logger.info("WelcomeTask: step D skip — no roleMappings groups configured", { uid });
+        if (!dryRun) {
+          await userRef.update({ "service.roleGroupsMappingsSyncedAt": new Date() });
+        }
+      }
+    } else {
+      logger.info("Skip: roleGroupsMappings already synced", { uid });
     }
 
     logger.info("WelcomeTask: completed", { uid });

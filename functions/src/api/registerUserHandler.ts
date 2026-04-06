@@ -30,8 +30,8 @@ export type RegisterUserDeps = {
   getSetupApp: () => Promise<SetupApp | null>;
   defaultScreenForRoleKey: (roleKey: string) => string;
 
-  // ✅ sheets sync
-  syncMemberToSheet: (uid: string) => Promise<void>;
+  // ✅ sheets sync (via service_job for retry support)
+  enqueueMemberSheetSync: (uid: string) => Promise<void>;
 };
 
 type ProfileInput = {
@@ -266,7 +266,7 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
     requireIdToken,
     getSetupApp,
     defaultScreenForRoleKey,
-    syncMemberToSheet,
+    enqueueMemberSheetSync,
   } = deps;
 
   if (sendPreflight(req, res)) return;
@@ -390,8 +390,8 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
 
           // jeśli po tym profilu jest komplet → sync do arkusza (fire-and-forget, nie blokuje odpowiedzi)
           if (profileComplete) {
-            syncMemberToSheet(uid).catch((sheetErr: any) => {
-              console.error("syncMemberToSheet failed (existing user)", {
+            enqueueMemberSheetSync(uid).catch((sheetErr: any) => {
+              console.error("enqueueMemberSheetSync failed (existing user)", {
                 uid,
                 message: sheetErr?.message || String(sheetErr),
               });
@@ -490,8 +490,8 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
 
       // jeśli user już podał komplet profilu → sync do arkusza (fire-and-forget, nie blokuje odpowiedzi)
       if (profileComplete) {
-        syncMemberToSheet(uid).catch((sheetErr: any) => {
-          console.error("syncMemberToSheet failed (new user)", {
+        enqueueMemberSheetSync(uid).catch((sheetErr: any) => {
+          console.error("enqueueMemberSheetSync failed (new user)", {
             uid,
             message: sheetErr?.message || String(sheetErr),
           });
