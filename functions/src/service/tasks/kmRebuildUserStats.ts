@@ -48,9 +48,9 @@ export const kmRebuildUserStatsTask: ServiceTask<Payload> = {
     const currentYear = String(new Date().getFullYear());
 
     // Pobierz wszystkie km_logs dla użytkownika
+    // Brak orderBy — kolejność nie ma znaczenia przy akumulacji agregatów, unikamy konieczności indeksu (uid, date ASC)
     const logsSnap = await ctx.firestore.collection("km_logs")
       .where("uid", "==", uid)
-      .orderBy("date", "asc")
       .get();
 
     if (logsSnap.empty) {
@@ -62,8 +62,13 @@ export const kmRebuildUserStatsTask: ServiceTask<Payload> = {
     const userSnap = await ctx.firestore.collection("users_active").doc(uid).get();
     const userData = userSnap.exists ? (userSnap.data() as any) : null;
     const profile = userData?.profile || {};
-    const displayName = norm(profile?.firstName + " " + profile?.lastName) || norm(userData?.email);
-    const nickname = norm(profile?.nickname);
+    const firstName = String(profile?.firstName || "").trim();
+    const lastName = String(profile?.lastName || "").trim();
+    const fullName = [firstName, lastName].filter(Boolean).join(" ");
+    // Fallback do userSnapshot z pierwszego logu (dla użytkowników historycznych bez konta)
+    const firstLogSnapshot = (logsSnap.docs[0]?.data() as any)?.userSnapshot;
+    const displayName = fullName || norm(userData?.email) || norm(firstLogSnapshot?.displayName) || uid;
+    const nickname = norm(profile?.nickname) || norm(firstLogSnapshot?.nickname) || "";
 
     // Akumuluj agregaty
     let allTimeKm = 0;
@@ -80,15 +85,21 @@ export const kmRebuildUserStatsTask: ServiceTask<Payload> = {
     let yearPoints = 0;
     let yearLogs = 0;
 
+    // Agregaty per-rok
+    const yearAggregates: Record<string, {km: number; hours: number; days: number; points: number; logs: number}> = {};
+
     // Przelicz punkty dla każdego wpisu i aktualizuj go w Firestore
-    const batch = ctx.firestore.batch();
+    // Nowy batch tworzony po każdym commit — zamknięty batch nie przyjmuje kolejnych operacji
+    let currentBatch = ctx.firestore.batch();
     let batchCount = 0;
     const MAX_BATCH = 400;
 
     const flushBatch = async () => {
       if (batchCount > 0 && !dryRun) {
-        await batch.commit();
+        await currentBatch.commit();
         ctx.logger.info("km.rebuildUserStats: batch committed", {batchCount});
+        currentBatch = ctx.firestore.batch();
+        batchCount = 0;
       }
     };
 
@@ -115,6 +126,17 @@ export const kmRebuildUserStatsTask: ServiceTask<Payload> = {
       allTimeCapsizeRolka += capsizeRolls.rolka;
       allTimeCapsizeDziubek += capsizeRolls.dziubek;
 
+      // Akumuluj per-rok
+      if (logYear && /^\d{4}$/.test(logYear)) {
+        if (!yearAggregates[logYear]) yearAggregates[logYear] = {km: 0, hours: 0, days: 0, points: 0, logs: 0};
+        const ya = yearAggregates[logYear];
+        ya.km = Math.round((ya.km + (log.km || 0)) * 100) / 100;
+        ya.hours = Math.round((ya.hours + (log.hoursOnWater || 0)) * 100) / 100;
+        ya.days += 1;
+        ya.points = Math.round((ya.points + scoring.pointsTotal) * 100) / 100;
+        ya.logs += 1;
+      }
+
       // Akumuluj bieżący rok
       if (logYear === currentYear) {
         yearKm += log.km || 0;
@@ -126,7 +148,7 @@ export const kmRebuildUserStatsTask: ServiceTask<Payload> = {
 
       // Zaktualizuj pointsTotal/pointsBreakdown w samym logu
       if (!dryRun) {
-        batch.update(doc.ref, {
+        currentBatch.update(doc.ref, {
           pointsTotal: scoring.pointsTotal,
           pointsBreakdown: scoring.pointsBreakdown,
           scoringVersion: scoring.scoringVersion,
@@ -136,7 +158,6 @@ export const kmRebuildUserStatsTask: ServiceTask<Payload> = {
 
         if (batchCount >= MAX_BATCH) {
           await flushBatch();
-          batchCount = 0;
         }
       }
     }
@@ -169,6 +190,7 @@ export const kmRebuildUserStatsTask: ServiceTask<Payload> = {
       seasonPoints: Math.round(yearPoints * 100) / 100,
       seasonLogs: yearLogs,
       scoringVersion: vars.scoringVersion,
+      years: yearAggregates,
       updatedAt: admin.firestore.Timestamp.now(),
     };
 

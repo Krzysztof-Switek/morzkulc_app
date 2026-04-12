@@ -9,6 +9,7 @@ import { usersSyncRolesFromSheetTask } from "./tasks/usersSyncRolesFromSheet";
 import { membersSyncToSheetTask } from "./tasks/membersSyncToSheet";
 import { kmRebuildUserStatsTask } from "./tasks/kmRebuildUserStats";
 import { kmRebuildRankingsTask } from "./tasks/kmRebuildRankings";
+import { kmMergeHistoricalUserTask } from "./tasks/kmMergeHistoricalUser";
 
 const tasks: ServiceTask[] = [
   onUserRegisteredWelcomeTask,
@@ -23,6 +24,7 @@ const tasks: ServiceTask[] = [
   membersSyncToSheetTask,
   kmRebuildUserStatsTask,
   kmRebuildRankingsTask,
+  kmMergeHistoricalUserTask,
 ];
 
 export function getTaskRegistry(): Map<string, ServiceTask> {

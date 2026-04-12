@@ -255,6 +255,41 @@ async function findOpeningBalance(
   return {openingMatch: false, obData: null, matchMethod: null};
 }
 
+async function enqueueKmHistoricalMerge(
+  db: FirebaseFirestore.Firestore,
+  adminSdk: typeof admin,
+  uid: string,
+  email: string
+): Promise<void> {
+  if (!email) return;
+  const histUid = `hist_${email}`;
+  // Quick probe — is there anything to merge?
+  const probe = await db.collection("km_logs").where("uid", "==", histUid).limit(1).get();
+  if (probe.empty) return;
+  // Enqueue with deterministic job id (idempotent)
+  const jobId = `km-hist-merge:${uid}`;
+  const jobRef = db.collection("service_jobs").doc(jobId);
+  await db.runTransaction(async (tx) => {
+    const ex = await tx.get(jobRef);
+    if (ex.exists) {
+      const s = String((ex.data() as any)?.status || "");
+      if (s === "queued" || s === "running" || s === "done") return;
+    }
+    const now = adminSdk.firestore.Timestamp.now();
+    tx.set(jobRef, {
+      taskId: "km.mergeHistoricalUser",
+      payload: {uid, email, histUid},
+      status: "queued",
+      attempts: 0,
+      createdAt: now,
+      updatedAt: now,
+      nextRunAt: now,
+      lockOwner: null,
+      lockedUntil: null,
+    });
+  });
+}
+
 export async function handleRegisterUser(req: Request, res: Response, deps: RegisterUserDeps) {
   const {
     db,
@@ -404,6 +439,14 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
           ...(Object.keys(incomingProfile).length > 0 ? incomingProfile : {}),
         };
 
+        // Jednorazowo: scal historyczne km_logs jeśli nie zrobiono jeszcze
+        const existingData = data as any;
+        if (email && !existingData.service?.kmHistMergedFrom && !existingData.service?.kmHistMergeEnqueued) {
+          userRef.set({"service.kmHistMergeEnqueued": true}, {merge: true}).catch(() => {/* fire-and-forget */});
+          enqueueKmHistoricalMerge(db, admin, uid, email)
+            .catch((e: any) => console.error("enqueueKmHistoricalMerge (existing user) failed", {uid, message: e?.message}));
+        }
+
         res.status(200).json({
           ok: true,
           existed: true,
@@ -485,6 +528,10 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
             .catch((e: any) => console.error("creditOpeningBalance (new user) failed", {uid, message: e?.message}));
         }
       }
+
+      // Fire-and-forget: scal historyczne km_logs jeśli istnieją
+      enqueueKmHistoricalMerge(db, admin, uid, email)
+        .catch((e: any) => console.error("enqueueKmHistoricalMerge (new user) failed", {uid, message: e?.message}));
 
       const profileComplete = isProfileComplete(incomingProfile);
 

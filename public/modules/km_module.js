@@ -13,11 +13,13 @@
 
 import { apiGetJson, apiPostJson } from "/core/api_client.js";
 
-const KM_ADD_LOG_URL = "/kmAddLog";
-const KM_MY_LOGS_URL = "/kmMyLogs";
-const KM_MY_STATS_URL = "/kmMyStats";
-const KM_RANKINGS_URL = "/kmRankings";
-const KM_PLACES_URL = "/kmPlaces";
+const KM_ADD_LOG_URL = "/api/km/log/add";
+const KM_MY_LOGS_URL = "/api/km/logs";
+const KM_MY_STATS_URL = "/api/km/stats";
+const KM_RANKINGS_URL = "/api/km/rankings";
+const KM_PLACES_URL = "/api/km/places";
+const KM_EVENT_STATS_URL = "/api/km/event-stats";
+const EVENTS_URL = "/api/events";
 
 const NAV_BACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`;
 const NAV_HOME_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
@@ -26,6 +28,7 @@ const INFO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
 const TABS = [
   { id: "form",     label: "Dodaj wpis" },
   { id: "rankings", label: "Ranking" },
+  { id: "events",   label: "Imprezy" },
   { id: "my-stats", label: "Moje statystyki" },
   { id: "my-logs",  label: "Moje wpisy" },
 ];
@@ -265,6 +268,14 @@ function renderFormView(inner, ctx, moduleId) {
           </select>
         </div>
 
+        <div class="formRow" id="kmEventRow">
+          <label for="kmEvent">Impreza (opcjonalnie)</label>
+          <select id="kmEvent" name="event">
+            <option value="">— brak / nie dotyczy —</option>
+          </select>
+          <input type="hidden" id="kmEventName" />
+        </div>
+
         <fieldset class="kmCapsizeFieldset">
           <legend>
             Wywrotolotek
@@ -330,6 +341,24 @@ function renderFormView(inner, ctx, moduleId) {
   const placeIdHidden = inner.querySelector("#kmPlaceId");
   attachPlacesAutocomplete(placeInput, placeIdHidden, ctx);
 
+  // Załaduj listę aktualnych imprez asynchronicznie (mode=recent: od 30 dni wstecz do dziś)
+  const eventSelect = inner.querySelector("#kmEvent");
+  apiGetJson({ url: EVENTS_URL + "?mode=recent", idToken: ctx.idToken })
+    .then(data => {
+      const events = data?.events || [];
+      events.forEach(ev => {
+        const opt = document.createElement("option");
+        opt.value = ev.id;
+        opt.dataset.eventName = ev.name;
+        const dateRange = ev.startDate === ev.endDate
+          ? ev.startDate
+          : `${ev.startDate} – ${ev.endDate}`;
+        opt.textContent = `${ev.name} (${dateRange})`;
+        eventSelect.appendChild(opt);
+      });
+    })
+    .catch(() => {/* Cichy błąd — dropdown pozostaje z opcją brak */});
+
   // Submit
   const form = inner.querySelector("#kmAddForm");
   const errEl = inner.querySelector("#kmFormError");
@@ -361,6 +390,10 @@ function renderFormView(inner, ctx, moduleId) {
     const rolka = parseInt(form.rolka.value, 10) || 0;
     const dziubek = parseInt(form.dziubek.value, 10) || 0;
 
+    const selectedEventOpt = eventSelect.options[eventSelect.selectedIndex];
+    const eventId = selectedEventOpt?.value || undefined;
+    const eventName = eventId ? (selectedEventOpt?.dataset?.eventName || undefined) : undefined;
+
     // Lekka walidacja UX
     if (!date) { setErr("Podaj datę aktywności."); return; }
     if (!waterType) { setErr("Wybierz typ akwenu."); return; }
@@ -388,6 +421,8 @@ function renderFormView(inner, ctx, moduleId) {
           capsizeRolls: { kabina, rolka, dziubek },
           sectionDescription,
           note,
+          eventId,
+          eventName,
         },
       });
 
@@ -411,6 +446,12 @@ function renderFormView(inner, ctx, moduleId) {
 // ─── WIDOK: rankingi ──────────────────────────────────────────────────────────
 
 async function renderRankingsView(inner, ctx) {
+  const currentYear = new Date().getFullYear();
+  const yearOptions = [];
+  for (let y = currentYear; y >= 2010; y--) {
+    yearOptions.push(`<option value="${y}"${y === currentYear - 1 ? " selected" : ""}>${y}</option>`);
+  }
+
   inner.innerHTML = `
     <div class="kmRankingsSection">
       <div class="kmRankingsControls">
@@ -418,7 +459,7 @@ async function renderRankingsView(inner, ctx) {
           <label>Typ rankingu:</label>
           <div class="kmBtnGroup" id="kmTypeGroup">
             <button class="kmRankBtn active" data-km-type="km">Kilometry</button>
-            <button class="kmRankBtn" data-km-type="points">Punkty</button>
+            <button class="kmRankBtn" data-km-type="points">Wywrotolotek</button>
             <button class="kmRankBtn" data-km-type="hours">Godziny</button>
           </div>
         </div>
@@ -427,7 +468,12 @@ async function renderRankingsView(inner, ctx) {
           <div class="kmBtnGroup" id="kmPeriodGroup">
             <button class="kmRankBtn active" data-km-period="alltime">Wszech czasów</button>
             <button class="kmRankBtn" data-km-period="year">Bieżący rok</button>
+            <button class="kmRankBtn" data-km-period="specificYear">Wybrany rok</button>
           </div>
+        </div>
+        <div class="kmControlGroup" id="kmYearGroup" style="display:none">
+          <label>Rok:</label>
+          <select id="kmYearSelect" class="kmYearSelect">${yearOptions.join("")}</select>
         </div>
       </div>
       <div id="kmRankingsTable">${spinnerHtml("Pobieranie rankingu…")}</div>
@@ -437,14 +483,19 @@ async function renderRankingsView(inner, ctx) {
   let activeType = "km";
   let activePeriod = "alltime";
 
+  const yearGroup = inner.querySelector("#kmYearGroup");
+  const yearSelect = inner.querySelector("#kmYearSelect");
+
   async function loadRanking() {
     const tableEl = inner.querySelector("#kmRankingsTable");
     tableEl.innerHTML = spinnerHtml("Pobieranie rankingu…");
     try {
-      const data = await apiGetJson({
-        url: KM_RANKINGS_URL + `?type=${activeType}&period=${activePeriod}&limit=50`,
-        idToken: ctx.idToken,
-      });
+      let url = KM_RANKINGS_URL + `?type=${activeType}&period=${activePeriod}&limit=50`;
+      if (activePeriod === "specificYear") {
+        const yr = yearSelect?.value || String(currentYear - 1);
+        url += `&year=${yr}`;
+      }
+      const data = await apiGetJson({ url, idToken: ctx.idToken });
       const entries = data?.entries || [];
       const typeLabel = { km: "km", points: "pkt", hours: "h" }[activeType] || "";
 
@@ -453,9 +504,14 @@ async function renderRankingsView(inner, ctx) {
         return;
       }
 
-      const infoText = activePeriod === "year"
-        ? `<p class="kmRankNote">Ranking dotyczy bieżącego roku. Dane historyczne wliczane do rankingu wszech czasów.</p>`
-        : `<p class="kmRankNote">Ranking wszech czasów — uwzględnia dane historyczne i bieżące.</p>`;
+      let infoText;
+      if (activePeriod === "year") {
+        infoText = `<p class="kmRankNote">Ranking dotyczy bieżącego roku. Dane historyczne wliczane do rankingu wszech czasów.</p>`;
+      } else if (activePeriod === "specificYear") {
+        infoText = `<p class="kmRankNote">Ranking za rok ${esc(data?.year || "")}.</p>`;
+      } else {
+        infoText = `<p class="kmRankNote">Ranking wszech czasów — uwzględnia dane historyczne i bieżące.</p>`;
+      }
 
       tableEl.innerHTML = infoText + `
         <div class="kmRankingList">
@@ -492,8 +548,13 @@ async function renderRankingsView(inner, ctx) {
       inner.querySelectorAll("[data-km-period]").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       activePeriod = btn.dataset.kmPeriod;
+      yearGroup.style.display = activePeriod === "specificYear" ? "" : "none";
       loadRanking();
     });
+  });
+
+  yearSelect?.addEventListener("change", () => {
+    if (activePeriod === "specificYear") loadRanking();
   });
 
   await loadRanking();
@@ -587,6 +648,22 @@ async function renderMyStatsView(inner, ctx) {
           <span class="kmStatLabel">wpisów</span>
         </div>
       </div>
+      ${(() => {
+        const yearsData = stats.years || {};
+        const sortedYears = Object.keys(yearsData).sort((a, b) => b.localeCompare(a));
+        if (!sortedYears.length) return "";
+        const rows = sortedYears.map(yr => {
+          const y = yearsData[yr];
+          return `<tr><td>${esc(yr)}</td><td>${fmtNum(y.km)}</td><td>${fmtNum(y.points)}</td><td>${fmtNum(y.hours)}</td><td>${y.days || 0}</td></tr>`;
+        }).join("");
+        return `
+          <h3>Statystyki roczne</h3>
+          <table class="kmYearsTable">
+            <thead><tr><th>Rok</th><th>km</th><th>pkt</th><th>godz</th><th>dni</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        `;
+      })()}
     </div>
   `;
 }
@@ -628,11 +705,12 @@ async function renderMyLogsView(inner, ctx) {
               <div class="kmLogHeader">
                 <span class="kmLogDate">${esc(formatDate(log.date))}</span>
                 ${isHistorical ? `<span class="kmLogBadge">historyczny</span>` : ""}
+                ${log.eventName ? `<span class="kmLogBadge kmLogBadgeEvent">${esc(log.eventName)}</span>` : ""}
                 <span class="kmLogPts">${fmtNum(log.pointsTotal, 1)} pkt</span>
               </div>
               <div class="kmLogBody">
                 <span class="kmLogPlace">${esc(log.placeName || "—")}</span>
-                <span class="kmLogType">${esc(waterTypeLabel(log.waterType))}</span>
+                ${!isHistorical ? `<span class="kmLogType">${esc(waterTypeLabel(log.waterType))}</span>` : ""}
               </div>
               <div class="kmLogMeta">
                 <span>${fmtNum(log.km)} km</span>
@@ -647,6 +725,120 @@ async function renderMyLogsView(inner, ctx) {
       </div>
     </div>
   `;
+}
+
+// ─── WIDOK: imprezy ────────────────────────────────────────────────────────────
+
+async function renderEventStatsView(inner, ctx) {
+  inner.innerHTML = spinnerHtml("Pobieranie imprez…");
+
+  let eventsData;
+  try {
+    eventsData = await apiGetJson({ url: EVENTS_URL + "?mode=all", idToken: ctx.idToken });
+  } catch (e) {
+    inner.innerHTML = `<p class="errorMsg">Błąd: ${esc(e?.message || String(e))}</p>`;
+    return;
+  }
+
+  const events = eventsData?.events || [];
+
+  if (!events.length) {
+    inner.innerHTML = `<div class="kmStatsEmpty"><p>Brak zatwierdzonych imprez.</p></div>`;
+    return;
+  }
+
+  inner.innerHTML = `
+    <div class="kmEventsSection">
+      <p class="kmRankNote">Kliknij imprezę aby zobaczyć statystyki wywrotolotek uczestników.</p>
+      <div id="kmEventsList">
+        ${events.map(ev => {
+          const dateRange = ev.startDate === ev.endDate
+            ? ev.startDate
+            : `${ev.startDate} – ${ev.endDate}`;
+          return `
+            <div class="kmEventCard" data-event-id="${esc(ev.id)}" data-event-name="${esc(ev.name)}">
+              <div class="kmEventCardHeader">
+                <div class="kmEventCardInfo">
+                  <span class="kmEventCardName">${esc(ev.name)}</span>
+                  <span class="kmEventCardDate">${esc(dateRange)}</span>
+                  ${ev.location ? `<span class="kmEventCardLoc">${esc(ev.location)}</span>` : ""}
+                </div>
+                <button class="kmEventStatsBtn" type="button">Statystyki</button>
+              </div>
+              <div class="kmEventStatsPanel" style="display:none"></div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </div>
+  `;
+
+  inner.querySelectorAll(".kmEventCard").forEach(card => {
+    const btn = card.querySelector(".kmEventStatsBtn");
+    const panel = card.querySelector(".kmEventStatsPanel");
+    const eventId = card.dataset.eventId;
+    let loaded = false;
+
+    btn.addEventListener("click", async () => {
+      const isOpen = panel.style.display !== "none";
+      if (isOpen) {
+        panel.style.display = "none";
+        btn.textContent = "Statystyki";
+        return;
+      }
+      panel.style.display = "";
+      btn.textContent = "Ukryj";
+
+      if (loaded) return;
+      panel.innerHTML = spinnerHtml("Pobieranie…");
+
+      try {
+        const data = await apiGetJson({
+          url: KM_EVENT_STATS_URL + "?eventId=" + encodeURIComponent(eventId),
+          idToken: ctx.idToken,
+        });
+
+        if (!data?.participants?.length) {
+          panel.innerHTML = `<p class="kmEmpty">Brak wpisów km dla tej imprezy.</p>`;
+          loaded = true;
+          return;
+        }
+
+        const totals = data.totals || {};
+        const rows = data.participants.map(p => {
+          const name = p.nickname || p.displayName || "—";
+          return `<tr>
+            <td>${esc(name)}</td>
+            <td>${p.capsizeKabina}</td>
+            <td>${p.capsizeRolka}</td>
+            <td>${p.capsizeDziubek}</td>
+            <td><strong>${fmtNum(p.pointsTotal, 2)}</strong></td>
+          </tr>`;
+        }).join("");
+
+        panel.innerHTML = `
+          <table class="kmEventTable">
+            <thead>
+              <tr><th>Uczestnik</th><th>kabina</th><th>rolka</th><th>dziubek</th><th>pkt</th></tr>
+            </thead>
+            <tbody>${rows}</tbody>
+            <tfoot>
+              <tr class="kmEventTotals">
+                <td>RAZEM</td>
+                <td>${totals.capsizeKabina || 0}</td>
+                <td>${totals.capsizeRolka || 0}</td>
+                <td>${totals.capsizeDziubek || 0}</td>
+                <td><strong>${fmtNum(totals.pointsTotal || 0, 2)}</strong></td>
+              </tr>
+            </tfoot>
+          </table>
+        `;
+        loaded = true;
+      } catch (e) {
+        panel.innerHTML = `<p class="errorMsg">Błąd: ${esc(e?.message || String(e))}</p>`;
+      }
+    });
+  });
 }
 
 // ─── główny render ─────────────────────────────────────────────────────────────
@@ -711,6 +903,8 @@ async function renderKmView(viewEl, routeId, ctx, moduleId) {
     renderFormView(inner, ctx, moduleId);
   } else if (activeTab === "rankings") {
     await renderRankingsView(inner, ctx);
+  } else if (activeTab === "events") {
+    await renderEventStatsView(inner, ctx);
   } else if (activeTab === "my-stats") {
     await renderMyStatsView(inner, ctx);
   } else if (activeTab === "my-logs") {

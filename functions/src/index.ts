@@ -41,6 +41,7 @@ import {handleKmMyLogs} from "./api/kmMyLogsHandler";
 import {handleKmMyStats} from "./api/kmMyStatsHandler";
 import {handleKmRankings} from "./api/kmRankingsHandler";
 import {handleKmPlaces} from "./api/kmPlacesHandler";
+import {handleKmEventStats} from "./api/kmEventStatsHandler";
 import {getServiceConfig} from "./service/service_config";
 
 setGlobalOptions({region: "us-central1"});
@@ -984,6 +985,21 @@ export const kmRankings = onRequest({invoker: "private"}, async (req, res) => {
  */
 export const kmPlaces = onRequest({invoker: "private"}, async (req, res) => {
   return handleKmPlaces(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * GET /kmEventStats (authenticated)
+ * Statystyki wywrotolotek per uczestnik dla danej imprezy: ?eventId=XXX
+ */
+export const kmEventStats = onRequest({invoker: "private"}, async (req, res) => {
+  return handleKmEventStats(req, res, {
     db,
     sendPreflight,
     requireAllowedHost,

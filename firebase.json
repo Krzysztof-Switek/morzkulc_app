@@ -295,6 +295,48 @@
           "functionId": "basenAdminSearchUsers",
           "region": "us-central1"
         }
+      },
+      {
+        "source": "/api/km/log/add",
+        "function": {
+          "functionId": "kmAddLog",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/km/logs",
+        "function": {
+          "functionId": "kmMyLogs",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/km/stats",
+        "function": {
+          "functionId": "kmMyStats",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/km/rankings",
+        "function": {
+          "functionId": "kmRankings",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/km/places",
+        "function": {
+          "functionId": "kmPlaces",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/km/event-stats",
+        "function": {
+          "functionId": "kmEventStats",
+          "region": "us-central1"
+        }
       }
     ]
   }

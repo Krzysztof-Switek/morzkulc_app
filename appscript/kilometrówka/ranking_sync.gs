@@ -50,6 +50,13 @@ function syncRankingFromFirestore() {
     sheet.setFrozenRows(1);
   }
 
+  // Upewnij się że nagłówki są zawsze na pierwszym wierszu
+  const firstRow = sheet.getRange(1, 1, 1, RANKING_HEADERS.length).getValues()[0];
+  if (!firstRow[0] || normalizeHeader_(firstRow[0]) !== "logid") {
+    sheet.getRange(1, 1, 1, RANKING_HEADERS.length).setValues([RANKING_HEADERS]);
+    sheet.setFrozenRows(1);
+  }
+
   const existingValues = sheet.getDataRange().getValues();
 
   // Zbierz już istniejące logId (kolumna A = logId)
@@ -109,11 +116,6 @@ function syncRankingFromFirestore() {
   }
 
   if (newRows.length > 0) {
-    // Upewnij się, że nagłówki są na pierwszym wierszu
-    if (existingValues.length === 0 || !existingValues[0][0]) {
-      sheet.getRange(1, 1, 1, RANKING_HEADERS.length).setValues([RANKING_HEADERS]);
-      sheet.setFrozenRows(1);
-    }
     const startRow = sheet.getLastRow() + 1;
     sheet.getRange(startRow, 1, newRows.length, RANKING_HEADERS.length).setValues(newRows);
   }

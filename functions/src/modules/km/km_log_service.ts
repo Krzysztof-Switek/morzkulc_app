@@ -33,6 +33,8 @@ export type KmLogInput = {
   difficulty?: string | null; // "WW3", "U2", null, itd.
   capsizeRolls: CapsizeRolls;
   note?: string;
+  eventId?: string;
+  eventName?: string;
 };
 
 export type KmLog = KmLogInput & {
@@ -101,6 +103,8 @@ export async function addKmLog(
   if (input.difficultyScale) logDoc.difficultyScale = input.difficultyScale;
   if (input.difficulty) logDoc.difficulty = input.difficulty;
   if (input.note) logDoc.note = input.note;
+  if (input.eventId) logDoc.eventId = input.eventId;
+  if (input.eventName) logDoc.eventName = input.eventName;
 
   await db.runTransaction(async (tx) => {
     tx.set(logRef, logDoc);
@@ -231,6 +235,21 @@ async function updateUserStatsInTransaction(
     update.seasonPoints = base.seasonPoints || 0;
     update.seasonLogs = base.seasonLogs || 0;
   }
+
+  // Aktualizuj agregatów per-rok (years map)
+  const existingYears: Record<string, any> = (existing?.years as any) || {};
+  const incYearStr = String(inc.year);
+  const yearEntry = existingYears[incYearStr] || {km: 0, hours: 0, days: 0, points: 0, logs: 0};
+  update.years = {
+    ...existingYears,
+    [incYearStr]: {
+      km: Math.round(((yearEntry.km || 0) + inc.km) * 100) / 100,
+      hours: Math.round(((yearEntry.hours || 0) + inc.hoursOnWater) * 100) / 100,
+      days: (yearEntry.days || 0) + 1,
+      points: Math.round(((yearEntry.points || 0) + inc.pointsTotal) * 100) / 100,
+      logs: (yearEntry.logs || 0) + 1,
+    },
+  };
 
   tx.set(statsRef, update, {merge: false});
 }

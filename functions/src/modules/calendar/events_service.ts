@@ -40,6 +40,42 @@ export async function listUpcomingEvents(db: FirebaseFirestore.Firestore): Promi
     .sort((a, b) => String(a.startDate).localeCompare(String(b.startDate)));
 }
 
+/**
+ * Zwraca imprezy które się zaczęły (startDate <= dziś) i nie zakończyły dawniej niż 30 dni temu.
+ * Używane przez dropdown w formularzu km — krótka lista, tylko bieżące i niedawne.
+ */
+export async function listRecentEvents(db: FirebaseFirestore.Firestore): Promise<EventRecord[]> {
+  const todayIso = todayIsoUTC();
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+  const snap = await db
+    .collection(COLLECTION)
+    .where("approved", "==", true)
+    .where("endDate", ">=", thirtyDaysAgo)
+    .orderBy("endDate", "asc")
+    .get();
+
+  return snap.docs
+    .map((d) => d.data() as EventRecord)
+    .filter((e) => String(e.startDate) <= todayIso)
+    .sort((a, b) => String(b.startDate).localeCompare(String(a.startDate)));
+}
+
+/**
+ * Zwraca wszystkie zatwierdzone imprezy bez filtra daty, posortowane startDate DESC.
+ * Używane przez zakładkę „Imprezy" w km module.
+ */
+export async function listAllEvents(db: FirebaseFirestore.Firestore): Promise<EventRecord[]> {
+  const snap = await db
+    .collection(COLLECTION)
+    .where("approved", "==", true)
+    .get();
+
+  return snap.docs
+    .map((d) => d.data() as EventRecord)
+    .sort((a, b) => String(b.startDate).localeCompare(String(a.startDate)));
+}
+
 export async function createEvent(
   db: FirebaseFirestore.Firestore,
   args: {

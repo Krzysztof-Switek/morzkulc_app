@@ -55,6 +55,10 @@ export const kmRebuildRankingsTask: ServiceTask<Payload> = {
     let errors = 0;
 
     for (const uid of uids) {
+      if (uid === "historical_unmatched") {
+        ctx.logger.info("km.rebuildRankings: skipping historical_unmatched");
+        continue;
+      }
       try {
         const result = await kmRebuildUserStatsTask.run({uid, dry: dryRun}, ctx);
         if (result.ok) {

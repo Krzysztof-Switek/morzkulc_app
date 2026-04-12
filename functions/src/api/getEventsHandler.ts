@@ -3,7 +3,7 @@
 
 import type {Request, Response} from "express";
 import {logger} from "firebase-functions/v2";
-import {listUpcomingEvents} from "../modules/calendar/events_service";
+import {listUpcomingEvents, listRecentEvents, listAllEvents} from "../modules/calendar/events_service";
 
 type TokenCheck =
   | {error: string}
@@ -38,7 +38,16 @@ export async function handleGetEvents(req: Request, res: Response, deps: GetEven
         return;
       }
 
-      const events = await listUpcomingEvents(db);
+      const mode = String(req.query.mode || "").trim();
+
+      let events;
+      if (mode === "recent") {
+        events = await listRecentEvents(db);
+      } else if (mode === "all") {
+        events = await listAllEvents(db);
+      } else {
+        events = await listUpcomingEvents(db);
+      }
 
       res.status(200).json({ok: true, events});
     } catch (err: any) {

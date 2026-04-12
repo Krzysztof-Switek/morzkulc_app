@@ -122,6 +122,8 @@ export async function handleKmAddLog(
       const difficulty = norm(body.difficulty) || null;
       const sectionDescription = norm(body.sectionDescription).slice(0, 500) || undefined;
       const note = norm(body.note).slice(0, 1000) || undefined;
+      const eventId = norm(body.eventId).slice(0, 128) || undefined;
+      const eventName = norm(body.eventName).slice(0, 200) || undefined;
 
       const capsizeRolls = {
         kabina: toSafeInt(body.capsizeRolls?.kabina),
@@ -238,6 +240,8 @@ export async function handleKmAddLog(
         difficulty,
         capsizeRolls,
         note,
+        eventId,
+        eventName,
       }, vars);
 
       res.status(200).json({ok: true, logId});

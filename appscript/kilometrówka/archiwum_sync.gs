@@ -140,8 +140,9 @@ function syncArchivumToFirestore() {
       // Mapuj waterType
       const waterType = resolveWaterType_(typLokalizacji);
 
-      // Lookup uid
-      const uid = emailToUid[email] || "historical_unmatched";
+      // Lookup uid — jeśli email nie pasuje do users_active, tworzymy wirtualny uid per osoba
+      // Dzięki temu każdy historyczny uczestnik ma własny rekord w km_user_stats i widoczny w rankingu
+      const uid = emailToUid[email] || (email ? "hist_" + email : "historical_unmatched");
 
       // Punkty: 0 — archiwum nie zawiera danych o wywrotkach
       const pointsTotal = 0;
@@ -219,6 +220,16 @@ function syncArchivumToFirestore() {
 
   const durMs = new Date().getTime() - started.getTime();
 
+  // Zawsze enqueue rebuild rankingu — nawet jeśli importedCount === 0 (idempotentne)
+  var rebuildQueued = false;
+  try {
+    enqueueServiceJob_("km.rebuildRankings", {});
+    rebuildQueued = true;
+  } catch (e) {
+    // Nie blokuj komunikatu — zaloguj tylko błąd
+    Logger.log("Błąd enqueue km.rebuildRankings: " + String(e.message || e));
+  }
+
   let msg =
     "ARCHIWUM IMPORT " + (errorCount === 0 ? "OK ✅" : "Z BŁĘDAMI ⚠️") + "\n" +
     "env: " + ACTIVE_ENV + "\n" +
@@ -226,7 +237,8 @@ function syncArchivumToFirestore() {
     "zaimportowano: " + importedCount + "\n" +
     "pominięto (już w Firestore): " + skippedCount + "\n" +
     "błędy: " + errorCount + "\n" +
-    "czas: " + durMs + " ms";
+    "czas: " + durMs + " ms\n" +
+    "przeliczenie rankingu: " + (rebuildQueued ? "zakolejkowane ✅" : "błąd kolejkowania ⚠️");
 
   if (errors.length) {
     msg += "\n\nBłędy:\n" + errors.slice(0, 10).join("\n");

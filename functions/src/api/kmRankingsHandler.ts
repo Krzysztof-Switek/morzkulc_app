@@ -33,7 +33,7 @@ export type KmRankingsDeps = {
 };
 
 const VALID_TYPES = new Set(["km", "points", "hours"]);
-const VALID_PERIODS = new Set(["year", "alltime"]);
+const VALID_PERIODS = new Set(["year", "alltime", "specificYear"]);
 
 function resolveOrderField(type: string, period: string): string {
   if (period === "year") {
@@ -74,9 +74,52 @@ export async function handleKmRankings(
       const periodRaw = String(req.query.period || "alltime").trim();
       const limitRaw = parseInt(String(req.query.limit || "50"), 10);
       const limit = Math.min(100, Math.max(1, Number.isNaN(limitRaw) ? 50 : limitRaw));
+      const yearRaw = String(req.query.year || "").trim();
 
       const type = VALID_TYPES.has(typeRaw) ? typeRaw : "km";
       const period = VALID_PERIODS.has(periodRaw) ? periodRaw : "alltime";
+      const isSpecificYear = period === "specificYear" && /^\d{4}$/.test(yearRaw);
+
+      // Ranking dla konkretnego roku — in-memory sort (klub < 200 członków, brak indeksu)
+      if (isSpecificYear) {
+        const metricKey = type === "km" ? "km" : type === "points" ? "points" : "hours";
+        const allSnap = await deps.db.collection("km_user_stats").get();
+        const entries = allSnap.docs
+          .map((d) => {
+            const data = d.data() as any;
+            const value = (data.years?.[yearRaw]?.[metricKey] as number) ?? 0;
+            return {data, value};
+          })
+          .filter(({value}) => value > 0)
+          .sort((a, b) => b.value - a.value)
+          .slice(0, limit)
+          .map(({data, value}, i) => ({
+            rank: i + 1,
+            uid: data.uid,
+            displayName: data.displayName || "",
+            nickname: data.nickname || "",
+            value,
+            allTimeKm: data.allTimeKm || 0,
+            allTimePoints: data.allTimePoints || 0,
+            allTimeHours: data.allTimeHours || 0,
+            yearKm: data.yearKm || 0,
+            yearPoints: data.yearPoints || 0,
+            yearHours: data.yearHours || 0,
+            yearKey: data.yearKey || "",
+            allTimeLogs: data.allTimeLogs || 0,
+          }));
+        res.status(200).json({
+          ok: true,
+          type,
+          period: "specificYear",
+          year: yearRaw,
+          orderField: `years.${yearRaw}.${metricKey}`,
+          entries,
+          count: entries.length,
+        });
+        return;
+      }
+
       const orderField = resolveOrderField(type, period);
 
       const snap = await deps.db.collection("km_user_stats")

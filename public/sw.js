@@ -13,7 +13,7 @@
  * Stary cache jest automatycznie czyszczony w activate.
  */
 
-const CACHE_VERSION = "v30";
+const CACHE_VERSION = "v31";
 const STATIC_CACHE  = `morzkulc-static-${CACHE_VERSION}`;
 
 // Pliki precachowane przy instalacji SW
@@ -39,6 +39,8 @@ const PRECACHE_URLS = [
   "/modules/godzinki_module.js",
   "/modules/impreza_module.js",
   "/modules/basen_module.js",
+  "/modules/admin_pending_module.js",
+  "/modules/km_module.js",
   "/styles/app.css",
   "/styles/base.css",
   "/styles/dashboard.css",
@@ -46,6 +48,7 @@ const PRECACHE_URLS = [
   "/styles/start.css",
   "/styles/events.css",
   "/styles/basen.css",
+  "/styles/km.css",
 ];
 
 // ── Instalacja ────────────────────────────────────────────────────────────────
