@@ -150,12 +150,20 @@ const SESSION_MAX_MS = 24 * 60 * 60 * 1000; // 24 godziny
       window.__APP_CTX__ = ctx;
     }
 
-    ctx.modules = buildModulesFromSetup(ctx.setup);
+    ctx.modules = buildModulesFromSetup(ctx.setup, ctx.session?.role_key);
     window.__APP_CTX__ = ctx;
 
     renderNav({ navEl, ctx });
 
-    if (!location.hash) location.hash = "#/home/home";
+    if (!location.hash) {
+      const screenId = String(ctx.session?.screen || "");
+      const targetModule = screenId
+        ? (ctx.modules || []).find((m) => m.id === screenId)
+        : null;
+      location.hash = targetModule
+        ? `#/${targetModule.id}/${targetModule.defaultRoute || "home"}`
+        : "#/home/home";
+    }
     await renderView({ viewEl, ctx });
 
 

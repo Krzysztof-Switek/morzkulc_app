@@ -7,6 +7,8 @@ import { basenNotifySessionCancelledTask } from "./tasks/basenNotifySessionCance
 import { gearPrivateStorageTask } from "./tasks/gearPrivateStorage";
 import { usersSyncRolesFromSheetTask } from "./tasks/usersSyncRolesFromSheet";
 import { membersSyncToSheetTask } from "./tasks/membersSyncToSheet";
+import { kmRebuildUserStatsTask } from "./tasks/kmRebuildUserStats";
+import { kmRebuildRankingsTask } from "./tasks/kmRebuildRankings";
 
 const tasks: ServiceTask[] = [
   onUserRegisteredWelcomeTask,
@@ -19,6 +21,8 @@ const tasks: ServiceTask[] = [
   gearPrivateStorageTask,
   usersSyncRolesFromSheetTask,
   membersSyncToSheetTask,
+  kmRebuildUserStatsTask,
+  kmRebuildRankingsTask,
 ];
 
 export function getTaskRegistry(): Map<string, ServiceTask> {

@@ -23,6 +23,7 @@ import {handleSubmitGodzinki} from "./api/submitGodzinkiHandler";
 import {handleGodzinkiPurchase} from "./api/godzinkiPurchaseHandler";
 import {handleGetKayakReservations} from "./api/getKayakReservationsHandler";
 import {handleGetEvents} from "./api/getEventsHandler";
+import {handleGetAdminPending} from "./api/getAdminPendingHandler";
 import {handleSubmitEvent} from "./api/submitEventHandler";
 import {handleGetBasenSessions} from "./api/getBasenSessionsHandler";
 import {handleBasenEnroll} from "./api/basenEnrollHandler";
@@ -31,6 +32,15 @@ import {handleGetBasenKarnety} from "./api/getBasenKarnetyHandler";
 import {handleBasenCreateSession} from "./api/basenCreateSessionHandler";
 import {handleBasenCancelSession} from "./api/basenCancelSessionHandler";
 import {handleBasenGrantKarnet} from "./api/basenGrantKarnetHandler";
+import {handleGetBasenGodziny} from "./api/getBasenGodzinyHandler";
+import {handleBasenAdminAddGodziny} from "./api/basenAdminAddGodzinyHandler";
+import {handleBasenAdminCorrectGodziny} from "./api/basenAdminCorrectGodzinyHandler";
+import {handleBasenAdminSearchUsers} from "./api/basenAdminSearchUsersHandler";
+import {handleKmAddLog} from "./api/kmAddLogHandler";
+import {handleKmMyLogs} from "./api/kmMyLogsHandler";
+import {handleKmMyStats} from "./api/kmMyStatsHandler";
+import {handleKmRankings} from "./api/kmRankingsHandler";
+import {handleKmPlaces} from "./api/kmPlacesHandler";
 import {getServiceConfig} from "./service/service_config";
 
 setGlobalOptions({region: "us-central1"});
@@ -636,18 +646,30 @@ export const purchaseGodzinki = onRequest({invoker: "private"}, async (req, res)
 
 /**
  * Kolejkuje zadanie serwisowe synchronizacji członka z Google Sheets.
- * Zastępuje fire-and-forget syncMemberToSheet — umożliwia retry.
+ * Używa deterministycznego ID joba (`sheet-sync:{uid}`) — zapobiega duplikatom.
+ * Jeśli job jest już w stanie "queued" lub "running" — nie tworzy nowego.
+ * Jeśli job jest w stanie "done", "failed" lub "dead" — nadpisuje (re-enqueue).
  */
 async function enqueueMemberSheetSync(uid: string): Promise<void> {
-  const jobRef = db.collection("service_jobs").doc();
-  await jobRef.set({
-    id: jobRef.id,
-    taskId: "members.syncToSheet",
-    payload: {uid},
-    status: "queued",
-    attempts: 0,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  const jobId = `sheet-sync:${uid}`;
+  const jobRef = db.collection("service_jobs").doc(jobId);
+  const now = admin.firestore.FieldValue.serverTimestamp();
+
+  await db.runTransaction(async (tx) => {
+    const existing = await tx.get(jobRef);
+    if (existing.exists) {
+      const status = String((existing.data() as any)?.status || "");
+      if (status === "queued" || status === "running") return; // już w kolejce lub działa — pomiń
+    }
+    tx.set(jobRef, {
+      id: jobId,
+      taskId: "members.syncToSheet",
+      payload: {uid},
+      status: "queued",
+      attempts: 0,
+      createdAt: existing.exists ? existing.data()?.createdAt : now,
+      updatedAt: now,
+    });
   });
 }
 
@@ -678,6 +700,22 @@ export const getEvents = onRequest({invoker: "private"}, async (req, res) => {
     setCorsHeaders,
     corsHandler,
     requireIdToken,
+  });
+});
+
+/**
+ * GET /api/admin/pending (authenticated, role: zarzad/kr)
+ * Zwraca listę godzinek i imprez oczekujących na zatwierdzenie.
+ */
+export const getAdminPending = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetAdminPending(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    adminRoleKeys,
   });
 });
 
@@ -817,6 +855,145 @@ export const basenGrantKarnet = onRequest({invoker: "private"}, async (req, res)
 });
 
 /**
+ * GET /api/basen/godziny (authenticated)
+ * Saldo i historia godzin basenowych. Admin może podać ?uid= dla innego użytkownika.
+ */
+export const getBasenGodziny = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetBasenGodziny(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    adminRoleKeys,
+  });
+});
+
+/**
+ * POST /api/basen/admin/godziny/add (authenticated, role: zarzad/kr)
+ * Admin dopisuje godziny basenowe użytkownikowi.
+ */
+export const basenAdminAddGodziny = onRequest({invoker: "private"}, async (req, res) => {
+  return handleBasenAdminAddGodziny(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    adminRoleKeys,
+  });
+});
+
+/**
+ * POST /api/basen/admin/godziny/correct (authenticated, role: zarzad/kr)
+ * Admin wykonuje korektę godzin basenowych (plus lub minus).
+ */
+export const basenAdminCorrectGodziny = onRequest({invoker: "private"}, async (req, res) => {
+  return handleBasenAdminCorrectGodziny(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    adminRoleKeys,
+  });
+});
+
+/**
+ * GET /api/basen/admin/users (authenticated, role: zarzad/kr)
+ * Wyszukiwanie użytkowników po fragmencie e-mail (?q=).
+ */
+export const basenAdminSearchUsers = onRequest({invoker: "private"}, async (req, res) => {
+  return handleBasenAdminSearchUsers(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    adminRoleKeys,
+  });
+});
+
+/**
+ * POST /kmAddLog (authenticated)
+ * Dodaje nowy wpis aktywności. Oblicza punkty ON WRITE.
+ */
+export const kmAddLog = onRequest({invoker: "private"}, async (req, res) => {
+  return handleKmAddLog(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * GET /kmMyLogs (authenticated)
+ * Moje wpisy aktywności (posortowane po dacie malejąco).
+ */
+export const kmMyLogs = onRequest({invoker: "private"}, async (req, res) => {
+  return handleKmMyLogs(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * GET /kmMyStats (authenticated)
+ * Moje statystyki z km_user_stats — odczyt O(1), brak przeliczania.
+ */
+export const kmMyStats = onRequest({invoker: "private"}, async (req, res) => {
+  return handleKmMyStats(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * GET /kmRankings (authenticated)
+ * Rankingi: type=km|points|hours, period=year|alltime.
+ */
+export const kmRankings = onRequest({invoker: "private"}, async (req, res) => {
+  return handleKmRankings(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * GET /kmPlaces (authenticated)
+ * Podpowiedzi nazw akwenów: ?q=rad (min 2 znaki).
+ */
+export const kmPlaces = onRequest({invoker: "private"}, async (req, res) => {
+  return handleKmPlaces(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
  * SERVICE MODULE EXPORTS
  */
 export {onUsersActiveCreated} from "./service/triggers/onUsersActiveCreated";
@@ -837,5 +1014,19 @@ export const gearPrivateStorageMonthly = onSchedule(
     logger.info("gearPrivateStorageMonthly: start");
     const result = await runTaskById("gear.chargePrivateStorage", {});
     logger.info("gearPrivateStorageMonthly: done", result as unknown as Record<string, unknown>);
+  }
+);
+
+/**
+ * SCHEDULER: Dzienny sync ról i statusów użytkowników z Google Sheets do Firestore.
+ * Uruchamiany codziennie o 04:30 czasu warszawskiego.
+ * Odpowiada za aktualizację role_key i status_key na podstawie arkusza członków.
+ */
+export const usersSyncRolesDaily = onSchedule(
+  {schedule: "30 4 * * *", timeZone: "Europe/Warsaw"},
+  async () => {
+    logger.info("usersSyncRolesDaily: start");
+    const result = await runTaskById("users.syncRolesFromSheet", {});
+    logger.info("usersSyncRolesDaily: done", result as unknown as Record<string, unknown>);
   }
 );

@@ -1,0 +1,280 @@
+/* global AdminDirectory */
+/**
+ * File: api_router.gs
+ * Purpose: web app backend for registration/login bridge
+ * Environment: controlled by ACTIVE_ENV in env_config.gs
+ */
+
+function doGet() {
+  return ContentService.createTextOutput(
+    JSON.stringify({
+      ok: true,
+      env: ACTIVE_ENV,
+      projectId: CONFIG.PROJECT_ID,
+      message: "Morzkulc GAS API is running",
+    })
+  ).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  const result = { ok: false, message: "Start" };
+
+  try {
+    const rawBody = e && e.postData ? e.postData.contents : "{}";
+    const data = JSON.parse(rawBody || "{}");
+    const idToken = data.idToken;
+
+    if (!idToken) {
+      throw new Error("Brak tokenu idToken");
+    }
+
+    const userAuth = verifyFirebaseToken_(idToken);
+    const email = userAuth.email;
+    const uid = userAuth.uid;
+
+    const existing = firestoreGetDocument_("users_active/" + uid);
+
+    if (existing && existing.fields) {
+      result.ok = true;
+      result.message = "Użytkownik już istnieje";
+      result.user = {
+        email: email,
+        uid: uid,
+        memberId: existing.fields.memberId
+          ? Number(existing.fields.memberId.integerValue || 0)
+          : null,
+        role_key: existing.fields.role_key
+          ? existing.fields.role_key.stringValue
+          : "rola_sympatyk",
+        status_key: existing.fields.status_key
+          ? existing.fields.status_key.stringValue
+          : "status_aktywny",
+      };
+    } else {
+      const created = handleNewRegistration_(uid, email);
+      return ContentService.createTextOutput(JSON.stringify(created)).setMimeType(
+        ContentService.MimeType.JSON
+      );
+    }
+  } catch (err) {
+    result.ok = false;
+    result.message = "Błąd krytyczny: " + err.message;
+  }
+
+  return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(
+    ContentService.MimeType.JSON
+  );
+}
+
+function handleNewRegistration_(uid, email) {
+  const opening = findOpeningBalanceByEmail_(email);
+  const roleKey = opening.isMember ? "rola_czlonek" : "rola_sympatyk";
+  const statusKey = "status_aktywny";
+  const memberId = getNextMemberId_();
+
+  const nowIso = new Date().toISOString();
+
+  const userDoc = {
+    uid: uid,
+    email: email,
+    memberId: memberId,
+    role_key: roleKey,
+    status_key: statusKey,
+    openingMatch: opening.found,
+    createdAt: nowIso,
+    firstLoginAt: nowIso,
+  };
+
+  firestorePatchDocument_("users_active/" + uid, userDoc);
+  appendUserToSheet_(userDoc);
+
+  try {
+    addToGoogleGroup_(email, LISTA_GROUP_EMAIL);
+  } catch (err) {
+    Logger.log("Błąd dodania do listy: " + err.message);
+  }
+
+  try {
+    sendWelcomeEmail_(email, roleKey);
+  } catch (err) {
+    Logger.log("Błąd wysyłki maila: " + err.message);
+  }
+
+  return {
+    ok: true,
+    message: "Rejestracja zakończona sukcesem",
+    user: userDoc,
+  };
+}
+
+function verifyFirebaseToken_(idToken) {
+  const url =
+    "https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=" +
+    CONFIG.FIREBASE_API_KEY;
+
+  const resp = UrlFetchApp.fetch(url, {
+    method: "POST",
+    contentType: "application/json",
+    payload: JSON.stringify({ idToken: idToken }),
+    muteHttpExceptions: true,
+  });
+
+  const data = JSON.parse(resp.getContentText());
+
+  if (resp.getResponseCode() !== 200 || !data.users || !data.users.length) {
+    throw new Error("Nieprawidłowy token Firebase");
+  }
+
+  return {
+    uid: data.users[0].localId,
+    email: String(data.users[0].email || "").toLowerCase(),
+  };
+}
+
+function findOpeningBalanceByEmail_(email) {
+  const ss = SpreadsheetApp.openById(CONFIG.USERS_ARCHIVE_SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(TAB_OPENING_BALANCE);
+
+  if (!sheet) {
+    throw new Error('Brak zakładki "' + TAB_OPENING_BALANCE + '"');
+  }
+
+  const values = sheet.getDataRange().getValues();
+  if (!values || values.length < 2) {
+    return { found: false, isMember: false };
+  }
+
+  const headers = values[0].map((h) => normalizeHeader_(h));
+
+  let emailIdx = headers.indexOf("e_mail");
+  if (emailIdx === -1) emailIdx = headers.indexOf("email");
+  if (emailIdx === -1) emailIdx = 1;
+
+  let memberIdx = headers.indexOf("czlonek_stowarzyszenia");
+  if (memberIdx === -1) memberIdx = 9;
+
+  const wantedEmail = String(email || "").toLowerCase().trim();
+
+  for (let i = 1; i < values.length; i++) {
+    const row = values[i];
+    const rowEmail = String(row[emailIdx] || "").toLowerCase().trim();
+
+    if (rowEmail !== wantedEmail) continue;
+
+    const memberValue = row[memberIdx];
+    const isMember =
+      memberValue === true ||
+      String(memberValue || "").toLowerCase().trim() === "tak" ||
+      String(memberValue || "").toLowerCase().trim() === "true";
+
+    return { found: true, isMember: isMember };
+  }
+
+  return { found: false, isMember: false };
+}
+
+function getNextMemberId_() {
+  const ss = SpreadsheetApp.openById(CONFIG.USERS_SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(TAB_USERS);
+
+  if (!sheet) {
+    throw new Error('Brak zakładki "' + TAB_USERS + '"');
+  }
+
+  const values = sheet.getDataRange().getValues();
+  if (!values || values.length < 2) return 1;
+
+  const headers = values[0].map((h) => normalizeHeader_(h));
+  const idIdx = headers.indexOf("id");
+
+  if (idIdx === -1) {
+    throw new Error('Brak kolumny "ID" w arkuszu users');
+  }
+
+  let maxId = 0;
+
+  for (let r = 1; r < values.length; r++) {
+    const row = values[r];
+    const raw = row[idIdx];
+    const n = Number(raw);
+    if (isFinite(n) && n > maxId) maxId = n;
+  }
+
+  return maxId + 1;
+}
+
+function appendUserToSheet_(userDoc) {
+  const ss = SpreadsheetApp.openById(CONFIG.USERS_SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(TAB_USERS);
+
+  if (!sheet) {
+    throw new Error('Brak zakładki "' + TAB_USERS + '"');
+  }
+
+  const headers = sheet
+    .getRange(1, 1, 1, sheet.getLastColumn())
+    .getValues()[0]
+    .map((h) => normalizeHeader_(h));
+
+  const row = new Array(headers.length).fill("");
+
+  function setCell(headerName, value) {
+    const i = headers.indexOf(headerName);
+    if (i !== -1) row[i] = value;
+  }
+
+  setCell("id", userDoc.memberId);
+  setCell("e_mail", userDoc.email);
+  setCell("rola", roleKeyToDisplay_(userDoc.role_key));
+  setCell("status", statusKeyToDisplay_(userDoc.status_key));
+  setCell("zgody_rodo", "TAK");
+  setCell("data_rejestracji", formatDatePL_(new Date()));
+
+  sheet.appendRow(row);
+}
+
+function addToGoogleGroup_(userEmail, groupEmail) {
+  const member = { email: userEmail, role: "MEMBER" };
+  AdminDirectory.Members.insert(member, groupEmail);
+}
+
+function sendWelcomeEmail_(email, roleKey) {
+  const subject = "Witaj w SKK Morzkulc!";
+  const body =
+    "Dziękujemy za rejestrację w systemie.\n\n" +
+    "Twoja rola startowa: " +
+    roleKeyToDisplay_(roleKey) +
+    "\n" +
+    "Środowisko: " +
+    ACTIVE_ENV;
+
+  MailApp.sendEmail({
+    to: email,
+    subject: subject,
+    body: body,
+    name: "SKK Morzkulc",
+    replyTo: WELCOME_FROM_EMAIL,
+  });
+}
+
+function roleKeyToDisplay_(roleKey) {
+  if (roleKey === "rola_zarzad") return "Zarząd";
+  if (roleKey === "rola_kr") return "KR";
+  if (roleKey === "rola_czlonek") return "Członek";
+  if (roleKey === "rola_kandydat") return "Kandydat";
+  if (roleKey === "rola_kursant") return "Kursant";
+  return "Sympatyk";
+}
+
+function statusKeyToDisplay_(statusKey) {
+  if (statusKey === "status_zawieszony") return "Zawieszony";
+  if (statusKey === "status_skreslony") return "Skreślony";
+  return "Aktywny";
+}
+
+function formatDatePL_(dateObj) {
+  const d = ("0" + dateObj.getDate()).slice(-2);
+  const m = ("0" + (dateObj.getMonth() + 1)).slice(-2);
+  const y = dateObj.getFullYear();
+  return d + "-" + m + "-" + y;
+}

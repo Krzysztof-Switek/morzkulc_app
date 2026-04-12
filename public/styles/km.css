@@ -1,0 +1,455 @@
+/* km.css — Style modułu Kilometrówka / Ranking */
+
+/* ─── Zakładki ─────────────────────────────────────────────────────────────── */
+
+.kmTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 0 0 12px 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.kmTab {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: var(--text2);
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.kmTab:hover {
+  background: var(--surface3);
+  color: var(--text1);
+}
+
+.kmTab.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* ─── Inner container ─────────────────────────────────────────────────────── */
+
+.kmInner {
+  min-height: 200px;
+}
+
+/* ─── Formularz ───────────────────────────────────────────────────────────── */
+
+.kmForm .formRow {
+  margin-bottom: 14px;
+}
+
+.kmForm label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text2);
+  margin-bottom: 4px;
+}
+
+.kmForm input[type="text"],
+.kmForm input[type="number"],
+.kmForm input[type="date"],
+.kmForm select,
+.kmForm textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface1);
+  color: var(--text1);
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+
+.kmForm input:focus,
+.kmForm select:focus,
+.kmForm textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb, 59,130,246), 0.15);
+}
+
+.kmCapsizeFieldset {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px 14px;
+  margin-bottom: 14px;
+}
+
+.kmCapsizeFieldset legend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text2);
+  padding: 0 4px;
+}
+
+.kmCapsizeGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.kmCapsizeItem label {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--text2);
+  margin-bottom: 4px;
+}
+
+.kmCapsizeItem input {
+  width: 100%;
+  padding: 7px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface1);
+  color: var(--text1);
+  font-size: 0.9rem;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+/* ─── Autocomplete ────────────────────────────────────────────────────────── */
+
+.kmPlacesSuggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 4px 0;
+  background: var(--surface1);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.kmPlacesSuggestion {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  color: var(--text1);
+}
+
+.kmPlacesSuggestion:hover {
+  background: var(--surface2);
+}
+
+/* ─── Tooltip / Popover ───────────────────────────────────────────────────── */
+
+.kmInfoBtn {
+  background: none;
+  border: none;
+  padding: 0 2px;
+  cursor: pointer;
+  color: var(--text3);
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+
+.kmInfoBtn:hover {
+  opacity: 1;
+  color: var(--accent);
+}
+
+.kmPopover {
+  position: absolute;
+  z-index: 200;
+  background: var(--surface3, #2a2a2a);
+  color: var(--text1);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  max-width: 240px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  margin-top: 4px;
+}
+
+/* ─── Rankingi ─────────────────────────────────────────────────────────────── */
+
+.kmRankingsControls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.kmControlGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.kmControlGroup label {
+  font-size: 0.85rem;
+  color: var(--text2);
+  white-space: nowrap;
+  min-width: 80px;
+}
+
+.kmBtnGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.kmRankBtn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 0.83rem;
+  cursor: pointer;
+  color: var(--text2);
+  transition: background 0.15s;
+}
+
+.kmRankBtn:hover {
+  background: var(--surface3);
+}
+
+.kmRankBtn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.kmRankNote {
+  font-size: 0.8rem;
+  color: var(--text3);
+  margin: 0 0 10px;
+  padding: 6px 10px;
+  background: var(--surface2);
+  border-radius: 6px;
+  border-left: 3px solid var(--accent);
+}
+
+.kmRankingList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kmRankRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.kmRankRow.kmRankRowMe {
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface1));
+  border-color: var(--accent);
+}
+
+.kmRankMedal {
+  font-size: 1rem;
+  min-width: 28px;
+  text-align: center;
+}
+
+.kmRankName {
+  flex: 1;
+  font-size: 0.9rem;
+  color: var(--text1);
+  font-weight: 500;
+}
+
+.kmRankValue {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+/* ─── Statystyki ───────────────────────────────────────────────────────────── */
+
+.kmStatsSection h3 {
+  font-size: 0.9rem;
+  color: var(--text2);
+  margin: 16px 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.kmStatsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 8px;
+}
+
+.kmStatCard {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 8px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.kmStatValue {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text1);
+  line-height: 1;
+}
+
+.kmStatLabel {
+  font-size: 0.75rem;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ─── Lista wpisów ─────────────────────────────────────────────────────────── */
+
+.kmLogsCount {
+  font-size: 0.82rem;
+  color: var(--text3);
+  margin: 0 0 10px;
+}
+
+.kmLogsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.kmLogItem {
+  background: var(--surface1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.kmLogItem.kmLogHistorical {
+  border-left: 3px solid var(--text3);
+  opacity: 0.85;
+}
+
+.kmLogHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.kmLogDate {
+  font-size: 0.82rem;
+  color: var(--text2);
+  font-weight: 600;
+}
+
+.kmLogBadge {
+  font-size: 0.72rem;
+  background: var(--surface3);
+  color: var(--text3);
+  border-radius: 4px;
+  padding: 1px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.kmLogPts {
+  margin-left: auto;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.kmLogBody {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.kmLogPlace {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text1);
+}
+
+.kmLogType {
+  font-size: 0.78rem;
+  color: var(--text3);
+}
+
+.kmLogMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--text2);
+}
+
+.kmLogNote {
+  margin-top: 6px;
+  font-size: 0.8rem;
+  color: var(--text3);
+  font-style: italic;
+  border-top: 1px solid var(--border);
+  padding-top: 5px;
+}
+
+/* ─── Stany puste ─────────────────────────────────────────────────────────── */
+
+.kmEmpty,
+.kmStatsEmpty,
+.kmLogsEmpty {
+  text-align: center;
+  color: var(--text3);
+  padding: 24px 16px;
+  font-size: 0.9rem;
+}
+
+/* ─── Mobile ──────────────────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .kmCapsizeGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .kmStatsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .kmRankingsControls {
+    gap: 8px;
+  }
+
+  .kmControlGroup {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+}

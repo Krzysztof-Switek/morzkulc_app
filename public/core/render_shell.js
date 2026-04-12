@@ -79,8 +79,8 @@ export async function renderView({ viewEl, ctx }) {
 
 async function renderHomeDashboard({ viewEl, ctx }) {
   const helloName = getHelloName(ctx);
-  const roleLabel = roleKeyToLabel(String(ctx.session?.role_key || ""));
-  const statusLabel = statusKeyToLabel(String(ctx.session?.status_key || ""));
+  const roleLabel = roleKeyToLabel(String(ctx.session?.role_key || ""), ctx?.setup?.roleMappings);
+  const statusLabel = statusKeyToLabel(String(ctx.session?.status_key || ""), ctx?.setup?.statusMappings);
   const hoursValue = getHoursValue(ctx);
   const membershipPaidUntil = getMembershipPaidUntil(ctx);
 
@@ -726,23 +726,31 @@ function getMembershipPaidUntil(ctx) {
   return "";
 }
 
-function roleKeyToLabel(roleKey) {
+function roleKeyToLabel(roleKey, roleMappings) {
   const k = String(roleKey || "").trim();
+  if (!k) return "-";
+  const fromSetup = roleMappings?.[k]?.label;
+  if (fromSetup) return String(fromSetup);
+  // fallback — klucze techniczne istniejące przed wprowadzeniem setup.roleMappings
   if (k === "rola_zarzad") return "Zarząd";
   if (k === "rola_kr") return "KR";
   if (k === "rola_czlonek") return "Członek";
   if (k === "rola_kandydat") return "Kandydat";
   if (k === "rola_sympatyk") return "Sympatyk";
   if (k === "rola_kursant") return "Kursant";
-  return k || "-";
+  return k;
 }
 
-function statusKeyToLabel(statusKey) {
+function statusKeyToLabel(statusKey, statusMappings) {
   const k = String(statusKey || "").trim();
+  if (!k) return "-";
+  const fromSetup = statusMappings?.[k]?.label;
+  if (fromSetup) return String(fromSetup);
+  // fallback — klucze techniczne istniejące przed wprowadzeniem setup.statusMappings
   if (k === "status_aktywny") return "Aktywny";
   if (k === "status_zawieszony") return "Zawieszony";
   if (k === "status_skreslony") return "Skreślony";
-  return k || "-";
+  return k;
 }
 
 function normalizePhoneDigits(v) {

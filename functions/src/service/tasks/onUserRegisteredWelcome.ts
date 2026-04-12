@@ -96,9 +96,21 @@ export const onUserRegisteredWelcomeTask: ServiceTask<OnUserRegisteredPayload> =
       logger.info("Skip: already added to lista group", { uid });
     }
 
+    // Odczyt setup/app — używany w kroku C i D
+    const setupSnap = await firestore.collection("setup").doc("app").get();
+    const setupData = (setupSnap.exists ? setupSnap.data() : null) as any;
+    const roleMappings: Record<string, { groups?: string[] }> = setupData?.roleMappings || {};
+
     // C) Add to role-based group for Drive access - idempotent
     const membersGroup = config.membersGroupEmail;
-    const shouldAddToMembersGroup = membersGroup && MEMBER_LEVEL_ROLES.has(roleKey);
+    // Jeśli setup.roleMappings jest skonfigurowany — sprawdź czy membersGroupEmail jest w grupach roli.
+    // Jeśli brak roleMappings w setup — fallback na hardcoded MEMBER_LEVEL_ROLES.
+    const hasRoleMappings = Object.keys(roleMappings).length > 0;
+    const shouldAddToMembersGroup = membersGroup && (
+      hasRoleMappings ?
+        (roleMappings[roleKey]?.groups || []).map((g) => g.trim().toLowerCase()).includes(membersGroup.trim().toLowerCase()) :
+        MEMBER_LEVEL_ROLES.has(roleKey)
+    );
 
     if (shouldAddToMembersGroup && !addedToRoleGroupAt) {
       logger.info("WelcomeTask: step C addMemberToGroup role - begin", {
@@ -193,8 +205,7 @@ export const onUserRegisteredWelcomeTask: ServiceTask<OnUserRegisteredPayload> =
     //    This covers groups beyond the hardcoded membersGroup above.
     //    Idempotent: only runs once per user via roleGroupsMappingsSyncedAt marker.
     if (!roleGroupsMappingsSyncedAt) {
-      const setupSnap = await firestore.collection("setup").doc("app").get();
-      const roleMappings: Record<string, { groups?: string[] }> = (setupSnap.exists ? setupSnap.data() : null as any)?.roleMappings || {};
+      // roleMappings już odczytane przed krokiem C — reużywamy
 
       const allManagedGroups = new Set<string>();
       for (const entry of Object.values(roleMappings)) {

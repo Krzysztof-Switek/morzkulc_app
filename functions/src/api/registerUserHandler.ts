@@ -388,9 +388,9 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
             ...incomingProfile,
           });
 
-          // jeśli po tym profilu jest komplet → sync do arkusza (fire-and-forget, nie blokuje odpowiedzi)
+          // jeśli po tym profilu jest komplet → sync do arkusza (await gwarantuje zapis joba przed odpowiedzią)
           if (profileComplete) {
-            enqueueMemberSheetSync(uid).catch((sheetErr: any) => {
+            await enqueueMemberSheetSync(uid).catch((sheetErr: any) => {
               console.error("enqueueMemberSheetSync failed (existing user)", {
                 uid,
                 message: sheetErr?.message || String(sheetErr),
@@ -488,9 +488,9 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
 
       const profileComplete = isProfileComplete(incomingProfile);
 
-      // jeśli user już podał komplet profilu → sync do arkusza (fire-and-forget, nie blokuje odpowiedzi)
+      // jeśli user już podał komplet profilu → sync do arkusza (await gwarantuje zapis joba przed odpowiedzią)
       if (profileComplete) {
-        enqueueMemberSheetSync(uid).catch((sheetErr: any) => {
+        await enqueueMemberSheetSync(uid).catch((sheetErr: any) => {
           console.error("enqueueMemberSheetSync failed (new user)", {
             uid,
             message: sheetErr?.message || String(sheetErr),

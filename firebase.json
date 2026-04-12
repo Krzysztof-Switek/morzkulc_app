@@ -83,14 +83,6 @@
           { "key": "Pragma", "value": "no-cache" },
           { "key": "Expires", "value": "0" }
         ]
-      },
-      {
-        "source": "/api/**",
-        "headers": [
-          { "key": "Access-Control-Allow-Origin", "value": "*" },
-          { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
-          { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
-        ]
       }
     ],
     "rewrites": [
@@ -266,6 +258,41 @@
         "source": "/api/basen/karnety/grant",
         "function": {
           "functionId": "basenGrantKarnet",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/godzinki/purchase",
+        "function": {
+          "functionId": "purchaseGodzinki",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/basen/godziny",
+        "function": {
+          "functionId": "getBasenGodziny",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/basen/admin/godziny/add",
+        "function": {
+          "functionId": "basenAdminAddGodziny",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/basen/admin/godziny/correct",
+        "function": {
+          "functionId": "basenAdminCorrectGodziny",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/basen/admin/users",
+        "function": {
+          "functionId": "basenAdminSearchUsers",
           "region": "us-central1"
         }
       }

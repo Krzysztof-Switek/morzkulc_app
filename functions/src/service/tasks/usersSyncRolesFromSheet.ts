@@ -285,6 +285,58 @@ export const usersSyncRolesFromSheetTask: ServiceTask<Payload> = {
 
         updated++;
 
+        // Email powiadomienie o zmianie roli (non-fatal)
+        if (roleChanged && newRoleKey && !dryRun) {
+          const oldRoleLabel = roleMappings[currentRoleKey]?.label || currentRoleKey;
+          const newRoleLabel = roleMappings[newRoleKey]?.label || newRoleKey;
+          const isBoardRole = newRoleKey === "rola_zarzad" || newRoleKey === "rola_kr";
+          const boardInstructions = isBoardRole ? [
+            "",
+            "---",
+            "",
+            "Jako członek Zarządu/KR obsługujesz adres: zarzad@morzkulc.pl",
+            "",
+            "ODBIERANIE MAILI:",
+            "1. Wejdź na groups.google.com",
+            "2. Znajdź grupę zarzad_skk@morzkulc.pl",
+            "3. Kliknij \"Moje ustawienia członkostwa\" → \"Subskrypcja\" → wybierz \"Każdy e-mail\"",
+            "4. Od tej chwili maile do zarzad@morzkulc.pl będą trafiać do Twojego Gmaila.",
+            "",
+            "ODPOWIADANIE JAKO zarzad@morzkulc.pl:",
+            "1. W Gmailu: koło zębate → Ustawienia → zakładka \"Konta i import\"",
+            "2. \"Wyślij pocztę jako\" → \"Dodaj inny adres e-mail\"",
+            "3. Wpisz: zarzad@morzkulc.pl → kliknij Dalej",
+            "4. Gmail wyśle kod weryfikacyjny na zarzad@ — odbierzesz go bo jesteś już w grupie",
+            "5. Po wpisaniu kodu możesz pisać i odpowiadać jako zarzad@morzkulc.pl",
+          ] : [];
+          try {
+            await workspace.sendWelcomeEmail(
+              cfg.welcomeFromEmail,
+              email,
+              cfg.welcomeReplyToEmail,
+              "Zmiana roli w SKK Morzkulc",
+              [
+                "Cześć!",
+                "",
+                "Twoja rola w SKK Morzkulc została zmieniona.",
+                "",
+                `Poprzednia rola: ${oldRoleLabel}`,
+                `Nowa rola: ${newRoleLabel}`,
+                "",
+                "Jeśli masz pytania, odpisz na tego maila.",
+                "",
+                "SKK Morzkulc",
+                ...boardInstructions,
+              ].join("\n")
+            );
+            ctx.logger.info("usersSyncRolesFromSheet: role change email sent", {email, oldRoleLabel, newRoleLabel, isBoardRole});
+          } catch (emailErr: any) {
+            ctx.logger.error("usersSyncRolesFromSheet: role change email failed (non-fatal)", {
+              email, message: emailErr?.message,
+            });
+          }
+        }
+
         // Sync grup Workspace jeśli rola się zmieniła i roleMappings jest skonfigurowane
         if (roleChanged && newRoleKey && Object.keys(roleMappings).length > 0) {
           try {

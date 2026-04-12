@@ -4,6 +4,8 @@ import { createMyReservationsModule } from "/modules/my_reservations_module.js";
 import { createGodzinkiModule } from "/modules/godzinki_module.js";
 import { createImprezaModule } from "/modules/impreza_module.js";
 import { createBasenModule } from "/modules/basen_module.js";
+import { createAdminPendingModule } from "/modules/admin_pending_module.js";
+import { createKmModule } from "/modules/km_module.js";
 
 /**
  * Resolves the module component type from setup config.
@@ -13,7 +15,7 @@ import { createBasenModule } from "/modules/basen_module.js";
  *
  * Known types: "gear" | "godzinki" | "imprezy" | "basen"
  */
-const KNOWN_MODULE_TYPES = new Set(["gear", "godzinki", "imprezy", "basen"]);
+const KNOWN_MODULE_TYPES = new Set(["gear", "godzinki", "imprezy", "basen", "km"]);
 
 function resolveModuleType(cfg) {
   const typeField = String(cfg?.type || "").trim().toLowerCase();
@@ -25,6 +27,8 @@ function resolveModuleType(cfg) {
   if (label === "godzinki") return "godzinki";
   if (label === "imprezy") return "imprezy";
   if (label === "basen") return "basen";
+  if (label === "ranking") return "km";
+
   return null;
 }
 
@@ -37,7 +41,7 @@ function resolveModuleType(cfg) {
  * `type` is the preferred field for component resolution.
  * PL `label` is used as fallback when `type` is absent (backwards compatibility).
  */
-export function buildModulesFromSetup(setup) {
+export function buildModulesFromSetup(setup, userRoleKey) {
   const modulesCfg = setup?.modules;
 
   if (!modulesCfg || typeof modulesCfg !== "object" || Array.isArray(modulesCfg)) {
@@ -84,6 +88,13 @@ export function buildModulesFromSetup(setup) {
       });
     }
 
+    if (moduleType === "km") {
+      return createKmModule({
+        ...base,
+        defaultRoute: base.defaultRoute === "home" ? "form" : base.defaultRoute
+      });
+    }
+
     return createGenericModule(base);
   });
 
@@ -99,6 +110,21 @@ export function buildModulesFromSetup(setup) {
         order: Number(gearModule.order ?? 9999) + 0.1,
         enabled: true,
         access: gearModule.access || {}
+      })
+    );
+  }
+
+  const ADMIN_ROLE_KEYS = new Set(["rola_zarzad", "rola_kr"]);
+  if (userRoleKey && ADMIN_ROLE_KEYS.has(userRoleKey)) {
+    modules.push(
+      createAdminPendingModule({
+        id: "admin_pending",
+        type: "admin_pending",
+        label: "Do zatwierdzenia",
+        defaultRoute: "list",
+        order: 9998,
+        enabled: true,
+        access: {}
       })
     );
   }
