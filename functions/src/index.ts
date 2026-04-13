@@ -42,6 +42,7 @@ import {handleKmMyStats} from "./api/kmMyStatsHandler";
 import {handleKmRankings} from "./api/kmRankingsHandler";
 import {handleKmPlaces} from "./api/kmPlacesHandler";
 import {handleKmEventStats} from "./api/kmEventStatsHandler";
+import {handleKmMapData} from "./api/kmMapDataHandler";
 import {getServiceConfig} from "./service/service_config";
 
 setGlobalOptions({region: "us-central1"});
@@ -1000,6 +1001,21 @@ export const kmPlaces = onRequest({invoker: "private"}, async (req, res) => {
  */
 export const kmEventStats = onRequest({invoker: "private"}, async (req, res) => {
   return handleKmEventStats(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * GET /kmMapData (authenticated)
+ * Pre-computed cache lokalizacji aktywności km dla mapy.
+ */
+export const kmMapData = onRequest({invoker: "private"}, async (req, res) => {
+  return handleKmMapData(req, res, {
     db,
     sendPreflight,
     requireAllowedHost,

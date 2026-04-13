@@ -337,6 +337,13 @@
           "functionId": "kmEventStats",
           "region": "us-central1"
         }
+      },
+      {
+        "source": "/api/km/map-data",
+        "function": {
+          "functionId": "kmMapData",
+          "region": "us-central1"
+        }
       }
     ]
   }

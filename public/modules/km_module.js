@@ -19,6 +19,7 @@ const KM_MY_STATS_URL = "/api/km/stats";
 const KM_RANKINGS_URL = "/api/km/rankings";
 const KM_PLACES_URL = "/api/km/places";
 const KM_EVENT_STATS_URL = "/api/km/event-stats";
+const KM_MAP_DATA_URL = "/api/km/map-data";
 const EVENTS_URL = "/api/events";
 
 const NAV_BACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`;
@@ -29,6 +30,7 @@ const TABS = [
   { id: "form",     label: "Dodaj wpis" },
   { id: "rankings", label: "Ranking" },
   { id: "events",   label: "Imprezy" },
+  { id: "map",      label: "Mapa" },
   { id: "my-stats", label: "Moje statystyki" },
   { id: "my-logs",  label: "Moje wpisy" },
 ];
@@ -129,7 +131,7 @@ function attachInfoTips(container) {
 
 // ─── autocomplete nazwy akwenu ────────────────────────────────────────────────
 
-function attachPlacesAutocomplete(input, hiddenPlaceId, ctx) {
+function attachPlacesAutocomplete(input, hiddenPlaceId, ctx, hiddenLat, hiddenLng) {
   let debounceTimer = null;
   let suggestionsList = null;
   let selectedPlaceId = null;
@@ -157,6 +159,8 @@ function attachPlacesAutocomplete(input, hiddenPlaceId, ctx) {
         input.value = p.name;
         selectedPlaceId = p.placeId;
         hiddenPlaceId.value = p.placeId;
+        if (hiddenLat) hiddenLat.value = p.lat != null ? p.lat : "";
+        if (hiddenLng) hiddenLng.value = p.lng != null ? p.lng : "";
         closeSuggestions();
       });
       suggestionsList.appendChild(li);
@@ -169,6 +173,8 @@ function attachPlacesAutocomplete(input, hiddenPlaceId, ctx) {
   input.addEventListener("input", () => {
     selectedPlaceId = null;
     hiddenPlaceId.value = "";
+    if (hiddenLat) hiddenLat.value = "";
+    if (hiddenLng) hiddenLng.value = "";
     clearTimeout(debounceTimer);
     const q = input.value.trim();
     if (q.length < 2) { closeSuggestions(); return; }
@@ -232,6 +238,8 @@ function renderFormView(inner, ctx, moduleId) {
           <input type="text" id="kmPlaceName" name="placeName" maxlength="200"
             placeholder="np. Radunia, Dunajec, Morze Bałtyckie" autocomplete="off" required />
           <input type="hidden" id="kmPlaceId" name="placeId" />
+          <input type="hidden" id="kmLat" />
+          <input type="hidden" id="kmLng" />
         </div>
 
         <div class="formRow">
@@ -339,7 +347,9 @@ function renderFormView(inner, ctx, moduleId) {
   // Autocomplete nazwy akwenu
   const placeInput = inner.querySelector("#kmPlaceName");
   const placeIdHidden = inner.querySelector("#kmPlaceId");
-  attachPlacesAutocomplete(placeInput, placeIdHidden, ctx);
+  const latHidden = inner.querySelector("#kmLat");
+  const lngHidden = inner.querySelector("#kmLng");
+  attachPlacesAutocomplete(placeInput, placeIdHidden, ctx, latHidden, lngHidden);
 
   // Załaduj listę aktualnych imprez asynchronicznie (mode=recent: od 30 dni wstecz do dziś)
   const eventSelect = inner.querySelector("#kmEvent");
@@ -385,6 +395,10 @@ function renderFormView(inner, ctx, moduleId) {
     const sectionDescription = String(form.sectionDescription.value || "").trim() || undefined;
     const note = String(form.note.value || "").trim() || undefined;
     const placeId = String(form.placeId.value || "").trim() || undefined;
+    const latRaw = inner.querySelector("#kmLat")?.value;
+    const lngRaw = inner.querySelector("#kmLng")?.value;
+    const lat = latRaw !== "" && latRaw != null ? parseFloat(latRaw) : undefined;
+    const lng = lngRaw !== "" && lngRaw != null ? parseFloat(lngRaw) : undefined;
 
     const kabina = parseInt(form.kabina.value, 10) || 0;
     const rolka = parseInt(form.rolka.value, 10) || 0;
@@ -413,6 +427,8 @@ function renderFormView(inner, ctx, moduleId) {
           placeName,
           placeNameRaw: placeName,
           placeId,
+          lat,
+          lng,
           km,
           hoursOnWater,
           activityType,
@@ -727,6 +743,90 @@ async function renderMyLogsView(inner, ctx) {
   `;
 }
 
+// ─── WIDOK: mapa aktywności ───────────────────────────────────────────────────
+
+async function renderMapView(inner, ctx) {
+  inner.innerHTML = `
+    <div class="kmMapSection">
+      <div id="kmMapContainer" style="height:420px;border-radius:12px;overflow:hidden;background:#1a1a2e;"></div>
+      <div id="kmMapStatus" style="margin-top:8px;font-size:0.8rem;color:var(--text-muted, #888);text-align:right;"></div>
+    </div>`;
+
+  const mapEl = inner.querySelector("#kmMapContainer");
+  const statusEl = inner.querySelector("#kmMapStatus");
+
+  // Załaduj Leaflet CSS i JS dynamicznie
+  async function loadLeaflet() {
+    if (window.L) return;
+    await new Promise((resolve, reject) => {
+      if (!document.querySelector("#leaflet-css")) {
+        const link = document.createElement("link");
+        link.id = "leaflet-css";
+        link.rel = "stylesheet";
+        link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+        document.head.appendChild(link);
+      }
+      const script = document.createElement("script");
+      script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  }
+
+  try {
+    mapEl.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#aaa;font-size:0.9rem;">Ładowanie mapy…</div>`;
+
+    await loadLeaflet();
+
+    const data = await apiGetJson({ url: KM_MAP_DATA_URL, idToken: ctx.idToken });
+
+    const L = window.L;
+    mapEl.innerHTML = "";
+
+    const map = L.map(mapEl, { zoomControl: true, attributionControl: true });
+
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      attribution: "© <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors © <a href='https://carto.com/'>CARTO</a>",
+      subdomains: "abcd",
+      maxZoom: 19,
+    }).addTo(map);
+
+    const locations = data?.locations || [];
+
+    if (locations.length === 0) {
+      mapEl.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#aaa;font-size:0.9rem;padding:16px;text-align:center;">Brak danych lokalizacji.<br>Mapa aktualizuje się po uruchomieniu zadania z menu w arkuszu.</div>`;
+      return;
+    }
+
+    const markers = [];
+    for (const loc of locations) {
+      const radius = 4 + Math.sqrt(loc.logCount) * 3;
+      const marker = L.circleMarker([loc.lat, loc.lng], {
+        radius,
+        color: "#00bcd4",
+        fillColor: "#00bcd4",
+        fillOpacity: 0.65,
+        weight: 1.5,
+      });
+      const logWord = loc.logCount === 1 ? "wpis" : (loc.logCount < 5 ? "wpisy" : "wpisów");
+      marker.bindPopup(`<strong>${esc(loc.placeName)}</strong><br>${loc.logCount} ${logWord} · ${fmtNum(loc.totalKm, 1)} km`);
+      marker.addTo(map);
+      markers.push(marker);
+    }
+
+    const group = L.featureGroup(markers);
+    map.fitBounds(group.getBounds().pad(0.15));
+
+    if (data.updatedAt) {
+      const d = new Date(data.updatedAt);
+      statusEl.textContent = `Ostatnia aktualizacja mapy: ${d.toLocaleDateString("pl-PL")} ${d.toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}`;
+    }
+  } catch (err) {
+    mapEl.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#f44;padding:16px;text-align:center;">Nie udało się załadować mapy.<br><small>${esc(err?.message || String(err))}</small></div>`;
+  }
+}
+
 // ─── WIDOK: imprezy ────────────────────────────────────────────────────────────
 
 async function renderEventStatsView(inner, ctx) {
@@ -889,6 +989,10 @@ async function renderKmView(viewEl, routeId, ctx, moduleId) {
   // Przełączanie zakładek
   viewEl.querySelectorAll("[data-km-tab]").forEach(btn => {
     btn.addEventListener("click", () => {
+      if (btn.dataset.kmTab === "map") {
+        window.open("/map.html", "_blank", "noopener");
+        return;
+      }
       import("/core/router.js").then(({ setHash }) => {
         setHash(moduleId, btn.dataset.kmTab);
       });
@@ -905,6 +1009,8 @@ async function renderKmView(viewEl, routeId, ctx, moduleId) {
     await renderRankingsView(inner, ctx);
   } else if (activeTab === "events") {
     await renderEventStatsView(inner, ctx);
+  } else if (activeTab === "map") {
+    await renderMapView(inner, ctx);
   } else if (activeTab === "my-stats") {
     await renderMyStatsView(inner, ctx);
   } else if (activeTab === "my-logs") {

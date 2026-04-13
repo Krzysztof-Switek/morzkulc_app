@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mapa aktywności — SKK Morzkulc</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; background: #0d1117; overflow: hidden; }
+    #map { width: 100%; height: 100%; }
+    #status {
+      position: fixed;
+      bottom: 8px;
+      right: 10px;
+      font: 11px/1.4 system-ui, sans-serif;
+      color: #666;
+      pointer-events: none;
+      z-index: 1000;
+    }
+    #loading {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0d1117;
+      color: #aaa;
+      font: 14px system-ui, sans-serif;
+      z-index: 2000;
+    }
+  </style>
+</head>
+<body>
+  <div id="loading">Ładowanie mapy…</div>
+  <div id="map"></div>
+  <div id="status"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    (async function () {
+      const loadingEl = document.getElementById("loading");
+      const statusEl  = document.getElementById("status");
+
+      function esc(s) {
+        return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      }
+      function fmtNum(n) {
+        const v = parseFloat(n) || 0;
+        return v % 1 === 0 ? String(v) : v.toFixed(1);
+      }
+
+      try {
+        const resp = await fetch("/api/km/map-data");
+        if (!resp.ok) throw new Error("HTTP " + resp.status);
+        const data = await resp.json();
+
+        loadingEl.remove();
+
+        const map = L.map("map", { zoomControl: true, attributionControl: true });
+
+        L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+          attribution: "© <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors © <a href='https://carto.com/'>CARTO</a>",
+          subdomains: "abcd",
+          maxZoom: 19,
+        }).addTo(map);
+
+        const locations = data?.locations || [];
+
+        if (locations.length === 0) {
+          document.getElementById("map").innerHTML =
+            "<div style='display:flex;align-items:center;justify-content:center;height:100%;color:#aaa;font:14px system-ui,sans-serif;'>Brak danych lokalizacji.</div>";
+          return;
+        }
+
+        const markers = [];
+        for (const loc of locations) {
+          const radius = 4 + Math.sqrt(loc.logCount) * 3;
+          const marker = L.circleMarker([loc.lat, loc.lng], {
+            radius,
+            color: "#00bcd4",
+            fillColor: "#00bcd4",
+            fillOpacity: 0.65,
+            weight: 1.5,
+          });
+          const cnt = loc.logCount;
+          const word = cnt === 1 ? "wpis" : cnt < 5 ? "wpisy" : "wpisów";
+          const usersHtml = (loc.topUsers || []).length > 0
+            ? "<br><span style='color:#aaa;font-size:0.85em'>" + loc.topUsers.map(u => esc(u.name)).join(", ") + "</span>"
+            : "";
+          marker.bindPopup("<strong>" + esc(loc.placeName) + "</strong><br>" + cnt + " " + word + " · " + fmtNum(loc.totalKm) + " km" + usersHtml);
+          marker.addTo(map);
+          markers.push(marker);
+        }
+
+        const group = L.featureGroup(markers);
+        map.fitBounds(group.getBounds().pad(0.12));
+
+        if (data.updatedAt) {
+          const d = new Date(data.updatedAt);
+          statusEl.textContent = "Aktualizacja: " + d.toLocaleDateString("pl-PL") + " " + d.toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
+        }
+      } catch (err) {
+        loadingEl.textContent = "Błąd ładowania mapy: " + (err?.message || String(err));
+      }
+    })();
+  </script>
+</body>
+</html>

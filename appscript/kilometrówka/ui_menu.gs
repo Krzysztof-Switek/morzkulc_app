@@ -11,6 +11,7 @@ function onOpen() {
     .addItem("Ranking korekta do Firestore", "pushRankingCorrections")
     .addItem("Ranking pobierz wszystko", "syncRankingFromFirestore")
     .addItem("Przelicz ranking (po zmianie punktacji)", "enqueueRebuildRankings")
+    .addItem("Odśwież mapę aktywności", "enqueueRebuildMapData")
     .addToUi();
 }
 
@@ -23,6 +24,20 @@ function enqueueRebuildRankings() {
   try {
     enqueueServiceJob_("km.rebuildRankings", {});
     SpreadsheetApp.getUi().alert("Przeliczanie rankingu zakolejkowane ✅\nWyniki pojawią się w aplikacji po chwili.");
+  } catch (e) {
+    SpreadsheetApp.getUi().alert("Błąd kolejkowania: " + String(e.message || e));
+  }
+}
+
+/**
+ * Kolejkuje task km.rebuildMapData — przebudowuje cache mapy aktywności.
+ * Uruchamiać po imporcie nowych danych lub zmianie lokalizacji.
+ */
+function enqueueRebuildMapData() {
+  assertBoardAccess_();
+  try {
+    enqueueServiceJob_("km.rebuildMapData", {});
+    SpreadsheetApp.getUi().alert("Przebudowa mapy zakolejkowana ✅\nMapa zaktualizuje się za chwilę.");
   } catch (e) {
     SpreadsheetApp.getUi().alert("Błąd kolejkowania: " + String(e.message || e));
   }
