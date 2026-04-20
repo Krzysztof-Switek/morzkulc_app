@@ -8,10 +8,15 @@ Endpoint map (verified against functions/src/index.ts):
   GET  /api/gear/items             — other gear items
   GET  /api/gear/items/availability?category=X&startDate=...&endDate=...
   GET  /api/gear/my-reservations   — current user's reservations
-  POST /api/gear/reservations/create   — body: {startDate, endDate, kayakIds: ["id"]}
-                                         returns: {ok, reservationId, costHours, blockStartIso, blockEndIso}
-  POST /api/gear/reservations/cancel   — body: {reservationId}
+  POST /api/gear/reservations/create         — body: {startDate, endDate, kayakIds}
+                                               returns: {ok, reservationId, costHours, blockStartIso, blockEndIso}
+  POST /api/gear/reservations/create-bundle  — body: {startDate, endDate, items[], starterCategory, starterItemId}
+                                               returns: {ok, reservationId, costHours, blockStartIso, blockEndIso, reservationKind}
+  POST /api/gear/reservations/cancel         — body: {reservationId}
+  POST /api/gear/reservations/update         — body: {reservationId, startDate, endDate}
   GET  /api/godzinki               — returns {ok, balance, negativeBalanceLimit, ...}
+  POST /api/godzinki/submit        — body: {amount, grantedAt, reason}
+                                     returns: {ok, recordId}
   GET  /api/gear/kayak-reservations?kayakId=X
 """
 import logging
@@ -158,3 +163,93 @@ class ApiHelper:
             timeout=15,
         )
         return self._check(resp, "GET /api/godzinki")
+
+    def submit_godzinki(self, token: str, amount: float, granted_at: str, reason: str) -> dict:
+        """
+        POST /api/godzinki/submit
+        Body: {amount, grantedAt: "YYYY-MM-DD", reason}
+        Returns: {ok, recordId}
+        """
+        resp = self._session.post(
+            f"{self.base_url}/api/godzinki/submit",
+            headers=self._headers(token),
+            json={"amount": amount, "grantedAt": granted_at, "reason": reason},
+            timeout=20,
+        )
+        return self._check(resp, "POST /api/godzinki/submit")
+
+    def submit_godzinki_soft(self, token: str, amount: float, granted_at: str, reason: str) -> dict:
+        """Like submit_godzinki but does NOT raise on HTTP error."""
+        resp = self._session.post(
+            f"{self.base_url}/api/godzinki/submit",
+            headers=self._headers(token),
+            json={"amount": amount, "grantedAt": granted_at, "reason": reason},
+            timeout=20,
+        )
+        return self._soft(resp, "POST /api/godzinki/submit (soft)")
+
+    # ------------------------------------------------------------------
+    # Bundle reservations
+    # ------------------------------------------------------------------
+
+    def reserve_bundle(self, token: str, items: list[dict], start_date: str, end_date: str,
+                       starter_category: str = "kayaks", starter_item_id: str = "") -> dict:
+        """
+        POST /api/gear/reservations/create-bundle
+        items: [{"category": "kayaks", "itemId": "K01"}, {"category": "paddles", "itemId": "P01"}]
+        Returns: {ok, reservationId, costHours, blockStartIso, blockEndIso, reservationKind}
+        """
+        resp = self._session.post(
+            f"{self.base_url}/api/gear/reservations/create-bundle",
+            headers=self._headers(token),
+            json={
+                "startDate": start_date,
+                "endDate": end_date,
+                "items": items,
+                "starterCategory": starter_category,
+                "starterItemId": starter_item_id or (items[0]["itemId"] if items else ""),
+            },
+            timeout=30,
+        )
+        return self._check(resp, "POST /api/gear/reservations/create-bundle")
+
+    def reserve_bundle_soft(self, token: str, items: list[dict], start_date: str, end_date: str,
+                            starter_category: str = "kayaks", starter_item_id: str = "") -> dict:
+        """Like reserve_bundle but does NOT raise on HTTP error."""
+        resp = self._session.post(
+            f"{self.base_url}/api/gear/reservations/create-bundle",
+            headers=self._headers(token),
+            json={
+                "startDate": start_date,
+                "endDate": end_date,
+                "items": items,
+                "starterCategory": starter_category,
+                "starterItemId": starter_item_id or (items[0]["itemId"] if items else ""),
+            },
+            timeout=30,
+        )
+        return self._soft(resp, "POST /api/gear/reservations/create-bundle (soft)")
+
+    def update_reservation(self, token: str, reservation_id: str, start_date: str, end_date: str) -> dict:
+        """
+        POST /api/gear/reservations/update
+        Body: {reservationId, startDate, endDate}
+        Returns: {ok, ...}
+        """
+        resp = self._session.post(
+            f"{self.base_url}/api/gear/reservations/update",
+            headers=self._headers(token),
+            json={"reservationId": reservation_id, "startDate": start_date, "endDate": end_date},
+            timeout=30,
+        )
+        return self._check(resp, "POST /api/gear/reservations/update")
+
+    def update_reservation_soft(self, token: str, reservation_id: str, start_date: str, end_date: str) -> dict:
+        """Like update_reservation but does NOT raise on HTTP error."""
+        resp = self._session.post(
+            f"{self.base_url}/api/gear/reservations/update",
+            headers=self._headers(token),
+            json={"reservationId": reservation_id, "startDate": start_date, "endDate": end_date},
+            timeout=30,
+        )
+        return self._soft(resp, "POST /api/gear/reservations/update (soft)")

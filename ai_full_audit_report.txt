@@ -1,0 +1,1918 @@
+🔍 Building AI optimization + refactor guard audit...
+
+====================================================================================================
+=== PROJECT AI OPTIMIZATION + REFACTOR GUARD RULES ===
+
+GENERAL
+- Never guess code structure.
+- Always rely on actual files.
+- If unsure -> inspect full file, not fragments.
+- functions/src = backend source of truth
+- public/ = frontend runtime source of truth
+- functions/lib = compiled output, never source of truth
+
+OPTIMIZATION SCOPE
+- Optimization only
+- No default business logic changes
+- No default UX redesign
+- No default visual redesign
+- No contract changes unless fully reviewed downstream
+
+PRIMARY GOAL
+- Find bottlenecks
+- Find repeated work
+- Find duplicated code
+- Find heavy renders
+- Find repeated Firestore/API usage
+- Find safe optimization candidates
+- Mark high-risk files that require full inspection
+- Detect likely hardcoded business/config/security values
+- Build full-read bundles for risky files
+- Define stop conditions before refactor
+
+SAFETY
+- High-risk files must not be modified from partial snippets
+- Shared contracts must be identified before refactor
+- Browser-facing endpoints require routing/security review
+- Firestore-heavy services require index/query review
+
+IMPORTANT FILTERS
+- Folder 'archiwed/' is excluded from analysis
+- Audit/snapshot tools are excluded from runtime ranking
+- Runtime usage is separated from diagnostic/reference usage
+- Quick wins should focus on active runtime first
+====================================================================================================
+
+=== EXECUTIVE SUMMARY ===
+- biggest_frontend_problem: public/modules/gear_module.js
+- biggest_backend_problem: functions/src/modules/equipment/kayaks/gear_kayaks_service.ts
+- largest_function: project_optimization_snapshot.py :: render_text_report :: len=298
+
+=== GIT SUMMARY ===
+- current branch: dev-reset-from-prod
+- HEAD short hash: 14d4061
+- last commit: 14d4061 project_optimization_snapshot.py - dodane w wersji 2
+- git status:
+  • D  archiwed/.clasp.json
+  • D  archiwed/.firebaserc
+  • D  archiwed/.gitignore
+  • D  archiwed/00_config_users.js
+  • D  archiwed/01_config_gear.js
+  • D  archiwed/02_config_master.js
+  • D  archiwed/05_ui_router.js
+  • D  archiwed/06_ui_render.js
+  • D  archiwed/07_ui_helpers.js
+  • D  archiwed/10_firestore_core.js
+  • D  archiwed/11_firestore_utils.js
+  • D  archiwed/12_firestore_mappers.js
+  • D  archiwed/13_firestore.js
+  • D  archiwed/20_kayaks_config.js
+  • D  archiwed/21_kayaks_backend.js
+  • D  archiwed/22_kayaks_sync.js
+  • D  archiwed/23_paddles_config.js
+  • D  archiwed/24_paddles_sync.js
+  • D  archiwed/25_fartuchy_config.js
+  • D  archiwed/26_fartuchy_sync.js
+  • D  archiwed/27_helmets_config.js
+  • D  archiwed/28_helmets_sync.js
+  • D  archiwed/29_lifejackets_config.js
+  • D  archiwed/30_lifejackets_sync.js
+  • D  archiwed/31_rzutki_config.js
+  • D  archiwed/32_rzutki_sync.js
+  • D  archiwed/40_hours_config.js
+  • D  archiwed/41_hours_core.js
+  • D  archiwed/42_hours_data.js
+  • D  archiwed/43_hours_economy_rules.js
+  • D  archiwed/44_hours_forms.js
+  • D  archiwed/45_hours_sheet_sync.js
+  • D  archiwed/46_fees_core.js
+  • D  archiwed/50_rental_core.js
+  • D  archiwed/51_rental_equipment_rules.js
+  • D  archiwed/52_rental_user_rules.js
+  • D  archiwed/60_users_core.js
+  • D  archiwed/61_users_active_sync.js
+  • D  archiwed/62_users_home_core.js
+  • D  archiwed/63_users_mappers.js
+  • D  archiwed/64_users_registration_router.js
+  • D  archiwed/65_users_sheet_writer.js
+  • D  archiwed/66_users_sheet_sync.js
+  • D  archiwed/67_auth_core.js
+  • D  archiwed/68_users_OB_manual_sync.js
+  • D  archiwed/70_api_router.js
+  • D  archiwed/80_setup_config.js
+  • D  archiwed/81_setup_roles.js
+  • D  archiwed/82_setup_sync.js
+  • D  archiwed/99_test_api_only.js
+  • D  archiwed/99_test_api_only_mode.js.js
+  • D  archiwed/99_test_api_router_registration_flow.js
+  • D  archiwed/99_test_e2e_identity_vs_router.js
+  • D  archiwed/99_test_registration_public_auth.js
+  • D  archiwed/99_test_ui_routing_diagnostics.js
+  • D  archiwed/DELETE_getModulesHandler.ts
+  • D  archiwed/appsscript.json
+  • D  archiwed/firebase.json
+  • D  archiwed/functions/index.js
+  • D  archiwed/functions/package-lock.json
+  • D  archiwed/functions/package.json
+  • D  archiwed/public/index.html
+  • D  archiwed/ui_app_shell.html
+  • D  archiwed/ui_archived.html
+  • D  archiwed/ui_home.html
+  • D  archiwed/ui_no_access.html
+  • D  archiwed/ui_register.html
+  • D  archiwed/ui_register_success.html
+  • D  archiwed/ui_theme.html
+  • MM project_optimization_snapshot.py
+
+=== PROJECT SUMMARY ===
+- BACKEND_SOURCE: 28 files
+- FRONTEND: 20 files
+- PROJECT: 10 files
+- total_files: 58
+
+=== TOP FILES BY LINE COUNT ===
+- public/assets/kayak-placeholder.png :: 37818 lines :: FRONTEND
+- functions/package-lock.json :: 9672 lines :: PROJECT
+- project_optimization_snapshot.py :: 2382 lines :: PROJECT
+- project_snapshot.py :: 1496 lines :: PROJECT
+- public/styles/gear.css :: 1227 lines :: FRONTEND
+- public/modules/gear_module.js :: 1030 lines :: FRONTEND
+- public/core/render_shell.js :: 572 lines :: FRONTEND
+- functions/src/index.ts :: 513 lines :: BACKEND_SOURCE
+- public/styles/base.css :: 422 lines :: FRONTEND
+- public/modules/my_reservations_module.js :: 405 lines :: FRONTEND
+- functions/src/api/registerUserHandler.ts :: 391 lines :: BACKEND_SOURCE
+- functions/src/modules/equipment/kayaks/gear_kayaks_service.ts :: 310 lines :: BACKEND_SOURCE
+- functions/src/service/providers/googleSheetsProvider.ts :: 276 lines :: BACKEND_SOURCE
+- functions/src/service/providers/googleWorkspaceProvider.ts :: 187 lines :: BACKEND_SOURCE
+- functions/src/service/service_config.ts :: 159 lines :: BACKEND_SOURCE
+- public/styles/start.css :: 157 lines :: FRONTEND
+- functions/src/modules/equipment/shared/gear_catalog_service.ts :: 155 lines :: BACKEND_SOURCE
+- functions/src/api/getGearKayaksHandler.ts :: 154 lines :: BACKEND_SOURCE
+- functions/src/service/tasks/gearSyncKayaksFromSheet.ts :: 145 lines :: BACKEND_SOURCE
+- public/core/app_shell.js :: 145 lines :: FRONTEND
+- functions/src/service/providers/googleAuth.ts :: 134 lines :: BACKEND_SOURCE
+- public/core/user_error_messages.js :: 134 lines :: FRONTEND
+- functions/src/service/tasks/onUserRegisteredWelcome.ts :: 133 lines :: BACKEND_SOURCE
+- functions/src/service/worker/jobProcessor.ts :: 126 lines :: BACKEND_SOURCE
+- firebase.json :: 123 lines :: PROJECT
+- public/styles/dashboard.css :: 116 lines :: FRONTEND
+- functions/src/api/getGearItemsHandler.ts :: 79 lines :: BACKEND_SOURCE
+- functions/src/service/runner.ts :: 79 lines :: BACKEND_SOURCE
+- public/core/firebase_client.js :: 78 lines :: FRONTEND
+- functions/src/api/gearReservationCreateHandler.ts :: 71 lines :: BACKEND_SOURCE
+- functions/src/api/gearReservationUpdateHandler.ts :: 68 lines :: BACKEND_SOURCE
+- functions/src/modules/setup/setup_gear_vars.ts :: 67 lines :: BACKEND_SOURCE
+- functions/.eslintrc.js :: 60 lines :: PROJECT
+- public/core/modules_registry.js :: 56 lines :: FRONTEND
+- functions/src/api/gearReservationCancelHandler.ts :: 51 lines :: BACKEND_SOURCE
+- functions/src/modules/calendar/calendar_utils.ts :: 51 lines :: BACKEND_SOURCE
+- functions/src/service/admin/adminRunTask.ts :: 50 lines :: BACKEND_SOURCE
+- functions/src/service/triggers/onUsersActiveCreated.ts :: 50 lines :: BACKEND_SOURCE
+- public/index.html :: 48 lines :: FRONTEND
+- public/core/theme.js :: 45 lines :: FRONTEND
+
+=== RUNTIME TOP FILES BY LINE COUNT ===
+- public/assets/kayak-placeholder.png :: 37818 lines :: FRONTEND
+- public/styles/gear.css :: 1227 lines :: FRONTEND
+- public/modules/gear_module.js :: 1030 lines :: FRONTEND
+- public/core/render_shell.js :: 572 lines :: FRONTEND
+- functions/src/index.ts :: 513 lines :: BACKEND_SOURCE
+- public/styles/base.css :: 422 lines :: FRONTEND
+- public/modules/my_reservations_module.js :: 405 lines :: FRONTEND
+- functions/src/api/registerUserHandler.ts :: 391 lines :: BACKEND_SOURCE
+- functions/src/modules/equipment/kayaks/gear_kayaks_service.ts :: 310 lines :: BACKEND_SOURCE
+- functions/src/service/providers/googleSheetsProvider.ts :: 276 lines :: BACKEND_SOURCE
+- functions/src/service/providers/googleWorkspaceProvider.ts :: 187 lines :: BACKEND_SOURCE
+- functions/src/service/service_config.ts :: 159 lines :: BACKEND_SOURCE
+- public/styles/start.css :: 157 lines :: FRONTEND
+- functions/src/modules/equipment/shared/gear_catalog_service.ts :: 155 lines :: BACKEND_SOURCE
+- functions/src/api/getGearKayaksHandler.ts :: 154 lines :: BACKEND_SOURCE
+- functions/src/service/tasks/gearSyncKayaksFromSheet.ts :: 145 lines :: BACKEND_SOURCE
+- public/core/app_shell.js :: 145 lines :: FRONTEND
+- functions/src/service/providers/googleAuth.ts :: 134 lines :: BACKEND_SOURCE
+- public/core/user_error_messages.js :: 134 lines :: FRONTEND
+- functions/src/service/tasks/onUserRegisteredWelcome.ts :: 133 lines :: BACKEND_SOURCE
+- functions/src/service/worker/jobProcessor.ts :: 126 lines :: BACKEND_SOURCE
+- public/styles/dashboard.css :: 116 lines :: FRONTEND
+- functions/src/api/getGearItemsHandler.ts :: 79 lines :: BACKEND_SOURCE
+- functions/src/service/runner.ts :: 79 lines :: BACKEND_SOURCE
+- public/core/firebase_client.js :: 78 lines :: FRONTEND
+
+=== FILE SIZE / COMPLEXITY SUMMARY ===
+- [HIGH] public/assets/kayak-placeholder.png :: 37818 lines :: FRONTEND
+- [HIGH] functions/package-lock.json :: 9672 lines :: PROJECT
+- [HIGH] project_optimization_snapshot.py :: 2382 lines :: PROJECT
+- [HIGH] project_snapshot.py :: 1496 lines :: PROJECT
+- [HIGH] public/styles/gear.css :: 1227 lines :: FRONTEND
+- [HIGH] public/modules/gear_module.js :: 1030 lines :: FRONTEND
+- [WARN] public/core/render_shell.js :: 572 lines :: FRONTEND
+- [WARN] functions/src/index.ts :: 513 lines :: BACKEND_SOURCE
+
+=== LARGE FUNCTIONS SUMMARY ===
+- [HIGH] project_optimization_snapshot.py :: render_text_report :: lines 2054-2351 :: length=298
+- [HIGH] functions/src/index.ts :: syncMemberToSheet :: lines 254-513 :: length=260
+- [HIGH] functions/src/service/providers/googleSheetsProvider.ts :: columnToA1 :: lines 17-276 :: length=260
+- [HIGH] public/modules/gear_module.js :: createGearModule :: lines 19-241 :: length=223
+- [HIGH] functions/src/api/registerUserHandler.ts :: handleRegisterUser :: lines 208-391 :: length=184
+- [WARN] functions/src/service/providers/googleWorkspaceProvider.ts :: assertLooksLikeEmail :: lines 16-187 :: length=172
+- [WARN] project_optimization_snapshot.py :: build_json_report :: lines 1900-2048 :: length=149
+- [WARN] project_snapshot.py :: print_snapshot :: lines 1350-1488 :: length=139
+- [WARN] functions/src/service/tasks/gearSyncKayaksFromSheet.ts :: parseNumber :: lines 23-145 :: length=123
+- [WARN] functions/src/service/tasks/onUserRegisteredWelcome.ts :: asErr :: lines 13-133 :: length=121
+- [WARN] functions/src/service/service_config.ts :: getServiceConfig :: lines 41-159 :: length=119
+- [WARN] functions/src/service/worker/jobProcessor.ts :: processJobDoc :: lines 17-126 :: length=110
+- [WARN] public/core/render_shell.js :: renderHomeDashboard :: lines 67-176 :: length=110
+- [WARN] public/modules/gear_module.js :: closeModal :: lines 576-685 :: length=110
+- [WARN] public/modules/gear_module.js :: renderKayakCard :: lines 686-789 :: length=104
+- [WARN] public/modules/my_reservations_module.js :: createMyReservationsModule :: lines 9-111 :: length=103
+- [WARN] public/modules/gear_module.js :: renderGenericGearCard :: lines 790-887 :: length=98
+- [WARN] public/core/user_error_messages.js :: mapUserFacingApiError :: lines 47-134 :: length=88
+- [WARN] functions/src/modules/equipment/kayaks/gear_kayaks_service.ts :: updateReservationDates :: lines 227-310 :: length=84
+
+=== FRONTEND HOTSPOTS SUMMARY ===
+- public/modules/gear_module.js :: score=218
+  • fetch/api calls: 2
+  • DOM queries: 28
+  • event listeners: 15
+  • innerHTML rebuilds: 8
+  • array ops: 23
+  • timers: 1
+- public/styles/gear.css :: score=184
+  • fetch/api calls: 2
+  • DOM queries: 26
+  • event listeners: 13
+  • innerHTML rebuilds: 8
+  • array ops: 11
+  • timers: 1
+- public/core/render_shell.js :: score=145
+  • fetch/api calls: 3
+  • DOM queries: 15
+  • event listeners: 9
+  • innerHTML rebuilds: 6
+  • array ops: 11
+  • timers: 0
+- public/modules/my_reservations_module.js :: score=133
+  • fetch/api calls: 4
+  • DOM queries: 12
+  • event listeners: 5
+  • innerHTML rebuilds: 7
+  • array ops: 6
+  • timers: 0
+- public/core/app_shell.js :: score=59
+  • fetch/api calls: 2
+  • DOM queries: 8
+  • event listeners: 3
+  • innerHTML rebuilds: 2
+  • array ops: 1
+  • timers: 0
+- public/core/api_client.js :: score=40
+  • fetch/api calls: 4
+  • DOM queries: 0
+  • event listeners: 0
+  • innerHTML rebuilds: 0
+  • array ops: 0
+  • timers: 0
+- public/core/theme.js :: score=10
+  • fetch/api calls: 0
+  • DOM queries: 2
+  • event listeners: 2
+  • innerHTML rebuilds: 0
+  • array ops: 0
+  • timers: 0
+- public/core/access_control.js :: score=6
+  • fetch/api calls: 0
+  • DOM queries: 0
+  • event listeners: 0
+  • innerHTML rebuilds: 0
+  • array ops: 3
+  • timers: 0
+- public/core/module_stub.js :: score=6
+  • fetch/api calls: 0
+  • DOM queries: 0
+  • event listeners: 0
+  • innerHTML rebuilds: 1
+  • array ops: 0
+  • timers: 0
+- public/core/modules_registry.js :: score=6
+  • fetch/api calls: 0
+  • DOM queries: 0
+  • event listeners: 0
+  • innerHTML rebuilds: 0
+  • array ops: 3
+  • timers: 0
+- public/core/router.js :: score=2
+  • fetch/api calls: 0
+  • DOM queries: 0
+  • event listeners: 0
+  • innerHTML rebuilds: 0
+  • array ops: 1
+  • timers: 0
+- public/404.html :: score=0
+  • fetch/api calls: 0
+  • DOM queries: 0
+  • event listeners: 0
+  • innerHTML rebuilds: 0
+  • array ops: 0
+  • timers: 0
+- public/index.html :: score=0
+  • fetch/api calls: 0
+  • DOM queries: 0
+  • event listeners: 0
+  • innerHTML rebuilds: 0
+  • array ops: 0
+  • timers: 0
+- public/assets/kayak-placeholder.png :: score=0
+  • fetch/api calls: 0
+  • DOM queries: 0
+  • event listeners: 0
+  • innerHTML rebuilds: 0
+  • array ops: 0
+  • timers: 0
+- public/core/firebase_client.js :: score=0
+  • fetch/api calls: 0
+  • DOM queries: 0
+  • event listeners: 0
+  • innerHTML rebuilds: 0
+  • array ops: 0
+  • timers: 0
+
+=== BACKEND HOTSPOTS SUMMARY ===
+- functions/src/modules/equipment/kayaks/gear_kayaks_service.ts :: score=142
+  • Firestore chain ops: 33
+  • array ops: 5
+  • console logs: 0
+- functions/src/index.ts :: score=84
+  • Firestore chain ops: 21
+  • array ops: 0
+  • console logs: 0
+- functions/src/service/providers/googleSheetsProvider.ts :: score=64
+  • Firestore chain ops: 12
+  • array ops: 8
+  • console logs: 0
+- functions/src/api/getGearKayaksHandler.ts :: score=40
+  • Firestore chain ops: 9
+  • array ops: 2
+  • console logs: 0
+- functions/src/api/registerUserHandler.ts :: score=40
+  • Firestore chain ops: 9
+  • array ops: 2
+  • console logs: 0
+- functions/src/service/worker/jobProcessor.ts :: score=32
+  • Firestore chain ops: 7
+  • array ops: 0
+  • console logs: 4
+- functions/src/service/worker/fallbackDailyWorker.ts :: score=26
+  • Firestore chain ops: 6
+  • array ops: 0
+  • console logs: 2
+- functions/src/service/tasks/gearSyncKayaksFromSheet.ts :: score=24
+  • Firestore chain ops: 6
+  • array ops: 0
+  • console logs: 0
+- functions/src/service/triggers/onUsersActiveCreated.ts :: score=22
+  • Firestore chain ops: 5
+  • array ops: 0
+  • console logs: 2
+- functions/src/service/tasks/onUserRegisteredWelcome.ts :: score=20
+  • Firestore chain ops: 5
+  • array ops: 0
+  • console logs: 0
+- functions/src/modules/equipment/shared/gear_catalog_service.ts :: score=18
+  • Firestore chain ops: 4
+  • array ops: 1
+  • console logs: 0
+- functions/src/service/providers/googleWorkspaceProvider.ts :: score=13
+  • Firestore chain ops: 3
+  • array ops: 0
+  • console logs: 1
+- functions/src/modules/setup/setup_gear_vars.ts :: score=12
+  • Firestore chain ops: 3
+  • array ops: 0
+  • console logs: 0
+- functions/src/service/admin/adminRunTask.ts :: score=12
+  • Firestore chain ops: 3
+  • array ops: 0
+  • console logs: 0
+- functions/src/service/providers/googleAuth.ts :: score=9
+  • Firestore chain ops: 2
+  • array ops: 0
+  • console logs: 1
+
+=== RUNTIME ROUTE USAGE SUMMARY ===
+- /api/gear/kayaks
+  • public/core/render_shell.js
+  • public/modules/gear_module.js
+  • public/modules/my_reservations_module.js
+  • public/styles/gear.css
+- /api/gear/my-reservations
+  • public/core/render_shell.js
+  • public/modules/my_reservations_module.js
+- /api/gear/reservations/cancel
+  • public/modules/my_reservations_module.js
+- /api/gear/reservations/create
+  • public/modules/gear_module.js
+  • public/styles/gear.css
+- /api/gear/reservations/update
+  • public/modules/my_reservations_module.js
+- /api/register
+  • public/core/app_shell.js
+  • public/core/render_shell.js
+- /api/setup
+  • public/core/app_shell.js
+
+=== DIAGNOSTIC / NON-RUNTIME ROUTE USAGE SUMMARY ===
+- none
+
+=== FIRESTORE SUMMARY ===
+- collections:
+  • counters
+      - functions/src/index.ts
+  • gear_kayaks
+      - functions/src/api/getGearKayaksHandler.ts
+      - functions/src/modules/equipment/kayaks/gear_kayaks_service.ts
+      - functions/src/service/tasks/gearSyncKayaksFromSheet.ts
+  • gear_reservations
+      - functions/src/api/getGearKayaksHandler.ts
+      - functions/src/modules/equipment/kayaks/gear_kayaks_service.ts
+  • offset_rezerwacji
+      - functions/src/modules/setup/setup_gear_vars.ts
+  • setup
+      - functions/src/index.ts
+      - functions/src/modules/setup/setup_gear_vars.ts
+  • users_active
+      - functions/src/api/registerUserHandler.ts
+      - functions/src/index.ts
+      - functions/src/modules/equipment/kayaks/gear_kayaks_service.ts
+      - functions/src/service/admin/adminRunTask.ts
+      - functions/src/service/tasks/onUserRegisteredWelcome.ts
+  • users_opening_balance_26
+      - functions/src/api/registerUserHandler.ts
+
+- documents:
+  • counters/members
+      - functions/src/index.ts
+  • setup/app
+      - functions/src/index.ts
+  • setup/vars_gear
+      - functions/src/modules/setup/setup_gear_vars.ts
+
+=== FIRESTORE INDEX CHECK ===
+- firestore.indexes.json present: True
+- declared composite indexes: 2
+- missing index declarations:
+  • gear_reservations :: userUid + createdAt
+      - missing for: functions/src/modules/equipment/kayaks/gear_kayaks_service.ts:40 (where + orderBy)
+        snippet: .collection("gear_reservations") .where("userUid", "==", uid) .orderBy("createdAt", "desc") .limit(50) .get();
+  • gear_reservations :: userUid + status + blockStartIso
+      - missing for: functions/src/modules/equipment/kayaks/gear_kayaks_service.ts:68 (2+ where, range query)
+        snippet: .collection("gear_reservations") .where("userUid", "==", uid) .where("status", "==", "active") .where("blockStartIso", "<=", blockEndIso) .get();
+
+=== HARDCODE SUMMARY ===
+- total findings: 2770
+- by kind:
+  • api_route_literal: 39
+  • env_fallback_string: 14
+  • firestore_collection_literal: 22
+  • firestore_doc_literal: 4
+  • hardcoded_boolean_map: 20
+  • hardcoded_email: 9
+  • host_literal: 22
+  • magic_number: 2567
+  • origin_literal: 8
+  • role_key_literal: 41
+  • status_key_literal: 24
+- top files:
+  • public/assets/kayak-placeholder.png: 1128
+  • functions/package-lock.json: 1108
+  • public/styles/base.css: 127
+  • public/styles/gear.css: 82
+  • project_optimization_snapshot.py: 62
+  • functions/src/index.ts: 44
+  • project_snapshot.py: 35
+  • functions/src/service/service_config.ts: 27
+  • functions/src/api/registerUserHandler.ts: 20
+  • public/core/render_shell.js: 19
+  • functions/src/modules/equipment/kayaks/gear_kayaks_service.ts: 16
+  • public/styles/start.css: 16
+  • firebase.json: 10
+  • functions/src/modules/setup/setup_gear_vars.ts: 10
+  • public/core/firebase_client.js: 9
+  • public/modules/gear_module.js: 9
+  • public/styles/dashboard.css: 9
+  • public/modules/my_reservations_module.js: 7
+  • functions/package.json: 4
+  • functions/src/service/providers/googleSheetsProvider.ts: 3
+
+=== HIGH-RISK HARDCODE EXAMPLES ===
+- firebase.json:49 :: api_route_literal :: /api/**
+  • "source": "/api/**",
+- firebase.json:59 :: api_route_literal :: /api/setup
+  • "source": "/api/setup",
+- firebase.json:66 :: api_route_literal :: /api/admin/setup
+  • "source": "/api/admin/setup",
+- firebase.json:73 :: api_route_literal :: /api/register
+  • "source": "/api/register",
+- firebase.json:80 :: api_route_literal :: /api/gear/kayaks
+  • "source": "/api/gear/kayaks",
+- firebase.json:87 :: api_route_literal :: /api/gear/items
+  • "source": "/api/gear/items",
+- firebase.json:94 :: api_route_literal :: /api/gear/my-reservations
+  • "source": "/api/gear/my-reservations",
+- firebase.json:101 :: api_route_literal :: /api/gear/reservations/create
+  • "source": "/api/gear/reservations/create",
+- firebase.json:108 :: api_route_literal :: /api/gear/reservations/update
+  • "source": "/api/gear/reservations/update",
+- firebase.json:115 :: api_route_literal :: /api/gear/reservations/cancel
+  • "source": "/api/gear/reservations/cancel",
+- project_optimization_snapshot.py:94 :: api_route_literal :: /api/register
+  • "/api/register",
+- project_optimization_snapshot.py:95 :: api_route_literal :: /api/setup
+  • "/api/setup",
+- project_optimization_snapshot.py:96 :: api_route_literal :: /api/gear/kayaks
+  • "/api/gear/kayaks",
+- project_optimization_snapshot.py:97 :: api_route_literal :: /api/gear/items
+  • "/api/gear/items",
+- project_optimization_snapshot.py:98 :: host_literal :: sprzet-skk-morzkulc.web.app
+  • "sprzet-skk-morzkulc.web.app",
+- project_optimization_snapshot.py:99 :: host_literal :: sprzet-skk-morzkulc.firebaseapp.com
+  • "sprzet-skk-morzkulc.firebaseapp.com",
+- project_optimization_snapshot.py:100 :: host_literal :: morzkulc-e9df7.web.app
+  • "morzkulc-e9df7.web.app",
+- project_optimization_snapshot.py:101 :: host_literal :: morzkulc-e9df7.firebaseapp.com
+  • "morzkulc-e9df7.firebaseapp.com",
+- project_optimization_snapshot.py:193 :: status_key_literal :: status_key
+  • "status_key",
+- project_optimization_snapshot.py:255 :: status_key_literal :: status_key_literal
+  • "status_key_literal": re.compile(r'\bstatus_[a-zA-Z0-9_]+\b'),
+- project_optimization_snapshot.py:341 :: status_key_literal :: status_key
+  • "status_key",
+- project_optimization_snapshot.py:700 :: status_key_literal :: status_lines
+  • "status_lines": lines,
+- project_optimization_snapshot.py:942 :: api_route_literal :: /api/register
+  • "/api/register",
+- project_optimization_snapshot.py:943 :: api_route_literal :: /api/setup
+  • "/api/setup",
+- project_optimization_snapshot.py:944 :: api_route_literal :: /api/gear/kayaks
+  • "/api/gear/kayaks",
+- project_optimization_snapshot.py:945 :: api_route_literal :: /api/gear/items
+  • "/api/gear/items",
+- project_optimization_snapshot.py:1493 :: status_key_literal :: status_key_literal
+  • if kind in {"role_key_literal", "status_key_literal", "firestore_collection_literal"}:
+- project_optimization_snapshot.py:2084 :: status_key_literal :: status_lines
+  • if git["status_lines"]:
+- project_optimization_snapshot.py:2085 :: status_key_literal :: status_lines
+  • for line in git["status_lines"]:
+- project_snapshot.py:133 :: api_route_literal :: /api/register
+  • "/api/register",
+- project_snapshot.py:134 :: api_route_literal :: /api/setup
+  • "/api/setup",
+- project_snapshot.py:135 :: api_route_literal :: /api/gear/kayaks
+  • "/api/gear/kayaks",
+- project_snapshot.py:136 :: api_route_literal :: /api/gear/items
+  • "/api/gear/items",
+- project_snapshot.py:137 :: host_literal :: sprzet-skk-morzkulc.web.app
+  • "sprzet-skk-morzkulc.web.app",
+- project_snapshot.py:138 :: host_literal :: sprzet-skk-morzkulc.firebaseapp.com
+  • "sprzet-skk-morzkulc.firebaseapp.com",
+- project_snapshot.py:139 :: host_literal :: morzkulc-e9df7.web.app
+  • "morzkulc-e9df7.web.app",
+- project_snapshot.py:140 :: host_literal :: morzkulc-e9df7.firebaseapp.com
+  • "morzkulc-e9df7.firebaseapp.com",
+- project_snapshot.py:1162 :: api_route_literal :: /api/register
+  • for pattern in ["requireAllowedHost", "isAllowedHost", "/api/register", "/api/setup", "/api/gear/kayaks", "/api/gear/items"]:
+- project_snapshot.py:1162 :: api_route_literal :: /api/setup
+  • for pattern in ["requireAllowedHost", "isAllowedHost", "/api/register", "/api/setup", "/api/gear/kayaks", "/api/gear/items"]:
+- project_snapshot.py:1162 :: api_route_literal :: /api/gear/kayaks
+  • for pattern in ["requireAllowedHost", "isAllowedHost", "/api/register", "/api/setup", "/api/gear/kayaks", "/api/gear/items"]:
+
+=== STOP CONDITIONS ===
+- firebase.json
+  • labels: contract_related, routing_related, security_related, setup_related
+- firestore.indexes.json
+  • labels: contract_related
+- project_optimization_snapshot.py
+  • labels: auth_related, contract_related, firestore_write_related, role_status_related, routing_related, security_related, setup_related
+- project_snapshot.py
+  • labels: auth_related, contract_related, firestore_write_related, routing_related, security_related, setup_related
+- functions/package-lock.json
+  • labels: auth_related, contract_related, routing_related
+- functions/package.json
+  • labels: auth_related
+- functions/src/index.ts
+  • labels: auth_related, contract_related, firestore_write_related, role_status_related, routing_related, security_related, setup_related
+- functions/src/api/gearKayaksListHandler.ts
+  • labels: contract_related, security_related
+- functions/src/api/gearMyReservationsHandler.ts
+  • labels: contract_related, security_related
+- functions/src/api/gearReservationCancelHandler.ts
+  • labels: contract_related, security_related
+- functions/src/api/gearReservationCreateHandler.ts
+  • labels: contract_related, security_related
+- functions/src/api/gearReservationUpdateHandler.ts
+  • labels: contract_related, security_related
+- functions/src/api/getGearItemsHandler.ts
+  • labels: contract_related, security_related
+- functions/src/api/getGearKayaksHandler.ts
+  • labels: auth_related, contract_related, firestore_write_related, security_related
+- functions/src/api/registerUserHandler.ts
+  • labels: auth_related, contract_related, firestore_write_related, role_status_related, security_related, setup_related
+- functions/src/modules/calendar/calendar_utils.ts
+  • labels: contract_related
+- functions/src/modules/equipment/kayaks/gear_kayaks_service.ts
+  • labels: contract_related, firestore_write_related, role_status_related
+- functions/src/modules/equipment/shared/gear_catalog_service.ts
+  • labels: contract_related
+- functions/src/modules/hours/hours_quote.ts
+  • labels: role_status_related
+- functions/src/modules/setup/setup_gear_vars.ts
+  • labels: role_status_related, setup_related
+- functions/src/service/registry.ts
+  • labels: firestore_write_related
+- functions/src/service/runner.ts
+  • labels: auth_related
+- functions/src/service/service_config.ts
+  • labels: role_status_related
+- functions/src/service/admin/adminRunTask.ts
+  • labels: auth_related, role_status_related, routing_related, security_related
+- functions/src/service/providers/googleAuth.ts
+  • labels: firestore_write_related
+- functions/src/service/providers/googleSheetsProvider.ts
+  • labels: firestore_write_related
+- functions/src/service/providers/googleWorkspaceProvider.ts
+  • labels: firestore_write_related
+- functions/src/service/tasks/gearSyncKayaksFromSheet.ts
+  • labels: auth_related, contract_related, firestore_write_related
+- functions/src/service/tasks/onUserRegisteredWelcome.ts
+  • labels: firestore_write_related
+- functions/src/service/triggers/onUsersActiveCreated.ts
+  • labels: auth_related, firestore_write_related
+- functions/src/service/worker/fallbackDailyWorker.ts
+  • labels: auth_related
+- functions/src/service/worker/jobProcessor.ts
+  • labels: auth_related, firestore_write_related
+- public/index.html
+  • labels: contract_related
+- public/core/access_control.js
+  • labels: role_status_related
+- public/core/app_shell.js
+  • labels: auth_related, contract_related, firestore_write_related, routing_related, setup_related
+- public/core/firebase_client.js
+  • labels: auth_related
+- public/core/module_stub.js
+  • labels: contract_related, role_status_related, setup_related
+- public/core/modules_registry.js
+  • labels: contract_related, setup_related
+- public/core/render_shell.js
+  • labels: contract_related, role_status_related, routing_related
+- public/core/router.js
+  • labels: routing_related
+
+=== DEPENDENCY SUMMARY ===
+- files with many imports:
+  • project_optimization_snapshot.py :: imports=15
+  • functions/src/index.ts :: imports=14
+  • project_snapshot.py :: imports=13
+  • functions/src/service/runner.ts :: imports=5
+  • functions/src/service/admin/adminRunTask.ts :: imports=4
+  • functions/src/service/tasks/gearSyncKayaksFromSheet.ts :: imports=4
+  • functions/src/service/worker/fallbackDailyWorker.ts :: imports=4
+  • functions/src/api/gearReservationCreateHandler.ts :: imports=3
+  • functions/src/api/gearReservationUpdateHandler.ts :: imports=3
+  • functions/src/api/getGearItemsHandler.ts :: imports=3
+  • functions/src/api/getGearKayaksHandler.ts :: imports=3
+  • functions/src/modules/equipment/kayaks/gear_kayaks_service.ts :: imports=3
+  • functions/src/service/registry.ts :: imports=3
+  • functions/src/service/triggers/onUsersActiveCreated.ts :: imports=3
+  • functions/src/service/worker/jobProcessor.ts :: imports=3
+  • public/core/app_shell.js :: imports=3
+  • public/core/modules_registry.js :: imports=3
+  • public/core/render_shell.js :: imports=3
+  • functions/src/api/gearKayaksListHandler.ts :: imports=2
+  • functions/src/api/gearMyReservationsHandler.ts :: imports=2
+  • functions/src/api/gearReservationCancelHandler.ts :: imports=2
+  • functions/src/api/registerUserHandler.ts :: imports=2
+  • functions/src/modules/hours/hours_quote.ts :: imports=2
+  • functions/src/service/providers/googleSheetsProvider.ts :: imports=2
+  • functions/src/service/providers/googleWorkspaceProvider.ts :: imports=2
+  • functions/src/service/worker/onJobCreatedWorker.ts :: imports=2
+  • public/modules/gear_module.js :: imports=2
+  • public/modules/my_reservations_module.js :: imports=2
+- shared imported modules / paths:
+  • functions/src/service/service_config.ts :: used_by=7
+  • functions/src/modules/equipment/kayaks/gear_kayaks_service.ts :: used_by=5
+  • functions/src/modules/calendar/calendar_utils.ts :: used_by=4
+  • functions/src/service/types.ts :: used_by=4
+  • functions/src/service/providers/googleSheetsProvider.ts :: used_by=2
+  • functions/src/modules/setup/setup_gear_vars.ts :: used_by=2
+  • functions/src/service/runner.ts :: used_by=2
+  • functions/src/service/providers/googleAuth.ts :: used_by=2
+  • functions/src/service/worker/jobProcessor.ts :: used_by=2
+
+=== SHARED DATA CONTRACTS ===
+- modules
+  • firebase.json
+  • functions/package-lock.json
+  • functions/src/api/gearKayaksListHandler.ts
+  • functions/src/api/gearMyReservationsHandler.ts
+  • functions/src/api/gearReservationCancelHandler.ts
+  • functions/src/api/gearReservationCreateHandler.ts
+  • functions/src/api/gearReservationUpdateHandler.ts
+  • functions/src/api/getGearItemsHandler.ts
+  • functions/src/api/getGearKayaksHandler.ts
+  • functions/src/api/registerUserHandler.ts
+  • functions/src/index.ts
+  • project_optimization_snapshot.py
+- access
+  • functions/src/index.ts
+  • functions/src/service/providers/googleAuth.ts
+  • project_optimization_snapshot.py
+  • project_snapshot.py
+  • public/core/access_control.js
+  • public/core/module_stub.js
+  • public/core/modules_registry.js
+  • public/core/render_shell.js
+  • public/modules/gear_module.js
+  • public/modules/my_reservations_module.js
+  • public/styles/gear.css
+- role_key
+  • functions/src/api/registerUserHandler.ts
+  • functions/src/index.ts
+  • functions/src/modules/equipment/kayaks/gear_kayaks_service.ts
+  • functions/src/service/admin/adminRunTask.ts
+  • project_optimization_snapshot.py
+  • public/core/access_control.js
+  • public/core/module_stub.js
+  • public/core/render_shell.js
+- status_key
+  • functions/src/api/registerUserHandler.ts
+  • functions/src/index.ts
+  • functions/src/modules/equipment/kayaks/gear_kayaks_service.ts
+  • project_optimization_snapshot.py
+  • public/core/render_shell.js
+- defaultRoute
+  • functions/src/index.ts
+  • project_optimization_snapshot.py
+  • public/core/module_stub.js
+  • public/core/modules_registry.js
+  • public/core/render_shell.js
+  • public/modules/gear_module.js
+  • public/modules/my_reservations_module.js
+  • public/styles/gear.css
+- profileComplete
+  • functions/src/api/registerUserHandler.ts
+  • project_optimization_snapshot.py
+  • public/core/render_shell.js
+- setupMissing
+  • functions/src/api/registerUserHandler.ts
+  • functions/src/index.ts
+  • project_optimization_snapshot.py
+  • public/core/module_stub.js
+- createdAt
+  • functions/src/api/registerUserHandler.ts
+  • functions/src/index.ts
+  • functions/src/modules/equipment/kayaks/gear_kayaks_service.ts
+  • functions/src/service/tasks/gearSyncKayaksFromSheet.ts
+  • functions/src/service/triggers/onUsersActiveCreated.ts
+  • project_optimization_snapshot.py
+- memberId
+  • functions/src/index.ts
+  • project_optimization_snapshot.py
+- openingMatch
+  • functions/src/api/registerUserHandler.ts
+  • project_optimization_snapshot.py
+- kayakIds
+  • functions/src/api/gearReservationCreateHandler.ts
+  • functions/src/api/getGearKayaksHandler.ts
+  • functions/src/modules/equipment/kayaks/gear_kayaks_service.ts
+  • project_optimization_snapshot.py
+  • public/core/render_shell.js
+  • public/modules/gear_module.js
+  • public/modules/my_reservations_module.js
+  • public/styles/gear.css
+- blockStartIso
+  • firestore.indexes.json
+  • functions/src/api/getGearKayaksHandler.ts
+  • functions/src/modules/calendar/calendar_utils.ts
+  • functions/src/modules/equipment/kayaks/gear_kayaks_service.ts
+  • project_optimization_snapshot.py
+  • public/modules/my_reservations_module.js
+- blockEndIso
+  • functions/src/api/getGearKayaksHandler.ts
+  • functions/src/modules/calendar/calendar_utils.ts
+  • functions/src/modules/equipment/kayaks/gear_kayaks_service.ts
+  • project_optimization_snapshot.py
+  • public/modules/my_reservations_module.js
+- userUid
+  • firestore.indexes.json
+  • functions/src/modules/equipment/kayaks/gear_kayaks_service.ts
+  • project_optimization_snapshot.py
+- isActive
+  • functions/src/api/getGearKayaksHandler.ts
+  • functions/src/modules/equipment/kayaks/gear_kayaks_service.ts
+  • functions/src/modules/equipment/shared/gear_catalog_service.ts
+  • functions/src/service/tasks/gearSyncKayaksFromSheet.ts
+  • project_optimization_snapshot.py
+- images
+  • functions/src/api/getGearKayaksHandler.ts
+  • functions/src/modules/equipment/shared/gear_catalog_service.ts
+  • functions/src/service/tasks/gearSyncKayaksFromSheet.ts
+  • project_optimization_snapshot.py
+  • public/modules/gear_module.js
+  • public/styles/gear.css
+- gearCategory
+  • functions/src/modules/equipment/shared/gear_catalog_service.ts
+  • project_optimization_snapshot.py
+  • public/modules/gear_module.js
+- gearCategoryDisplay
+  • functions/src/modules/equipment/shared/gear_catalog_service.ts
+  • project_optimization_snapshot.py
+  • public/modules/gear_module.js
+
+=== SHARED HELPER CANDIDATES ===
+- duplicate_logic_block :: occurrences=9
+  • name/snippet: const tokenCheck = await requireIdToken(req); if ("error" in tokenCheck) { res.status(401).json({error: tokenCheck.error
+    - functions/src/api/gearKayaksListHandler.ts
+    - functions/src/api/gearMyReservationsHandler.ts
+    - functions/src/api/gearReservationCancelHandler.ts
+    - functions/src/api/gearReservationCreateHandler.ts
+    - functions/src/api/gearReservationUpdateHandler.ts
+    - functions/src/api/getGearItemsHandler.ts
+    - functions/src/api/getGearKayaksHandler.ts
+    - functions/src/api/registerUserHandler.ts
+    - functions/src/index.ts
+- duplicate_logic_block :: occurrences=9
+  • name/snippet: if (sendPreflight(req, res)) return; if (!requireAllowedHost(req, res)) return; setCorsHeaders(req, res); corsHandler(re
+    - functions/src/api/gearKayaksListHandler.ts
+    - functions/src/api/gearMyReservationsHandler.ts
+    - functions/src/api/gearReservationCancelHandler.ts
+    - functions/src/api/gearReservationCreateHandler.ts
+    - functions/src/api/gearReservationUpdateHandler.ts
+    - functions/src/api/getGearItemsHandler.ts
+    - functions/src/api/getGearKayaksHandler.ts
+    - functions/src/api/registerUserHandler.ts
+    - functions/src/index.ts
+- duplicate_logic_block :: occurrences=7
+  • name/snippet: corsHandler(req, res, async () => { try { const tokenCheck = await requireIdToken(req); if ("error" in tokenCheck) { res
+    - functions/src/api/gearKayaksListHandler.ts
+    - functions/src/api/gearMyReservationsHandler.ts
+    - functions/src/api/gearReservationCancelHandler.ts
+    - functions/src/api/gearReservationCreateHandler.ts
+    - functions/src/api/gearReservationUpdateHandler.ts
+    - functions/src/api/registerUserHandler.ts
+    - functions/src/index.ts
+- duplicate_logic_block :: occurrences=7
+  • name/snippet: corsHandler(req, res, async () => { try { const tokenCheck = await requireIdToken(req); if ("error" in tokenCheck) { res
+    - functions/src/api/gearKayaksListHandler.ts
+    - functions/src/api/gearMyReservationsHandler.ts
+    - functions/src/api/gearReservationCancelHandler.ts
+    - functions/src/api/gearReservationCreateHandler.ts
+    - functions/src/api/gearReservationUpdateHandler.ts
+    - functions/src/api/registerUserHandler.ts
+    - functions/src/index.ts
+- duplicate_logic_block :: occurrences=7
+  • name/snippet: setCorsHeaders(req, res); corsHandler(req, res, async () => { try { const tokenCheck = await requireIdToken(req); if ("e
+    - functions/src/api/gearKayaksListHandler.ts
+    - functions/src/api/gearMyReservationsHandler.ts
+    - functions/src/api/gearReservationCancelHandler.ts
+    - functions/src/api/gearReservationCreateHandler.ts
+    - functions/src/api/gearReservationUpdateHandler.ts
+    - functions/src/api/registerUserHandler.ts
+    - functions/src/index.ts
+- duplicate_logic_block :: occurrences=7
+  • name/snippet: try { const tokenCheck = await requireIdToken(req); if ("error" in tokenCheck) { res.status(401).json({error: tokenCheck
+    - functions/src/api/gearKayaksListHandler.ts
+    - functions/src/api/gearMyReservationsHandler.ts
+    - functions/src/api/gearReservationCancelHandler.ts
+    - functions/src/api/gearReservationCreateHandler.ts
+    - functions/src/api/gearReservationUpdateHandler.ts
+    - functions/src/api/registerUserHandler.ts
+    - functions/src/index.ts
+- duplicate_logic_block :: occurrences=6
+  • name/snippet: if (!requireAllowedHost(req, res)) return; setCorsHeaders(req, res); corsHandler(req, res, async () => { try { const tok
+    - functions/src/api/gearKayaksListHandler.ts
+    - functions/src/api/gearMyReservationsHandler.ts
+    - functions/src/api/gearReservationCancelHandler.ts
+    - functions/src/api/gearReservationCreateHandler.ts
+    - functions/src/api/gearReservationUpdateHandler.ts
+    - functions/src/index.ts
+- duplicate_logic_block :: occurrences=5
+  • name/snippet: const {db, sendPreflight, requireAllowedHost, setCorsHeaders, corsHandler, requireIdToken} = deps; if (sendPreflight(req
+    - functions/src/api/gearKayaksListHandler.ts
+    - functions/src/api/gearMyReservationsHandler.ts
+    - functions/src/api/gearReservationCancelHandler.ts
+    - functions/src/api/gearReservationCreateHandler.ts
+    - functions/src/api/gearReservationUpdateHandler.ts
+- duplicate_logic_block :: occurrences=5
+  • name/snippet: function escapeHtml(s) { return String(s) .replaceAll("&", "&amp;") .replaceAll("<", "&lt;") .replaceAll(">", "&gt;");
+    - public/core/module_stub.js
+    - public/core/render_shell.js
+    - public/modules/gear_module.js
+    - public/modules/my_reservations_module.js
+    - public/styles/gear.css
+- duplicate_logic_block :: occurrences=5
+  • name/snippet: function escapeHtml(s) { return String(s) .replaceAll("&", "&amp;") .replaceAll("<", "&lt;") .replaceAll(">", "&gt;"); }
+    - public/core/module_stub.js
+    - public/core/render_shell.js
+    - public/modules/gear_module.js
+    - public/modules/my_reservations_module.js
+    - public/styles/gear.css
+- duplicate_logic_block :: occurrences=5
+  • name/snippet: if (sendPreflight(req, res)) return; if (!requireAllowedHost(req, res)) return; setCorsHeaders(req, res); corsHandler(re
+    - functions/src/api/gearKayaksListHandler.ts
+    - functions/src/api/gearMyReservationsHandler.ts
+    - functions/src/api/gearReservationCancelHandler.ts
+    - functions/src/api/gearReservationCreateHandler.ts
+    - functions/src/api/gearReservationUpdateHandler.ts
+- duplicate_logic_block :: occurrences=5
+  • name/snippet: } function escapeHtml(s) { return String(s) .replaceAll("&", "&amp;") .replaceAll("<", "&lt;")
+    - public/core/module_stub.js
+    - public/core/render_shell.js
+    - public/modules/gear_module.js
+    - public/modules/my_reservations_module.js
+    - public/styles/gear.css
+- duplicate_logic_block :: occurrences=4
+  • name/snippet: const brand = String(k?.brand || "").trim(); const model = String(k?.model || "").trim(); const number = String(k?.numbe
+    - public/core/render_shell.js
+    - public/modules/gear_module.js
+    - public/modules/my_reservations_module.js
+    - public/styles/gear.css
+- duplicate_logic_block :: occurrences=4
+  • name/snippet: const model = String(k?.model || "").trim(); const number = String(k?.number || "").trim(); const core = [brand, model].
+    - public/core/render_shell.js
+    - public/modules/gear_module.js
+    - public/modules/my_reservations_module.js
+    - public/styles/gear.css
+- duplicate_logic_block :: occurrences=4
+  • name/snippet: const number = String(k?.number || "").trim(); const core = [brand, model].filter(Boolean).join(" ").trim() || "Kajak"; 
+    - public/core/render_shell.js
+    - public/modules/gear_module.js
+    - public/modules/my_reservations_module.js
+    - public/styles/gear.css
+- duplicate_logic_block :: occurrences=4
+  • name/snippet: const setErr = (msg) => { errEl.textContent = String(msg || ""); errEl.classList.toggle("hidden", !errEl.textContent); }
+    - public/core/render_shell.js
+    - public/modules/gear_module.js
+    - public/modules/my_reservations_module.js
+    - public/styles/gear.css
+- duplicate_logic_block :: occurrences=4
+  • name/snippet: function buildKayakTitle(k) { const brand = String(k?.brand || "").trim(); const model = String(k?.model || "").trim(); 
+    - public/core/render_shell.js
+    - public/modules/gear_module.js
+    - public/modules/my_reservations_module.js
+    - public/styles/gear.css
+- duplicate_logic_block :: occurrences=4
+  • name/snippet: function buildKayakTitle(k) { const brand = String(k?.brand || "").trim(); const model = String(k?.model || "").trim(); 
+    - public/core/render_shell.js
+    - public/modules/gear_module.js
+    - public/modules/my_reservations_module.js
+    - public/styles/gear.css
+- duplicate_logic_block :: occurrences=4
+  • name/snippet: if (!requireAllowedHost(req, res)) return; setCorsHeaders(req, res); corsHandler(req, res, async () => { try {
+    - functions/src/api/getGearItemsHandler.ts
+    - functions/src/api/getGearKayaksHandler.ts
+    - functions/src/api/registerUserHandler.ts
+    - functions/src/index.ts
+- duplicate_logic_block :: occurrences=4
+  • name/snippet: } function buildKayakTitle(k) { const brand = String(k?.brand || "").trim(); const model = String(k?.model || "").trim()
+    - public/core/render_shell.js
+    - public/modules/gear_module.js
+    - public/modules/my_reservations_module.js
+    - public/styles/gear.css
+- function_name_reuse :: occurrences=4
+  • name/snippet: escapeHtml
+    - public/core/module_stub.js
+    - public/core/render_shell.js
+    - public/modules/gear_module.js
+    - public/modules/my_reservations_module.js
+- duplicate_logic_block :: occurrences=3
+  • name/snippet: .replaceAll("<", "&lt;") .replaceAll(">", "&gt;"); } function escapeHtml(s) { return String(s)
+    - public/modules/gear_module.js
+    - public/modules/my_reservations_module.js
+    - public/styles/gear.css
+- duplicate_logic_block :: occurrences=3
+  • name/snippet: .replaceAll(">", "&gt;"); } function escapeHtml(s) { return String(s) .replaceAll("&", "&amp;")
+    - public/modules/gear_module.js
+    - public/modules/my_reservations_module.js
+    - public/styles/gear.css
+- duplicate_logic_block :: occurrences=3
+  • name/snippet: .replaceAll('"', "&quot;") .replaceAll("<", "&lt;") .replaceAll(">", "&gt;"); } function escapeHtml(s) {
+    - public/modules/gear_module.js
+    - public/modules/my_reservations_module.js
+    - public/styles/gear.css
+- duplicate_logic_block :: occurrences=3
+  • name/snippet: corsHandler: any; requireIdToken: (req: Request) => Promise<TokenCheck>; }; function norm(v: any): string { return Strin
+    - functions/src/api/gearReservationCancelHandler.ts
+    - functions/src/api/gearReservationCreateHandler.ts
+    - functions/src/api/gearReservationUpdateHandler.ts
+- duplicate_logic_block :: occurrences=3
+  • name/snippet: function escapeAttr(s) { return String(s) .replaceAll("&", "&amp;") .replaceAll('"', "&quot;") .replaceAll("<", "&lt;")
+    - public/modules/gear_module.js
+    - public/modules/my_reservations_module.js
+    - public/styles/gear.css
+- duplicate_logic_block :: occurrences=3
+  • name/snippet: function escapeAttr(s) { return String(s) .replaceAll("&", "&amp;") .replaceAll('"', "&quot;") .replaceAll("<", "&lt;") 
+    - public/modules/gear_module.js
+    - public/modules/my_reservations_module.js
+    - public/styles/gear.css
+- duplicate_logic_block :: occurrences=3
+  • name/snippet: if (!ctx?.idToken) { viewEl.innerHTML = ` <div class="card center"> <h2>${escapeHtml(label)}</h2> <p>Brak tokenu sesji. 
+    - public/modules/gear_module.js
+    - public/modules/my_reservations_module.js
+    - public/styles/gear.css
+- duplicate_logic_block :: occurrences=3
+  • name/snippet: if (!ctx?.idToken) { viewEl.innerHTML = ` <div class="card center"> <h2>${escapeHtml(label)}</h2> <p>Brak tokenu sesji. 
+    - public/modules/gear_module.js
+    - public/modules/my_reservations_module.js
+    - public/styles/gear.css
+- duplicate_logic_block :: occurrences=3
+  • name/snippet: if (!out.ok) { res.status(400).json(out); return; } res.status(200).json(out);
+    - functions/src/api/gearReservationCancelHandler.ts
+    - functions/src/api/gearReservationCreateHandler.ts
+    - functions/src/api/gearReservationUpdateHandler.ts
+- duplicate_logic_block :: occurrences=3
+  • name/snippet: if ("error" in tokenCheck) { res.status(401).json({error: tokenCheck.error}); return; } const body = (req.body || {}) as
+    - functions/src/api/gearReservationCancelHandler.ts
+    - functions/src/api/gearReservationCreateHandler.ts
+    - functions/src/api/gearReservationUpdateHandler.ts
+- duplicate_logic_block :: occurrences=3
+  • name/snippet: if (sendPreflight(req, res)) return; if (!requireAllowedHost(req, res)) return; setCorsHeaders(req, res);
+    - functions/src/api/getGearItemsHandler.ts
+    - functions/src/api/getGearKayaksHandler.ts
+    - functions/src/api/registerUserHandler.ts
+- duplicate_logic_block :: occurrences=3
+  • name/snippet: requireIdToken: (req: Request) => Promise<TokenCheck>; }; function norm(v: any): string { return String(v || "").trim();
+    - functions/src/api/gearReservationCancelHandler.ts
+    - functions/src/api/gearReservationCreateHandler.ts
+    - functions/src/api/gearReservationUpdateHandler.ts
+- duplicate_logic_block :: occurrences=3
+  • name/snippet: return String(s) .replaceAll("&", "&amp;") .replaceAll('"', "&quot;") .replaceAll("<", "&lt;") .replaceAll(">", "&gt;");
+    - public/modules/gear_module.js
+    - public/modules/my_reservations_module.js
+    - public/styles/gear.css
+- duplicate_logic_block :: occurrences=3
+  • name/snippet: setCorsHeaders: (req: Request, res: Response) => void; corsHandler: any; requireIdToken: (req: Request) => Promise<Token
+    - functions/src/api/gearReservationCancelHandler.ts
+    - functions/src/api/gearReservationCreateHandler.ts
+    - functions/src/api/gearReservationUpdateHandler.ts
+- duplicate_logic_block :: occurrences=3
+  • name/snippet: } = deps; if (sendPreflight(req, res)) return; if (!requireAllowedHost(req, res)) return; setCorsHeaders(req, res);
+    - functions/src/api/getGearItemsHandler.ts
+    - functions/src/api/getGearKayaksHandler.ts
+    - functions/src/api/registerUserHandler.ts
+- duplicate_logic_block :: occurrences=3
+  • name/snippet: } function escapeAttr(s) { return String(s) .replaceAll("&", "&amp;") .replaceAll('"', "&quot;")
+    - public/modules/gear_module.js
+    - public/modules/my_reservations_module.js
+    - public/styles/gear.css
+- function_name_reuse :: occurrences=3
+  • name/snippet: buildKayakTitle
+    - public/core/render_shell.js
+    - public/modules/gear_module.js
+    - public/modules/my_reservations_module.js
+- function_name_reuse :: occurrences=3
+  • name/snippet: formatDatePL
+    - functions/src/index.ts
+    - public/core/render_shell.js
+    - public/modules/my_reservations_module.js
+- function_name_reuse :: occurrences=3
+  • name/snippet: isIsoDateYYYYMMDD
+    - functions/src/api/registerUserHandler.ts
+    - functions/src/modules/calendar/calendar_utils.ts
+    - public/core/render_shell.js
+
+=== DUPLICATION SUMMARY ===
+- duplicate block candidate (occurrences: 16, lines: 8)
+  • functions/src/index.ts:325-332
+  • functions/src/index.ts:326-333
+  • functions/src/index.ts:353-360
+  • functions/src/index.ts:354-361
+  • functions/src/api/gearKayaksListHandler.ts:23-30
+  • functions/src/api/gearKayaksListHandler.ts:24-31
+  • preview: corsHandler(req, res, async () => {
+    try {
+      const tokenCheck = await requireIdToken(req);
+- duplicate block candidate (occurrences: 12, lines: 6)
+  • functions/src/index.ts:328-333
+  • functions/src/index.ts:356-361
+  • functions/src/api/gearKayaksListHandler.ts:26-31
+  • functions/src/api/gearMyReservationsHandler.ts:26-31
+  • functions/src/api/gearReservationCancelHandler.ts:30-35
+  • functions/src/api/gearReservationCreateHandler.ts:36-41
+  • preview: const tokenCheck = await requireIdToken(req);
+      if ("error" in tokenCheck) {
+        res.status(401).json({error: tokenCheck.error});
+- duplicate block candidate (occurrences: 10, lines: 12)
+  • functions/src/api/gearKayaksListHandler.ts:19-30
+  • functions/src/api/gearKayaksListHandler.ts:20-31
+  • functions/src/api/gearMyReservationsHandler.ts:19-30
+  • functions/src/api/gearMyReservationsHandler.ts:20-31
+  • functions/src/api/gearReservationCancelHandler.ts:23-34
+  • functions/src/api/gearReservationCancelHandler.ts:24-35
+  • preview: if (sendPreflight(req, res)) return;
+  if (!requireAllowedHost(req, res)) return;
+  setCorsHeaders(req, res);
+- duplicate block candidate (occurrences: 9, lines: 11)
+  • functions/src/index.ts:322-332
+  • functions/src/index.ts:323-333
+  • functions/src/index.ts:350-360
+  • functions/src/index.ts:351-361
+  • functions/src/api/gearKayaksListHandler.ts:21-31
+  • functions/src/api/gearMyReservationsHandler.ts:21-31
+  • preview: if (!requireAllowedHost(req, res)) return;
+  setCorsHeaders(req, res);
+
+- duplicate block candidate (occurrences: 9, lines: 10)
+  • functions/src/index.ts:324-333
+  • functions/src/index.ts:352-361
+  • functions/src/api/gearKayaksListHandler.ts:22-31
+  • functions/src/api/gearMyReservationsHandler.ts:22-31
+  • functions/src/api/gearReservationCancelHandler.ts:26-35
+  • functions/src/api/gearReservationCreateHandler.ts:32-41
+  • preview: setCorsHeaders(req, res);
+
+  corsHandler(req, res, async () => {
+- duplicate block candidate (occurrences: 8, lines: 9)
+  • functions/src/index.ts:324-332
+  • functions/src/index.ts:352-360
+  • functions/src/api/gearKayaksListHandler.ts:22-30
+  • functions/src/api/gearMyReservationsHandler.ts:22-30
+  • functions/src/api/gearReservationCancelHandler.ts:26-34
+  • functions/src/api/gearReservationCreateHandler.ts:32-40
+  • preview: setCorsHeaders(req, res);
+
+  corsHandler(req, res, async () => {
+- duplicate block candidate (occurrences: 8, lines: 9)
+  • functions/src/index.ts:325-333
+  • functions/src/index.ts:353-361
+  • functions/src/api/gearKayaksListHandler.ts:23-31
+  • functions/src/api/gearMyReservationsHandler.ts:23-31
+  • functions/src/api/gearReservationCancelHandler.ts:27-35
+  • functions/src/api/gearReservationCreateHandler.ts:33-41
+  • preview: corsHandler(req, res, async () => {
+    try {
+      const tokenCheck = await requireIdToken(req);
+- duplicate block candidate (occurrences: 8, lines: 9)
+  • public/core/render_shell.js:283-291
+  • public/core/render_shell.js:284-292
+  • public/modules/gear_module.js:958-966
+  • public/modules/gear_module.js:959-967
+  • public/modules/my_reservations_module.js:375-383
+  • public/modules/my_reservations_module.js:376-384
+  • preview: function buildKayakTitle(k) {
+  const brand = String(k?.brand || "").trim();
+  const model = String(k?.model || "").trim();
+- duplicate block candidate (occurrences: 8, lines: 8)
+  • functions/src/index.ts:324-331
+  • functions/src/index.ts:352-359
+  • functions/src/api/gearKayaksListHandler.ts:22-29
+  • functions/src/api/gearMyReservationsHandler.ts:22-29
+  • functions/src/api/gearReservationCancelHandler.ts:26-33
+  • functions/src/api/gearReservationCreateHandler.ts:32-39
+  • preview: setCorsHeaders(req, res);
+
+  corsHandler(req, res, async () => {
+- duplicate block candidate (occurrences: 8, lines: 7)
+  • functions/src/index.ts:324-330
+  • functions/src/index.ts:352-358
+  • functions/src/api/gearKayaksListHandler.ts:22-28
+  • functions/src/api/gearMyReservationsHandler.ts:22-28
+  • functions/src/api/gearReservationCancelHandler.ts:26-32
+  • functions/src/api/gearReservationCreateHandler.ts:32-38
+  • preview: setCorsHeaders(req, res);
+
+  corsHandler(req, res, async () => {
+- duplicate block candidate (occurrences: 8, lines: 7)
+  • functions/src/index.ts:325-331
+  • functions/src/index.ts:353-359
+  • functions/src/api/gearKayaksListHandler.ts:23-29
+  • functions/src/api/gearMyReservationsHandler.ts:23-29
+  • functions/src/api/gearReservationCancelHandler.ts:27-33
+  • functions/src/api/gearReservationCreateHandler.ts:33-39
+  • preview: corsHandler(req, res, async () => {
+    try {
+      const tokenCheck = await requireIdToken(req);
+- duplicate block candidate (occurrences: 8, lines: 7)
+  • functions/src/index.ts:326-332
+  • functions/src/index.ts:354-360
+  • functions/src/api/gearKayaksListHandler.ts:24-30
+  • functions/src/api/gearMyReservationsHandler.ts:24-30
+  • functions/src/api/gearReservationCancelHandler.ts:28-34
+  • functions/src/api/gearReservationCreateHandler.ts:34-40
+  • preview: corsHandler(req, res, async () => {
+    try {
+      const tokenCheck = await requireIdToken(req);
+- duplicate block candidate (occurrences: 8, lines: 7)
+  • functions/src/index.ts:327-333
+  • functions/src/index.ts:355-361
+  • functions/src/api/gearKayaksListHandler.ts:25-31
+  • functions/src/api/gearMyReservationsHandler.ts:25-31
+  • functions/src/api/gearReservationCancelHandler.ts:29-35
+  • functions/src/api/gearReservationCreateHandler.ts:35-41
+  • preview: try {
+      const tokenCheck = await requireIdToken(req);
+      if ("error" in tokenCheck) {
+- duplicate block candidate (occurrences: 8, lines: 6)
+  • functions/src/index.ts:324-329
+  • functions/src/index.ts:352-357
+  • functions/src/api/gearKayaksListHandler.ts:22-27
+  • functions/src/api/gearMyReservationsHandler.ts:22-27
+  • functions/src/api/gearReservationCancelHandler.ts:26-31
+  • functions/src/api/gearReservationCreateHandler.ts:32-37
+  • preview: setCorsHeaders(req, res);
+
+  corsHandler(req, res, async () => {
+- duplicate block candidate (occurrences: 8, lines: 6)
+  • functions/src/index.ts:325-330
+  • functions/src/index.ts:353-358
+  • functions/src/api/gearKayaksListHandler.ts:23-28
+  • functions/src/api/gearMyReservationsHandler.ts:23-28
+  • functions/src/api/gearReservationCancelHandler.ts:27-32
+  • functions/src/api/gearReservationCreateHandler.ts:33-38
+  • preview: corsHandler(req, res, async () => {
+    try {
+      const tokenCheck = await requireIdToken(req);
+- duplicate block candidate (occurrences: 8, lines: 6)
+  • functions/src/index.ts:326-331
+  • functions/src/index.ts:354-359
+  • functions/src/api/gearKayaksListHandler.ts:24-29
+  • functions/src/api/gearMyReservationsHandler.ts:24-29
+  • functions/src/api/gearReservationCancelHandler.ts:28-33
+  • functions/src/api/gearReservationCreateHandler.ts:34-39
+  • preview: corsHandler(req, res, async () => {
+    try {
+      const tokenCheck = await requireIdToken(req);
+- duplicate block candidate (occurrences: 8, lines: 6)
+  • functions/src/index.ts:327-332
+  • functions/src/index.ts:355-360
+  • functions/src/api/gearKayaksListHandler.ts:25-30
+  • functions/src/api/gearMyReservationsHandler.ts:25-30
+  • functions/src/api/gearReservationCancelHandler.ts:29-34
+  • functions/src/api/gearReservationCreateHandler.ts:35-40
+  • preview: try {
+      const tokenCheck = await requireIdToken(req);
+      if ("error" in tokenCheck) {
+- duplicate block candidate (occurrences: 7, lines: 10)
+  • functions/src/index.ts:323-332
+  • functions/src/index.ts:351-360
+  • functions/src/api/gearKayaksListHandler.ts:21-30
+  • functions/src/api/gearMyReservationsHandler.ts:21-30
+  • functions/src/api/gearReservationCancelHandler.ts:25-34
+  • functions/src/api/gearReservationCreateHandler.ts:31-40
+  • preview: if (!requireAllowedHost(req, res)) return;
+  setCorsHeaders(req, res);
+
+- duplicate block candidate (occurrences: 7, lines: 9)
+  • functions/src/index.ts:323-331
+  • functions/src/index.ts:351-359
+  • functions/src/api/gearKayaksListHandler.ts:21-29
+  • functions/src/api/gearMyReservationsHandler.ts:21-29
+  • functions/src/api/gearReservationCancelHandler.ts:25-33
+  • functions/src/api/gearReservationCreateHandler.ts:31-39
+  • preview: if (!requireAllowedHost(req, res)) return;
+  setCorsHeaders(req, res);
+
+- duplicate block candidate (occurrences: 7, lines: 8)
+  • functions/src/index.ts:323-330
+  • functions/src/index.ts:351-358
+  • functions/src/api/gearKayaksListHandler.ts:21-28
+  • functions/src/api/gearMyReservationsHandler.ts:21-28
+  • functions/src/api/gearReservationCancelHandler.ts:25-32
+  • functions/src/api/gearReservationCreateHandler.ts:31-38
+  • preview: if (!requireAllowedHost(req, res)) return;
+  setCorsHeaders(req, res);
+
+- duplicate block candidate (occurrences: 7, lines: 7)
+  • functions/src/index.ts:323-329
+  • functions/src/index.ts:351-357
+  • functions/src/api/gearKayaksListHandler.ts:21-27
+  • functions/src/api/gearMyReservationsHandler.ts:21-27
+  • functions/src/api/gearReservationCancelHandler.ts:25-31
+  • functions/src/api/gearReservationCreateHandler.ts:31-37
+  • preview: if (!requireAllowedHost(req, res)) return;
+  setCorsHeaders(req, res);
+
+- duplicate block candidate (occurrences: 7, lines: 7)
+  • functions/src/api/gearKayaksListHandler.ts:10-16
+  • functions/src/api/gearMyReservationsHandler.ts:10-16
+  • functions/src/api/gearReservationCancelHandler.ts:10-16
+  • functions/src/api/gearReservationCreateHandler.ts:11-17
+  • functions/src/api/gearReservationUpdateHandler.ts:11-17
+  • functions/src/api/getGearItemsHandler.ts:14-20
+  • preview: sendPreflight: (req: Request, res: Response) => boolean;
+  requireAllowedHost: (req: Request, res: Response) => boolean;
+  setCorsHeaders: (req: Request, res: Response) => void;
+- duplicate block candidate (occurrences: 7, lines: 6)
+  • functions/src/index.ts:323-328
+  • functions/src/index.ts:351-356
+  • functions/src/api/gearKayaksListHandler.ts:21-26
+  • functions/src/api/gearMyReservationsHandler.ts:21-26
+  • functions/src/api/gearReservationCancelHandler.ts:25-30
+  • functions/src/api/gearReservationCreateHandler.ts:31-36
+  • preview: if (!requireAllowedHost(req, res)) return;
+  setCorsHeaders(req, res);
+
+- duplicate block candidate (occurrences: 7, lines: 6)
+  • functions/src/index.ts:442-447
+  • functions/src/index.ts:456-461
+  • functions/src/index.ts:470-475
+  • functions/src/index.ts:484-489
+  • functions/src/index.ts:498-503
+  • functions/src/api/getGearItemsHandler.ts:29-34
+  • preview: db,
+    sendPreflight,
+    requireAllowedHost,
+- duplicate block candidate (occurrences: 7, lines: 6)
+  • functions/src/api/gearKayaksListHandler.ts:10-15
+  • functions/src/api/gearMyReservationsHandler.ts:10-15
+  • functions/src/api/gearReservationCancelHandler.ts:10-15
+  • functions/src/api/gearReservationCreateHandler.ts:11-16
+  • functions/src/api/gearReservationUpdateHandler.ts:11-16
+  • functions/src/api/getGearItemsHandler.ts:14-19
+  • preview: sendPreflight: (req: Request, res: Response) => boolean;
+  requireAllowedHost: (req: Request, res: Response) => boolean;
+  setCorsHeaders: (req: Request, res: Response) => void;
+
+=== POSSIBLE LOOP + AWAIT RISK SUMMARY ===
+- functions/src/service/providers/googleWorkspaceProvider.ts:129 :: await_near_loop :: for (const grpRaw of privilegedPosterGroups) {
+- functions/src/service/worker/fallbackDailyWorker.ts:33 :: await_near_loop :: for (const doc of q.docs) {
+
+=== HOST / API / SECURITY SUMMARY ===
+- Host literals detected:
+  • 127.0.0.1
+      - functions/src/index.ts
+      - public/core/firebase_client.js
+  • localhost
+      - functions/src/index.ts
+      - public/core/firebase_client.js
+  • morzkulc-e9df7.firebaseapp.com
+      - functions/src/index.ts
+      - project_optimization_snapshot.py
+      - project_snapshot.py
+      - public/core/firebase_client.js
+  • morzkulc-e9df7.web.app
+      - functions/src/index.ts
+      - project_optimization_snapshot.py
+      - project_snapshot.py
+      - public/core/firebase_client.js
+  • sprzet-skk-morzkulc.firebaseapp.com
+      - functions/src/index.ts
+      - project_optimization_snapshot.py
+      - project_snapshot.py
+      - public/core/firebase_client.js
+  • sprzet-skk-morzkulc.web.app
+      - functions/src/index.ts
+      - project_optimization_snapshot.py
+      - project_snapshot.py
+      - public/core/firebase_client.js
+- Origin literals detected:
+  • http://127.0.0.1:5000
+      - functions/src/index.ts
+  • http://127.0.0.1:5173
+      - functions/src/index.ts
+  • http://localhost:5000
+      - functions/src/index.ts
+  • http://localhost:5173
+      - functions/src/index.ts
+  • https://morzkulc-e9df7.firebaseapp.com
+      - functions/src/index.ts
+  • https://morzkulc-e9df7.web.app
+      - functions/src/index.ts
+  • https://sprzet-skk-morzkulc.firebaseapp.com
+      - functions/src/index.ts
+  • https://sprzet-skk-morzkulc.web.app
+      - functions/src/index.ts
+- API/security references:
+  • firebase.json :: /api/gear/items
+  • firebase.json :: /api/gear/kayaks
+  • firebase.json :: /api/register
+  • firebase.json :: /api/setup
+  • functions/src/api/gearKayaksListHandler.ts :: requireAllowedHost
+  • functions/src/api/gearMyReservationsHandler.ts :: requireAllowedHost
+  • functions/src/api/gearReservationCancelHandler.ts :: requireAllowedHost
+  • functions/src/api/gearReservationCreateHandler.ts :: requireAllowedHost
+  • functions/src/api/gearReservationUpdateHandler.ts :: requireAllowedHost
+  • functions/src/api/getGearItemsHandler.ts :: requireAllowedHost
+  • functions/src/api/getGearKayaksHandler.ts :: requireAllowedHost
+  • functions/src/api/registerUserHandler.ts :: requireAllowedHost
+  • functions/src/index.ts :: /api/gear/items
+  • functions/src/index.ts :: /api/gear/kayaks
+  • functions/src/index.ts :: /api/register
+  • functions/src/index.ts :: /api/setup
+  • functions/src/index.ts :: isAllowedHost
+  • functions/src/index.ts :: requireAllowedHost
+  • project_optimization_snapshot.py :: /api/gear/items
+  • project_optimization_snapshot.py :: /api/gear/kayaks
+  • project_optimization_snapshot.py :: /api/register
+  • project_optimization_snapshot.py :: /api/setup
+  • project_optimization_snapshot.py :: isAllowedHost
+  • project_optimization_snapshot.py :: requireAllowedHost
+  • project_snapshot.py :: /api/gear/items
+  • project_snapshot.py :: /api/gear/kayaks
+  • project_snapshot.py :: /api/register
+  • project_snapshot.py :: /api/setup
+  • project_snapshot.py :: isAllowedHost
+  • project_snapshot.py :: requireAllowedHost
+  • public/core/app_shell.js :: /api/register
+  • public/core/app_shell.js :: /api/setup
+  • public/core/render_shell.js :: /api/gear/kayaks
+  • public/core/render_shell.js :: /api/register
+  • public/modules/gear_module.js :: /api/gear/kayaks
+  • public/modules/my_reservations_module.js :: /api/gear/kayaks
+  • public/styles/gear.css :: /api/gear/kayaks
+- Header/host/origin checks:
+  • firebase.json :: Access-Control-Allow-Origin
+  • firebase.json :: invoker
+  • functions/src/index.ts :: ALLOWED_HOSTS
+  • functions/src/index.ts :: ALLOWED_ORIGINS
+  • functions/src/index.ts :: Access-Control-Allow-Origin
+  • functions/src/index.ts :: invoker
+  • functions/src/index.ts :: req.headers.host
+  • functions/src/index.ts :: req.headers.origin
+  • functions/src/service/admin/adminRunTask.ts :: invoker
+  • project_optimization_snapshot.py :: ALLOWED_HOSTS
+  • project_optimization_snapshot.py :: ALLOWED_ORIGINS
+  • project_optimization_snapshot.py :: Access-Control-Allow-Origin
+  • project_optimization_snapshot.py :: invoker
+  • project_optimization_snapshot.py :: req.headers.host
+  • project_optimization_snapshot.py :: req.headers.origin
+  • project_optimization_snapshot.py :: req.headers.referer
+  • project_optimization_snapshot.py :: run.googleapis.com/invoker-iam-disabled
+  • project_snapshot.py :: ALLOWED_HOSTS
+  • project_snapshot.py :: ALLOWED_ORIGINS
+  • project_snapshot.py :: Access-Control-Allow-Origin
+  • project_snapshot.py :: invoker
+  • project_snapshot.py :: req.headers.host
+  • project_snapshot.py :: req.headers.origin
+  • project_snapshot.py :: req.headers.referer
+  • project_snapshot.py :: run.googleapis.com/invoker-iam-disabled
+
+=== CRITICAL FILES / TAGS ===
+- functions/src/api/registerUserHandler.ts
+  • risk=HIGH (15)
+  • tags=backend_runtime,endpoint_critical,firestore_related,security_critical
+- public/core/render_shell.js
+  • risk=HIGH (12)
+  • tags=browser_route_related,frontend_runtime
+- functions/src/index.ts
+  • risk=HIGH (11)
+  • tags=backend_runtime,browser_route_related,env_auth_critical,firestore_related,invoker_related,security_critical
+- public/modules/gear_module.js
+  • risk=MEDIUM (9)
+  • tags=browser_route_related,frontend_runtime
+- functions/src/modules/equipment/kayaks/gear_kayaks_service.ts
+  • risk=MEDIUM (8)
+  • tags=backend_runtime,firestore_related
+- functions/src/api/gearKayaksListHandler.ts
+  • risk=MEDIUM (7)
+  • tags=backend_runtime,endpoint_critical,security_critical
+- functions/src/api/gearMyReservationsHandler.ts
+  • risk=MEDIUM (7)
+  • tags=backend_runtime,endpoint_critical,security_critical
+- functions/src/api/gearReservationCancelHandler.ts
+  • risk=MEDIUM (7)
+  • tags=backend_runtime,endpoint_critical,security_critical
+- functions/src/api/gearReservationCreateHandler.ts
+  • risk=MEDIUM (7)
+  • tags=backend_runtime,endpoint_critical,security_critical
+- functions/src/api/gearReservationUpdateHandler.ts
+  • risk=MEDIUM (7)
+  • tags=backend_runtime,endpoint_critical,security_critical
+- functions/src/api/getGearItemsHandler.ts
+  • risk=MEDIUM (7)
+  • tags=backend_runtime,endpoint_critical,security_critical
+- functions/src/api/getGearKayaksHandler.ts
+  • risk=MEDIUM (7)
+  • tags=backend_runtime,endpoint_critical,security_critical
+- functions/src/modules/equipment/shared/gear_catalog_service.ts
+  • risk=MEDIUM (7)
+  • tags=backend_runtime,firestore_related
+- public/core/firebase_client.js
+  • risk=MEDIUM (6)
+  • tags=env_auth_critical,frontend_runtime
+- firebase.json
+  • risk=LOW (4)
+  • tags=browser_route_related,hosting_critical,invoker_related,routing_critical
+- firestore.indexes.json
+  • risk=LOW (4)
+  • tags=firestore_index_critical
+- functions/src/service/providers/googleSheetsProvider.ts
+  • risk=LOW (1)
+  • tags=backend_runtime
+- public/modules/my_reservations_module.js
+  • risk=LOW (1)
+  • tags=frontend_runtime
+- public/styles/gear.css
+  • risk=LOW (1)
+  • tags=frontend_runtime
+- project_optimization_snapshot.py
+  • risk=LOW (0)
+  • tags=audit_tool
+- project_snapshot.py
+  • risk=LOW (0)
+  • tags=audit_tool
+
+=== REFACTOR RISK SUMMARY ===
+- HIGH: 3
+- MEDIUM: 11
+- LOW: 7
+- highest risk files:
+  • functions/src/api/registerUserHandler.ts :: HIGH (15)
+  • public/core/render_shell.js :: HIGH (12)
+  • functions/src/index.ts :: HIGH (11)
+  • public/modules/gear_module.js :: MEDIUM (9)
+  • functions/src/modules/equipment/kayaks/gear_kayaks_service.ts :: MEDIUM (8)
+  • functions/src/api/gearKayaksListHandler.ts :: MEDIUM (7)
+  • functions/src/api/gearMyReservationsHandler.ts :: MEDIUM (7)
+  • functions/src/api/gearReservationCancelHandler.ts :: MEDIUM (7)
+  • functions/src/api/gearReservationCreateHandler.ts :: MEDIUM (7)
+  • functions/src/api/gearReservationUpdateHandler.ts :: MEDIUM (7)
+  • functions/src/api/getGearItemsHandler.ts :: MEDIUM (7)
+  • functions/src/api/getGearKayaksHandler.ts :: MEDIUM (7)
+  • functions/src/modules/equipment/shared/gear_catalog_service.ts :: MEDIUM (7)
+  • public/core/firebase_client.js :: MEDIUM (6)
+  • firebase.json :: LOW (4)
+  • firestore.indexes.json :: LOW (4)
+  • functions/src/service/providers/googleSheetsProvider.ts :: LOW (1)
+  • public/modules/my_reservations_module.js :: LOW (1)
+  • public/styles/gear.css :: LOW (1)
+  • project_optimization_snapshot.py :: LOW (0)
+  • project_snapshot.py :: LOW (0)
+
+=== SAFE / MEDIUM / HIGH RISK ZONES ===
+- SAFE TO OPTIMIZE FIRST:
+  • firebase.json
+  • firestore.indexes.json
+  • functions/src/service/providers/googleSheetsProvider.ts
+  • public/modules/my_reservations_module.js
+  • public/styles/gear.css
+- MEDIUM RISK:
+  • functions/src/api/gearKayaksListHandler.ts
+  • functions/src/api/gearMyReservationsHandler.ts
+  • functions/src/api/gearReservationCancelHandler.ts
+  • functions/src/api/gearReservationCreateHandler.ts
+  • functions/src/api/gearReservationUpdateHandler.ts
+  • functions/src/api/getGearItemsHandler.ts
+  • functions/src/api/getGearKayaksHandler.ts
+  • functions/src/modules/equipment/kayaks/gear_kayaks_service.ts
+  • functions/src/modules/equipment/shared/gear_catalog_service.ts
+  • public/core/firebase_client.js
+  • public/modules/gear_module.js
+- HIGH RISK / FULL FILE REVIEW REQUIRED:
+  • functions/src/api/registerUserHandler.ts
+  • functions/src/index.ts
+  • public/core/render_shell.js
+
+=== FULL READ BUNDLES BEFORE REFACTOR ===
+- target: functions/src/api/registerUserHandler.ts
+  • reason: auth + profile + role/status contract
+  • contracts: createdAt, modules, openingMatch, profileComplete, role_key, setupMissing, status_key
+  • read before change:
+    - firebase.json
+    - functions/package-lock.json
+    - functions/src/api/gearKayaksListHandler.ts
+    - functions/src/api/gearMyReservationsHandler.ts
+    - functions/src/api/gearReservationCancelHandler.ts
+    - functions/src/api/gearReservationCreateHandler.ts
+    - functions/src/api/gearReservationUpdateHandler.ts
+    - functions/src/api/getGearItemsHandler.ts
+    - functions/src/api/getGearKayaksHandler.ts
+    - functions/src/index.ts
+    - functions/src/modules/equipment/kayaks/gear_kayaks_service.ts
+    - functions/src/service/admin/adminRunTask.ts
+    - functions/src/service/tasks/gearSyncKayaksFromSheet.ts
+    - functions/src/service/triggers/onUsersActiveCreated.ts
+    - project_optimization_snapshot.py
+    - project_snapshot.py
+    - public/core/access_control.js
+    - public/core/app_shell.js
+    - public/core/module_stub.js
+    - public/core/modules_registry.js
+- target: public/core/render_shell.js
+  • reason: central frontend routing / dashboard / module entry
+  • contracts: access, defaultRoute, kayakIds, modules, profileComplete, role_key, status_key
+  • read before change:
+    - firebase.json
+    - functions/package-lock.json
+    - functions/src/api/gearKayaksListHandler.ts
+    - functions/src/api/gearMyReservationsHandler.ts
+    - functions/src/api/gearReservationCancelHandler.ts
+    - functions/src/api/gearReservationCreateHandler.ts
+    - functions/src/api/gearReservationUpdateHandler.ts
+    - functions/src/api/getGearItemsHandler.ts
+    - functions/src/api/getGearKayaksHandler.ts
+    - functions/src/api/registerUserHandler.ts
+    - functions/src/index.ts
+    - functions/src/modules/equipment/kayaks/gear_kayaks_service.ts
+    - functions/src/service/admin/adminRunTask.ts
+    - functions/src/service/providers/googleAuth.ts
+    - project_optimization_snapshot.py
+    - project_snapshot.py
+    - public/core/access_control.js
+    - public/core/app_shell.js
+    - public/core/module_stub.js
+    - public/core/modules_registry.js
+- target: functions/src/index.ts
+  • reason: central backend runtime / routing / security
+  • contracts: access, createdAt, defaultRoute, memberId, modules, role_key, setupMissing, status_key
+  • read before change:
+    - firebase.json
+    - functions/package-lock.json
+    - functions/src/api/gearKayaksListHandler.ts
+    - functions/src/api/gearMyReservationsHandler.ts
+    - functions/src/api/gearReservationCancelHandler.ts
+    - functions/src/api/gearReservationCreateHandler.ts
+    - functions/src/api/gearReservationUpdateHandler.ts
+    - functions/src/api/getGearItemsHandler.ts
+    - functions/src/api/getGearKayaksHandler.ts
+    - functions/src/api/registerUserHandler.ts
+    - functions/src/modules/equipment/kayaks/gear_kayaks_service.ts
+    - functions/src/service/admin/adminRunTask.ts
+    - functions/src/service/providers/googleAuth.ts
+    - functions/src/service/providers/googleSheetsProvider.ts
+    - functions/src/service/service_config.ts
+    - functions/src/service/tasks/gearSyncKayaksFromSheet.ts
+    - functions/src/service/triggers/onUsersActiveCreated.ts
+    - project_optimization_snapshot.py
+    - project_snapshot.py
+    - public/core/access_control.js
+- target: public/modules/gear_module.js
+  • reason: largest active frontend runtime hotspot
+  • contracts: access, defaultRoute, gearCategory, gearCategoryDisplay, images, kayakIds
+  • read before change:
+    - functions/src/api/gearReservationCreateHandler.ts
+    - functions/src/api/getGearKayaksHandler.ts
+    - functions/src/index.ts
+    - functions/src/modules/equipment/kayaks/gear_kayaks_service.ts
+    - functions/src/modules/equipment/shared/gear_catalog_service.ts
+    - functions/src/service/providers/googleAuth.ts
+    - functions/src/service/tasks/gearSyncKayaksFromSheet.ts
+    - project_optimization_snapshot.py
+    - project_snapshot.py
+    - public/core/access_control.js
+    - public/core/module_stub.js
+    - public/core/modules_registry.js
+    - public/core/render_shell.js
+    - public/modules/my_reservations_module.js
+    - public/styles/gear.css
+- target: functions/src/modules/equipment/kayaks/gear_kayaks_service.ts
+  • reason: Firestore-heavy equipment/reservation service
+  • contracts: blockEndIso, blockStartIso, createdAt, isActive, kayakIds, role_key, status_key, userUid
+  • read before change:
+    - firestore.indexes.json
+    - functions/src/api/gearKayaksListHandler.ts
+    - functions/src/api/gearMyReservationsHandler.ts
+    - functions/src/api/gearReservationCancelHandler.ts
+    - functions/src/api/gearReservationCreateHandler.ts
+    - functions/src/api/gearReservationUpdateHandler.ts
+    - functions/src/api/getGearKayaksHandler.ts
+    - functions/src/api/registerUserHandler.ts
+    - functions/src/index.ts
+    - functions/src/modules/calendar/calendar_utils.ts
+    - functions/src/modules/equipment/shared/gear_catalog_service.ts
+    - functions/src/modules/hours/hours_quote.ts
+    - functions/src/modules/setup/setup_gear_vars.ts
+    - functions/src/service/admin/adminRunTask.ts
+    - functions/src/service/tasks/gearSyncKayaksFromSheet.ts
+    - functions/src/service/triggers/onUsersActiveCreated.ts
+    - project_optimization_snapshot.py
+    - public/core/access_control.js
+    - public/core/module_stub.js
+    - public/core/render_shell.js
+- target: functions/src/api/gearKayaksListHandler.ts
+  • reason: high or medium-high refactor risk
+  • contracts: modules
+  • read before change:
+    - firebase.json
+    - functions/package-lock.json
+    - functions/src/api/gearMyReservationsHandler.ts
+    - functions/src/api/gearReservationCancelHandler.ts
+    - functions/src/api/gearReservationCreateHandler.ts
+    - functions/src/api/gearReservationUpdateHandler.ts
+    - functions/src/api/getGearItemsHandler.ts
+    - functions/src/api/getGearKayaksHandler.ts
+    - functions/src/api/registerUserHandler.ts
+    - functions/src/index.ts
+    - functions/src/modules/equipment/kayaks/gear_kayaks_service.ts
+    - project_optimization_snapshot.py
+    - project_snapshot.py
+    - public/core/app_shell.js
+    - public/core/modules_registry.js
+    - public/core/render_shell.js
+    - public/index.html
+- target: functions/src/api/gearMyReservationsHandler.ts
+  • reason: high or medium-high refactor risk
+  • contracts: modules
+  • read before change:
+    - firebase.json
+    - functions/package-lock.json
+    - functions/src/api/gearKayaksListHandler.ts
+    - functions/src/api/gearReservationCancelHandler.ts
+    - functions/src/api/gearReservationCreateHandler.ts
+    - functions/src/api/gearReservationUpdateHandler.ts
+    - functions/src/api/getGearItemsHandler.ts
+    - functions/src/api/getGearKayaksHandler.ts
+    - functions/src/api/registerUserHandler.ts
+    - functions/src/index.ts
+    - functions/src/modules/equipment/kayaks/gear_kayaks_service.ts
+    - project_optimization_snapshot.py
+    - project_snapshot.py
+    - public/core/app_shell.js
+    - public/core/modules_registry.js
+    - public/core/render_shell.js
+    - public/index.html
+- target: functions/src/api/gearReservationCancelHandler.ts
+  • reason: high or medium-high refactor risk
+  • contracts: modules
+  • read before change:
+    - firebase.json
+    - functions/package-lock.json
+    - functions/src/api/gearKayaksListHandler.ts
+    - functions/src/api/gearMyReservationsHandler.ts
+    - functions/src/api/gearReservationCreateHandler.ts
+    - functions/src/api/gearReservationUpdateHandler.ts
+    - functions/src/api/getGearItemsHandler.ts
+    - functions/src/api/getGearKayaksHandler.ts
+    - functions/src/api/registerUserHandler.ts
+    - functions/src/index.ts
+    - functions/src/modules/equipment/kayaks/gear_kayaks_service.ts
+    - project_optimization_snapshot.py
+    - project_snapshot.py
+    - public/core/app_shell.js
+    - public/core/modules_registry.js
+    - public/core/render_shell.js
+    - public/index.html
+- target: functions/src/api/gearReservationCreateHandler.ts
+  • reason: high or medium-high refactor risk
+  • contracts: kayakIds, modules
+  • read before change:
+    - firebase.json
+    - functions/package-lock.json
+    - functions/src/api/gearKayaksListHandler.ts
+    - functions/src/api/gearMyReservationsHandler.ts
+    - functions/src/api/gearReservationCancelHandler.ts
+    - functions/src/api/gearReservationUpdateHandler.ts
+    - functions/src/api/getGearItemsHandler.ts
+    - functions/src/api/getGearKayaksHandler.ts
+    - functions/src/api/registerUserHandler.ts
+    - functions/src/index.ts
+    - functions/src/modules/calendar/calendar_utils.ts
+    - functions/src/modules/equipment/kayaks/gear_kayaks_service.ts
+    - project_optimization_snapshot.py
+    - project_snapshot.py
+    - public/core/app_shell.js
+    - public/core/modules_registry.js
+    - public/core/render_shell.js
+    - public/index.html
+    - public/modules/gear_module.js
+    - public/modules/my_reservations_module.js
+- target: functions/src/api/gearReservationUpdateHandler.ts
+  • reason: high or medium-high refactor risk
+  • contracts: modules
+  • read before change:
+    - firebase.json
+    - functions/package-lock.json
+    - functions/src/api/gearKayaksListHandler.ts
+    - functions/src/api/gearMyReservationsHandler.ts
+    - functions/src/api/gearReservationCancelHandler.ts
+    - functions/src/api/gearReservationCreateHandler.ts
+    - functions/src/api/getGearItemsHandler.ts
+    - functions/src/api/getGearKayaksHandler.ts
+    - functions/src/api/registerUserHandler.ts
+    - functions/src/index.ts
+    - functions/src/modules/calendar/calendar_utils.ts
+    - functions/src/modules/equipment/kayaks/gear_kayaks_service.ts
+    - project_optimization_snapshot.py
+    - project_snapshot.py
+    - public/core/app_shell.js
+    - public/core/modules_registry.js
+    - public/core/render_shell.js
+    - public/index.html
+- target: functions/src/api/getGearItemsHandler.ts
+  • reason: high or medium-high refactor risk
+  • contracts: modules
+  • read before change:
+    - firebase.json
+    - functions/package-lock.json
+    - functions/src/api/gearKayaksListHandler.ts
+    - functions/src/api/gearMyReservationsHandler.ts
+    - functions/src/api/gearReservationCancelHandler.ts
+    - functions/src/api/gearReservationCreateHandler.ts
+    - functions/src/api/gearReservationUpdateHandler.ts
+    - functions/src/api/getGearKayaksHandler.ts
+    - functions/src/api/registerUserHandler.ts
+    - functions/src/index.ts
+    - functions/src/modules/equipment/shared/gear_catalog_service.ts
+    - project_optimization_snapshot.py
+    - project_snapshot.py
+    - public/core/app_shell.js
+    - public/core/modules_registry.js
+    - public/core/render_shell.js
+    - public/index.html
+- target: functions/src/api/getGearKayaksHandler.ts
+  • reason: high or medium-high refactor risk
+  • contracts: blockEndIso, blockStartIso, images, isActive, kayakIds, modules
+  • read before change:
+    - firebase.json
+    - firestore.indexes.json
+    - functions/package-lock.json
+    - functions/src/api/gearKayaksListHandler.ts
+    - functions/src/api/gearMyReservationsHandler.ts
+    - functions/src/api/gearReservationCancelHandler.ts
+    - functions/src/api/gearReservationCreateHandler.ts
+    - functions/src/api/gearReservationUpdateHandler.ts
+    - functions/src/api/getGearItemsHandler.ts
+    - functions/src/api/registerUserHandler.ts
+    - functions/src/index.ts
+    - functions/src/modules/calendar/calendar_utils.ts
+    - functions/src/modules/equipment/kayaks/gear_kayaks_service.ts
+    - functions/src/modules/equipment/shared/gear_catalog_service.ts
+    - functions/src/service/tasks/gearSyncKayaksFromSheet.ts
+    - project_optimization_snapshot.py
+    - project_snapshot.py
+    - public/core/app_shell.js
+    - public/core/modules_registry.js
+    - public/core/render_shell.js
+- target: functions/src/modules/equipment/shared/gear_catalog_service.ts
+  • reason: high or medium-high refactor risk
+  • contracts: gearCategory, gearCategoryDisplay, images, isActive
+  • read before change:
+    - functions/src/api/getGearItemsHandler.ts
+    - functions/src/api/getGearKayaksHandler.ts
+    - functions/src/modules/equipment/kayaks/gear_kayaks_service.ts
+    - functions/src/service/tasks/gearSyncKayaksFromSheet.ts
+    - project_optimization_snapshot.py
+    - public/modules/gear_module.js
+    - public/styles/gear.css
+- target: public/core/firebase_client.js
+  • reason: high or medium-high refactor risk
+  • read before change:
+
+=== PRIORITY PLAN FOR AI DEVELOPER ===
+- P1 :: frontend_hotspot :: public/modules/gear_module.js
+  • reason: {'score': 218, 'dom_queries': 28, 'listeners': 15, 'innerHTML': 8}
+- P1 :: frontend_hotspot :: public/styles/gear.css
+  • reason: {'score': 184, 'dom_queries': 26, 'listeners': 13, 'innerHTML': 8}
+- P1 :: frontend_hotspot :: public/core/render_shell.js
+  • reason: {'score': 145, 'dom_queries': 15, 'listeners': 9, 'innerHTML': 6}
+- P1 :: frontend_hotspot :: public/modules/my_reservations_module.js
+  • reason: {'score': 133, 'dom_queries': 12, 'listeners': 5, 'innerHTML': 7}
+- P1 :: frontend_hotspot :: public/core/app_shell.js
+  • reason: {'score': 59, 'dom_queries': 8, 'listeners': 3, 'innerHTML': 2}
+- P1 :: backend_hotspot :: functions/src/modules/equipment/kayaks/gear_kayaks_service.ts
+  • reason: {'score': 142, 'firestore_ops': 33}
+- P1 :: backend_hotspot :: functions/src/index.ts
+  • reason: {'score': 84, 'firestore_ops': 21}
+- P1 :: backend_hotspot :: functions/src/service/providers/googleSheetsProvider.ts
+  • reason: {'score': 64, 'firestore_ops': 12}
+- P1 :: backend_hotspot :: functions/src/api/getGearKayaksHandler.ts
+  • reason: {'score': 40, 'firestore_ops': 9}
+- P1 :: backend_hotspot :: functions/src/api/registerUserHandler.ts
+  • reason: {'score': 40, 'firestore_ops': 9}
+- P2 :: large_function :: functions/src/index.ts
+  • reason: {'function': 'syncMemberToSheet', 'length': 260}
+- P2 :: large_function :: functions/src/service/providers/googleSheetsProvider.ts
+  • reason: {'function': 'columnToA1', 'length': 260}
+- P2 :: large_function :: public/modules/gear_module.js
+  • reason: {'function': 'createGearModule', 'length': 223}
+- P2 :: large_function :: functions/src/api/registerUserHandler.ts
+  • reason: {'function': 'handleRegisterUser', 'length': 184}
+- P2 :: duplicate_block :: functions/src/index.ts
+  • reason: {'occurrences': 16, 'block_len': 8}
+- P2 :: duplicate_block :: functions/src/index.ts
+  • reason: {'occurrences': 12, 'block_len': 6}
+- P2 :: duplicate_block :: functions/src/api/gearKayaksListHandler.ts
+  • reason: {'occurrences': 10, 'block_len': 12}
+- P2 :: duplicate_block :: functions/src/index.ts
+  • reason: {'occurrences': 9, 'block_len': 11}
+- P2 :: duplicate_block :: functions/src/index.ts
+  • reason: {'occurrences': 9, 'block_len': 10}
+- P3 :: duplicate_logic_block :: functions/src/api/gearKayaksListHandler.ts
+  • reason: {'name': 'const tokenCheck = await requireIdToken(req); if ("error" in tokenCheck) { res.status(401).json({error: tokenCheck.error', 'occurrences': 9}
+- P3 :: duplicate_logic_block :: functions/src/api/gearKayaksListHandler.ts
+  • reason: {'name': 'if (sendPreflight(req, res)) return; if (!requireAllowedHost(req, res)) return; setCorsHeaders(req, res); corsHandler(re', 'occurrences': 9}
+- P3 :: duplicate_logic_block :: functions/src/api/gearKayaksListHandler.ts
+  • reason: {'name': 'corsHandler(req, res, async () => { try { const tokenCheck = await requireIdToken(req); if ("error" in tokenCheck) { res', 'occurrences': 7}
+- P3 :: duplicate_logic_block :: functions/src/api/gearKayaksListHandler.ts
+  • reason: {'name': 'corsHandler(req, res, async () => { try { const tokenCheck = await requireIdToken(req); if ("error" in tokenCheck) { res', 'occurrences': 7}
+- P3 :: duplicate_logic_block :: functions/src/api/gearKayaksListHandler.ts
+  • reason: {'name': 'setCorsHeaders(req, res); corsHandler(req, res, async () => { try { const tokenCheck = await requireIdToken(req); if ("e', 'occurrences': 7}
+
+=== MANUAL REVIEW TARGETS FOR AI DEVELOPER ===
+- Review first:
+  • highest frontend hotspot
+  • highest backend hotspot
+  • largest runtime functions
+  • Firestore-heavy services
+  • browser-facing endpoint chain: firebase.json -> function -> Cloud Run
+  • shared contracts before any rename
+  • hardcoded role/status/route/collection literals
+- Constraints:
+  • do NOT change business logic by default
+  • do NOT redesign UX by default
+  • do NOT refactor high-risk files from partial snippets
+  • optimize by reducing waste, not by changing intended behavior
+
+====================================================================================================
+END OF AI OPTIMIZATION + REFACTOR GUARD AUDIT
+====================================================================================================

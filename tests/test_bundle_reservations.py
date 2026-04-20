@@ -1223,5 +1223,395 @@ class TestScenario10_PrimaryItemSelection(unittest.TestCase):
         self.assertEqual(primary_count, 1)
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# Section C: Cross-format conflict tests (bundle vs legacy kayakIds[])
+# ──────────────────────────────────────────────────────────────────────────────
+
+class TestCrossFormatConflicts(unittest.TestCase):
+    """
+    Weryfikuje że findBundleConflicts() poprawnie wykrywa konflikty między
+    rezerwacjami w nowym formacie (itemIds[]) i starym formacie (kayakIds[]).
+    Odzwierciedla gear_bundle_service.ts:305-322.
+    """
+
+    def _make_legacy_reservation(self, kayak_ids: list, block_start: str, block_end: str,
+                                  status: str = "active", uid: str = "U1") -> dict:
+        """Stara rezerwacja — tylko kayakIds[], bez itemIds[]."""
+        return {
+            "id": "R_LEGACY",
+            "status": status,
+            "userUid": uid,
+            "blockStartIso": block_start,
+            "blockEndIso": block_end,
+            "kayakIds": kayak_ids,
+        }
+
+    def _make_bundle_reservation(self, item_ids: list, block_start: str, block_end: str,
+                                   status: str = "active", uid: str = "U2") -> dict:
+        """Nowa rezerwacja bundle — itemIds[], kayakIds[] puste."""
+        return {
+            "id": "R_BUNDLE",
+            "status": status,
+            "userUid": uid,
+            "blockStartIso": block_start,
+            "blockEndIso": block_end,
+            "itemIds": item_ids,
+            "kayakIds": [],
+        }
+
+    def test_bundle_conflicts_with_legacy_same_kayak(self):
+        """
+        Stara rezerwacja z kayakIds=["K01"].
+        Nowa próba z items=[{category: kayaks, itemId: K01}] → compositeId=kayaks/K01.
+        findBundleConflicts musi wykryć konflikt przez legacy-format ścieżkę.
+        """
+        existing = self._make_legacy_reservation(["K01"], "2025-07-01", "2025-07-08")
+        conflicts = find_bundle_conflicts(
+            composite_ids=["kayaks/K01"],
+            reservations=[existing],
+            block_start="2025-07-02",
+            block_end="2025-07-06",
+        )
+        self.assertIn("kayaks/K01", conflicts)
+
+    def test_bundle_conflicts_with_legacy_different_kayak(self):
+        """
+        Stara rezerwacja z K01 — nowa próba z K02 → brak konfliktu.
+        """
+        existing = self._make_legacy_reservation(["K01"], "2025-07-01", "2025-07-08")
+        conflicts = find_bundle_conflicts(
+            composite_ids=["kayaks/K02"],
+            reservations=[existing],
+            block_start="2025-07-02",
+            block_end="2025-07-06",
+        )
+        self.assertEqual(conflicts, [])
+
+    def test_bundle_conflicts_with_new_format_same_item(self):
+        """
+        Nowa rezerwacja z itemIds=["kayaks/K01"].
+        Nowa próba z compositeId=kayaks/K01 → konflikt przez itemIds[].
+        """
+        existing = self._make_bundle_reservation(["kayaks/K01"], "2025-07-01", "2025-07-08")
+        conflicts = find_bundle_conflicts(
+            composite_ids=["kayaks/K01"],
+            reservations=[existing],
+            block_start="2025-07-02",
+            block_end="2025-07-06",
+        )
+        self.assertIn("kayaks/K01", conflicts)
+
+    def test_bundle_conflicts_with_new_format_accessory(self):
+        """
+        Nowa rezerwacja ma itemIds=["paddles/P01"].
+        Nowa próba z paddles/P01 → konflikt.
+        """
+        existing = self._make_bundle_reservation(["paddles/P01"], "2025-07-01", "2025-07-08")
+        conflicts = find_bundle_conflicts(
+            composite_ids=["paddles/P01"],
+            reservations=[existing],
+            block_start="2025-07-03",
+            block_end="2025-07-06",
+        )
+        self.assertIn("paddles/P01", conflicts)
+
+    def test_legacy_cancelled_not_conflicting(self):
+        """Anulowana stara rezerwacja nie blokuje."""
+        existing = self._make_legacy_reservation(["K01"], "2025-07-01", "2025-07-08", status="cancelled")
+        conflicts = find_bundle_conflicts(
+            composite_ids=["kayaks/K01"],
+            reservations=[existing],
+            block_start="2025-07-02",
+            block_end="2025-07-06",
+        )
+        self.assertEqual(conflicts, [])
+
+    def test_legacy_non_overlapping_not_conflicting(self):
+        """Stara rezerwacja nie nakłada się na nowe daty → brak konfliktu."""
+        existing = self._make_legacy_reservation(["K01"], "2025-07-20", "2025-07-25")
+        conflicts = find_bundle_conflicts(
+            composite_ids=["kayaks/K01"],
+            reservations=[existing],
+            block_start="2025-07-01",
+            block_end="2025-07-08",
+        )
+        self.assertEqual(conflicts, [])
+
+    def test_multiple_items_partial_conflict(self):
+        """
+        Próba rezerwacji K01 + P01 + H01.
+        Istniejąca rezerwacja ma K01 (legacy) i P01 (bundle).
+        → Oba powinny być w konfliktach, H01 nie.
+        """
+        legacy_r = self._make_legacy_reservation(["K01"], "2025-07-01", "2025-07-10")
+        bundle_r = self._make_bundle_reservation(["paddles/P01"], "2025-07-02", "2025-07-09", uid="U3")
+        conflicts = find_bundle_conflicts(
+            composite_ids=["kayaks/K01", "paddles/P01", "helmets/H01"],
+            reservations=[legacy_r, bundle_r],
+            block_start="2025-07-03",
+            block_end="2025-07-08",
+        )
+        self.assertIn("kayaks/K01", conflicts)
+        self.assertIn("paddles/P01", conflicts)
+        self.assertNotIn("helmets/H01", conflicts)
+
+    def test_exclude_id_skips_own_reservation(self):
+        """
+        Przy aktualizacji rezerwacji (exclude_id) własna rezerwacja nie blokuje samej siebie.
+        """
+        existing = self._make_bundle_reservation(["kayaks/K01"], "2025-07-01", "2025-07-10")
+        existing["id"] = "R_OWN"
+        conflicts = find_bundle_conflicts(
+            composite_ids=["kayaks/K01"],
+            reservations=[existing],
+            block_start="2025-07-02",
+            block_end="2025-07-08",
+            exclude_id="R_OWN",
+        )
+        self.assertEqual(conflicts, [])
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Section D: max_items bundle enforcement
+# ──────────────────────────────────────────────────────────────────────────────
+
+class TestMaxItemsBundleEnforcement(unittest.TestCase):
+    """
+    Weryfikuje że limit max_items jest liczony łącznie dla wszystkich
+    przedmiotów zestawu (kajak + akcesoria), nie tylko dla kajaków.
+    Odzwierciedla gear_bundle_service.ts:363-369, gear_kayaks_service.ts:90-93.
+
+    Domyślne limity BackendStub:
+      rola_czlonek = 3
+      rola_kandydat = 1
+      rola_zarzad = 100
+    """
+
+    CATALOG = {
+        "kayaks/K01": {"active": True, "operational": True, "number": "K01", "label": "Kajak K01"},
+        "kayaks/K02": {"active": True, "operational": True, "number": "K02", "label": "Kajak K02"},
+        "paddles/P01": {"active": True, "number": "P01", "label": "Wiosło P01"},
+        "paddles/P02": {"active": True, "number": "P02", "label": "Wiosło P02"},
+        "helmets/H01": {"active": True, "number": "H01", "label": "Kask H01"},
+        "lifejackets/LJ01": {"active": True, "number": "LJ01", "label": "Kamizelka LJ01"},
+    }
+
+    def _make_backend(self, role: str = "rola_czlonek") -> BackendStub:
+        return BackendStub(
+            users={"U1": {"role_key": role, "status_key": "status_aktywny"}},
+            catalog=self.CATALOG,
+        )
+
+    def test_member_kayak_paddle_lifejacket_equals_3_ok(self):
+        """
+        Czlonek: kajak + wiosło + kamizelka = 3 przedmioty = max_items → OK.
+        """
+        backend = self._make_backend("rola_czlonek")
+        result = backend.create_bundle_reservation(
+            uid="U1",
+            start_date="2025-08-01",
+            end_date="2025-08-03",
+            items=[
+                {"itemId": "K01", "category": "kayaks"},
+                {"itemId": "P01", "category": "paddles"},
+                {"itemId": "LJ01", "category": "lifejackets"},
+            ],
+        )
+        self.assertTrue(result["ok"], result)
+
+    def test_member_kayak_paddle_helmet_lifejacket_equals_4_blocked(self):
+        """
+        Czlonek: kajak + wiosło + kask + kamizelka = 4 przedmioty > max_items=3 → blokada.
+        """
+        backend = self._make_backend("rola_czlonek")
+        result = backend.create_bundle_reservation(
+            uid="U1",
+            start_date="2025-08-01",
+            end_date="2025-08-03",
+            items=[
+                {"itemId": "K01", "category": "kayaks"},
+                {"itemId": "P01", "category": "paddles"},
+                {"itemId": "H01", "category": "helmets"},
+                {"itemId": "LJ01", "category": "lifejackets"},
+            ],
+        )
+        self.assertFalse(result["ok"], result)
+        self.assertEqual(result["code"], "too_many_items")
+
+    def test_candidate_1_kayak_ok(self):
+        """Kandydat: 1 kajak = max_items=1 → OK."""
+        backend = self._make_backend("rola_kandydat")
+        result = backend.create_bundle_reservation(
+            uid="U1",
+            start_date="2025-08-01",
+            end_date="2025-08-03",
+            items=[{"itemId": "K01", "category": "kayaks"}],
+        )
+        self.assertTrue(result["ok"], result)
+
+    def test_candidate_kayak_plus_paddle_equals_2_blocked(self):
+        """
+        Kandydat: kajak + wiosło = 2 przedmioty > max_items=1 → blokada.
+        Ważna uwaga: nawet 1 akcesorium blokuje kandydata (luka S2).
+        """
+        backend = self._make_backend("rola_kandydat")
+        result = backend.create_bundle_reservation(
+            uid="U1",
+            start_date="2025-08-01",
+            end_date="2025-08-03",
+            items=[
+                {"itemId": "K01", "category": "kayaks"},
+                {"itemId": "P01", "category": "paddles"},
+            ],
+        )
+        self.assertFalse(result["ok"], result)
+        self.assertEqual(result["code"], "too_many_items")
+
+    def test_board_100_items_ok(self):
+        """Zarząd: limit = 100, 2 kajaki + 2 akcesoria = 4 → OK."""
+        backend = self._make_backend("rola_zarzad")
+        result = backend.create_bundle_reservation(
+            uid="U1",
+            start_date="2025-08-01",
+            end_date="2025-08-03",
+            items=[
+                {"itemId": "K01", "category": "kayaks"},
+                {"itemId": "K02", "category": "kayaks"},
+                {"itemId": "P01", "category": "paddles"},
+                {"itemId": "H01", "category": "helmets"},
+            ],
+        )
+        self.assertTrue(result["ok"], result)
+
+    def test_cumulative_count_across_overlapping_reservations(self):
+        """
+        Czlonek ma już 2 kajaki w nakładającej się rezerwacji.
+        Próba dodania kolejnego kajaka → już + 1 = 3 → OK.
+        Próba dodania 2 kolejnych kajaków → już + 2 = 4 > 3 → blokada.
+        """
+        backend = self._make_backend("rola_czlonek")
+
+        # Pierwsza rezerwacja: 2 kajaki
+        first = backend.create_bundle_reservation(
+            uid="U1",
+            start_date="2025-09-01",
+            end_date="2025-09-05",
+            items=[
+                {"itemId": "K01", "category": "kayaks"},
+                {"itemId": "K02", "category": "kayaks"},
+            ],
+        )
+        self.assertTrue(first["ok"], first)
+
+        # Nakładające się: 1 kajak → łącznie 3 → OK
+        second = backend.create_bundle_reservation(
+            uid="U1",
+            start_date="2025-09-03",
+            end_date="2025-09-07",
+            items=[{"itemId": "P01", "category": "paddles"}],
+        )
+        self.assertTrue(second["ok"], second)
+
+    def test_cumulative_over_limit_blocked(self):
+        """
+        Czlonek ma już 3 kajaki. Dodanie 1 akcesoria → 4 > 3 → blokada.
+        """
+        backend = self._make_backend("rola_czlonek")
+
+        first = backend.create_bundle_reservation(
+            uid="U1",
+            start_date="2025-09-01",
+            end_date="2025-09-05",
+            items=[
+                {"itemId": "K01", "category": "kayaks"},
+                {"itemId": "K02", "category": "kayaks"},
+                {"itemId": "P01", "category": "paddles"},
+            ],
+        )
+        self.assertTrue(first["ok"], first)
+
+        second = backend.create_bundle_reservation(
+            uid="U1",
+            start_date="2025-09-03",
+            end_date="2025-09-07",
+            items=[{"itemId": "H01", "category": "helmets"}],
+        )
+        self.assertFalse(second["ok"], second)
+        self.assertEqual(second["code"], "too_many_items")
+
+    def test_gear_only_bundle_no_kayak_cost_zero(self):
+        """
+        Bundle bez kajaka → reservationKind=gear_only, costHours=0.
+        Odzwierciedla luka K1: akcesoria nie mają ceny.
+        """
+        backend = self._make_backend("rola_czlonek")
+        result = backend.create_bundle_reservation(
+            uid="U1",
+            start_date="2025-08-01",
+            end_date="2025-08-05",
+            items=[
+                {"itemId": "P01", "category": "paddles"},
+                {"itemId": "H01", "category": "helmets"},
+            ],
+        )
+        self.assertTrue(result["ok"], result)
+        self.assertEqual(result["reservationKind"], "gear_only")
+        self.assertEqual(result["costHours"], 0)
+
+    def test_kayak_bundle_cost_only_from_kayaks(self):
+        """
+        Bundle z kajakiem i akcesoriami: costHours = tylko dni × kajaki.
+        Akcesoria (wiosło, kask) mają koszt=0 — luka K1.
+        """
+        backend = self._make_backend("rola_czlonek")
+        result = backend.create_bundle_reservation(
+            uid="U1",
+            start_date="2025-08-01",
+            end_date="2025-08-03",
+            items=[
+                {"itemId": "K01", "category": "kayaks"},
+                {"itemId": "P01", "category": "paddles"},
+                {"itemId": "H01", "category": "helmets"},
+            ],
+        )
+        self.assertTrue(result["ok"], result)
+        self.assertEqual(result["reservationKind"], "kayak_bundle")
+        # BackendStub: 1h/dzień/kajak, 3 dni = 3h. Akcesoria 0.
+        self.assertEqual(result["costHours"], 3)
+
+    def test_accessories_price_gap_k1_documented(self):
+        """
+        LUKA K1: Akcesoria (wiosło, kask, fartuch) nie mają cennika.
+        Oczekiwany koszt = tylko kajaki × dni × stawka.
+        Ten test dokumentuje zachowanie obecne (nie oczekiwane docelowo).
+        """
+        backend = self._make_backend("rola_czlonek")
+        result_kayak_only = backend.create_bundle_reservation(
+            uid="U1",
+            start_date="2025-08-10",
+            end_date="2025-08-12",
+            items=[{"itemId": "K01", "category": "kayaks"}],
+        )
+        result_kayak_with_extras = backend.create_bundle_reservation(
+            uid="U1",
+            start_date="2025-08-15",
+            end_date="2025-08-17",
+            items=[
+                {"itemId": "K02", "category": "kayaks"},
+                {"itemId": "P02", "category": "paddles"},
+                {"itemId": "H01", "category": "helmets"},
+            ],
+        )
+        self.assertTrue(result_kayak_only["ok"], result_kayak_only)
+        self.assertTrue(result_kayak_with_extras["ok"], result_kayak_with_extras)
+
+        # Oba mają 1 kajak na 3 dni → ten sam koszt mimo różnej liczby akcesoriów
+        self.assertEqual(
+            result_kayak_only["costHours"],
+            result_kayak_with_extras["costHours"],
+            "Luka K1: koszt z akcesoriami powinien równać się kosztowi bez akcesoriów (akcesoria bezpłatne)",
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -43,6 +43,37 @@ class EnvConfig:
     new_user_last_name: str = "Testowy"
     new_user_phone: str = ""
     new_user_date_of_birth: str = ""
+    # -----------------------------------------------------------------------
+    # Konta testowe audytu sprzętu (gear audit accounts)
+    # -----------------------------------------------------------------------
+    # Członek z godzinkami (3 zatwierdzone pule FIFO)
+    member_user_email: str = ""
+    member_user_password: str = ""
+    # Kandydat (max 1 kajak, 1 tydzień)
+    candidate_user_email: str = ""
+    candidate_user_password: str = ""
+    # Zarząd (boardDoesNotPay test)
+    board_user_email: str = ""
+    board_user_password: str = ""
+    # KR
+    kr_user_email: str = ""
+    kr_user_password: str = ""
+    # Sympatyk (nie może rezerwować)
+    sympatyk_user_email: str = ""
+    sympatyk_user_password: str = ""
+    # Graniczny (saldo ustawiane przez test fixture)
+    boundary_user_email: str = ""
+    boundary_user_password: str = ""
+    # -----------------------------------------------------------------------
+    # IDs sprzętu testowego
+    # -----------------------------------------------------------------------
+    test_kayak_id_1: str = ""
+    test_kayak_id_2: str = ""
+    test_kayak_id_3: str = ""
+    test_kayak_basen_id: str = ""   # kajak przypisany do basenu
+    test_paddle_id: str = ""
+    test_lifejacket_id: str = ""
+    test_helmet_id: str = ""
     # Timeouts
     job_poll_timeout_seconds: int = 60
     job_poll_interval_seconds: int = 2
@@ -78,6 +109,25 @@ DEV = EnvConfig(
     new_user_last_name=os.environ.get("DEV_NEW_USER_LAST_NAME", "Testowy"),
     new_user_phone=os.environ.get("DEV_NEW_USER_PHONE", ""),
     new_user_date_of_birth=os.environ.get("DEV_NEW_USER_DOB", ""),
+    member_user_email=os.environ.get("DEV_TEST_MEMBER_EMAIL", ""),
+    member_user_password=os.environ.get("DEV_TEST_MEMBER_PASSWORD", ""),
+    candidate_user_email=os.environ.get("DEV_TEST_CANDIDATE_EMAIL", ""),
+    candidate_user_password=os.environ.get("DEV_TEST_CANDIDATE_PASSWORD", ""),
+    board_user_email=os.environ.get("DEV_TEST_BOARD_EMAIL", ""),
+    board_user_password=os.environ.get("DEV_TEST_BOARD_PASSWORD", ""),
+    kr_user_email=os.environ.get("DEV_TEST_KR_EMAIL", ""),
+    kr_user_password=os.environ.get("DEV_TEST_KR_PASSWORD", ""),
+    sympatyk_user_email=os.environ.get("DEV_TEST_SYMPATYK_EMAIL", ""),
+    sympatyk_user_password=os.environ.get("DEV_TEST_SYMPATYK_PASSWORD", ""),
+    boundary_user_email=os.environ.get("DEV_TEST_BOUNDARY_EMAIL", ""),
+    boundary_user_password=os.environ.get("DEV_TEST_BOUNDARY_PASSWORD", ""),
+    test_kayak_id_1=os.environ.get("DEV_TEST_KAYAK_ID_1", ""),
+    test_kayak_id_2=os.environ.get("DEV_TEST_KAYAK_ID_2", ""),
+    test_kayak_id_3=os.environ.get("DEV_TEST_KAYAK_ID_3", ""),
+    test_kayak_basen_id=os.environ.get("DEV_TEST_KAYAK_BASEN_ID", ""),
+    test_paddle_id=os.environ.get("DEV_TEST_PADDLE_ID", ""),
+    test_lifejacket_id=os.environ.get("DEV_TEST_LIFEJACKET_ID", ""),
+    test_helmet_id=os.environ.get("DEV_TEST_HELMET_ID", ""),
 )
 
 # ---------------------------------------------------------------------------
@@ -109,6 +159,25 @@ PROD = EnvConfig(
     new_user_last_name=os.environ.get("PROD_NEW_USER_LAST_NAME", "Testowy"),
     new_user_phone=os.environ.get("PROD_NEW_USER_PHONE", ""),
     new_user_date_of_birth=os.environ.get("PROD_NEW_USER_DOB", ""),
+    member_user_email=os.environ.get("PROD_TEST_MEMBER_EMAIL", ""),
+    member_user_password=os.environ.get("PROD_TEST_MEMBER_PASSWORD", ""),
+    candidate_user_email=os.environ.get("PROD_TEST_CANDIDATE_EMAIL", ""),
+    candidate_user_password=os.environ.get("PROD_TEST_CANDIDATE_PASSWORD", ""),
+    board_user_email=os.environ.get("PROD_TEST_BOARD_EMAIL", ""),
+    board_user_password=os.environ.get("PROD_TEST_BOARD_PASSWORD", ""),
+    kr_user_email=os.environ.get("PROD_TEST_KR_EMAIL", ""),
+    kr_user_password=os.environ.get("PROD_TEST_KR_PASSWORD", ""),
+    sympatyk_user_email=os.environ.get("PROD_TEST_SYMPATYK_EMAIL", ""),
+    sympatyk_user_password=os.environ.get("PROD_TEST_SYMPATYK_PASSWORD", ""),
+    boundary_user_email=os.environ.get("PROD_TEST_BOUNDARY_EMAIL", ""),
+    boundary_user_password=os.environ.get("PROD_TEST_BOUNDARY_PASSWORD", ""),
+    test_kayak_id_1=os.environ.get("PROD_TEST_KAYAK_ID_1", ""),
+    test_kayak_id_2=os.environ.get("PROD_TEST_KAYAK_ID_2", ""),
+    test_kayak_id_3=os.environ.get("PROD_TEST_KAYAK_ID_3", ""),
+    test_kayak_basen_id=os.environ.get("PROD_TEST_KAYAK_BASEN_ID", ""),
+    test_paddle_id=os.environ.get("PROD_TEST_PADDLE_ID", ""),
+    test_lifejacket_id=os.environ.get("PROD_TEST_LIFEJACKET_ID", ""),
+    test_helmet_id=os.environ.get("PROD_TEST_HELMET_ID", ""),
 )
 
 # ---------------------------------------------------------------------------
