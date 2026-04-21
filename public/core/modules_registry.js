@@ -41,7 +41,7 @@ function resolveModuleType(cfg) {
  * `type` is the preferred field for component resolution.
  * PL `label` is used as fallback when `type` is absent (backwards compatibility).
  */
-export function buildModulesFromSetup(setup, userRoleKey) {
+export function buildModulesFromSetup(setup, allowedActions) {
   const modulesCfg = setup?.modules;
 
   if (!modulesCfg || typeof modulesCfg !== "object" || Array.isArray(modulesCfg)) {
@@ -114,8 +114,7 @@ export function buildModulesFromSetup(setup, userRoleKey) {
     );
   }
 
-  const ADMIN_ROLE_KEYS = new Set(["rola_zarzad", "rola_kr"]);
-  if (userRoleKey && ADMIN_ROLE_KEYS.has(userRoleKey)) {
+  if (Array.isArray(allowedActions) && allowedActions.includes("admin.pending")) {
     modules.push(
       createAdminPendingModule({
         id: "admin_pending",

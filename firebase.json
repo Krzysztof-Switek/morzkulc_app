@@ -101,6 +101,13 @@
         }
       },
       {
+        "source": "/api/admin/pending",
+        "function": {
+          "functionId": "getAdminPending",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "/api/register",
         "function": {
           "functionId": "registerUser",

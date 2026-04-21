@@ -204,8 +204,12 @@ async function requireIdToken(req: Request) {
   const authHeader = String(req.headers.authorization || "");
   const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
   if (!idToken) return {error: "Missing token"} as const;
-  const decoded = await admin.auth().verifyIdToken(idToken);
-  return {decoded} as const;
+  try {
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    return {decoded} as const;
+  } catch {
+    return {error: "Invalid token"} as const;
+  }
 }
 
 async function getSetupApp(): Promise<SetupApp | null> {
@@ -214,16 +218,23 @@ async function getSetupApp(): Promise<SetupApp | null> {
   return (snap.data() as SetupApp) || null;
 }
 
-function defaultScreenForRoleKey(roleKey: string): string {
-  const map: Record<string, string> = {
-    rola_zarzad: "screen_board",
-    rola_kr: "screen_kr",
-    rola_czlonek: "screen_member",
-    rola_kandydat: "screen_candidate",
-    rola_sympatyk: "screen_supporter",
-    rola_kursant: "screen_trainee",
-  };
-  return map[roleKey] || "screen_supporter";
+function defaultScreenForRoleKey(_roleKey: string): string {
+  return "home";
+}
+
+function computeAllowedActions(roleKey: string): string[] {
+  const actions: string[] = [];
+  const {adminRoleKeys, memberRoleKeys, godzinkiRoleKeys} = svcCfg;
+  if (memberRoleKeys.includes(roleKey)) {
+    actions.push("gear.reserve", "basen.enroll", "events.submit");
+  }
+  if (godzinkiRoleKeys.includes(roleKey)) {
+    actions.push("godzinki.submit");
+  }
+  if (adminRoleKeys.includes(roleKey)) {
+    actions.push("admin.pending", "basen.admin", "events.admin");
+  }
+  return actions;
 }
 
 function requireAdminEmail(email: string): boolean {
@@ -422,6 +433,7 @@ export const registerUser = onRequest({invoker: "private"}, async (req, res) => 
     requireIdToken,
     getSetupApp,
     defaultScreenForRoleKey,
+    computeAllowedActions,
     enqueueMemberSheetSync,
   });
 });
@@ -480,6 +492,7 @@ export const createGearReservation = onRequest({invoker: "private"}, async (req,
     setCorsHeaders,
     corsHandler,
     requireIdToken,
+    memberRoleKeys: svcCfg.memberRoleKeys,
   });
 });
 
@@ -494,6 +507,7 @@ export const createBundleGearReservation = onRequest({invoker: "private"}, async
     setCorsHeaders,
     corsHandler,
     requireIdToken,
+    memberRoleKeys: svcCfg.memberRoleKeys,
   });
 });
 
@@ -626,6 +640,7 @@ export const submitGodzinki = onRequest({invoker: "private"}, async (req, res) =
     setCorsHeaders,
     corsHandler,
     requireIdToken,
+    godzinkiRoleKeys: svcCfg.godzinkiRoleKeys,
     enqueueGodzinkiSheetWrite,
   });
 });

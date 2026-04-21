@@ -150,7 +150,7 @@ const SESSION_MAX_MS = 24 * 60 * 60 * 1000; // 24 godziny
       window.__APP_CTX__ = ctx;
     }
 
-    ctx.modules = buildModulesFromSetup(ctx.setup, ctx.session?.role_key);
+    ctx.modules = buildModulesFromSetup(ctx.setup, ctx.session?.allowed_actions ?? []);
     window.__APP_CTX__ = ctx;
 
     renderNav({ navEl, ctx });

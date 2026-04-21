@@ -77,7 +77,23 @@ export async function renderView({ viewEl, ctx }) {
   }
 }
 
+function getDashboardConfig(ctx) {
+  const actions = ctx?.session?.allowed_actions ?? [];
+  const roleKey = String(ctx?.session?.role_key || "");
+  return {
+    isAdmin:           actions.includes("admin.pending"),
+    canReserveGear:    actions.includes("gear.reserve"),
+    canEnrollBasen:    actions.includes("basen.enroll"),
+    canSubmitGodzinki: actions.includes("godzinki.submit"),
+    canSubmitEvents:   actions.includes("events.submit"),
+    isKursant:         roleKey === "rola_kursant",
+    isSympatyk:        roleKey === "rola_sympatyk",
+    isKandydat:        roleKey === "rola_kandydat",
+  };
+}
+
 async function renderHomeDashboard({ viewEl, ctx }) {
+  const dash = getDashboardConfig(ctx);
   const helloName = getHelloName(ctx);
   const roleLabel = roleKeyToLabel(String(ctx.session?.role_key || ""), ctx?.setup?.roleMappings);
   const statusLabel = statusKeyToLabel(String(ctx.session?.status_key || ""), ctx?.setup?.statusMappings);
@@ -88,6 +104,13 @@ async function renderHomeDashboard({ viewEl, ctx }) {
   const basenEnabledTile = (ctx.modules || []).find((m) =>
     m?.type === "basen"
   )?.enabled === true;
+
+  // Komunikat dla ról z ograniczonym dostępem
+  const accessInfoMsg = dash.isSympatyk
+    ? "Jako Sympatyk możesz przeglądać sprzęt i imprezy. Rezerwacja sprzętu i zapisy na basen dostępne dla Członków."
+    : dash.isKandydat
+      ? "Jako Kandydat możesz zgłaszać godzinki. Rezerwacja sprzętu i zapisy na basen dostępne po przyjęciu w poczet Członków."
+      : "";
 
   // Render struktury natychmiast — rezerwacje ładujemy asynchronicznie
   viewEl.innerHTML = `
@@ -122,7 +145,8 @@ async function renderHomeDashboard({ viewEl, ctx }) {
             </div>
 
             <div class="startTopActions">
-              <button type="button" class="startTile primary" data-home-action="reserve-gear">
+              <button type="button" class="startTile${dash.canReserveGear ? " primary" : ""}" data-home-action="reserve-gear"
+                title="${dash.canReserveGear ? "Rezerwuj sprzęt" : "Przeglądaj sprzęt (rezerwacja wymaga roli Członek)"}">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12 C4 8 8 7 12 7 C16 7 20 8 22 12 C20 16 16 17 12 17 C8 17 4 16 2 12 Z"/><ellipse cx="12" cy="11" rx="3.5" ry="1.5"/></svg>
                 <span class="startTileTitle">Sprzęt</span>
               </button>
@@ -146,6 +170,35 @@ async function renderHomeDashboard({ viewEl, ctx }) {
         </div>
       </section>
 
+      ${dash.isAdmin ? `
+      <section class="dashCard startSection">
+        <div class="dashCardHead">
+          <h3>Panel zarządczy</h3>
+        </div>
+        <div class="startTopActions">
+          <button type="button" class="startTile" data-home-action="admin-pending">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <span class="startTileTitle">Do zatwierdzenia</span>
+          </button>
+        </div>
+      </section>
+      ` : ""}
+
+      ${dash.isKursant ? `
+      <section class="dashCard startSection">
+        <div class="dashCardHead"><h3>Witaj w SKK Morzkulc!</h3></div>
+        <p class="muted" style="padding:0 16px 12px;">Jesteś kursantem — poniżej znajdziesz moduły dostępne dla Ciebie. Zapoznaj się z imprezami i aktywnościami klubu.</p>
+      </section>
+      ` : ""}
+
+      ${accessInfoMsg ? `
+      <section class="dashCard startSection">
+        <div class="dashCardHead"><h3>Twój dostęp</h3></div>
+        <p class="muted" style="padding:0 16px 12px;">${escapeHtml(accessInfoMsg)}</p>
+      </section>
+      ` : ""}
+
+      ${dash.canReserveGear ? `
       <section class="dashCard startSection">
         <div class="dashCardHead">
           <h3>Moje rezerwacje</h3>
@@ -156,6 +209,7 @@ async function renderHomeDashboard({ viewEl, ctx }) {
           ${spinnerHtml("Ładowanie rezerwacji...")}
         </div>
       </section>
+      ` : ""}
 
       <section class="dashCard startSection">
         <div class="dashCardHead">
@@ -187,6 +241,11 @@ async function renderHomeDashboard({ viewEl, ctx }) {
     allReservationsBtn.addEventListener("click", () => setHash("my_reservations", "list"));
   }
 
+  const adminPendingBtn = viewEl.querySelector("[data-home-action='admin-pending']");
+  if (adminPendingBtn) {
+    adminPendingBtn.addEventListener("click", () => setHash("admin_pending", "list"));
+  }
+
   const reserveBtn = viewEl.querySelector("[data-home-action='reserve-gear']");
   const eventsBtn = viewEl.querySelector("[data-home-action='events']");
 
@@ -216,7 +275,7 @@ async function renderHomeDashboard({ viewEl, ctx }) {
     addEventBtn.addEventListener("click", () => {
       const eventsTarget = getModuleRouteByType(ctx, "imprezy");
       if (eventsTarget.moduleId !== "home") {
-        setHash(eventsTarget.moduleId, "submit");
+        setHash(eventsTarget.moduleId, dash.canSubmitEvents ? "submit" : "list");
       }
     });
   }
@@ -226,46 +285,48 @@ async function renderHomeDashboard({ viewEl, ctx }) {
     addHoursBtn.addEventListener("click", () => {
       const godzinkiTarget = getModuleRouteByType(ctx, "godzinki");
       if (godzinkiTarget.moduleId !== "home") {
-        setHash(godzinkiTarget.moduleId, "submit");
+        setHash(godzinkiTarget.moduleId, dash.canSubmitGodzinki ? "submit" : "balance");
       }
     });
   }
 
-  // Ładuj rezerwacje asynchronicznie po wyrenderowaniu dashboardu
-  buildHomeReservationsSection(ctx).then((html) => {
-    const listEl = viewEl.querySelector("#homeReservationsList");
-    if (!listEl) return;
-    listEl.innerHTML = html;
-    listEl.addEventListener("click", async (ev) => {
-      const editBtn = ev.target.closest("[data-home-rsv-edit]");
-      if (editBtn) {
-        const rsvId = String(editBtn.getAttribute("data-home-rsv-edit") || "");
-        if (rsvId) setHash("my_reservations", rsvId);
-        return;
-      }
-      const cancelBtn = ev.target.closest("[data-home-rsv-cancel]");
-      if (cancelBtn && !cancelBtn.disabled) {
-        const rsvId = String(cancelBtn.getAttribute("data-home-rsv-cancel") || "");
-        if (!rsvId) return;
-        if (!window.confirm("Na pewno anulować tę rezerwację?")) return;
-        cancelBtn.disabled = true;
-        try {
-          await apiPostJson({
-            url: CANCEL_RESERVATION_URL,
-            idToken: ctx.idToken,
-            body: { reservationId: rsvId }
-          });
-          setHash("home", "home");
-        } catch (e) {
-          cancelBtn.disabled = false;
-          window.alert("Nie udało się anulować: " + (e?.message || "Spróbuj ponownie."));
+  // Ładuj rezerwacje asynchronicznie — tylko dla ról z gear.reserve
+  if (dash.canReserveGear) {
+    buildHomeReservationsSection(ctx).then((html) => {
+      const listEl = viewEl.querySelector("#homeReservationsList");
+      if (!listEl) return;
+      listEl.innerHTML = html;
+      listEl.addEventListener("click", async (ev) => {
+        const editBtn = ev.target.closest("[data-home-rsv-edit]");
+        if (editBtn) {
+          const rsvId = String(editBtn.getAttribute("data-home-rsv-edit") || "");
+          if (rsvId) setHash("my_reservations", rsvId);
+          return;
         }
-      }
+        const cancelBtn = ev.target.closest("[data-home-rsv-cancel]");
+        if (cancelBtn && !cancelBtn.disabled) {
+          const rsvId = String(cancelBtn.getAttribute("data-home-rsv-cancel") || "");
+          if (!rsvId) return;
+          if (!window.confirm("Na pewno anulować tę rezerwację?")) return;
+          cancelBtn.disabled = true;
+          try {
+            await apiPostJson({
+              url: CANCEL_RESERVATION_URL,
+              idToken: ctx.idToken,
+              body: { reservationId: rsvId }
+            });
+            setHash("home", "home");
+          } catch (e) {
+            cancelBtn.disabled = false;
+            window.alert("Nie udało się anulować: " + (e?.message || "Spróbuj ponownie."));
+          }
+        }
+      });
+    }).catch(() => {
+      const listEl = viewEl.querySelector("#homeReservationsList");
+      if (listEl) listEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać rezerwacji.</div></div></div>`;
     });
-  }).catch(() => {
-    const listEl = viewEl.querySelector("#homeReservationsList");
-    if (listEl) listEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać rezerwacji.</div></div></div>`;
-  });
+  }
 
   // Ładuj saldo godzinek asynchronicznie
   if (ctx?.idToken) {

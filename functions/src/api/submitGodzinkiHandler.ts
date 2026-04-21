@@ -14,6 +14,7 @@ export type SubmitGodzinkiDeps = {
   setCorsHeaders: (req: Request, res: Response) => void;
   corsHandler: any;
   requireIdToken: (req: Request) => Promise<TokenCheck>;
+  godzinkiRoleKeys: string[];
   /** Opcjonalne: kolejkowanie zadania syncu do Google Sheets (fire-and-forget) */
   enqueueGodzinkiSheetWrite?: (recordId: string, uid: string) => Promise<void>;
 };
@@ -59,6 +60,11 @@ export async function handleSubmitGodzinki(req: Request, res: Response, deps: Su
       const statusKey = String((userSnap.data() as any)?.status_key || "");
       if (await isUserStatusBlocked(db, statusKey)) {
         res.status(403).json({ok: false, code: "forbidden", error: "Konto zawieszone."});
+        return;
+      }
+      const roleKey = String((userSnap.data() as any)?.role_key || "");
+      if (!deps.godzinkiRoleKeys.includes(roleKey)) {
+        res.status(403).json({ok: false, code: "forbidden", error: "Zgłaszanie godzinek wymaga roli Kandydat lub Członek."});
         return;
       }
 

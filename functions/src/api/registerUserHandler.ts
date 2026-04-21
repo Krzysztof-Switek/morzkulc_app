@@ -29,6 +29,7 @@ export type RegisterUserDeps = {
   requireIdToken: (req: Request) => Promise<TokenCheck>;
   getSetupApp: () => Promise<SetupApp | null>;
   defaultScreenForRoleKey: (roleKey: string) => string;
+  computeAllowedActions: (roleKey: string) => string[];
 
   // ✅ sheets sync (via service_job for retry support)
   enqueueMemberSheetSync: (uid: string) => Promise<void>;
@@ -455,6 +456,7 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
           role_key: roleKey,
           status_key: statusKey,
           screen: defaultScreenForRoleKey(roleKey),
+          allowed_actions: deps.computeAllowedActions(roleKey),
           setupMissing: !setupApp,
           openingMatch: Boolean((data as any).openingMatch),
           profileComplete,
@@ -553,6 +555,7 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
         role_key: roleKey,
         status_key: statusKey,
         screen: defaultScreenForRoleKey(roleKey),
+        allowed_actions: deps.computeAllowedActions(roleKey),
         setupMissing: !setupApp,
         openingMatch,
         profileComplete,

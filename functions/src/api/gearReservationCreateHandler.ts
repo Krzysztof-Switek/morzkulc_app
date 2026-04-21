@@ -1,6 +1,8 @@
 import type {Request, Response} from "express";
+import {logger} from "firebase-functions/v2";
 import {isIsoDateYYYYMMDD} from "../modules/calendar/calendar_utils";
 import {createReservation} from "../modules/equipment/kayaks/gear_kayaks_service";
+import {isUserStatusBlocked} from "../modules/users/userStatusCheck";
 
 type TokenCheck =
   | {error: string}
@@ -13,6 +15,7 @@ export type GearReservationCreateDeps = {
   setCorsHeaders: (req: Request, res: Response) => void;
   corsHandler: any;
   requireIdToken: (req: Request) => Promise<TokenCheck>;
+  memberRoleKeys: string[];
 };
 
 function norm(v: any): string {
@@ -39,6 +42,32 @@ export async function handleGearReservationCreate(req: Request, res: Response, d
         return;
       }
 
+      const uid = tokenCheck.decoded.uid;
+
+      const userSnap = await db.collection("users_active").doc(uid).get();
+      if (!userSnap.exists) {
+        res.status(403).json({ok: false, code: "forbidden", message: "User not registered"});
+        return;
+      }
+      const userData = userSnap.data() as any;
+      const roleKey = String(userData?.role_key || "");
+      const statusKey = String(userData?.status_key || "");
+      logger.info("gearReservationCreate: user data check", {
+        uid,
+        role_key: userData?.role_key,
+        status_key: userData?.status_key,
+        statusKey,
+        userDocKeys: Object.keys(userData || {}),
+      });
+      if (await isUserStatusBlocked(db, statusKey)) {
+        res.status(403).json({ok: false, code: "forbidden", message: "Konto zawieszone."});
+        return;
+      }
+      if (!deps.memberRoleKeys.includes(roleKey)) {
+        res.status(403).json({ok: false, code: "forbidden", message: "Rezerwacja sprzętu wymaga roli Członek."});
+        return;
+      }
+
       const body = (req.body || {}) as any;
       const startDate = norm(body.startDate);
       const endDate = norm(body.endDate);
@@ -49,7 +78,7 @@ export async function handleGearReservationCreate(req: Request, res: Response, d
       }
 
       const out = await createReservation(db, {
-        uid: tokenCheck.decoded.uid,
+        uid,
         startDate,
         endDate,
         kayakIds,
