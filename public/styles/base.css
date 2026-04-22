@@ -340,6 +340,17 @@ textarea:focus {
   border-color: rgba(138, 180, 255, 0.45);
 }
 
+/* Natywna lista opcji select — solidne tło żeby nie było białe w dark mode */
+:root select option {
+  background-color: #ffffff;
+  color: #0b0f17;
+}
+
+:root[data-theme="dark"] select option {
+  background-color: #101828;
+  color: #e8eaf0;
+}
+
 textarea {
   resize: vertical;
   min-height: 88px;

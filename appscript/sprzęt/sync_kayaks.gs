@@ -42,7 +42,19 @@ function syncSingleGearCategory_(category, opts) {
 
   const data = sh.getDataRange().getValues();
   if (!data || data.length < 2) {
-    throw new Error(`Sheet "${category.sheetTab}" has no data rows`);
+    return {
+      key: category.key,
+      label: category.label,
+      collection: category.collection,
+      sheetTab: category.sheetTab,
+      dryRun: dryRun,
+      processed: 0,
+      upserted: 0,
+      skippedNoId: 0,
+      skippedNotReal: 0,
+      sheetIds: 0,
+      scrapped: 0,
+    };
   }
 
   const headers = data[0].map((h) => String(h || "").trim());

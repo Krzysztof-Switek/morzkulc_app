@@ -9,11 +9,12 @@
  *  - Nawigacja (request.mode === "navigate"):
  *    Network-first; jeśli sieć niedostępna → index.html z cache (offline fallback).
  *
- * Wersjonowanie: zmień CACHE_VERSION przy każdym deployu, który zmienia assets.
+ * Wersjonowanie: CACHE_VERSION jest automatycznie podmieniana przez scripts/bump-sw-cache.js
+ * w predeploy hooku firebase.json. Nie zmieniaj ręcznie.
  * Stary cache jest automatycznie czyszczony w activate.
  */
 
-const CACHE_VERSION = "v33";
+const CACHE_VERSION = "mo9rlpdf";
 const STATIC_CACHE  = `morzkulc-static-${CACHE_VERSION}`;
 
 // Pliki precachowane przy instalacji SW
