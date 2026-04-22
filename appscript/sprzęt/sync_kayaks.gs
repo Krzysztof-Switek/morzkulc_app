@@ -140,6 +140,9 @@ function getGearCategoryList_() {
     cfg.helmets,
     cfg.throwbags,
     cfg.sprayskirts,
+    cfg.flotationChambers,
+    cfg.wetsuits,
+    cfg.miscellaneous,
   ].filter(Boolean);
 }
 
@@ -213,6 +216,12 @@ function isRealGearRow_(categoryKey, r) {
       return isRealThrowbagRow_(r);
     case "sprayskirts":
       return isRealSprayskirtRow_(r);
+    case "flotationChambers":
+      return isRealFloatationChamberRow_(r);
+    case "wetsuits":
+      return isRealWetsuitRow_(r);
+    case "miscellaneous":
+      return isRealMiscRow_(r);
     default:
       return false;
   }
@@ -232,6 +241,12 @@ function buildGearDocFromRow_(categoryKey, id, r, now, category) {
       return buildThrowbagDocFromRow_(id, r, now, category);
     case "sprayskirts":
       return buildSprayskirtDocFromRow_(id, r, now, category);
+    case "flotationChambers":
+      return buildFloatationChamberDocFromRow_(id, r, now, category);
+    case "wetsuits":
+      return buildWetsuitDocFromRow_(id, r, now, category);
+    case "miscellaneous":
+      return buildMiscDocFromRow_(id, r, now, category);
     default:
       throw new Error(`Unsupported gear category: "${categoryKey}"`);
   }
@@ -489,6 +504,109 @@ function buildSprayskirtDocFromRow_(id, r, now, category) {
 
     gearCategory: "sprayskirts",
     gearCategoryDisplay: "Fartuchy",
+
+    gearScrapped: false,
+
+    source: {
+      sheetTab: category.sheetTab,
+      syncedAt: now,
+    },
+
+    updatedAt: now,
+  };
+}
+
+/**
+ * KOMORY
+ * Kolumny: ID, Producent, Kolor, Numer, Przypisana do kajaka, uwagi
+ */
+function isRealFloatationChamberRow_(r) {
+  const number = normCell_(r["Numer"]);
+  const brand = normCell_(r["Producent"]);
+  return Boolean(number || brand);
+}
+
+function buildFloatationChamberDocFromRow_(id, r, now, category) {
+  return {
+    id: String(id),
+    number: normCell_(r["Numer"]),
+    brand: normCell_(r["Producent"]),
+    color: normCell_(r["Kolor"]),
+    assignedToKayak: normCell_(r["Przypisana do kajaka"]),
+    notes: normCell_(r["uwagi"]),
+
+    isActive: true,
+    status: "available",
+
+    gearCategory: "flotationChambers",
+    gearCategoryDisplay: "Komory",
+
+    gearScrapped: false,
+
+    source: {
+      sheetTab: category.sheetTab,
+      syncedAt: now,
+    },
+
+    updatedAt: now,
+  };
+}
+
+/**
+ * KURTKI / PIANKI
+ * Kolumny: ID, typ, rozmiar, kolor, uwagi
+ */
+function isRealWetsuitRow_(r) {
+  const type = normCell_(r["typ"]);
+  const size = normCell_(r["rozmiar"]);
+  return Boolean(type || size);
+}
+
+function buildWetsuitDocFromRow_(id, r, now, category) {
+  return {
+    id: String(id),
+    type: normCell_(r["typ"]),
+    size: normCell_(r["rozmiar"]),
+    color: normCell_(r["kolor"]),
+    notes: normCell_(r["uwagi"]),
+
+    isActive: true,
+    status: "available",
+
+    gearCategory: "wetsuits",
+    gearCategoryDisplay: "Kurtki/Pianki",
+
+    gearScrapped: false,
+
+    source: {
+      sheetTab: category.sheetTab,
+      syncedAt: now,
+    },
+
+    updatedAt: now,
+  };
+}
+
+/**
+ * INNE RÓŻNE
+ * Kolumny: Id, Nazwa, Kolor, Uwagi
+ */
+function isRealMiscRow_(r) {
+  return Boolean(normCell_(r["Nazwa"]));
+}
+
+function buildMiscDocFromRow_(id, r, now, category) {
+  return {
+    id: String(id),
+    name: normCell_(r["Nazwa"]),
+    color: normCell_(r["Kolor"]),
+    notes: normCell_(r["Uwagi"]),
+
+    isActive: true,
+    status: "available",
+
+    gearCategory: "miscellaneous",
+    gearCategoryDisplay: "Inne różne",
 
     gearScrapped: false,
 

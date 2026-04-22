@@ -162,6 +162,7 @@ type ModuleAccess = {
   rolesAllowed?: string[];
   testUsersAllow?: string[];
   usersBlock?: string[];
+  testUserGranted?: boolean; // set server-side when testUsersAllow overrides disabled/off state
 };
 
 type SetupModuleConfig = {
@@ -243,19 +244,32 @@ function requireAdminEmail(email: string): boolean {
 
 
 /**
+ * Splits and normalises an array of email/uid strings stored in Firestore.
+ * Each element may contain multiple values separated by commas, which is
+ * convenient when editing the list in the Firebase console or admin tools.
+ */
+function flattenEmails(arr: unknown): string[] {
+  if (!Array.isArray(arr)) return [];
+  return (arr as unknown[])
+    .flatMap((e) => String(e).split(",").map((s) => s.trim().toLowerCase()))
+    .filter(Boolean);
+}
+
+/**
  * Filters setup.modules to only those the given user can see.
  *
  * Filtering rules (must match canSeeModule in access_control.js):
- *   - module.enabled !== true                        → hidden
+ *   - uid/email in access.usersBlock                 → hidden (always, even for test users)
  *   - statusMappings[statusKey].blocksAccess === true → all modules hidden
- *   - access.mode === "off"                          → hidden
- *   - uid/email in access.usersBlock                 → hidden
+ *   - module.enabled !== true                        → hidden UNLESS uid/email in testUsersAllow
+ *   - access.mode === "off"                          → hidden UNLESS uid/email in testUsersAllow
  *   - access.mode === "test" and uid/email not in testUsersAllow → hidden
  *   - access.mode === "prod" and rolesAllowed empty  → hidden
  *   - access.mode === "prod" and roleKey not in rolesAllowed → hidden
  *
- * Sensitive fields (testUsersAllow, usersBlock) are stripped from each module's
- * access object before returning so they do not leak to the client.
+ * When a module is shown via testUsersAllow override (enabled=false or mode=off),
+ * the response includes testUserGranted:true so the frontend can bypass its own guards.
+ * Sensitive fields (testUsersAllow, usersBlock) are otherwise stripped from the response.
  */
 function filterSetupForUser(
   setup: SetupApp,
@@ -267,27 +281,30 @@ function filterSetupForUser(
   const statusBlocked =
     setup.statusMappings?.[statusKey]?.blocksAccess === true;
 
+  const emailLower = email.toLowerCase();
   const filteredModules: Record<string, SetupModuleConfig> = {};
 
   for (const [id, cfg] of Object.entries(setup.modules || {})) {
-    if (!cfg.enabled) continue;
+    const access = cfg.access || {};
+
+    // testUsersAllow sprawdzamy najwcześniej — może nadpisać disabled/off
+    const testAllow = flattenEmails(access.testUsersAllow);
+    const isTestUser = testAllow.includes(uid) || testAllow.includes(emailLower);
+
+    // usersBlock wygrywa zawsze, nawet nad testUsersAllow
+    const usersBlock = flattenEmails(access.usersBlock);
+    if (usersBlock.includes(uid) || usersBlock.includes(emailLower)) continue;
+
+    if (!cfg.enabled && !isTestUser) continue;
     if (statusBlocked) continue;
 
-    const access = cfg.access || {};
     const mode = String(access.mode || "prod");
 
-    if (mode === "off") continue;
+    if (mode === "off" && !isTestUser) continue;
 
-    const usersBlock = Array.isArray(access.usersBlock) ?
-      access.usersBlock.map(String) :
-      [];
-    if (usersBlock.includes(uid) || usersBlock.includes(email)) continue;
-
-    if (mode === "test") {
-      const testAllow = Array.isArray(access.testUsersAllow) ?
-        access.testUsersAllow.map(String) :
-        [];
-      if (!testAllow.includes(uid) && !testAllow.includes(email)) continue;
+    if (mode === "test" || mode === "off") {
+      // Dla mode=test lub mode=off (z override) wymagamy bycia na liście testowej
+      if (!isTestUser) continue;
     } else {
       // prod
       const rolesAllowed = Array.isArray(access.rolesAllowed) ?
@@ -297,13 +314,17 @@ function filterSetupForUser(
       if (!rolesAllowed.includes(roleKey)) continue;
     }
 
-    // Moduł widoczny — pomiń wrażliwe pola z access przed zwróceniem
+    // Moduł widoczny — pomiń wrażliwe pola z access przed zwróceniem.
+    // Gdy testUsersAllow nadpisało disabled/off, dodaj flagę testUserGranted
+    // żeby frontend mógł pominąć swoje własne blokady.
+    const testUserOverride = isTestUser && (!cfg.enabled || mode === "off");
     const safeAccess: ModuleAccess = {
       mode: access.mode,
       rolesAllowed: access.rolesAllowed,
+      ...(testUserOverride ? {testUserGranted: true} : {}),
     };
 
-    filteredModules[id] = {...cfg, access: safeAccess};
+    filteredModules[id] = {...cfg, enabled: true, access: safeAccess};
   }
 
   return {

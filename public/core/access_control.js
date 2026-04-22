@@ -1,7 +1,12 @@
 export function canSeeModule({ ctx, module }) {
-  if (!module?.enabled) return false;
+  const access = module?.access || {};
 
-  const access = module.access || {};
+  // testUserGranted jest ustawiane przez backend gdy testUsersAllow nadpisało
+  // disabled lub mode=off — frontend musi to respektować
+  const testUserGranted = access.testUserGranted === true;
+
+  if (!module?.enabled && !testUserGranted) return false;
+
   const mode = String(access.mode || "prod"); // off | prod | test
 
   const uid = String(ctx?.session?.uid || "");
@@ -9,7 +14,6 @@ export function canSeeModule({ ctx, module }) {
   const roleKey = String(ctx?.session?.role_key || "rola_sympatyk");
   const statusKey = String(ctx?.session?.status_key || "");
 
-  const testAllow = Array.isArray(access.testUsersAllow) ? access.testUsersAllow.map(String) : [];
   const usersBlock = Array.isArray(access.usersBlock) ? access.usersBlock.map(String) : [];
   const rolesAllowed = Array.isArray(access.rolesAllowed) ? access.rolesAllowed.map(String) : [];
 
@@ -17,13 +21,14 @@ export function canSeeModule({ ctx, module }) {
   const statusMappings = ctx?.setup?.statusMappings || {};
   if (statusMappings[statusKey]?.blocksAccess === true) return false;
 
-  // blocklist zawsze wygrywa
+  // blocklist zawsze wygrywa, nawet nad testUserGranted
   if (usersBlock.includes(uid) || usersBlock.includes(email)) return false;
 
-  if (mode === "off") return false;
+  if (mode === "off" && !testUserGranted) return false;
 
-  if (mode === "test") {
-    return testAllow.includes(uid) || testAllow.includes(email);
+  if (mode === "test" || mode === "off") {
+    // Backend już zweryfikował obecność na liście testowej i ustawił testUserGranted
+    return testUserGranted;
   }
 
   // prod

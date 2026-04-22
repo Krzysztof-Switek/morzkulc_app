@@ -60,6 +60,27 @@ function buildGearCategoriesConfig_() {
       sheetTab: "fartuchy",
       idHeader: "ID",
     },
+    flotationChambers: {
+      key: "flotationChambers",
+      label: "Komory",
+      collection: "gear_flotation_chambers",
+      sheetTab: "komory",
+      idHeader: "ID",
+    },
+    wetsuits: {
+      key: "wetsuits",
+      label: "Kurtki/Pianki",
+      collection: "gear_wetsuits",
+      sheetTab: "kurtki pianki",
+      idHeader: "ID",
+    },
+    miscellaneous: {
+      key: "miscellaneous",
+      label: "Inne różne",
+      collection: "gear_miscellaneous",
+      sheetTab: "inne różne",
+      idHeader: "Id",
+    },
   };
 }
 
@@ -67,6 +88,12 @@ const CONFIG_DEV = {
   ENV_NAME: "dev",
   PROJECT_ID: "sprzet-skk-morzkulc",
   DATABASE_ID: "(default)",
+  FIRESTORE_BASE_URL:
+    "https://firestore.googleapis.com/v1/projects/sprzet-skk-morzkulc/databases/(default)/documents",
+
+  // Sheet IDs
+  MEMBERS_SHEET_ID: "1pw_hvxvtk_pX7BRcWatNChoAa4u6FmCZqKFMvJdhjFE",
+  GEAR_SHEET_ID: "1xSQtn1gxXsu_P-sVu6Cfy_tlnfQuF7c_ysL9GmEZQu8",
 
   // Backward compatibility with old kayak-only sync
   KAYAKS_COLLECTION: "gear_kayaks",
@@ -94,6 +121,12 @@ const CONFIG_PROD = {
   ENV_NAME: "prod",
   PROJECT_ID: "morzkulc-e9df7",
   DATABASE_ID: "(default)",
+  FIRESTORE_BASE_URL:
+    "https://firestore.googleapis.com/v1/projects/morzkulc-e9df7/databases/(default)/documents",
+
+  // Sheet IDs
+  MEMBERS_SHEET_ID: "1lF5eDF9B6ip4G497qG1QGePXqrXdLPS8kt-3pX-ZBsM",
+  GEAR_SHEET_ID: "1eUjW_hyhHBlv4lRTNYS3wcltUarV5G6FiH_b5kujgRI",
 
   // Backward compatibility with old kayak-only sync
   KAYAKS_COLLECTION: "gear_kayaks",
@@ -118,3 +151,10 @@ const CONFIG_PROD = {
 };
 
 const CONFIG = CURRENT_ENV === "prod" ? CONFIG_PROD : CONFIG_DEV;
+
+// Stałe nazw zakładek i dokumentów Firestore (wspólne z setup_sync.gs)
+const TAB_SETUP = "SETUP";
+const TAB_APP_SETUP = "APP_SETUP";
+const DOC_SETUP_APP = "setup/app";
+const DOC_VARS_MEMBERS = "setup/vars_members";
+const DOC_VARS_GEAR = "setup/vars_gear";
