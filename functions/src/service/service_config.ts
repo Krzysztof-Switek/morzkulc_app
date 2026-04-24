@@ -56,6 +56,11 @@ export interface ServiceConfig {
   basen: {
     adminEmail: string;
   };
+
+  // ✅ NEW: Google Calendar config
+  calendar: {
+    calendarId: string; // empty string = calendar sync disabled
+  };
 }
 
 export function getServiceConfig(): ServiceConfig {
@@ -128,6 +133,10 @@ export function getServiceConfig(): ServiceConfig {
         "• Otwórz https://groups.google.com i wyszukaj grupę.",
         "• Sprawdź folder Spam w Gmailu.",
         "",
+        "Korzystasz z telefonu? Dodaj aplikację do ekranu głównego, żeby uruchamiać ją jak zwykłą apkę.",
+        "Android: otwórz aplikację w Chrome, kliknij menu przeglądarki i wybierz \"Dodaj do ekranu głównego\".",
+        "iPhone (iOS): otwórz aplikację w Safari, kliknij Udostępnij, a potem wybierz \"Do ekranu początkowego\".",
+        "",
         `Pytania? Odpisz na tego maila — odpowiedź trafi do: ${cfg?.welcomeReplyToEmail || "zarzad@morzkulc.pl"}.`,
         "",
         "SKK Morzkulc",
@@ -177,6 +186,10 @@ export function getServiceConfig(): ServiceConfig {
 
     basen: {
       adminEmail: process.env.SVC_BASEN_ADMIN_EMAIL || "",
+    },
+
+    calendar: {
+      calendarId: process.env.SVC_CALENDAR_ID || "",
     },
   };
 

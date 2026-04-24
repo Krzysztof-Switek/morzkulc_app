@@ -340,15 +340,22 @@ textarea:focus {
   border-color: rgba(138, 180, 255, 0.45);
 }
 
-/* Natywna lista opcji select — solidne tło żeby nie było białe w dark mode */
-:root select option {
+/* Natywna lista opcji select — ciemne tło domyślnie (dark-first), jasne tylko w light mode */
+select option {
+  background-color: #101828;
+  color: #e8eaf0;
+}
+
+:root[data-theme="light"] select option {
   background-color: #ffffff;
   color: #0b0f17;
 }
 
-:root[data-theme="dark"] select option {
-  background-color: #101828;
-  color: #e8eaf0;
+@media (prefers-color-scheme: light) {
+  :root[data-theme="auto"] select option {
+    background-color: #ffffff;
+    color: #0b0f17;
+  }
 }
 
 textarea {

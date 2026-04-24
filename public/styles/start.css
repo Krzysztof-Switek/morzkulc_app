@@ -174,3 +174,30 @@
 .startStatValNeg {
   color: var(--danger);
 }
+
+/* ── Stat inline (ikonki + wartości w jednej linii) ── */
+.startStatInline { display: flex; gap: 16px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+.startStatInlineItem { display: flex; align-items: center; gap: 5px; font-size: 14px; font-weight: 700; color: var(--text); }
+.startStatInlineItem svg { color: var(--text-muted); flex-shrink: 0; }
+
+/* ── Kafelek danger (składki nieopłacone) ── */
+.startTile2.danger { border-color: rgba(255, 107, 107, 0.45); background: linear-gradient(180deg, rgba(255,107,107,0.22), rgba(255,107,107,0.12)); }
+.startTile2.danger .startTile2Title { color: var(--danger); }
+
+/* ── Stat bar (poziomy układ chipów) ── */
+.startStatBar { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.startStatChip { display: flex; flex-direction: column; gap: 1px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 10px; padding: 6px 10px; min-width: 70px; }
+:root[data-theme="light"] .startStatChip { background: rgba(12,18,32,0.04); }
+.startStatChipKey { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.startStatChipVal { font-size: 13px; font-weight: 800; color: var(--text); }
+
+/* ── Tile grid (3 kolumny mobile, 4 tablet) ── */
+.startTileGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+@media (min-width: 480px) { .startTileGrid { grid-template-columns: repeat(4, 1fr); } }
+
+/* ── Kafelek 2.0 (większy tap target) ── */
+.startTile2 { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 0; height: 84px; border-radius: 16px; text-align: center; overflow: hidden; }
+@media (min-width: 480px) { .startTile2 { height: 92px; } }
+.startTile2 svg { flex-shrink: 0; display: block; }
+.startTile2Title { font-size: 11px; font-weight: 800; color: var(--text); line-height: 1.1; letter-spacing: 0.01em; }
+@media (min-width: 480px) { .startTile2Title { font-size: 12px; } }

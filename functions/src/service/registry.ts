@@ -3,6 +3,7 @@ import { onUserRegisteredWelcomeTask } from "./tasks/onUserRegisteredWelcome";
 import { gearSyncKayaksFromSheetTask } from "./tasks/gearSyncKayaksFromSheet";
 import { godzinkiSyncFromSheetTask, godzinkiWriteToSheetTask } from "./tasks/godzinkiSyncFromSheet";
 import { eventsSyncFromSheetTask, eventsWriteToSheetTask } from "./tasks/eventsSyncFromSheet";
+import { eventsSyncCalendarTask } from "./tasks/eventsSyncCalendar";
 import { basenNotifySessionCancelledTask } from "./tasks/basenNotifySessionCancelled";
 import { gearPrivateStorageTask } from "./tasks/gearPrivateStorage";
 import { usersSyncRolesFromSheetTask } from "./tasks/usersSyncRolesFromSheet";
@@ -19,6 +20,7 @@ const tasks: ServiceTask[] = [
   godzinkiWriteToSheetTask,
   eventsSyncFromSheetTask,
   eventsWriteToSheetTask,
+  eventsSyncCalendarTask,
   basenNotifySessionCancelledTask,
   gearPrivateStorageTask,
   usersSyncRolesFromSheetTask,

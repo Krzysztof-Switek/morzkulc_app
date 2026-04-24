@@ -1,6 +1,7 @@
 import * as admin from "firebase-admin";
 import {ServiceTask} from "../types";
 import {GoogleSheetsProvider} from "../providers/googleSheetsProvider";
+import {GoogleCalendarProvider, CalendarEventData} from "../providers/googleCalendarProvider";
 import {getServiceConfig} from "../service_config";
 
 /**
@@ -52,14 +53,16 @@ export const eventsSyncFromSheetTask: ServiceTask<Payload> = {
 
     const spreadsheetId = cfg.events.spreadsheetId;
     const tabName = cfg.events.tabName;
+    const calendarId = cfg.calendar?.calendarId || "";
 
     if (!spreadsheetId) {
       return {ok: false, message: "Missing events spreadsheetId in config"};
     }
 
-    ctx.logger.info("eventsSyncFromSheet: start", {spreadsheetId, tabName, dryRun});
+    ctx.logger.info("eventsSyncFromSheet: start", {spreadsheetId, tabName, dryRun, calendarEnabled: Boolean(calendarId)});
 
     const sheets = new GoogleSheetsProvider(delegated);
+    const calendarProvider = calendarId ? new GoogleCalendarProvider(delegated) : null;
 
     let table;
     try {
@@ -74,17 +77,38 @@ export const eventsSyncFromSheetTask: ServiceTask<Payload> = {
     let upserted = 0;
     let skipped = 0;
     let errors = 0;
+    let calendarSynced = 0;
 
     for (const row of table.rows) {
-      const sheetId = norm(row["ID"]);
-      if (!sheetId) {
-        skipped++;
-        continue;
-      }
+      let sheetId = norm(row["ID"]);
+      const rowNumber = Number(row["_rowNumber"]);
 
       const startDate = normDate(row["data rozpoczęcia"]);
       const endDate = normDate(row["data zakończenia"]);
       const name = norm(row["nazwa imprezy"]);
+
+      if (!sheetId) {
+        if (!startDate || !endDate || !name) {
+          skipped++;
+          continue;
+        }
+
+        // Auto-generate Firestore document ID for rows added directly to sheet
+        sheetId = ctx.firestore.collection("events").doc().id;
+
+        if (!dryRun && rowNumber > 0) {
+          try {
+            await sheets.writeSingleCell({spreadsheetId, tabName}, rowNumber, "ID", sheetId);
+            ctx.logger.info("eventsSyncFromSheet: wrote auto-generated ID to sheet", {sheetId, rowNumber});
+          } catch (e: any) {
+            ctx.logger.error("eventsSyncFromSheet: failed to write ID back to sheet", {sheetId, rowNumber, message: e?.message});
+            errors++;
+            continue;
+          }
+        } else {
+          ctx.logger.info("eventsSyncFromSheet: [DRY RUN] would auto-generate ID", {sheetId, rowNumber});
+        }
+      }
 
       if (!startDate || !endDate || !name) {
         ctx.logger.warn("eventsSyncFromSheet: skipping row with missing required fields", {sheetId});
@@ -93,16 +117,20 @@ export const eventsSyncFromSheetTask: ServiceTask<Payload> = {
       }
 
       const approved = isApproved(row["Zatwierdzona"]);
+      const location = norm(row["miejsce"]);
+      const description = norm(row["opis"]);
+      const contact = norm(row["kontakt"]);
+      const link = norm(row["link do strony / zgłoszeń"]);
 
       const doc = {
         id: sheetId,
         startDate,
         endDate,
         name,
-        location: norm(row["miejsce"]),
-        description: norm(row["opis"]),
-        contact: norm(row["kontakt"]),
-        link: norm(row["link do strony / zgłoszeń"]),
+        location,
+        description,
+        contact,
+        link,
         approved,
         source: "sheet",
         updatedAt: ctx.now,
@@ -126,16 +154,50 @@ export const eventsSyncFromSheetTask: ServiceTask<Payload> = {
       } catch (e: any) {
         ctx.logger.error("eventsSyncFromSheet: error upserting", {sheetId, message: e?.message});
         errors++;
+        continue;
+      }
+
+      // Sync to Google Calendar for approved events
+      if (approved && calendarProvider && calendarId) {
+        try {
+          const existingSnap = await ctx.firestore.collection("events").doc(sheetId).get();
+          const existingCalId = existingSnap.data()?.calendarEventId as string | undefined;
+
+          const descriptionParts: string[] = [];
+          if (description) descriptionParts.push(description);
+          if (contact) descriptionParts.push(`Kontakt: ${contact}`);
+          if (link) descriptionParts.push(`Link: ${link}`);
+
+          const calData: CalendarEventData = {
+            summary: name,
+            description: descriptionParts.join("\n"),
+            location,
+            startDate,
+            endDate,
+          };
+
+          if (existingCalId) {
+            await calendarProvider.updateEvent(calendarId, existingCalId, calData);
+            ctx.logger.info("eventsSyncFromSheet: calendar event updated", {sheetId, gcalEventId: existingCalId});
+          } else {
+            const gcalEventId = await calendarProvider.createEvent(calendarId, calData);
+            await ctx.firestore.collection("events").doc(sheetId).update({calendarEventId: gcalEventId});
+            ctx.logger.info("eventsSyncFromSheet: calendar event created", {sheetId, gcalEventId});
+          }
+          calendarSynced++;
+        } catch (e: any) {
+          ctx.logger.warn("eventsSyncFromSheet: calendar sync failed (non-fatal)", {sheetId, message: e?.message});
+        }
       }
     }
 
-    const message = `upserted=${upserted}, skipped=${skipped}, errors=${errors}`;
-    ctx.logger.info("eventsSyncFromSheet: done", {upserted, skipped, errors, dryRun});
+    const message = `upserted=${upserted}, skipped=${skipped}, errors=${errors}, calendarSynced=${calendarSynced}`;
+    ctx.logger.info("eventsSyncFromSheet: done", {upserted, skipped, errors, calendarSynced, dryRun});
 
     return {
       ok: errors === 0,
       message,
-      details: {upserted, skipped, errors, dryRun},
+      details: {upserted, skipped, errors, calendarSynced, dryRun},
     };
   },
 };

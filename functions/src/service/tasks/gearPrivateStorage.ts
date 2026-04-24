@@ -23,11 +23,15 @@ import {deductHours} from "../../modules/hours/godzinki_service";
  *
  * Idempotencja:
  *   Kolekcja gear_storage_charges/{kayakId}_{YYYY-MM}
- *   Rekord tworzony przed dedukcją (status: "pending") i aktualizowany po (status: "charged"|"failed").
+ *   Rekord tworzony przed dedukcją (status: "pending") i aktualizowany po (status: "charged"|"failed"|"exempt").
  *   Przy ponownym uruchomieniu w tym samym miesiącu rekord już istnieje → skip.
  *
  * Koszt:
  *   vars_gear.godzinki_za_sprzęt_prywatny → hoursPerPrivateKayakPerMonth
+ *
+ * Zwolnienie:
+ *   Gdy boardDoesNotPay=true i właściciel ma rolę rola_zarzad lub rola_kr:
+ *   tworzy rekord {status: "exempt", hoursCharged: 0} oraz wpis 0h w godzinki_ledger.
  */
 
 type Payload = {
@@ -107,6 +111,7 @@ export const gearPrivateStorageTask: ServiceTask<Payload> = {
       .get();
 
     let charged = 0;
+    let exempt = 0;
     let skipped = 0;
     let failed = 0;
     let notEligible = 0;
@@ -130,11 +135,32 @@ export const gearPrivateStorageTask: ServiceTask<Payload> = {
         continue;
       }
 
+      // --- Idempotencja (przed walidacją emailu — żeby "failed" rekordy też były idempotentne) ---
+      const chargeDocId = `${kayakId}_${currentMonth}`;
+      const chargeRef = ctx.firestore.collection(STORAGE_CHARGES_COLLECTION).doc(chargeDocId);
+      const chargeSnap = await chargeRef.get();
+
+      if (chargeSnap.exists) {
+        ctx.logger.info("gearPrivateStorage: already processed", {chargeDocId, status: chargeSnap.data()?.status});
+        skipped++;
+        continue;
+      }
+
       // Musi mieć email właściciela
       const ownerContact = norm(kayak?.ownerContact);
       if (!ownerContact || !ownerContact.includes("@")) {
-        ctx.logger.warn("gearPrivateStorage: missing ownerContact", {kayakId});
-        notEligible++;
+        ctx.logger.warn("gearPrivateStorage: missing or invalid ownerContact", {kayakId, ownerContact});
+        if (!dryRun) {
+          await chargeRef.set({
+            kayakId,
+            billingMonth: currentMonth,
+            ownerContact: ownerContact || "",
+            status: "failed",
+            message: "Missing or invalid ownerContact",
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+        }
+        failed++;
         continue;
       }
 
@@ -149,17 +175,6 @@ export const gearPrivateStorageTask: ServiceTask<Payload> = {
       // Sprawdź czy bieżący miesiąc jest naliczalny
       if (!isChargeableThisMonth(privateSinceIso, currentMonth)) {
         ctx.logger.info("gearPrivateStorage: not chargeable yet", {kayakId, privateSinceIso, currentMonth});
-        skipped++;
-        continue;
-      }
-
-      // --- Idempotencja ---
-      const chargeDocId = `${kayakId}_${currentMonth}`;
-      const chargeRef = ctx.firestore.collection(STORAGE_CHARGES_COLLECTION).doc(chargeDocId);
-      const chargeSnap = await chargeRef.get();
-
-      if (chargeSnap.exists) {
-        ctx.logger.info("gearPrivateStorage: already charged", {chargeDocId});
         skipped++;
         continue;
       }
@@ -187,7 +202,42 @@ export const gearPrivateStorageTask: ServiceTask<Payload> = {
         continue;
       }
 
-      const uid = userSnap.docs[0].id;
+      const userDoc = userSnap.docs[0];
+      const uid = userDoc.id;
+      const roleKey = String((userDoc.data() as any)?.role_key || "");
+      const isExempt = gearVars.boardDoesNotPay &&
+        (roleKey === "rola_zarzad" || roleKey === "rola_kr");
+
+      // --- Zarząd/kr zwolniony z opłaty ---
+      if (isExempt) {
+        if (!dryRun) {
+          await chargeRef.set({
+            kayakId,
+            billingMonth: currentMonth,
+            uid,
+            ownerContact,
+            hoursCharged: 0,
+            status: "exempt",
+            message: `boardDoesNotPay: role=${roleKey}`,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+          // Zero-amount spend — widoczny w historii godzinek, bez wpływu na bilans
+          await ctx.firestore.collection("godzinki_ledger").add({
+            uid,
+            type: "spend",
+            amount: 0,
+            fromEarn: 0,
+            overdraft: 0,
+            reason: `Opłata za przechowywanie kajaka ${kayak?.number || kayakId} — ${currentMonth} (zwolnienie zarząd/kr)`,
+            submittedBy: "system",
+            reservationId: null,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+        }
+        ctx.logger.info("gearPrivateStorage: exempt (boardDoesNotPay)", {kayakId, uid, roleKey, currentMonth});
+        exempt++;
+        continue;
+      }
 
       // --- Dry run ---
       if (dryRun) {
@@ -251,13 +301,15 @@ export const gearPrivateStorageTask: ServiceTask<Payload> = {
       }
     }
 
-    const message = `charged=${charged}, skipped=${skipped}, notEligible=${notEligible}, failed=${failed}`;
-    ctx.logger.info("gearPrivateStorage: done", {charged, skipped, notEligible, failed, dryRun});
+    const message = `charged=${charged}, exempt=${exempt}, skipped=${skipped}, notEligible=${notEligible}, failed=${failed}`;
+    ctx.logger.info("gearPrivateStorage: done", {charged, exempt, skipped, notEligible, failed, dryRun});
 
+    // ok=true zawsze — poszczególne błędy (brak emaila, user not found) są zapisane
+    // w gear_storage_charges i są idempotentne. Retry joba niczego nie naprawia.
     return {
-      ok: failed === 0,
+      ok: true,
       message,
-      details: {charged, skipped, notEligible, failed, currentMonth, dryRun},
+      details: {charged, exempt, skipped, notEligible, failed, currentMonth, dryRun},
     };
   },
 };

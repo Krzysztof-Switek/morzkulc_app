@@ -109,6 +109,13 @@
         }
       },
       {
+        "source": "/api/admin/events/sync-calendar",
+        "function": {
+          "functionId": "adminEventsSyncCalendar",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "/api/register",
         "function": {
           "functionId": "registerUser",

@@ -47,6 +47,7 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
       const activeTab = GEAR_TABS.find((t) => t.id === requestedRoute)?.id || "kayaks";
       const activeTabLabel = GEAR_TABS.find((t) => t.id === activeTab)?.label || "Kajaki";
       const isKayaksView = activeTab === "kayaks";
+      const isPaddlesView = activeTab === "paddles";
       const isLifejacketsView = activeTab === "lifejackets";
       const isHelmetsView = activeTab === "helmets";
 
@@ -111,7 +112,9 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
                   placeholder="${escapeAttr(
                     isKayaksView ?
                       "np. Diesel, Wave sport, niebieski, creek..." :
-                      "np. Werner, L, czerwony, pool..."
+                      isPaddlesView ?
+                        "np. TNP, symetryczne, żółty, 195..." :
+                        "np. Werner, L, czerwony, pool..."
                   )}"
                 />
                 <button id="gearReloadBtn" type="button" class="gearReloadBtn ghost" title="Odśwież" aria-label="Odśwież">${refreshIconSvg()}</button>
@@ -155,6 +158,29 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
                     <label for="filterTypeSelect">Typ</label>
                     <select id="filterTypeSelect">
                       <option value="">Wszystkie typy</option>
+                    </select>
+                  </div>
+                </div>
+              ` : isPaddlesView ? `
+                <div class="gearFiltersBar">
+                  <label class="gearCheckPill" for="filterFavoritesOnly">
+                    <input id="filterFavoritesOnly" type="checkbox" />
+                    <span>Ulubione</span>
+                  </label>
+
+                  <div class="gearTypeFilter">
+                    <label for="filterTypeSelect">Typ</label>
+                    <select id="filterTypeSelect">
+                      <option value="">Wszystkie typy</option>
+                    </select>
+                  </div>
+
+                  <div class="gearTypeFilter">
+                    <label for="filterPaddlePoolSelect">Basen</label>
+                    <select id="filterPaddlePoolSelect">
+                      <option value="">Wszystkie</option>
+                      <option value="pool">Tylko basenowe</option>
+                      <option value="nopool">Bez basenowych</option>
                     </select>
                   </div>
                 </div>
@@ -346,6 +372,7 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
       const filterPrivateOnlyEl = viewEl.querySelector("#filterPrivateOnly");
       const filterBrokenOnlyEl = viewEl.querySelector("#filterBrokenOnly");
       const filterSizeSelectEl = viewEl.querySelector("#filterSizeSelect");
+      const filterPaddlePoolSelectEl = viewEl.querySelector("#filterPaddlePoolSelect");
 
       const reservationModalEl = viewEl.querySelector("#gearReservationModal");
       const reservationTitleEl = viewEl.querySelector("#gearReservationTitle");
@@ -782,11 +809,13 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
 
         const cards = isKayaksView
           ? items.map((k) => renderKayakCard(k, favSet.has(String(k?.id || "")))).join("")
-          : isLifejacketsView
-            ? items.map((item) => renderLifejacketCard(item, favSet.has(String(item?.id || "")))).join("")
-            : isHelmetsView
-              ? items.map((item) => renderHelmetCard(item, favSet.has(String(item?.id || "")))).join("")
-              : items.map((item) => renderGenericGearCard(item, favSet.has(String(item?.id || "")))).join("");
+          : isPaddlesView
+            ? items.map((item) => renderPaddleCard(item, favSet.has(String(item?.id || "")))).join("")
+            : isLifejacketsView
+              ? items.map((item) => renderLifejacketCard(item, favSet.has(String(item?.id || "")))).join("")
+              : isHelmetsView
+                ? items.map((item) => renderHelmetCard(item, favSet.has(String(item?.id || "")))).join("")
+                : items.map((item) => renderGenericGearCard(item, favSet.has(String(item?.id || "")))).join("");
 
         listEl.innerHTML = `
           <div class="gearGrid">
@@ -893,6 +922,13 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
               if (storageVal !== "basen") return false;
             }
             if (privateOnly && !toBool(item?.isPrivate)) return false;
+          } else if (isPaddlesView) {
+            const poolFilter = filterPaddlePoolSelectEl?.value || "";
+            if (poolFilter) {
+              const isPool = toBool(item?.isPoolAllowed);
+              if (poolFilter === "pool" && !isPool) return false;
+              if (poolFilter === "nopool" && isPool) return false;
+            }
           } else {
             const selectedSize = normalizeSimpleValue(filterSizeSelectEl?.value || "");
             if (selectedSize) {
@@ -921,23 +957,35 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
               item?.cockpit,
               item?.material
             ]
-            : [
-              item?.number,
-              item?.brand,
-              item?.model,
-              item?.type,
-              item?.color,
-              item?.size,
-              item?.status,
-              item?.notes,
-              item?.gearCategory,
-              item?.gearCategoryDisplay,
-              item?.meta?.lengthCm,
-              item?.meta?.featherAngle,
-              item?.meta?.buoyancy,
-              item?.meta?.material,
-              item?.meta?.tunnelSize
-            ];
+            : isPaddlesView
+              ? [
+                item?.number,
+                item?.brand,
+                item?.model,
+                item?.type,
+                item?.color,
+                item?.status,
+                item?.notes,
+                item?.lengthCm,
+                item?.featherAngle,
+              ]
+              : [
+                item?.number,
+                item?.brand,
+                item?.model,
+                item?.type,
+                item?.color,
+                item?.size,
+                item?.status,
+                item?.notes,
+                item?.gearCategory,
+                item?.gearCategoryDisplay,
+                item?.meta?.lengthCm,
+                item?.meta?.featherAngle,
+                item?.meta?.buoyancy,
+                item?.meta?.material,
+                item?.meta?.tunnelSize
+              ];
 
           const haystack = hay
             .map((x) => String(x || "").toLowerCase())
@@ -1408,6 +1456,7 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
       if (filterBrokenOnlyEl) filterBrokenOnlyEl.addEventListener("change", applyFilter);
       if (filterTypeSelectEl) filterTypeSelectEl.addEventListener("change", applyFilter);
       if (filterSizeSelectEl) filterSizeSelectEl.addEventListener("change", applyFilter);
+      if (filterPaddlePoolSelectEl) filterPaddlePoolSelectEl.addEventListener("change", applyFilter);
 
       reservationCreateBtn.addEventListener("click", async () => {
         await submitCreateReservation();
@@ -1633,6 +1682,64 @@ function renderHelmetCard(item, isFav = false) {
             data-gear-bundle-reserve="${escapeAttr(String(item?.id || ""))}"
             data-gear-bundle-category="helmets"
           >Rezerwuj</button>
+        </div>
+
+      </div>
+    </div>
+  `;
+}
+
+function renderPaddleCard(item, isFav = false) {
+  const number = String(item?.number || "").trim();
+  const brand = String(item?.brand || "").trim();
+  const model = String(item?.model || "").trim();
+  const color = String(item?.color || "").trim();
+  const type = String(item?.type || "").trim();
+  const lengthCm = String(item?.lengthCm || "").trim();
+  const featherAngle = String(item?.featherAngle || "").trim();
+  const notes = String(item?.notes || "").trim();
+
+  const isPool = toBool(item?.isPoolAllowed);
+
+  const brandModel = [brand, model].filter(Boolean).join(" ");
+
+  return `
+    <div class="gearCard gearOk${isPool ? " gearPool" : ""}">
+      <div class="gearCardInner">
+
+        <div class="gearHead">
+          <div class="gearTitleWrap">
+            <div class="gearTitleLine">
+              <span class="gearTitle">Wiosło nr ${escapeHtml(number || "?")}</span>
+            </div>
+            ${brandModel ? `<div class="gearMiniType">${escapeHtml(brandModel)}</div>` : ""}
+            ${type ? `<div class="gearInlineMeta gearInlineMetaMain gearMiniType">${escapeHtml(type)}</div>` : ""}
+            ${lengthCm ? `<div class="gearInlineMeta gearInlineMetaMain"><strong>Długość:</strong> ${escapeHtml(lengthCm)} cm</div>` : ""}
+            ${color ? `<div class="gearInlineMeta gearInlineMetaMain"><strong>Kolor:</strong> ${escapeHtml(color)}</div>` : ""}
+            <div class="gearInlineMeta gearInlineMetaMain"><strong>Kąt skrętu:</strong> ${featherAngle ? `${escapeHtml(featherAngle)}°` : "brak"}</div>
+            ${notes ? `<div class="gearInlineMeta"><strong>Uwagi:</strong> ${escapeHtml(notes)}</div>` : ""}
+          </div>
+
+          <div class="gearHeadSide">
+            <button
+              class="gearFavBtn${isFav ? " active" : ""}"
+              type="button"
+              data-gear-fav="${escapeAttr(String(item?.id || ""))}"
+              aria-label="${isFav ? "Usuń z ulubionych" : "Dodaj do ulubionych"}"
+            >${heartSvg(isFav)}</button>
+            ${isPool ? `<div class="gearBadges gearBadgesStack"><span class="badge pool">Basen</span></div>` : ""}
+          </div>
+        </div>
+
+        <div class="gearMiniBar">
+          ${isPool
+            ? `<span class="badge pool gearPoolActionLabel">Basen</span>`
+            : `<button
+                type="button"
+                class="gearMiniReserveBtn gearBundleReserveBtn"
+                data-gear-bundle-reserve="${escapeAttr(String(item?.id || ""))}"
+                data-gear-bundle-category="paddles"
+              >Rezerwuj</button>`}
         </div>
 
       </div>

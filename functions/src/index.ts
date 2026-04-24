@@ -24,6 +24,7 @@ import {handleGodzinkiPurchase} from "./api/godzinkiPurchaseHandler";
 import {handleGetKayakReservations} from "./api/getKayakReservationsHandler";
 import {handleGetEvents} from "./api/getEventsHandler";
 import {handleGetAdminPending} from "./api/getAdminPendingHandler";
+import {handleAdminEventsSyncCalendar} from "./api/adminEventsSyncCalendarHandler";
 import {handleSubmitEvent} from "./api/submitEventHandler";
 import {handleGetBasenSessions} from "./api/getBasenSessionsHandler";
 import {handleBasenEnroll} from "./api/basenEnrollHandler";
@@ -747,6 +748,22 @@ export const getEvents = onRequest({invoker: "private"}, async (req, res) => {
  */
 export const getAdminPending = onRequest({invoker: "private"}, async (req, res) => {
   return handleGetAdminPending(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    adminRoleKeys,
+  });
+});
+
+/**
+ * POST /api/admin/events/sync-calendar (authenticated, role: zarzad/kr)
+ * Kolejkuje job events.syncCalendar — synchronizuje zatwierdzone imprezy z Google Calendar.
+ */
+export const adminEventsSyncCalendar = onRequest({invoker: "private"}, async (req, res) => {
+  return handleAdminEventsSyncCalendar(req, res, {
     db,
     sendPreflight,
     requireAllowedHost,

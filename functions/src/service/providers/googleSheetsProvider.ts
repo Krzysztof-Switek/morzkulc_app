@@ -50,7 +50,7 @@ export type SheetTableConfig = {
 
 export type SheetTableReadResult = {
   headers: string[];
-  rows: Record<string, string>[];
+  rows: Record<string, string>[]; // each row includes _rowNumber (1-based sheet row)
 };
 
 export class GoogleSheetsProvider {
@@ -104,10 +104,50 @@ export class GoogleSheetsProvider {
         obj[key] = val;
       }
 
-      if (any) rows.push(obj);
+      if (any) {
+        obj["_rowNumber"] = String(r + 1); // 1-based sheet row (header is row 1)
+        rows.push(obj);
+      }
     }
 
     return {headers, rows};
+  }
+
+  /**
+   * Writes a single cell value by row number and column header name.
+   * Reads the header row to find the column index, then updates that cell.
+   */
+  async writeSingleCell(
+    cfg: SheetTableConfig,
+    rowNumber1based: number,
+    colHeader: string,
+    value: string
+  ): Promise<void> {
+    const spreadsheetId = normalizeStr(cfg.spreadsheetId);
+    const tabName = normalizeStr(cfg.tabName);
+
+    assertNonEmpty("spreadsheetId", spreadsheetId);
+    assertNonEmpty("tabName", tabName);
+
+    const sheets = await this.getSheetsClient();
+
+    const headerResp = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${quoteTab(tabName)}!1:1`,
+      majorDimension: "ROWS",
+    });
+
+    const headers = (headerResp.data.values?.[0] || []).map((h) => normalizeStr(h));
+    const colIdx = headers.indexOf(colHeader);
+    if (colIdx === -1) throw new Error(`Column "${colHeader}" not found in sheet "${tabName}"`);
+
+    const colA1 = columnToA1(colIdx);
+    await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: `${quoteTab(tabName)}!${colA1}${rowNumber1based}`,
+      valueInputOption: "RAW",
+      requestBody: {values: [[value]]},
+    });
   }
 
   /**

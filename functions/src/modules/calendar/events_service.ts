@@ -23,6 +23,7 @@ export type EventRecord = {
   updatedAt: any;
   sheetRowNumber?: number;
   sheetSyncedAt?: any;
+  calendarEventId?: string;
 };
 
 export async function listUpcomingEvents(db: FirebaseFirestore.Firestore): Promise<EventRecord[]> {
