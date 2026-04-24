@@ -18,12 +18,17 @@ function syncAllGearCore_(opts) {
 
   for (let i = 0; i < categories.length; i++) {
     const category = categories[i];
-    const summary = syncSingleGearCategory_(category, {
-      dryRun: dryRun,
-      limit: limit,
-      now: now,
-    });
-    summaries.push(summary);
+    try {
+      const summary = syncSingleGearCategory_(category, {
+        dryRun: dryRun,
+        limit: limit,
+        now: now,
+      });
+      summaries.push(summary);
+    } catch (e) {
+      SpreadsheetApp.getUi().alert("❌ SYNC ZABLOKOWANY — " + category.label + "\n\n" + e.message);
+      return;
+    }
   }
 
   const total = summarizeAllGearResults_(summaries, dryRun);
@@ -71,6 +76,28 @@ function syncSingleGearCategory_(category, opts) {
 
   const rows = data.slice(1);
   const rowsLimited = limit ? rows.slice(0, limit) : rows;
+
+  // Walidacja dla kajaków: prywatne kajaki muszą mieć email właściciela.
+  // Rzuca błąd przed jakimkolwiek zapisem, żeby sync był atomowy.
+  if (category.key === "kayaks") {
+    var invalidPrivate = [];
+    for (var vi = 0; vi < rowsLimited.length; vi++) {
+      var vRowObj = rowToObject_(rowsLimited[vi], headerIndex);
+      if (parseBool_(vRowObj["Prywatny?"]) !== true) continue;
+      var vOwner = normCell_(vRowObj["kontakt do właściciela"]);
+      if (!vOwner || vOwner.indexOf("@") < 0) {
+        var vNum = normCell_(vRowObj["Numer Kajaka"]);
+        var vId = normCell_(rowsLimited[vi][idIdx]);
+        invalidPrivate.push("  • " + (vNum || vId || "?") + " (arkusz wiersz " + (vi + 2) + ")");
+      }
+    }
+    if (invalidPrivate.length > 0) {
+      throw new Error(
+        "Prywatne kajaki bez poprawnego maila właściciela — uzupełnij kolumnę 'kontakt do właściciela':\n\n" +
+        invalidPrivate.join("\n")
+      );
+    }
+  }
 
   let processed = 0;
   let upserted = 0;

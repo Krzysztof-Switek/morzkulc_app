@@ -82,6 +82,8 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
       const renderContent = (data) => {
         const godzinki = data?.godzinki || { count: 0, items: [] };
         const events = data?.events || { count: 0, items: [] };
+        const emailIssues = data?.privateKayakEmailIssues || { count: 0, items: [] };
+        const unpaidContributions = data?.privateKayakUnpaidContributions || { count: 0, items: [] };
 
         let html = "";
 
@@ -117,9 +119,9 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
         // Sekcja imprezy
         html += `<h3 style="margin:0 0 8px;">Imprezy do zatwierdzenia (${escapeHtml(String(events.count))})</h3>`;
         if (!events.items?.length) {
-          html += `<p class="hint">Brak oczekujących.</p>`;
+          html += `<p class="hint" style="margin-bottom:20px;">Brak oczekujących.</p>`;
         } else {
-          html += `<div>`;
+          html += `<div style="margin-bottom:20px;">`;
           for (const item of events.items) {
             const startStr = item.startDate ? formatDatePL(item.startDate) : "—";
             const endStr = item.endDate ? formatDatePL(item.endDate) : "—";
@@ -134,6 +136,58 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
                         ${escapeHtml(startStr)} – ${escapeHtml(endStr)}
                         · zgłosił: ${escapeHtml(item.userEmail || "—")}
                         · ${escapeHtml(dateStr)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+          html += `</div>`;
+        }
+
+        // Sekcja: prywatne kajaki — problem z emailem właściciela
+        html += `<h3 style="margin:0 0 8px;">Prywatne kajaki — problem z emailem właściciela (${escapeHtml(String(emailIssues.count))})</h3>`;
+        if (!emailIssues.items?.length) {
+          html += `<p class="hint" style="margin-bottom:20px;">Brak problemów.</p>`;
+        } else {
+          html += `<div style="margin-bottom:20px;">`;
+          for (const item of emailIssues.items) {
+            html += `
+              <div class="gearCard" style="margin-bottom:8px;">
+                <div class="gearCardInner">
+                  <div class="gearHead">
+                    <div class="gearTitleWrap">
+                      <div class="gearTitle">Kajak ${escapeHtml(item.number || item.kayakId || "—")}</div>
+                      <div class="gearSubtitle">
+                        ${escapeHtml(item.reason)}
+                        ${item.ownerContact ? ` · email: ${escapeHtml(item.ownerContact)}` : ""}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+          html += `</div>`;
+        }
+
+        // Sekcja: właściciele prywatnych kajaków — możliwe zaległości składkowe
+        html += `<h3 style="margin:0 0 8px;">Prywatne kajaki — możliwe zaległości składkowe (${escapeHtml(String(unpaidContributions.count))})</h3>`;
+        if (!unpaidContributions.items?.length) {
+          html += `<p class="hint">Brak zaległości.</p>`;
+        } else {
+          html += `<div>`;
+          for (const item of unpaidContributions.items) {
+            const contributionsLabel = item.contributions ? `składki: ${escapeHtml(item.contributions)}` : "brak danych o składkach";
+            html += `
+              <div class="gearCard" style="margin-bottom:8px;">
+                <div class="gearCardInner">
+                  <div class="gearHead">
+                    <div class="gearTitleWrap">
+                      <div class="gearTitle">Kajak ${escapeHtml(item.number || item.kayakId || "—")} — ${escapeHtml(item.ownerName || item.ownerContact || "—")}</div>
+                      <div class="gearSubtitle">
+                        ${escapeHtml(item.ownerContact)} · ${contributionsLabel}
                       </div>
                     </div>
                   </div>

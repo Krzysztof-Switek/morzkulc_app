@@ -56,6 +56,22 @@ export const gearSyncKayaksFromSheetTask: ServiceTask<Payload> = {
 
     const rows = payload?.limit ? table.rows.slice(0, Number(payload.limit)) : table.rows;
 
+    // Walidacja: każdy kajak z isPrivate=true musi mieć poprawny ownerContact (email).
+    // Jeśli nie — blokujemy sync zanim cokolwiek zostanie zapisane do Firestore.
+    const privateWithoutEmail: string[] = [];
+    for (const r of rows) {
+      if (parseBool(r["Prywatny?"]) !== true) continue;
+      const ownerContact = norm(r["kontakt do właściciela"]);
+      if (!ownerContact || !ownerContact.includes("@")) {
+        privateWithoutEmail.push(norm(r["Numer Kajaka"]) || norm(r["ID"]) || "?");
+      }
+    }
+    if (privateWithoutEmail.length > 0) {
+      const msg = `Sync zablokowany — prywatne kajaki bez maila właściciela: ${privateWithoutEmail.join(", ")}. Uzupełnij kolumnę "kontakt do właściciela" i uruchom sync ponownie.`;
+      ctx.logger.warn("gearSyncKayaksFromSheet: validation error — private kayaks missing email", {privateWithoutEmail});
+      return {ok: true, message: msg, details: {validationError: true, privateWithoutEmail}};
+    }
+
     const firestore = admin.firestore();
     const col = firestore.collection("gear_kayaks");
 
