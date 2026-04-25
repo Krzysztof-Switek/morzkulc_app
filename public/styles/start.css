@@ -180,6 +180,9 @@
 .startStatInlineItem { display: flex; align-items: center; gap: 5px; font-size: 14px; font-weight: 700; color: var(--text); }
 .startStatInlineItem svg { color: var(--text-muted); flex-shrink: 0; }
 
+/* ── Odznaka powiadomień na kafelku ── */
+.tileNotifBadge { position: absolute; top: 6px; right: 6px; min-width: 18px; height: 18px; background: #e53535; color: #fff; border-radius: 9px; font-size: 10px; font-weight: 800; line-height: 18px; text-align: center; padding: 0 4px; pointer-events: none; }
+
 /* ── Kafelek danger (składki nieopłacone) ── */
 .startTile2.danger { border-color: rgba(255, 107, 107, 0.45); background: linear-gradient(180deg, rgba(255,107,107,0.22), rgba(255,107,107,0.12)); }
 .startTile2.danger .startTile2Title { color: var(--danger); }

@@ -3,6 +3,7 @@
 
 import type {Request, Response} from "express";
 import {logger} from "firebase-functions/v2";
+import {getServiceConfig} from "../service/service_config";
 
 type TokenCheck =
   | {error: string}
@@ -43,6 +44,23 @@ type PrivateKayakUnpaidContributions = {
   contributions: string;
 };
 
+type DeadJob = {
+  id: string;
+  taskId: string;
+  attempts: number;
+  lastErrorMessage: string;
+  updatedAt: string | null;
+};
+
+type FailedStorageCharge = {
+  id: string;
+  kayakId: string;
+  billingMonth: string;
+  ownerContact: string;
+  message: string;
+  createdAt: string | null;
+};
+
 export async function handleGetAdminPending(req: Request, res: Response, deps: GetAdminPendingDeps) {
   const {sendPreflight, requireAllowedHost, setCorsHeaders, corsHandler, requireIdToken, db, adminRoleKeys} = deps;
 
@@ -73,10 +91,15 @@ export async function handleGetAdminPending(req: Request, res: Response, deps: G
         return;
       }
 
+      const svcCfg = getServiceConfig();
+      const godzinkiSheetUrl = svcCfg.godzinki?.spreadsheetId ?
+        `https://docs.google.com/spreadsheets/d/${svcCfg.godzinki.spreadsheetId}` :
+        null;
+
       const LIMIT = 50;
       const currentYear = String(new Date().getFullYear());
 
-      const [earnSnap, purchaseSnap, eventsSnap, privateKayaksSnap] = await Promise.all([
+      const [earnSnap, purchaseSnap, eventsSnap, privateKayaksSnap, deadJobsSnap, failedChargesSnap] = await Promise.all([
         db.collection("godzinki_ledger")
           .where("approved", "==", false)
           .where("type", "==", "earn")
@@ -96,6 +119,14 @@ export async function handleGetAdminPending(req: Request, res: Response, deps: G
           .get(),
         db.collection("gear_kayaks")
           .where("isPrivate", "==", true)
+          .get(),
+        db.collection("service_jobs")
+          .where("status", "==", "dead")
+          .limit(20)
+          .get(),
+        db.collection("gear_storage_charges")
+          .where("status", "==", "failed")
+          .limit(30)
           .get(),
       ]);
 
@@ -117,6 +148,36 @@ export async function handleGetAdminPending(req: Request, res: Response, deps: G
             createdAt: tsToIso(data.createdAt),
           };
         });
+
+      // Resolve display names (nickname → firstName → email → uid) for godzinki submitters
+      const godzinkiUids = [...new Set(godzinkiItems.map((i) => i.uid).filter(Boolean))];
+      const uidToName = new Map<string, string>();
+      if (godzinkiUids.length > 0) {
+        await Promise.all(
+          godzinkiUids.map(async (submitterUid) => {
+            const snap = await db.collection("users_active").doc(submitterUid).get();
+            const d = snap.data() as any;
+            const nickname = norm(d?.profile?.nickname);
+            const firstName = norm(d?.profile?.firstName);
+            uidToName.set(submitterUid, nickname || firstName || norm(d?.email) || submitterUid);
+          })
+        );
+      }
+
+      // Group by uid — one entry per person with aggregated total
+      const godzinkiByUid = new Map<string, {displayName: string; totalAmount: number}>();
+      for (const item of godzinkiItems) {
+        const displayName = uidToName.get(item.uid) || item.uid;
+        const existing = godzinkiByUid.get(item.uid);
+        if (existing) {
+          existing.totalAmount += item.amount;
+        } else {
+          godzinkiByUid.set(item.uid, {displayName, totalAmount: item.amount});
+        }
+      }
+      const godzinkiGrouped = [...godzinkiByUid.values()].sort((a, b) =>
+        a.displayName.localeCompare(b.displayName, "pl")
+      );
 
       const eventsItems = eventsSnap.docs.map((d) => {
         const data = d.data() as any;
@@ -189,12 +250,42 @@ export async function handleGetAdminPending(req: Request, res: Response, deps: G
         }
       }
 
+      const deadJobs: DeadJob[] = deadJobsSnap.docs
+        .map((d) => {
+          const data = d.data() as any;
+          return {
+            id: d.id,
+            taskId: norm(data.taskId),
+            attempts: Number(data.attempts ?? 0),
+            lastErrorMessage: norm(data.lastError?.message),
+            updatedAt: tsToIso(data.updatedAt),
+          };
+        })
+        .sort((a, b) => (b.updatedAt ?? "").localeCompare(a.updatedAt ?? ""));
+
+      const failedStorageCharges: FailedStorageCharge[] = failedChargesSnap.docs
+        .map((d) => {
+          const data = d.data() as any;
+          return {
+            id: d.id,
+            kayakId: norm(data.kayakId),
+            billingMonth: norm(data.billingMonth),
+            ownerContact: norm(data.ownerContact),
+            message: norm(data.message),
+            createdAt: tsToIso(data.createdAt),
+          };
+        })
+        .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
+
       res.status(200).json({
         ok: true,
-        godzinki: {count: godzinkiItems.length, items: godzinkiItems},
+        meta: {godzinkiSheetUrl},
+        godzinki: {count: godzinkiItems.length, items: godzinkiGrouped},
         events: {count: eventsItems.length, items: eventsItems},
         privateKayakEmailIssues: {count: privateKayakEmailIssues.length, items: privateKayakEmailIssues},
         privateKayakUnpaidContributions: {count: privateKayakUnpaidContributions.length, items: privateKayakUnpaidContributions},
+        deadJobs: {count: deadJobs.length, items: deadJobs},
+        failedStorageCharges: {count: failedStorageCharges.length, items: failedStorageCharges},
       });
     } catch (err: any) {
       logger.error("getAdminPending failed", {message: err?.message, stack: err?.stack});

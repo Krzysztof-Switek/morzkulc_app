@@ -13,9 +13,9 @@ import { createKmModule } from "/modules/km_module.js";
  * Priority: explicit `type` field (only if it matches a known type) → derived from PL label.
  * Returns a stable lowercase type string or null for unknown/generic modules.
  *
- * Known types: "gear" | "godzinki" | "imprezy" | "basen"
+ * Known types: "gear" | "godzinki" | "imprezy" | "basen" | "km" | "admin_pending"
  */
-const KNOWN_MODULE_TYPES = new Set(["gear", "godzinki", "imprezy", "basen", "km"]);
+const KNOWN_MODULE_TYPES = new Set(["gear", "godzinki", "imprezy", "basen", "km", "admin_pending"]);
 
 function resolveModuleType(cfg) {
   const typeField = String(cfg?.type || "").trim().toLowerCase();
@@ -28,6 +28,7 @@ function resolveModuleType(cfg) {
   if (label === "imprezy") return "imprezy";
   if (label === "basen") return "basen";
   if (label === "ranking") return "km";
+  if (label === "zarząd") return "admin_pending";
 
   return null;
 }
@@ -95,6 +96,13 @@ export function buildModulesFromSetup(setup, allowedActions) {
       });
     }
 
+    if (moduleType === "admin_pending") {
+      return createAdminPendingModule({
+        ...base,
+        defaultRoute: "list"
+      });
+    }
+
     return createGenericModule(base);
   });
 
@@ -114,16 +122,19 @@ export function buildModulesFromSetup(setup, allowedActions) {
     );
   }
 
-  if (Array.isArray(allowedActions) && allowedActions.includes("admin.pending")) {
+  // Fallback: create admin_pending only when setup/app has no admin_pending type module.
+  // When modul_X has label "Zarząd" or type "admin_pending", it already handles this.
+  const hasAdminModule = modules.some((m) => m?.type === "admin_pending");
+  if (!hasAdminModule && Array.isArray(allowedActions) && allowedActions.includes("admin.pending")) {
     modules.push(
       createAdminPendingModule({
         id: "admin_pending",
         type: "admin_pending",
-        label: "Do zatwierdzenia",
+        label: "Zarząd",
         defaultRoute: "list",
         order: 9998,
         enabled: true,
-        access: {}
+        access: { mode: "prod", rolesAllowed: ["rola_zarzad", "rola_kr"] }
       })
     );
   }

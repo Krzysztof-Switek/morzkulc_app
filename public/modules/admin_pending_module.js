@@ -39,10 +39,10 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
             </div>
           </div>
 
-          <div class="actions" style="margin-top:12px;">
-            <div class="hint">Zatwierdzanie odbywa się w arkuszu Google — poniżej lista oczekujących pozycji.</div>
-            <button id="adminPendingReloadBtn" type="button">Odśwież</button>
-            <button id="adminSyncCalendarBtn" type="button" style="margin-left:8px;">Synchronizuj z Google Calendar</button>
+          <div class="actions" style="margin-top:12px;display:flex;align-items:center;gap:8px;">
+            <button id="adminPendingReloadBtn" type="button" class="moduleNavBtn" title="Odśwież dane"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.79"/></svg></button>
+            <button id="adminSyncCalendarBtn" type="button">Synchronizuj kalendarz</button>
+            <span style="color:var(--text-muted);cursor:help;display:flex;align-items:center;" title="Zatwierdzanie odbywa się w arkuszu Google — poniżej lista oczekujących pozycji. Sync z Google Calendar uruchamiany automatycznie codziennie o 05:00."><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
           </div>
           <div id="adminCalendarMsg" class="hint hidden" style="margin-top:8px;"></div>
 
@@ -84,36 +84,27 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
         const events = data?.events || { count: 0, items: [] };
         const emailIssues = data?.privateKayakEmailIssues || { count: 0, items: [] };
         const unpaidContributions = data?.privateKayakUnpaidContributions || { count: 0, items: [] };
+        const deadJobs = data?.deadJobs || { count: 0, items: [] };
+        const failedCharges = data?.failedStorageCharges || { count: 0, items: [] };
+        const godzinkiSheetUrl = data?.meta?.godzinkiSheetUrl || null;
 
         let html = "";
 
         // Sekcja godzinki
-        html += `<h3 style="margin:0 0 8px;">Godzinki do zatwierdzenia (${escapeHtml(String(godzinki.count))})</h3>`;
+        html += `<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px;">`;
+        html += `<h3 style="margin:0;">Godzinki do zatwierdzenia (${escapeHtml(String(godzinki.count))})</h3>`;
+        if (godzinkiSheetUrl) {
+          html += `<a href="${escapeHtml(godzinkiSheetUrl)}" target="_blank" rel="noopener" style="font-size:13px;font-weight:600;">→ Otwórz arkusz</a>`;
+        }
+        html += `</div>`;
         if (!godzinki.items?.length) {
           html += `<p class="hint" style="margin-bottom:20px;">Brak oczekujących.</p>`;
         } else {
-          html += `<div style="margin-bottom:20px;">`;
+          html += `<ul style="margin:0 0 20px;padding:0;list-style:none;display:grid;gap:2px;">`;
           for (const item of godzinki.items) {
-            const typeLabel = item.type === "purchase" ? "Wykup" : "Zgłoszenie";
-            const dateStr = item.createdAt ? formatDatePL(item.createdAt.slice(0, 10)) : "—";
-            html += `
-              <div class="gearCard" style="margin-bottom:8px;">
-                <div class="gearCardInner">
-                  <div class="gearHead">
-                    <div class="gearTitleWrap">
-                      <div class="gearTitle">${escapeHtml(item.reason || "—")}</div>
-                      <div class="gearSubtitle">
-                        ${escapeHtml(typeLabel)} · <strong>${escapeHtml(String(item.amount))} godz.</strong>
-                        · zgłosił: ${escapeHtml(item.submittedBy || "—")}
-                        · ${escapeHtml(dateStr)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            `;
+            html += `<li style="font-size:14px;padding:6px 0;border-bottom:1px solid var(--border);"><strong>${escapeHtml(item.displayName)}</strong> — ${escapeHtml(String(item.totalAmount))} godz. do zatwierdzenia</li>`;
           }
-          html += `</div>`;
+          html += `</ul>`;
         }
 
         // Sekcja imprezy
@@ -188,6 +179,62 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
                       <div class="gearTitle">Kajak ${escapeHtml(item.number || item.kayakId || "—")} — ${escapeHtml(item.ownerName || item.ownerContact || "—")}</div>
                       <div class="gearSubtitle">
                         ${escapeHtml(item.ownerContact)} · ${contributionsLabel}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+          html += `</div>`;
+        }
+
+        // Sekcja: martwe service joby
+        html += `<h3 style="margin:16px 0 8px;">Martwe service joby (${escapeHtml(String(deadJobs.count))})</h3>`;
+        if (!deadJobs.items?.length) {
+          html += `<p class="hint" style="margin-bottom:20px;">Brak.</p>`;
+        } else {
+          html += `<div style="margin-bottom:20px;">`;
+          for (const item of deadJobs.items) {
+            const dateStr = item.updatedAt ? formatDatePL(item.updatedAt.slice(0, 10)) : "—";
+            html += `
+              <div class="gearCard" style="margin-bottom:8px;">
+                <div class="gearCardInner">
+                  <div class="gearHead">
+                    <div class="gearTitleWrap">
+                      <div class="gearTitle">${escapeHtml(item.taskId || item.id || "—")}</div>
+                      <div class="gearSubtitle">
+                        ${escapeHtml(String(item.attempts))} prób
+                        · ${escapeHtml(dateStr)}
+                        ${item.lastErrorMessage ? ` · błąd: ${escapeHtml(item.lastErrorMessage)}` : ""}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+          html += `</div>`;
+        }
+
+        // Sekcja: nieudane naliczenia za sprzęt prywatny
+        html += `<h3 style="margin:0 0 8px;">Nieudane naliczenia za sprzęt prywatny (${escapeHtml(String(failedCharges.count))})</h3>`;
+        if (!failedCharges.items?.length) {
+          html += `<p class="hint">Brak.</p>`;
+        } else {
+          html += `<div>`;
+          for (const item of failedCharges.items) {
+            const dateStr = item.createdAt ? formatDatePL(item.createdAt.slice(0, 10)) : "—";
+            html += `
+              <div class="gearCard" style="margin-bottom:8px;">
+                <div class="gearCardInner">
+                  <div class="gearHead">
+                    <div class="gearTitleWrap">
+                      <div class="gearTitle">${escapeHtml(item.billingMonth || "—")} — kajak ${escapeHtml(item.kayakId || "—")}</div>
+                      <div class="gearSubtitle">
+                        ${escapeHtml(item.ownerContact || "—")}
+                        · ${escapeHtml(item.message || "—")}
+                        · ${escapeHtml(dateStr)}
                       </div>
                     </div>
                   </div>

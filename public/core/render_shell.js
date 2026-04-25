@@ -8,6 +8,7 @@ export function spinnerHtml(text = "Morzkulc myśli") {
 }
 
 const REGISTER_URL = "/api/register";
+const ADMIN_PENDING_URL = "/api/admin/pending";
 const MY_RESERVATIONS_URL = "/api/gear/my-reservations";
 const KAYAKS_URL = "/api/gear/kayaks";
 const CANCEL_RESERVATION_URL = "/api/gear/reservations/cancel";
@@ -24,7 +25,7 @@ export function renderNav({ navEl, ctx }) {
   navEl.appendChild(homeBtn);
 
   const modules = Array.isArray(ctx.modules) ? ctx.modules : [];
-  const visible = modules.filter((m) => canSeeModule({ ctx, module: m }) && m.id !== "my_reservations" && m.id !== "admin_pending");
+  const visible = modules.filter((m) => canSeeModule({ ctx, module: m }) && m.id !== "my_reservations");
 
   for (const m of visible) {
     const btn = document.createElement("button");
@@ -176,9 +177,10 @@ async function renderHomeDashboard({ viewEl, ctx }) {
             </button>
 
             ${dash.isAdmin ? `
-            <button type="button" class="startTile2" data-home-action="admin-pending">
+            <button type="button" class="startTile2" data-home-action="admin-pending" style="position:relative;">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
               <span class="startTile2Title">Zarząd</span>
+              <span class="tileNotifBadge hidden" id="adminPendingBadge"></span>
             </button>
             ` : ""}
           </div>
@@ -243,7 +245,12 @@ async function renderHomeDashboard({ viewEl, ctx }) {
 
   const adminPendingBtn = viewEl.querySelector("[data-home-action='admin-pending']");
   if (adminPendingBtn) {
-    adminPendingBtn.addEventListener("click", () => setHash("admin_pending", "list"));
+    const adminTarget = getModuleRouteByType(ctx, "admin_pending");
+    adminPendingBtn.addEventListener("click", () => setHash(adminTarget.moduleId, "list"));
+  }
+
+  if (dash.isAdmin && ctx?.idToken) {
+    loadAdminPendingBadge(ctx, viewEl).catch(() => {});
   }
 
   const reserveBtn = viewEl.querySelector("[data-home-action='reserve-gear']");
@@ -408,20 +415,47 @@ function renderHomeProfile({ viewEl, ctx }) {
   if (backBtn) backBtn.addEventListener("click", () => setHash("home", "home"));
 }
 
+const _ADMIN_BADGE_CACHE_KEY = "adminPendingGodzinkiCount";
+const _ADMIN_BADGE_CACHE_TTL = 5 * 60 * 1000;
+
+async function loadAdminPendingBadge(ctx, viewEl) {
+  const updateBadge = (count) => {
+    const badge = viewEl.querySelector("#adminPendingBadge");
+    if (!badge) return;
+    if (count > 0) {
+      badge.textContent = count > 99 ? "99+" : String(count);
+      badge.classList.remove("hidden");
+    } else {
+      badge.classList.add("hidden");
+    }
+  };
+
+  try {
+    const cached = JSON.parse(sessionStorage.getItem(_ADMIN_BADGE_CACHE_KEY) || "null");
+    if (cached && Date.now() - cached.ts < _ADMIN_BADGE_CACHE_TTL) {
+      updateBadge(cached.count);
+      return;
+    }
+  } catch { /* ignore */ }
+
+  try {
+    const data = await apiGetJson({ url: ADMIN_PENDING_URL, idToken: ctx.idToken });
+    const count = Number(data?.godzinki?.count ?? 0);
+    sessionStorage.setItem(_ADMIN_BADGE_CACHE_KEY, JSON.stringify({ count, ts: Date.now() }));
+    updateBadge(count);
+  } catch { /* cicha porażka */ }
+}
+
 async function buildHomeHoursCell(ctx) {
   if (!ctx?.idToken) return `<strong class="startStatVal">—</strong>`;
 
   try {
     const data = await apiGetJson({ url: GODZINKI_URL + "?view=home", idToken: ctx.idToken });
     const balance = Number(data?.balance ?? 0);
-    const nextExpiry = data?.nextExpiryMonthYear || null;
     const sign = balance > 0 ? "+" : "";
     const cls = balance < 0 ? "startStatValNeg" : "";
 
-    return `
-      <strong class="startStatVal ${escapeHtml(cls)}">${escapeHtml(sign + balance)} h</strong>
-      ${nextExpiry ? `<span class="startStatExpiry">wygasa ${escapeHtml(nextExpiry)}</span>` : ""}
-    `;
+    return `<strong class="startStatVal ${escapeHtml(cls)}">${escapeHtml(sign + balance)} h</strong>`;
   } catch {
     return `<strong class="startStatVal">—</strong>`;
   }

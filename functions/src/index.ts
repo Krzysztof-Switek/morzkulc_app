@@ -1115,3 +1115,16 @@ export const usersSyncRolesDaily = onSchedule(
     logger.info("usersSyncRolesDaily: done", result as unknown as Record<string, unknown>);
   }
 );
+
+/**
+ * SCHEDULER: Dzienny sync zatwierdzonych imprez z Firestore do Google Calendar.
+ * Uruchamiany codziennie o 05:00 czasu warszawskiego.
+ */
+export const eventsSyncCalendarDaily = onSchedule(
+  {schedule: "0 5 * * *", timeZone: "Europe/Warsaw"},
+  async () => {
+    logger.info("eventsSyncCalendarDaily: start");
+    const result = await runTaskById("events.syncCalendar", {});
+    logger.info("eventsSyncCalendarDaily: done", result as unknown as Record<string, unknown>);
+  }
+);

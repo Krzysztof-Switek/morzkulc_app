@@ -14,7 +14,7 @@
  * Stary cache jest automatycznie czyszczony w activate.
  */
 
-const CACHE_VERSION = "mocj9etb";
+const CACHE_VERSION = "mocwdgcc";
 const STATIC_CACHE  = `morzkulc-static-${CACHE_VERSION}`;
 
 // Pliki precachowane przy instalacji SW
