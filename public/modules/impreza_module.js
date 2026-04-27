@@ -6,8 +6,6 @@ const SUBMIT_URL = "/api/events/submit";
 const NAV_BACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`;
 const NAV_HOME_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
 
-const SUBMIT_ROLES = new Set(["rola_czlonek", "rola_zarzad", "rola_kr"]);
-const ADMIN_ROLES = new Set(["rola_zarzad", "rola_kr"]);
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -236,8 +234,7 @@ export function createImprezaModule({ id, type, label, defaultRoute, order, enab
         return;
       }
 
-      const roleKey = String(ctx?.session?.role_key || "");
-      const canSubmit = SUBMIT_ROLES.has(roleKey);
+      const canSubmit = (ctx?.session?.allowed_actions ?? []).includes("events.submit");
 
       const requestedTab = String(routeId || "").trim();
       const activeTab = (requestedTab === "submit" && canSubmit) ? "submit" : "list";

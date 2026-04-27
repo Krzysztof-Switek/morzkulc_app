@@ -31,6 +31,7 @@ const SETUP_URL = "/api/setup";
 
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
+const profileBtn = document.getElementById("profileBtn");
 
 const appRoot = document.getElementById("appRoot");
 const navEl = document.getElementById("nav");
@@ -64,6 +65,10 @@ loginBtn.addEventListener("click", async () => {
 logoutBtn.addEventListener("click", async () => {
   await authLogout();
   hardResetUi();
+});
+
+profileBtn?.addEventListener("click", () => {
+  location.hash = "#/home/profile";
 });
 
 window.addEventListener("hashchange", async () => {
@@ -107,6 +112,7 @@ const SESSION_MAX_MS = 24 * 60 * 60 * 1000; // 24 godziny
 
   loginBtn.classList.add("hidden");
   logoutBtn.classList.remove("hidden");
+  profileBtn?.classList.remove("hidden");
   appRoot.classList.remove("hidden");
 
   ctx.user = user;
@@ -150,7 +156,7 @@ const SESSION_MAX_MS = 24 * 60 * 60 * 1000; // 24 godziny
       window.__APP_CTX__ = ctx;
     }
 
-    ctx.modules = buildModulesFromSetup(ctx.setup, ctx.session?.role_key);
+    ctx.modules = buildModulesFromSetup(ctx.setup, ctx.session?.allowed_actions ?? []);
     window.__APP_CTX__ = ctx;
 
     renderNav({ navEl, ctx });
@@ -210,6 +216,7 @@ function showAuthError(msg) {
 function hardResetUi() {
   loginBtn.classList.remove("hidden");
   logoutBtn.classList.add("hidden");
+  profileBtn?.classList.add("hidden");
   appRoot.classList.add("hidden");
 
   navEl.innerHTML = "";

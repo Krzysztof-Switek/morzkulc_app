@@ -24,7 +24,7 @@ export function renderNav({ navEl, ctx }) {
   navEl.appendChild(homeBtn);
 
   const modules = Array.isArray(ctx.modules) ? ctx.modules : [];
-  const visible = modules.filter((m) => canSeeModule({ ctx, module: m }) && m.id !== "my_reservations");
+  const visible = modules.filter((m) => canSeeModule({ ctx, module: m }) && m.id !== "my_reservations" && m.id !== "admin_pending");
 
   for (const m of visible) {
     const btn = document.createElement("button");
@@ -46,6 +46,10 @@ export async function renderView({ viewEl, ctx }) {
   }
 
   if (moduleId === "home") {
+    if (routeId === "profile") {
+      renderHomeProfile({ viewEl, ctx });
+      return;
+    }
     await renderHomeDashboard({ viewEl, ctx });
     return;
   }
@@ -77,17 +81,43 @@ export async function renderView({ viewEl, ctx }) {
   }
 }
 
+function getDashboardConfig(ctx) {
+  const actions = ctx?.session?.allowed_actions ?? [];
+  const roleKey = String(ctx?.session?.role_key || "");
+  return {
+    isAdmin:           actions.includes("admin.pending"),
+    canReserveGear:    actions.includes("gear.reserve"),
+    canEnrollBasen:    actions.includes("basen.enroll"),
+    canSubmitGodzinki: actions.includes("godzinki.submit"),
+    canSubmitEvents:   actions.includes("events.submit"),
+    isKursant:         roleKey === "rola_kursant",
+    isSympatyk:        roleKey === "rola_sympatyk",
+    isKandydat:        roleKey === "rola_kandydat",
+  };
+}
+
 async function renderHomeDashboard({ viewEl, ctx }) {
+  const dash = getDashboardConfig(ctx);
   const helloName = getHelloName(ctx);
-  const roleLabel = roleKeyToLabel(String(ctx.session?.role_key || ""), ctx?.setup?.roleMappings);
-  const statusLabel = statusKeyToLabel(String(ctx.session?.status_key || ""), ctx?.setup?.statusMappings);
   const hoursValue = getHoursValue(ctx);
   const membershipPaidUntil = getMembershipPaidUntil(ctx);
+  const today = new Date().toISOString().slice(0, 10);
+  const isSkladkiOverdue = membershipPaidUntil ? membershipPaidUntil < today : false;
 
   // Basen tile: zawsze widoczny, disabled gdy moduł nieaktywny w setup
   const basenEnabledTile = (ctx.modules || []).find((m) =>
     m?.type === "basen"
   )?.enabled === true;
+
+  const kmModuleRoute = getModuleRouteByType(ctx, "km");
+  const hasKmModule = kmModuleRoute.moduleId !== "home";
+
+  // Komunikat dla ról z ograniczonym dostępem
+  const accessInfoMsg = dash.isSympatyk
+    ? "Jako Sympatyk możesz przeglądać sprzęt i imprezy. Rezerwacja sprzętu i zapisy na basen dostępne dla Członków."
+    : dash.isKandydat
+      ? "Jako Kandydat możesz zgłaszać godzinki. Rezerwacja sprzętu i zapisy na basen dostępne po przyjęciu w poczet Członków."
+      : "";
 
   // Render struktury natychmiast — rezerwacje ładujemy asynchronicznie
   viewEl.innerHTML = `
@@ -96,56 +126,80 @@ async function renderHomeDashboard({ viewEl, ctx }) {
         <div class="startHero">
           <h2>Cześć${helloName ? `, ${escapeHtml(helloName)}` : ""}</h2>
 
-          <div class="startHeroBody">
-            <div class="startStats">
-              <div class="startStatRow">
-                <span class="startStatKey">Rola:</span>
-                <strong class="startStatVal">${escapeHtml(roleLabel)}</strong>
-              </div>
+          <div class="startStatInline">
+            <span class="startStatInlineItem">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span id="homeKmCell">— km</span>
+            </span>
+            <span class="startStatInlineItem">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
+              <span id="homeRankingCell">— miejsce</span>
+            </span>
+            <span class="startStatInlineItem">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span id="homeHoursCell"><strong class="startStatVal">${escapeHtml(hoursValue || "…")}</strong></span>
+            </span>
+          </div>
 
-              <div class="startStatRow">
-                <span class="startStatKey">Status:</span>
-                <strong class="startStatVal">${escapeHtml(statusLabel)}</strong>
-              </div>
+          <div class="startTileGrid">
+            <button type="button" class="startTile2${dash.canReserveGear ? " primary" : ""}" data-home-action="reserve-gear"
+              title="${dash.canReserveGear ? "Rezerwuj sprzęt" : "Przeglądaj sprzęt"}">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12 C4 8 8 7 12 7 C16 7 20 8 22 12 C20 16 16 17 12 17 C8 17 4 16 2 12 Z"/><ellipse cx="12" cy="11" rx="3.5" ry="1.5"/></svg>
+              <span class="startTile2Title">Sprzęt</span>
+            </button>
 
-              <div class="startStatRow">
-                <span class="startStatKey">Godzinki:</span>
-                <span id="homeHoursCell">
-                  <strong class="startStatVal">${escapeHtml(hoursValue || "…")}</strong>
-                </span>
-              </div>
+            <button type="button" class="startTile2" data-home-action="add-hours">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span class="startTile2Title">Godzinki</span>
+            </button>
 
-              <div class="startStatRow">
-                <span class="startStatKey">Składka:</span>
-                <strong class="startStatVal">${escapeHtml(membershipPaidUntil ? formatDatePL(membershipPaidUntil) : "Dostępne wkrótce")}</strong>
-              </div>
-            </div>
+            <button type="button" class="startTile2" data-home-action="add-event">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg>
+              <span class="startTile2Title">Imprezy</span>
+            </button>
 
-            <div class="startTopActions">
-              <button type="button" class="startTile primary" data-home-action="reserve-gear">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12 C4 8 8 7 12 7 C16 7 20 8 22 12 C20 16 16 17 12 17 C8 17 4 16 2 12 Z"/><ellipse cx="12" cy="11" rx="3.5" ry="1.5"/></svg>
-                <span class="startTileTitle">Sprzęt</span>
-              </button>
+            <button type="button" class="startTile2" data-home-action="basen"${basenEnabledTile ? "" : " disabled"}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>
+              <span class="startTile2Title">Basen</span>
+            </button>
 
-              <button type="button" class="startTile" data-home-action="add-hours">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                <span class="startTileTitle">Godzinki</span>
-              </button>
+            ${hasKmModule ? `
+            <button type="button" class="startTile2" data-home-action="km">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span class="startTile2Title">Ranking</span>
+            </button>
+            ` : ""}
 
-              <button type="button" class="startTile" data-home-action="add-event">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg>
-                <span class="startTileTitle">Imprezy</span>
-              </button>
+            <button type="button" class="startTile2${isSkladkiOverdue ? " danger" : ""}" data-home-action="skladki">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+              <span class="startTile2Title">Składki</span>
+            </button>
 
-              <button type="button" class="startTile" data-home-action="basen"${basenEnabledTile ? "" : " disabled"}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>
-                <span class="startTileTitle">Basen</span>
-              </button>
-            </div>
+            ${dash.isAdmin ? `
+            <button type="button" class="startTile2" data-home-action="admin-pending">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              <span class="startTile2Title">Zarząd</span>
+            </button>
+            ` : ""}
           </div>
         </div>
       </section>
 
+      ${dash.isKursant ? `
+      <section class="dashCard startSection">
+        <div class="dashCardHead"><h3>Witaj w SKK Morzkulc!</h3></div>
+        <p class="muted" style="padding:0 16px 12px;">Jesteś kursantem — poniżej znajdziesz moduły dostępne dla Ciebie. Zapoznaj się z imprezami i aktywnościami klubu.</p>
+      </section>
+      ` : ""}
+
+      ${accessInfoMsg ? `
+      <section class="dashCard startSection">
+        <div class="dashCardHead"><h3>Twój dostęp</h3></div>
+        <p class="muted" style="padding:0 16px 12px;">${escapeHtml(accessInfoMsg)}</p>
+      </section>
+      ` : ""}
+
+      ${dash.canReserveGear ? `
       <section class="dashCard startSection">
         <div class="dashCardHead">
           <h3>Moje rezerwacje</h3>
@@ -156,15 +210,16 @@ async function renderHomeDashboard({ viewEl, ctx }) {
           ${spinnerHtml("Ładowanie rezerwacji...")}
         </div>
       </section>
+      ` : ""}
 
       <section class="dashCard startSection">
         <div class="dashCardHead">
-          <h3>Najbliższe imprezy</h3>
-          <button type="button" class="ghost" data-home-action="events">Zobacz wszystkie</button>
+          <h3>Najbliższe wydarzenia</h3>
+          <button type="button" class="ghost" data-home-action="add-event">Dodaj wydarzenie +</button>
         </div>
 
         <div class="startList" id="homeEventsList">
-          ${spinnerHtml("Ładowanie imprez...")}
+          ${spinnerHtml("Ładowanie wydarzeń...")}
         </div>
       </section>
 
@@ -182,27 +237,20 @@ async function renderHomeDashboard({ viewEl, ctx }) {
     </div>
   `;
 
-  const allReservationsBtn = viewEl.querySelector("[data-home-action='all-reservations']");
-  if (allReservationsBtn) {
-    allReservationsBtn.addEventListener("click", () => setHash("my_reservations", "list"));
+  viewEl.querySelectorAll("[data-home-action='all-reservations']").forEach((btn) => {
+    btn.addEventListener("click", () => setHash("my_reservations", "list"));
+  });
+
+  const adminPendingBtn = viewEl.querySelector("[data-home-action='admin-pending']");
+  if (adminPendingBtn) {
+    adminPendingBtn.addEventListener("click", () => setHash("admin_pending", "list"));
   }
 
   const reserveBtn = viewEl.querySelector("[data-home-action='reserve-gear']");
-  const eventsBtn = viewEl.querySelector("[data-home-action='events']");
-
-  const openGear = () => {
+  if (reserveBtn) reserveBtn.addEventListener("click", () => {
     const gearTarget = getGearRoute(ctx);
     setHash(gearTarget.moduleId, gearTarget.routeId);
-  };
-
-  if (reserveBtn) reserveBtn.addEventListener("click", openGear);
-
-  if (eventsBtn) {
-    eventsBtn.addEventListener("click", () => {
-      const eventsTarget = getModuleRouteByType(ctx, "imprezy");
-      setHash(eventsTarget.moduleId, eventsTarget.routeId);
-    });
-  }
+  });
 
   viewEl.querySelectorAll("[data-home-action='basen']").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -211,61 +259,68 @@ async function renderHomeDashboard({ viewEl, ctx }) {
     });
   });
 
-  const addEventBtn = viewEl.querySelector("[data-home-action='add-event']");
-  if (addEventBtn) {
-    addEventBtn.addEventListener("click", () => {
+  viewEl.querySelectorAll("[data-home-action='add-event']").forEach((btn) => {
+    btn.addEventListener("click", () => {
       const eventsTarget = getModuleRouteByType(ctx, "imprezy");
       if (eventsTarget.moduleId !== "home") {
-        setHash(eventsTarget.moduleId, "submit");
+        setHash(eventsTarget.moduleId, dash.canSubmitEvents ? "submit" : "list");
       }
     });
-  }
+  });
 
   const addHoursBtn = viewEl.querySelector("[data-home-action='add-hours']");
   if (addHoursBtn) {
     addHoursBtn.addEventListener("click", () => {
       const godzinkiTarget = getModuleRouteByType(ctx, "godzinki");
       if (godzinkiTarget.moduleId !== "home") {
-        setHash(godzinkiTarget.moduleId, "submit");
+        setHash(godzinkiTarget.moduleId, dash.canSubmitGodzinki ? "submit" : "balance");
       }
     });
   }
 
-  // Ładuj rezerwacje asynchronicznie po wyrenderowaniu dashboardu
-  buildHomeReservationsSection(ctx).then((html) => {
-    const listEl = viewEl.querySelector("#homeReservationsList");
-    if (!listEl) return;
-    listEl.innerHTML = html;
-    listEl.addEventListener("click", async (ev) => {
-      const editBtn = ev.target.closest("[data-home-rsv-edit]");
-      if (editBtn) {
-        const rsvId = String(editBtn.getAttribute("data-home-rsv-edit") || "");
-        if (rsvId) setHash("my_reservations", rsvId);
-        return;
-      }
-      const cancelBtn = ev.target.closest("[data-home-rsv-cancel]");
-      if (cancelBtn && !cancelBtn.disabled) {
-        const rsvId = String(cancelBtn.getAttribute("data-home-rsv-cancel") || "");
-        if (!rsvId) return;
-        if (!window.confirm("Na pewno anulować tę rezerwację?")) return;
-        cancelBtn.disabled = true;
-        try {
-          await apiPostJson({
-            url: CANCEL_RESERVATION_URL,
-            idToken: ctx.idToken,
-            body: { reservationId: rsvId }
-          });
-          setHash("home", "home");
-        } catch (e) {
-          cancelBtn.disabled = false;
-          window.alert("Nie udało się anulować: " + (e?.message || "Spróbuj ponownie."));
+  const kmBtn = viewEl.querySelector("[data-home-action='km']");
+  if (kmBtn) kmBtn.addEventListener("click", () => setHash(kmModuleRoute.moduleId, kmModuleRoute.routeId));
+
+  const skladkiBtn = viewEl.querySelector("[data-home-action='skladki']");
+  if (skladkiBtn) skladkiBtn.addEventListener("click", () => setHash("home", "profile"));
+
+  // Ładuj rezerwacje asynchronicznie — tylko dla ról z gear.reserve
+  if (dash.canReserveGear) {
+    buildHomeReservationsSection(ctx).then((html) => {
+      const listEl = viewEl.querySelector("#homeReservationsList");
+      if (!listEl) return;
+      listEl.innerHTML = html;
+      listEl.addEventListener("click", async (ev) => {
+        const editBtn = ev.target.closest("[data-home-rsv-edit]");
+        if (editBtn) {
+          const rsvId = String(editBtn.getAttribute("data-home-rsv-edit") || "");
+          if (rsvId) setHash("my_reservations", rsvId);
+          return;
         }
-      }
+        const cancelBtn = ev.target.closest("[data-home-rsv-cancel]");
+        if (cancelBtn && !cancelBtn.disabled) {
+          const rsvId = String(cancelBtn.getAttribute("data-home-rsv-cancel") || "");
+          if (!rsvId) return;
+          if (!window.confirm("Na pewno anulować tę rezerwację?")) return;
+          cancelBtn.disabled = true;
+          try {
+            await apiPostJson({
+              url: CANCEL_RESERVATION_URL,
+              idToken: ctx.idToken,
+              body: { reservationId: rsvId }
+            });
+            setHash("home", "home");
+          } catch (e) {
+            cancelBtn.disabled = false;
+            window.alert("Nie udało się anulować: " + (e?.message || "Spróbuj ponownie."));
+          }
+        }
+      });
+    }).catch(() => {
+      const listEl = viewEl.querySelector("#homeReservationsList");
+      if (listEl) listEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać rezerwacji.</div></div></div>`;
     });
-  }).catch(() => {
-    const listEl = viewEl.querySelector("#homeReservationsList");
-    if (listEl) listEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać rezerwacji.</div></div></div>`;
-  });
+  }
 
   // Ładuj saldo godzinek asynchronicznie
   if (ctx?.idToken) {
@@ -302,6 +357,55 @@ async function renderHomeDashboard({ viewEl, ctx }) {
       if (listEl) listEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać sesji.</div></div></div>`;
     });
   }
+}
+
+function renderHomeProfile({ viewEl, ctx }) {
+  const name = getHelloName(ctx);
+  const email = String(ctx?.user?.email || "").trim();
+  const roleLabel = roleKeyToLabel(String(ctx?.session?.role_key || ""), ctx?.setup?.roleMappings);
+  const statusLabel = statusKeyToLabel(String(ctx?.session?.status_key || ""), ctx?.setup?.statusMappings);
+  const hoursValue = getHoursValue(ctx);
+
+  viewEl.innerHTML = `
+    <div class="card center">
+      <h2>${name ? escapeHtml(name) : "Profil"}</h2>
+      ${email ? `<p class="muted" style="margin-bottom:12px;">${escapeHtml(email)}</p>` : ""}
+
+      <div class="startStatBar" style="margin-bottom:14px;">
+        <div class="startStatChip">
+          <span class="startStatChipKey">Rola</span>
+          <span class="startStatChipVal">${escapeHtml(roleLabel)}</span>
+        </div>
+        <div class="startStatChip">
+          <span class="startStatChipKey">Status</span>
+          <span class="startStatChipVal">${escapeHtml(statusLabel)}</span>
+        </div>
+      </div>
+
+      <div class="startStatInline" style="margin-bottom:16px;">
+        <span class="startStatInlineItem">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span>— km</span>
+        </span>
+        <span class="startStatInlineItem">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
+          <span>— miejsce</span>
+        </span>
+        <span class="startStatInlineItem">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>${escapeHtml(hoursValue || "— h")}</span>
+        </span>
+      </div>
+
+      <p class="muted">Więcej opcji dostępnych wkrótce.</p>
+      <div class="actions">
+        <button type="button" class="ghost" id="profileBackBtn">← Wróć</button>
+      </div>
+    </div>
+  `;
+
+  const backBtn = viewEl.querySelector("#profileBackBtn");
+  if (backBtn) backBtn.addEventListener("click", () => setHash("home", "home"));
 }
 
 async function buildHomeHoursCell(ctx) {

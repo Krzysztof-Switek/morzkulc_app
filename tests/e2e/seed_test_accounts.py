@@ -242,7 +242,8 @@ def _seed_firestore(account: dict, uid: str):
 
 
 def _seed_godzinki(uid: str):
-    """Tworzy 3 pule FIFO w godzinki_ledger dla test.czlonek."""
+    """Tworzy lub resetuje 3 pule FIFO w godzinki_ledger dla test.czlonek.
+    Zawsze przywraca remaining=amount, żeby saldo nie było wyczerpane między przebiegami testów."""
     for pool in GODZINKI_POOLS:
         # Sprawdź czy pula już istnieje (po reason)
         existing = (
@@ -253,7 +254,12 @@ def _seed_godzinki(uid: str):
             .get()
         )
         if existing:
-            print(f"  [SKIP] godzinki — {pool['reason']} już istnieje")
+            # Resetuj remaining do pełnej wartości (testy mogły wyczerpać saldo)
+            existing[0].reference.update({
+                "remaining": pool["amount"],
+                "updatedAt": firestore.SERVER_TIMESTAMP,
+            })
+            print(f"  [RESET] godzinki — {pool['reason']}: remaining={pool['amount']}h")
             continue
 
         doc_ref = db.collection("godzinki_ledger").document()

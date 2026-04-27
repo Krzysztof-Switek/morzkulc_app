@@ -18,10 +18,20 @@ function syncEventsToFirestore() {
   let updatedCount = 0;
   let unchangedCount = 0;
   let markedSyncedCount = 0;
+  let generatedIdCount = 0;
   const changedSummaries = [];
 
   for (let i = 0; i < rows.length; i++) {
     const rowItem = rows[i];
+
+    if (rowItem.needsId) {
+      const newId = Utilities.getUuid();
+      sheet.getRange(rowItem.sheetRowNumber, rowItem.idColNumber).setValue(newId);
+      rowItem.docId = newId;
+      rowItem.needsId = false;
+      generatedIdCount++;
+    }
+
     const existingRaw = firestoreGetDocument_(COLLECTION_EVENTS + "/" + rowItem.docId);
 
     if (!existingRaw || !existingRaw.fields) {
@@ -84,6 +94,7 @@ function syncEventsToFirestore() {
     "env: " + ACTIVE_ENV + "\n" +
     "user: " + who + "\n" +
     "rows read: " + rows.length + "\n" +
+    "auto-generated IDs: " + generatedIdCount + "\n" +
     "created: " + createdCount + "\n" +
     "updated: " + updatedCount + "\n" +
     "unchanged: " + unchangedCount + "\n" +
@@ -96,6 +107,15 @@ function syncEventsToFirestore() {
       changedSummaries.slice(0, 20).join("\n");
     if (changedSummaries.length > 20) {
       msg += "\n... +" + (changedSummaries.length - 20) + " kolejnych";
+    }
+  }
+
+  if (createdCount > 0 || updatedCount > 0) {
+    try {
+      enqueueServiceJob_("events.syncCalendar", {});
+      msg += "\n\n📅 Kolejkuję synchronizację z Google Calendar...";
+    } catch (e) {
+      msg += "\n\n⚠️ Nie udało się zakolejkować syncu kalendarza: " + e.message;
     }
   }
 
@@ -153,10 +173,11 @@ function readEventsForSync_() {
     if (!row || row.every((c) => String(c || "").trim() === "")) continue;
 
     const docId = toStringOrEmpty_(row[idx("id")]);
-    if (!docId) continue;
 
     out.push({
-      docId: docId,
+      docId: docId || null,
+      needsId: !docId,
+      idColNumber: idx("id") + 1,
       sheetRowNumber: r + 1,
       syncCol: idx("zsynchronizowano") + 1,
       data: {

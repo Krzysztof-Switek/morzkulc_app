@@ -1,0 +1,119 @@
+/* public/styles/godzinki.css */
+/* ================= GODZINKI ================= */
+
+/* Tabela wpisów */
+.godzinkiTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.godzinkiTable th {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 2px solid var(--border);
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.godzinkiTable td {
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.godzinkiTable tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+:root[data-theme="light"] .godzinkiTable tbody tr:nth-child(even) {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+/* Kolumna kwoty */
+.godzinkiAmountCell {
+  text-align: right;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.godzinkiAmountNeg {
+  color: var(--danger, #e55);
+}
+
+.godzinkiAmountPos {
+  color: var(--success, #4a4);
+}
+
+/* Kolumna daty */
+.godzinkiDateCell {
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Kolumna Za co */
+.godzinkiReason {
+  display: block;
+}
+
+.godzinkiMeta {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Pasek saldo + wygasają */
+.godzinkiInfoBar {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 10px 0 14px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+
+.godzinkiSaldo {
+  font-weight: 700;
+}
+
+.godzinkiBalanceNeg {
+  color: var(--danger, #e55);
+}
+
+.godzinkiBalancePos {
+  color: var(--success, #4a4);
+}
+
+.godzinkiExpiry {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* Paginacja */
+.godzinkiPager {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.godzinkiPager button {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.godzinkiPager button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}

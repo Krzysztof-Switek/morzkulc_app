@@ -7,10 +7,11 @@ const NAV_BACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height=
 const NAV_HOME_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
 
 const TABS = [
-  { id: "balance", label: "Moje godzinki" },
   { id: "submit",  label: "Zgłoś godzinki" },
   { id: "history", label: "Historia" },
 ];
+
+const PAGE_SIZE = 30;
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -61,6 +62,66 @@ function formatDate(isoStr) {
   return `${day}-${m}-${y}`;
 }
 
+function shortenReason(reason) {
+  if (!reason) return "—";
+  if (reason.startsWith("Zwrot godzinek z")) return "Zwrot z rezerwacji";
+  return reason;
+}
+
+// ─── tabela wpisów ────────────────────────────────────────────────────────────
+
+function renderRecordTable(records) {
+  if (!records.length) return `<p class="godzinkiEmpty">Brak wpisów.</p>`;
+  return `
+    <table class="godzinkiTable">
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Ilość</th>
+          <th>Za co</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${records.map(r => {
+          const isSpend = r.type === "spend";
+          const amountClass = isSpend ? "godzinkiAmountNeg" : "godzinkiAmountPos";
+          const amountSign = isSpend ? "-" : "+";
+          const meta = buildMeta(r);
+          return `
+            <tr class="${esc(recordTypeClass(r.type, r.approved))}">
+              <td class="godzinkiDateCell">${esc(formatDate(r.createdAt))}</td>
+              <td class="godzinkiAmountCell ${amountClass}">${amountSign}${esc(String(r.amount))} h</td>
+              <td>
+                <span class="godzinkiReason">${esc(shortenReason(r.reason))}</span>
+                ${meta ? `<span class="godzinkiMeta">${esc(meta)}</span>` : ""}
+              </td>
+            </tr>
+          `;
+        }).join("")}
+      </tbody>
+    </table>
+  `;
+}
+
+function buildMeta(r) {
+  const parts = [recordTypeLabel(r.type, r.approved)];
+  if (r.grantedAt) parts.push(`data pracy: ${formatDate(r.grantedAt)}`);
+  if (r.type === "earn" && r.expiresAt) parts.push(`wygasa: ${r.expiresAt}`);
+  if (r.type === "spend" && r.reservationId) parts.push(`rez. #${r.reservationId.slice(0, 8)}`);
+  if (r.type === "earn" && r.approved) parts.push(`pozostało: ${r.remaining ?? 0} h`);
+  return parts.join(" · ");
+}
+
+function infoBarHtml(balance, nextExpiry) {
+  const balanceClass = balance < 0 ? "godzinkiBalanceNeg" : balance > 0 ? "godzinkiBalancePos" : "";
+  return `
+    <div class="godzinkiInfoBar">
+      <span class="godzinkiSaldo ${esc(balanceClass)}">Saldo: ${esc(formatBalanceSign(balance))} h</span>
+      ${nextExpiry ? `<span class="godzinkiExpiry">Najbliższe wygasają: ${esc(nextExpiry)}</span>` : ""}
+    </div>
+  `;
+}
+
 // ─── widoki ───────────────────────────────────────────────────────────────────
 
 function renderTabsHtml(activeTab) {
@@ -74,7 +135,7 @@ function renderTabsHtml(activeTab) {
   </div>`;
 }
 
-async function renderBalanceView(viewEl, ctx) {
+async function renderHomeView(viewEl, ctx) {
   const inner = viewEl.querySelector("#godzinkiInner");
   if (!inner) return;
   inner.innerHTML = spinnerHtml("Pobieranie salda…");
@@ -90,45 +151,12 @@ async function renderBalanceView(viewEl, ctx) {
   const balance = Number(data?.balance ?? 0);
   const nextExpiry = data?.nextExpiryMonthYear || null;
   const recentEarnings = Array.isArray(data?.recentEarnings) ? data.recentEarnings : [];
-  const limit = Number(data?.negativeBalanceLimit ?? 20);
-
-  const balanceClass = balance < 0 ? "godzinkiBalanceNeg" : balance > 0 ? "godzinkiBalancePos" : "";
 
   inner.innerHTML = `
-    <div class="godzinkiBalanceSection">
-      <div class="godzinkiBalanceBox">
-        <span class="godzinkiBalanceLabel">Twoje saldo godzinek</span>
-        <span class="godzinkiBalanceValue ${esc(balanceClass)}">${esc(formatBalanceSign(balance))} h</span>
-        ${nextExpiry ? `<span class="godzinkiBalanceExpiry">Najbliższe wygaśnięcie: ${esc(nextExpiry)}</span>` : ""}
-      </div>
-      ${balance < 0 ? `
-        <div class="godzinkiInfo">
-          Saldo ujemne: ${esc(String(balance))} h (limit: ${esc(String(-limit))} h)
-        </div>
-      ` : ""}
-    </div>
-
+    ${infoBarHtml(balance, nextExpiry)}
     <div class="godzinkiRecentSection">
-      <h3>Ostatnie godzinki</h3>
-      ${recentEarnings.length === 0
-        ? `<p class="godzinkiEmpty">Brak zgłoszonych godzinek.</p>`
-        : `<div class="godzinkiList">
-            ${recentEarnings.map(r => `
-              <div class="godzinkiListItem ${esc(recordTypeClass(r.type, r.approved))}">
-                <div class="godzinkiListMain">
-                  <span class="godzinkiListReason">${esc(r.reason || "—")}</span>
-                  <span class="godzinkiListMeta">${esc(recordTypeLabel(r.type, r.approved))}
-                    ${r.grantedAt ? ` · ${esc(formatDate(r.grantedAt))}` : ""}
-                    ${r.expiresAt ? ` · wygasa ${esc(r.expiresAt)}` : ""}
-                  </span>
-                </div>
-                <span class="godzinkiListAmount">
-                  ${r.type === "earn" ? `+${r.amount}` : r.type === "spend" ? `-${r.amount}` : `+${r.amount}`} h
-                </span>
-              </div>
-            `).join("")}
-          </div>`
-      }
+      <h3>Ostatnie wpisy</h3>
+      ${renderRecordTable(recentEarnings)}
     </div>
   `;
 }
@@ -146,53 +174,44 @@ async function renderHistoryView(viewEl, ctx) {
     return;
   }
 
-  const history = Array.isArray(data?.history) ? data.history : [];
+  const allRecords = Array.isArray(data?.history) ? data.history : [];
   const balance = Number(data?.balance ?? 0);
+  const nextExpiry = data?.nextExpiryMonthYear || null;
+  const totalPages = Math.max(1, Math.ceil(allRecords.length / PAGE_SIZE));
+  let currentPage = 0;
 
-  if (history.length === 0) {
-    inner.innerHTML = `
-      <div class="godzinkiBalanceSection">
-        <div class="godzinkiBalanceBox">
-          <span class="godzinkiBalanceLabel">Saldo</span>
-          <span class="godzinkiBalanceValue">${esc(formatBalanceSign(balance))} h</span>
-        </div>
-      </div>
-      <p class="godzinkiEmpty">Brak historii godzinek.</p>
-    `;
-    return;
+  function renderPage() {
+    const pageRecords = allRecords.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
+    const tableEl = inner.querySelector("#godzinkiHistoryTable");
+    const pagerEl = inner.querySelector("#godzinkiPager");
+    if (tableEl) tableEl.innerHTML = renderRecordTable(pageRecords);
+    if (pagerEl) {
+      pagerEl.innerHTML = `
+        <button type="button" id="godzinkiPrev" ${currentPage === 0 ? "disabled" : ""}>‹</button>
+        <span>Strona ${currentPage + 1} / ${totalPages}</span>
+        <button type="button" id="godzinkiNext" ${currentPage >= totalPages - 1 ? "disabled" : ""}>›</button>
+      `;
+      pagerEl.querySelector("#godzinkiPrev")?.addEventListener("click", () => {
+        if (currentPage > 0) { currentPage--; renderPage(); }
+      });
+      pagerEl.querySelector("#godzinkiNext")?.addEventListener("click", () => {
+        if (currentPage < totalPages - 1) { currentPage++; renderPage(); }
+      });
+    }
   }
 
+  const pageRecords = allRecords.slice(0, PAGE_SIZE);
+
   inner.innerHTML = `
-    <div class="godzinkiBalanceSection">
-      <div class="godzinkiBalanceBox">
-        <span class="godzinkiBalanceLabel">Saldo</span>
-        <span class="godzinkiBalanceValue ${balance < 0 ? "godzinkiBalanceNeg" : ""}">${esc(formatBalanceSign(balance))} h</span>
-      </div>
-    </div>
+    ${infoBarHtml(balance, nextExpiry)}
     <div class="godzinkiHistorySection">
-      <h3>Pełna historia (${history.length})</h3>
-      <div class="godzinkiList">
-        ${history.map(r => `
-          <div class="godzinkiListItem ${esc(recordTypeClass(r.type, r.approved))}">
-            <div class="godzinkiListMain">
-              <span class="godzinkiListReason">${esc(r.reason || "—")}</span>
-              <span class="godzinkiListMeta">
-                ${esc(recordTypeLabel(r.type, r.approved))}
-                ${r.grantedAt ? ` · data pracy: ${esc(formatDate(r.grantedAt))}` : ""}
-                ${r.type === "earn" && r.expiresAt ? ` · wygasa: ${esc(r.expiresAt)}` : ""}
-                ${r.type === "spend" && r.reservationId ? ` · rezerwacja #${esc(r.reservationId.slice(0, 8))}` : ""}
-                ${r.type === "earn" && r.approved ? ` · pozostało: ${r.remaining ?? 0} h` : ""}
-                · zgłoszono: ${esc(formatDate(r.createdAt))}
-              </span>
-            </div>
-            <span class="godzinkiListAmount ${r.type === "spend" ? "godzinkiAmountNeg" : "godzinkiAmountPos"}">
-              ${r.type === "spend" ? "-" : "+"}${r.amount} h
-            </span>
-          </div>
-        `).join("")}
-      </div>
+      <h3>Historia (${allRecords.length})</h3>
+      <div id="godzinkiHistoryTable">${renderRecordTable(pageRecords)}</div>
+      ${totalPages > 1 ? `<div id="godzinkiPager" class="godzinkiPager"></div>` : ""}
     </div>
   `;
+
+  if (totalPages > 1) renderPage();
 }
 
 function renderSubmitView(viewEl, ctx) {
@@ -297,7 +316,8 @@ function renderSubmitView(viewEl, ctx) {
 // ─── główny render ────────────────────────────────────────────────────────────
 
 async function renderGodzinkiView(viewEl, routeId, ctx, moduleId) {
-  const activeTab = TABS.find(t => t.id === routeId)?.id || "balance";
+  const isTab = TABS.some(t => t.id === routeId);
+  const activeTab = isTab ? routeId : null;
 
   if (!ctx?.idToken) {
     viewEl.innerHTML = `<div class="card center"><p>Brak tokenu sesji. Odśwież stronę.</p></div>`;
@@ -320,21 +340,19 @@ async function renderGodzinkiView(viewEl, routeId, ctx, moduleId) {
     </div>
   `;
 
-  // Nawigacja: wróć / strona główna
   viewEl.querySelector("[data-mod-home]")?.addEventListener("click", () => {
     import("/core/router.js").then(({ setHash }) => setHash("home", "home"));
   });
   viewEl.querySelector("[data-mod-back]")?.addEventListener("click", () => {
     import("/core/router.js").then(({ setHash }) => {
-      if (activeTab !== "balance") {
-        setHash(moduleId, "balance");
+      if (activeTab !== null) {
+        setHash(moduleId, "home");
       } else {
         setHash("home", "home");
       }
     });
   });
 
-  // Podłącz przełączanie zakładek
   viewEl.querySelectorAll("[data-godzinki-tab]").forEach(btn => {
     btn.addEventListener("click", () => {
       const tab = btn.dataset.godzinkiTab;
@@ -344,13 +362,12 @@ async function renderGodzinkiView(viewEl, routeId, ctx, moduleId) {
     });
   });
 
-  // Renderuj aktywną zakładkę
-  if (activeTab === "balance") {
-    await renderBalanceView(viewEl, ctx);
-  } else if (activeTab === "history") {
-    await renderHistoryView(viewEl, ctx);
-  } else if (activeTab === "submit") {
+  if (routeId === "submit") {
     renderSubmitView(viewEl, ctx);
+  } else if (routeId === "history") {
+    await renderHistoryView(viewEl, ctx);
+  } else {
+    await renderHomeView(viewEl, ctx);
   }
 }
 
@@ -361,13 +378,13 @@ export function createGodzinkiModule({ id, type, label, defaultRoute, order, ena
     id,
     type,
     label,
-    defaultRoute: defaultRoute === "home" ? "balance" : (defaultRoute || "balance"),
+    defaultRoute: "home",
     order,
     enabled,
     access,
 
     async render({ viewEl, routeId, ctx }) {
-      await renderGodzinkiView(viewEl, routeId || "balance", ctx, id);
+      await renderGodzinkiView(viewEl, routeId || "home", ctx, id);
     },
   };
 }

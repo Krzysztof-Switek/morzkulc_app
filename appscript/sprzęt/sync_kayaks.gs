@@ -18,12 +18,17 @@ function syncAllGearCore_(opts) {
 
   for (let i = 0; i < categories.length; i++) {
     const category = categories[i];
-    const summary = syncSingleGearCategory_(category, {
-      dryRun: dryRun,
-      limit: limit,
-      now: now,
-    });
-    summaries.push(summary);
+    try {
+      const summary = syncSingleGearCategory_(category, {
+        dryRun: dryRun,
+        limit: limit,
+        now: now,
+      });
+      summaries.push(summary);
+    } catch (e) {
+      SpreadsheetApp.getUi().alert("❌ SYNC ZABLOKOWANY — " + category.label + "\n\n" + e.message);
+      return;
+    }
   }
 
   const total = summarizeAllGearResults_(summaries, dryRun);
@@ -42,7 +47,19 @@ function syncSingleGearCategory_(category, opts) {
 
   const data = sh.getDataRange().getValues();
   if (!data || data.length < 2) {
-    throw new Error(`Sheet "${category.sheetTab}" has no data rows`);
+    return {
+      key: category.key,
+      label: category.label,
+      collection: category.collection,
+      sheetTab: category.sheetTab,
+      dryRun: dryRun,
+      processed: 0,
+      upserted: 0,
+      skippedNoId: 0,
+      skippedNotReal: 0,
+      sheetIds: 0,
+      scrapped: 0,
+    };
   }
 
   const headers = data[0].map((h) => String(h || "").trim());
@@ -59,6 +76,28 @@ function syncSingleGearCategory_(category, opts) {
 
   const rows = data.slice(1);
   const rowsLimited = limit ? rows.slice(0, limit) : rows;
+
+  // Walidacja dla kajaków: prywatne kajaki muszą mieć email właściciela.
+  // Rzuca błąd przed jakimkolwiek zapisem, żeby sync był atomowy.
+  if (category.key === "kayaks") {
+    var invalidPrivate = [];
+    for (var vi = 0; vi < rowsLimited.length; vi++) {
+      var vRowObj = rowToObject_(rowsLimited[vi], headerIndex);
+      if (parseBool_(vRowObj["Prywatny?"]) !== true) continue;
+      var vOwner = normCell_(vRowObj["kontakt do właściciela"]);
+      if (!vOwner || vOwner.indexOf("@") < 0) {
+        var vNum = normCell_(vRowObj["Numer Kajaka"]);
+        var vId = normCell_(rowsLimited[vi][idIdx]);
+        invalidPrivate.push("  • " + (vNum || vId || "?") + " (arkusz wiersz " + (vi + 2) + ")");
+      }
+    }
+    if (invalidPrivate.length > 0) {
+      throw new Error(
+        "Prywatne kajaki bez poprawnego maila właściciela — uzupełnij kolumnę 'kontakt do właściciela':\n\n" +
+        invalidPrivate.join("\n")
+      );
+    }
+  }
 
   let processed = 0;
   let upserted = 0;
@@ -140,6 +179,9 @@ function getGearCategoryList_() {
     cfg.helmets,
     cfg.throwbags,
     cfg.sprayskirts,
+    cfg.flotationChambers,
+    cfg.wetsuits,
+    cfg.miscellaneous,
   ].filter(Boolean);
 }
 
@@ -213,6 +255,12 @@ function isRealGearRow_(categoryKey, r) {
       return isRealThrowbagRow_(r);
     case "sprayskirts":
       return isRealSprayskirtRow_(r);
+    case "flotationChambers":
+      return isRealFloatationChamberRow_(r);
+    case "wetsuits":
+      return isRealWetsuitRow_(r);
+    case "miscellaneous":
+      return isRealMiscRow_(r);
     default:
       return false;
   }
@@ -232,6 +280,12 @@ function buildGearDocFromRow_(categoryKey, id, r, now, category) {
       return buildThrowbagDocFromRow_(id, r, now, category);
     case "sprayskirts":
       return buildSprayskirtDocFromRow_(id, r, now, category);
+    case "flotationChambers":
+      return buildFloatationChamberDocFromRow_(id, r, now, category);
+    case "wetsuits":
+      return buildWetsuitDocFromRow_(id, r, now, category);
+    case "miscellaneous":
+      return buildMiscDocFromRow_(id, r, now, category);
     default:
       throw new Error(`Unsupported gear category: "${categoryKey}"`);
   }
@@ -489,6 +543,109 @@ function buildSprayskirtDocFromRow_(id, r, now, category) {
 
     gearCategory: "sprayskirts",
     gearCategoryDisplay: "Fartuchy",
+
+    gearScrapped: false,
+
+    source: {
+      sheetTab: category.sheetTab,
+      syncedAt: now,
+    },
+
+    updatedAt: now,
+  };
+}
+
+/**
+ * KOMORY
+ * Kolumny: ID, Producent, Kolor, Numer, Przypisana do kajaka, uwagi
+ */
+function isRealFloatationChamberRow_(r) {
+  const number = normCell_(r["Numer"]);
+  const brand = normCell_(r["Producent"]);
+  return Boolean(number || brand);
+}
+
+function buildFloatationChamberDocFromRow_(id, r, now, category) {
+  return {
+    id: String(id),
+    number: normCell_(r["Numer"]),
+    brand: normCell_(r["Producent"]),
+    color: normCell_(r["Kolor"]),
+    assignedToKayak: normCell_(r["Przypisana do kajaka"]),
+    notes: normCell_(r["uwagi"]),
+
+    isActive: true,
+    status: "available",
+
+    gearCategory: "flotationChambers",
+    gearCategoryDisplay: "Komory",
+
+    gearScrapped: false,
+
+    source: {
+      sheetTab: category.sheetTab,
+      syncedAt: now,
+    },
+
+    updatedAt: now,
+  };
+}
+
+/**
+ * KURTKI / PIANKI
+ * Kolumny: ID, typ, rozmiar, kolor, uwagi
+ */
+function isRealWetsuitRow_(r) {
+  const type = normCell_(r["typ"]);
+  const size = normCell_(r["rozmiar"]);
+  return Boolean(type || size);
+}
+
+function buildWetsuitDocFromRow_(id, r, now, category) {
+  return {
+    id: String(id),
+    type: normCell_(r["typ"]),
+    size: normCell_(r["rozmiar"]),
+    color: normCell_(r["kolor"]),
+    notes: normCell_(r["uwagi"]),
+
+    isActive: true,
+    status: "available",
+
+    gearCategory: "wetsuits",
+    gearCategoryDisplay: "Kurtki/Pianki",
+
+    gearScrapped: false,
+
+    source: {
+      sheetTab: category.sheetTab,
+      syncedAt: now,
+    },
+
+    updatedAt: now,
+  };
+}
+
+/**
+ * INNE RÓŻNE
+ * Kolumny: Id, Nazwa, Kolor, Uwagi
+ */
+function isRealMiscRow_(r) {
+  return Boolean(normCell_(r["Nazwa"]));
+}
+
+function buildMiscDocFromRow_(id, r, now, category) {
+  return {
+    id: String(id),
+    name: normCell_(r["Nazwa"]),
+    color: normCell_(r["Kolor"]),
+    notes: normCell_(r["Uwagi"]),
+
+    isActive: true,
+    status: "available",
+
+    gearCategory: "miscellaneous",
+    gearCategoryDisplay: "Inne różne",
 
     gearScrapped: false,
 

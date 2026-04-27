@@ -14,6 +14,7 @@ export type GearBundleReservationCreateDeps = {
   setCorsHeaders: (req: Request, res: Response) => void;
   corsHandler: any;
   requireIdToken: (req: Request) => Promise<TokenCheck>;
+  memberRoleKeys: string[];
 };
 
 function norm(v: any): string {
@@ -68,6 +69,11 @@ export async function handleGearBundleReservationCreate(
       const statusKey = String((userSnap.data() as any)?.status_key || "");
       if (await isUserStatusBlocked(db, statusKey)) {
         res.status(403).json({ok: false, code: "forbidden", message: "Konto zawieszone."});
+        return;
+      }
+      const roleKey = String((userSnap.data() as any)?.role_key || "");
+      if (!deps.memberRoleKeys.includes(roleKey)) {
+        res.status(403).json({ok: false, code: "forbidden", message: "Rezerwacja sprzętu wymaga roli Członek."});
         return;
       }
 

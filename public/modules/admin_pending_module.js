@@ -1,4 +1,4 @@
-import { apiGetJson } from "/core/api_client.js";
+import { apiGetJson, apiPostJson } from "/core/api_client.js";
 import { mapUserFacingApiError } from "/core/user_error_messages.js";
 import { setHash } from "/core/router.js";
 
@@ -6,6 +6,7 @@ const NAV_BACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height=
 const NAV_HOME_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
 
 const ADMIN_PENDING_URL = "/api/admin/pending";
+const ADMIN_SYNC_CALENDAR_URL = "/api/admin/events/sync-calendar";
 
 export function createAdminPendingModule({ id, type, label, defaultRoute, order, enabled, access }) {
   return {
@@ -41,7 +42,9 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
           <div class="actions" style="margin-top:12px;">
             <div class="hint">Zatwierdzanie odbywa się w arkuszu Google — poniżej lista oczekujących pozycji.</div>
             <button id="adminPendingReloadBtn" type="button">Odśwież</button>
+            <button id="adminSyncCalendarBtn" type="button" style="margin-left:8px;">Synchronizuj z Google Calendar</button>
           </div>
+          <div id="adminCalendarMsg" class="hint hidden" style="margin-top:8px;"></div>
 
           <div id="adminPendingErr" class="err hidden" style="margin-top:12px;"></div>
           <div id="adminPendingContent" style="margin-top:16px;"></div>
@@ -60,9 +63,27 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
         errEl.classList.toggle("hidden", !errEl.textContent);
       };
 
+      const calendarMsgEl = viewEl.querySelector("#adminCalendarMsg");
+      const syncCalendarBtn = viewEl.querySelector("#adminSyncCalendarBtn");
+      syncCalendarBtn.addEventListener("click", async () => {
+        syncCalendarBtn.disabled = true;
+        calendarMsgEl.textContent = "Kolejkuję synchronizację...";
+        calendarMsgEl.classList.remove("hidden");
+        try {
+          await apiPostJson({url: ADMIN_SYNC_CALENDAR_URL, idToken: ctx.idToken, body: {}});
+          calendarMsgEl.textContent = "Synchronizacja z Google Calendar zakolejkowana. Efekt widoczny po chwili.";
+        } catch (e) {
+          calendarMsgEl.textContent = "Błąd: " + mapUserFacingApiError(e, "Nie udało się zakolejkować synchronizacji.");
+        } finally {
+          syncCalendarBtn.disabled = false;
+        }
+      });
+
       const renderContent = (data) => {
         const godzinki = data?.godzinki || { count: 0, items: [] };
         const events = data?.events || { count: 0, items: [] };
+        const emailIssues = data?.privateKayakEmailIssues || { count: 0, items: [] };
+        const unpaidContributions = data?.privateKayakUnpaidContributions || { count: 0, items: [] };
 
         let html = "";
 
@@ -98,9 +119,9 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
         // Sekcja imprezy
         html += `<h3 style="margin:0 0 8px;">Imprezy do zatwierdzenia (${escapeHtml(String(events.count))})</h3>`;
         if (!events.items?.length) {
-          html += `<p class="hint">Brak oczekujących.</p>`;
+          html += `<p class="hint" style="margin-bottom:20px;">Brak oczekujących.</p>`;
         } else {
-          html += `<div>`;
+          html += `<div style="margin-bottom:20px;">`;
           for (const item of events.items) {
             const startStr = item.startDate ? formatDatePL(item.startDate) : "—";
             const endStr = item.endDate ? formatDatePL(item.endDate) : "—";
@@ -115,6 +136,58 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
                         ${escapeHtml(startStr)} – ${escapeHtml(endStr)}
                         · zgłosił: ${escapeHtml(item.userEmail || "—")}
                         · ${escapeHtml(dateStr)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+          html += `</div>`;
+        }
+
+        // Sekcja: prywatne kajaki — problem z emailem właściciela
+        html += `<h3 style="margin:0 0 8px;">Prywatne kajaki — problem z emailem właściciela (${escapeHtml(String(emailIssues.count))})</h3>`;
+        if (!emailIssues.items?.length) {
+          html += `<p class="hint" style="margin-bottom:20px;">Brak problemów.</p>`;
+        } else {
+          html += `<div style="margin-bottom:20px;">`;
+          for (const item of emailIssues.items) {
+            html += `
+              <div class="gearCard" style="margin-bottom:8px;">
+                <div class="gearCardInner">
+                  <div class="gearHead">
+                    <div class="gearTitleWrap">
+                      <div class="gearTitle">Kajak ${escapeHtml(item.number || item.kayakId || "—")}</div>
+                      <div class="gearSubtitle">
+                        ${escapeHtml(item.reason)}
+                        ${item.ownerContact ? ` · email: ${escapeHtml(item.ownerContact)}` : ""}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+          html += `</div>`;
+        }
+
+        // Sekcja: właściciele prywatnych kajaków — możliwe zaległości składkowe
+        html += `<h3 style="margin:0 0 8px;">Prywatne kajaki — możliwe zaległości składkowe (${escapeHtml(String(unpaidContributions.count))})</h3>`;
+        if (!unpaidContributions.items?.length) {
+          html += `<p class="hint">Brak zaległości.</p>`;
+        } else {
+          html += `<div>`;
+          for (const item of unpaidContributions.items) {
+            const contributionsLabel = item.contributions ? `składki: ${escapeHtml(item.contributions)}` : "brak danych o składkach";
+            html += `
+              <div class="gearCard" style="margin-bottom:8px;">
+                <div class="gearCardInner">
+                  <div class="gearHead">
+                    <div class="gearTitleWrap">
+                      <div class="gearTitle">Kajak ${escapeHtml(item.number || item.kayakId || "—")} — ${escapeHtml(item.ownerName || item.ownerContact || "—")}</div>
+                      <div class="gearSubtitle">
+                        ${escapeHtml(item.ownerContact)} · ${contributionsLabel}
                       </div>
                     </div>
                   </div>

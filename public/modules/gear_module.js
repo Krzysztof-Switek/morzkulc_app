@@ -16,14 +16,21 @@ const KAYAK_RESERVATIONS_URL = "/api/gear/kayak-reservations";
 // Lokalny placeholder dostępny zawsze z aplikacji
 const PLACEHOLDER_SVG = "/assets/kayak-placeholder.png";
 
-const GEAR_TABS = [
+const GEAR_TABS_PRIMARY = [
   { id: "kayaks", label: "Kajaki" },
   { id: "paddles", label: "Wiosła" },
   { id: "lifejackets", label: "Kamizelki" },
   { id: "helmets", label: "Kaski" },
-  { id: "throwbags", label: "Rzutki" },
-  { id: "sprayskirts", label: "Fartuchy" }
+  { id: "sprayskirts", label: "Fartuchy" },
 ];
+const GEAR_TABS_SECONDARY = [
+  { id: "throwbags", label: "Rzutki" },
+  { id: "wetsuits", label: "Pianki" },
+  { id: "jackets", label: "Kurtki" },
+  { id: "drybags", label: "Komory" },
+  { id: "other", label: "Inne" },
+];
+const GEAR_TABS = [...GEAR_TABS_PRIMARY, ...GEAR_TABS_SECONDARY];
 
 export function createGearModule({ id, type, label, defaultRoute, order, enabled, access }) {
   return {
@@ -40,6 +47,7 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
       const activeTab = GEAR_TABS.find((t) => t.id === requestedRoute)?.id || "kayaks";
       const activeTabLabel = GEAR_TABS.find((t) => t.id === activeTab)?.label || "Kajaki";
       const isKayaksView = activeTab === "kayaks";
+      const isPaddlesView = activeTab === "paddles";
       const isLifejacketsView = activeTab === "lifejackets";
       const isHelmetsView = activeTab === "helmets";
 
@@ -64,7 +72,21 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
           </div>
 
           <div class="gearTabs" role="tablist" aria-label="Kategorie sprzętu">
-            ${GEAR_TABS.map((tab) => `
+            ${GEAR_TABS_PRIMARY.map((tab) => `
+              <button
+                type="button"
+                class="gearTab ${tab.id === activeTab ? "active" : ""}"
+                data-gear-tab="${escapeAttr(tab.id)}"
+                aria-pressed="${tab.id === activeTab ? "true" : "false"}"
+                title="${escapeAttr(tab.label)}"
+              >
+                <span class="gearTabIcon">${gearTabIcon(tab.id)}</span>
+                <span class="gearTabLabel">${escapeHtml(tab.label)}</span>
+              </button>
+            `).join("")}
+          </div>
+          <div class="gearTabs gearTabsSecondary" role="tablist" aria-label="Kategorie sprzętu dodatkowe">
+            ${GEAR_TABS_SECONDARY.map((tab) => `
               <button
                 type="button"
                 class="gearTab ${tab.id === activeTab ? "active" : ""}"
@@ -79,22 +101,23 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
           </div>
 
           <div class="gearToolbar">
-            <div class="gearToolbarTop">
-              <div class="row" style="margin:0;">
+            <div class="gearSearchSection">
+              <div class="gearSearchLabel">
                 <label for="gearSearch">Szukaj</label>
+                <span id="gearMeta" class="hint gearMetaInline"></span>
+              </div>
+              <div class="gearSearchRow">
                 <input
                   id="gearSearch"
                   placeholder="${escapeAttr(
                     isKayaksView ?
                       "np. Diesel, Wave sport, niebieski, creek..." :
-                      "np. Werner, L, czerwony, pool..."
+                      isPaddlesView ?
+                        "np. TNP, symetryczne, żółty, 195..." :
+                        "np. Werner, L, czerwony, pool..."
                   )}"
                 />
-              </div>
-
-              <div class="actions" style="margin:0;">
                 <button id="gearReloadBtn" type="button" class="gearReloadBtn ghost" title="Odśwież" aria-label="Odśwież">${refreshIconSvg()}</button>
-                <span id="gearMeta" class="hint"></span>
               </div>
             </div>
 
@@ -116,10 +139,48 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
                     <span>Ulubione</span>
                   </label>
 
+                  <label class="gearCheckPill" for="filterPoolOnly">
+                    <input id="filterPoolOnly" type="checkbox" />
+                    <span>Basen</span>
+                  </label>
+
+                  <label class="gearCheckPill" for="filterPrivateOnly">
+                    <input id="filterPrivateOnly" type="checkbox" />
+                    <span>Prywatny</span>
+                  </label>
+
+                  <label class="gearCheckPill" for="filterBrokenOnly">
+                    <input id="filterBrokenOnly" type="checkbox" />
+                    <span>Uszkodzony</span>
+                  </label>
+
                   <div class="gearTypeFilter">
                     <label for="filterTypeSelect">Typ</label>
                     <select id="filterTypeSelect">
                       <option value="">Wszystkie typy</option>
+                    </select>
+                  </div>
+                </div>
+              ` : isPaddlesView ? `
+                <div class="gearFiltersBar">
+                  <label class="gearCheckPill" for="filterFavoritesOnly">
+                    <input id="filterFavoritesOnly" type="checkbox" />
+                    <span>Ulubione</span>
+                  </label>
+
+                  <div class="gearTypeFilter">
+                    <label for="filterTypeSelect">Typ</label>
+                    <select id="filterTypeSelect">
+                      <option value="">Wszystkie typy</option>
+                    </select>
+                  </div>
+
+                  <div class="gearTypeFilter">
+                    <label for="filterPaddlePoolSelect">Basen</label>
+                    <select id="filterPaddlePoolSelect">
+                      <option value="">Wszystkie</option>
+                      <option value="pool">Tylko basenowe</option>
+                      <option value="nopool">Bez basenowych</option>
                     </select>
                   </div>
                 </div>
@@ -307,7 +368,11 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
       const filterWorkingOnlyEl = viewEl.querySelector("#filterWorkingOnly");
       const filterAvailableNowOnlyEl = viewEl.querySelector("#filterAvailableNowOnly");
       const filterFavoritesOnlyEl = viewEl.querySelector("#filterFavoritesOnly");
+      const filterPoolOnlyEl = viewEl.querySelector("#filterPoolOnly");
+      const filterPrivateOnlyEl = viewEl.querySelector("#filterPrivateOnly");
+      const filterBrokenOnlyEl = viewEl.querySelector("#filterBrokenOnly");
       const filterSizeSelectEl = viewEl.querySelector("#filterSizeSelect");
+      const filterPaddlePoolSelectEl = viewEl.querySelector("#filterPaddlePoolSelect");
 
       const reservationModalEl = viewEl.querySelector("#gearReservationModal");
       const reservationTitleEl = viewEl.querySelector("#gearReservationTitle");
@@ -744,11 +809,13 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
 
         const cards = isKayaksView
           ? items.map((k) => renderKayakCard(k, favSet.has(String(k?.id || "")))).join("")
-          : isLifejacketsView
-            ? items.map((item) => renderLifejacketCard(item, favSet.has(String(item?.id || "")))).join("")
-            : isHelmetsView
-              ? items.map((item) => renderHelmetCard(item, favSet.has(String(item?.id || "")))).join("")
-              : items.map((item) => renderGenericGearCard(item, favSet.has(String(item?.id || "")))).join("");
+          : isPaddlesView
+            ? items.map((item) => renderPaddleCard(item, favSet.has(String(item?.id || "")))).join("")
+            : isLifejacketsView
+              ? items.map((item) => renderLifejacketCard(item, favSet.has(String(item?.id || "")))).join("")
+              : isHelmetsView
+                ? items.map((item) => renderHelmetCard(item, favSet.has(String(item?.id || "")))).join("")
+                : items.map((item) => renderGenericGearCard(item, favSet.has(String(item?.id || "")))).join("");
 
         listEl.innerHTML = `
           <div class="gearGrid">
@@ -843,9 +910,25 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
           if (isKayaksView) {
             const workingOnly = filterWorkingOnlyEl?.checked === true;
             const availableNowOnly = filterAvailableNowOnlyEl?.checked === true;
+            const poolOnly = filterPoolOnlyEl?.checked === true;
+            const privateOnly = filterPrivateOnlyEl?.checked === true;
+            const brokenOnly = filterBrokenOnlyEl?.checked === true;
 
             if (workingOnly && !isWorking(item)) return false;
             if (availableNowOnly && item?.isReservedNow === true) return false;
+            if (brokenOnly && isWorking(item)) return false;
+            if (poolOnly) {
+              const storageVal = String(item?.storage || item?.storedAt || "").trim().toLowerCase();
+              if (storageVal !== "basen") return false;
+            }
+            if (privateOnly && !toBool(item?.isPrivate)) return false;
+          } else if (isPaddlesView) {
+            const poolFilter = filterPaddlePoolSelectEl?.value || "";
+            if (poolFilter) {
+              const isPool = toBool(item?.isPoolAllowed);
+              if (poolFilter === "pool" && !isPool) return false;
+              if (poolFilter === "nopool" && isPool) return false;
+            }
           } else {
             const selectedSize = normalizeSimpleValue(filterSizeSelectEl?.value || "");
             if (selectedSize) {
@@ -874,23 +957,35 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
               item?.cockpit,
               item?.material
             ]
-            : [
-              item?.number,
-              item?.brand,
-              item?.model,
-              item?.type,
-              item?.color,
-              item?.size,
-              item?.status,
-              item?.notes,
-              item?.gearCategory,
-              item?.gearCategoryDisplay,
-              item?.meta?.lengthCm,
-              item?.meta?.featherAngle,
-              item?.meta?.buoyancy,
-              item?.meta?.material,
-              item?.meta?.tunnelSize
-            ];
+            : isPaddlesView
+              ? [
+                item?.number,
+                item?.brand,
+                item?.model,
+                item?.type,
+                item?.color,
+                item?.status,
+                item?.notes,
+                item?.lengthCm,
+                item?.featherAngle,
+              ]
+              : [
+                item?.number,
+                item?.brand,
+                item?.model,
+                item?.type,
+                item?.color,
+                item?.size,
+                item?.status,
+                item?.notes,
+                item?.gearCategory,
+                item?.gearCategoryDisplay,
+                item?.meta?.lengthCm,
+                item?.meta?.featherAngle,
+                item?.meta?.buoyancy,
+                item?.meta?.material,
+                item?.meta?.tunnelSize
+              ];
 
           const haystack = hay
             .map((x) => String(x || "").toLowerCase())
@@ -1356,8 +1451,12 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
       if (filterWorkingOnlyEl) filterWorkingOnlyEl.addEventListener("change", applyFilter);
       if (filterAvailableNowOnlyEl) filterAvailableNowOnlyEl.addEventListener("change", applyFilter);
       if (filterFavoritesOnlyEl) filterFavoritesOnlyEl.addEventListener("change", applyFilter);
+      if (filterPoolOnlyEl) filterPoolOnlyEl.addEventListener("change", applyFilter);
+      if (filterPrivateOnlyEl) filterPrivateOnlyEl.addEventListener("change", applyFilter);
+      if (filterBrokenOnlyEl) filterBrokenOnlyEl.addEventListener("change", applyFilter);
       if (filterTypeSelectEl) filterTypeSelectEl.addEventListener("change", applyFilter);
       if (filterSizeSelectEl) filterSizeSelectEl.addEventListener("change", applyFilter);
+      if (filterPaddlePoolSelectEl) filterPaddlePoolSelectEl.addEventListener("change", applyFilter);
 
       reservationCreateBtn.addEventListener("click", async () => {
         await submitCreateReservation();
@@ -1465,14 +1564,16 @@ function renderKayakCard(k, isFav = false) {
         </div>
 
         <div class="actions gearCardActions">
-          <button
+          ${isPool
+            ? `<span class="badge pool gearPoolActionLabel">Basen</span>`
+            : `<button
             type="button"
             class="primary gearBundleReserveBtn"
             data-gear-bundle-reserve="${escapeAttr(String(k?.id || ""))}"
             data-gear-bundle-category="kayaks"
             ${canReserve ? "" : "disabled"}>
             Rezerwuj
-          </button>
+          </button>`}
           <button type="button" class="ghost gearMoreBtn">Więcej</button>
         </div>
 
@@ -1483,12 +1584,14 @@ function renderKayakCard(k, isFav = false) {
             ${reservedNow ? `<span class="gearMiniStatusIcon gearMiniLocked" title="Zarezerwowany teraz">${lockIconSvg()}</span>` : ""}
             <button type="button" class="gearMiniMoreBtn gearMoreBtn" title="Szczegóły" aria-label="Szczegóły">${dotsIconSvg()}</button>
           </div>
-          <button
+          ${isPool
+            ? `<span class="badge pool gearPoolActionLabel">Basen</span>`
+            : `<button
             type="button"
             class="gearMiniReserveBtn gearBundleReserveBtn"
             data-gear-bundle-reserve="${escapeAttr(String(k?.id || ""))}"
             data-gear-bundle-category="kayaks"
-            ${canReserve ? "" : "disabled"}>Rezerwuj</button>
+            ${canReserve ? "" : "disabled"}>Rezerwuj</button>`}
         </div>
 
         <details class="gearDetails">
@@ -1579,6 +1682,64 @@ function renderHelmetCard(item, isFav = false) {
             data-gear-bundle-reserve="${escapeAttr(String(item?.id || ""))}"
             data-gear-bundle-category="helmets"
           >Rezerwuj</button>
+        </div>
+
+      </div>
+    </div>
+  `;
+}
+
+function renderPaddleCard(item, isFav = false) {
+  const number = String(item?.number || "").trim();
+  const brand = String(item?.brand || "").trim();
+  const model = String(item?.model || "").trim();
+  const color = String(item?.color || "").trim();
+  const type = String(item?.type || "").trim();
+  const lengthCm = String(item?.lengthCm || "").trim();
+  const featherAngle = String(item?.featherAngle || "").trim();
+  const notes = String(item?.notes || "").trim();
+
+  const isPool = toBool(item?.isPoolAllowed);
+
+  const brandModel = [brand, model].filter(Boolean).join(" ");
+
+  return `
+    <div class="gearCard gearOk${isPool ? " gearPool" : ""}">
+      <div class="gearCardInner">
+
+        <div class="gearHead">
+          <div class="gearTitleWrap">
+            <div class="gearTitleLine">
+              <span class="gearTitle">Wiosło nr ${escapeHtml(number || "?")}</span>
+            </div>
+            ${brandModel ? `<div class="gearMiniType">${escapeHtml(brandModel)}</div>` : ""}
+            ${type ? `<div class="gearInlineMeta gearInlineMetaMain gearMiniType">${escapeHtml(type)}</div>` : ""}
+            ${lengthCm ? `<div class="gearInlineMeta gearInlineMetaMain"><strong>Długość:</strong> ${escapeHtml(lengthCm)} cm</div>` : ""}
+            ${color ? `<div class="gearInlineMeta gearInlineMetaMain"><strong>Kolor:</strong> ${escapeHtml(color)}</div>` : ""}
+            <div class="gearInlineMeta gearInlineMetaMain"><strong>Kąt skrętu:</strong> ${featherAngle ? `${escapeHtml(featherAngle)}°` : "brak"}</div>
+            ${notes ? `<div class="gearInlineMeta"><strong>Uwagi:</strong> ${escapeHtml(notes)}</div>` : ""}
+          </div>
+
+          <div class="gearHeadSide">
+            <button
+              class="gearFavBtn${isFav ? " active" : ""}"
+              type="button"
+              data-gear-fav="${escapeAttr(String(item?.id || ""))}"
+              aria-label="${isFav ? "Usuń z ulubionych" : "Dodaj do ulubionych"}"
+            >${heartSvg(isFav)}</button>
+            ${isPool ? `<div class="gearBadges gearBadgesStack"><span class="badge pool">Basen</span></div>` : ""}
+          </div>
+        </div>
+
+        <div class="gearMiniBar">
+          ${isPool
+            ? `<span class="badge pool gearPoolActionLabel">Basen</span>`
+            : `<button
+                type="button"
+                class="gearMiniReserveBtn gearBundleReserveBtn"
+                data-gear-bundle-reserve="${escapeAttr(String(item?.id || ""))}"
+                data-gear-bundle-category="paddles"
+              >Rezerwuj</button>`}
         </div>
 
       </div>
@@ -1977,6 +2138,14 @@ function gearTabIcon(id) {
       return `<svg ${a}><path d="M9 9.5a3 3 0 016 0V20H9V9.5z"/><path d="M9 9.5V8a3 3 0 016 0v1.5"/><circle cx="12" cy="5.5" r="1.5"/></svg>`;
     case "sprayskirts":
       return `<svg ${a}><ellipse cx="12" cy="15.5" rx="9" ry="4.5"/><ellipse cx="12" cy="15.5" rx="4.5" ry="2"/><line x1="12" y1="11" x2="12" y2="7"/><path d="M9.5 7.5Q12 6 14.5 7.5"/></svg>`;
+    case "wetsuits":
+      return `<svg ${a}><path d="M8 4h8v4l2 2v10H6V10l2-2V4z"/><line x1="8" y1="8" x2="16" y2="8"/><path d="M6 10H4v4h2"/><path d="M18 10h2v4h-2"/></svg>`;
+    case "jackets":
+      return `<svg ${a}><path d="M8 4L4 8v12h16V8l-4-4"/><path d="M8 4Q12 7 16 4"/><line x1="12" y1="7" x2="12" y2="20"/></svg>`;
+    case "drybags":
+      return `<svg ${a}><rect x="7" y="8" width="10" height="12" rx="2"/><path d="M9 8V6a3 3 0 016 0v2"/><line x1="9" y1="8" x2="15" y2="8"/></svg>`;
+    case "other":
+      return `<svg ${a}><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>`;
     default:
       return "";
   }

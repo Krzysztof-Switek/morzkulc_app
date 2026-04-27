@@ -12,8 +12,6 @@ const CREATE_SESSION_URL = "/api/basen/sessions/create";
 const CANCEL_SESSION_URL = "/api/basen/sessions/cancel";
 const GRANT_KARNET_URL = "/api/basen/karnety/grant";
 
-const ADMIN_ROLES = new Set(["rola_zarzad", "rola_kr"]);
-const ENROLL_ROLES = new Set(["rola_czlonek", "rola_zarzad", "rola_kr"]);
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -187,8 +185,7 @@ function bindSessionActions(innerEl, ctx) {
         const data = await apiGetJson({ url: SESSIONS_URL, idToken: ctx.idToken });
         const sessions = Array.isArray(data?.sessions) ? data.sessions : [];
         const activeKarnet = data?.activeKarnet || null;
-        const roleKey = String(ctx?.session?.role_key || "");
-        const canEnroll = ENROLL_ROLES.has(roleKey);
+        const canEnroll = (ctx?.session?.allowed_actions ?? []).includes("basen.enroll");
 
         innerEl.innerHTML = `
           ${activeKarnet ? `
@@ -232,8 +229,7 @@ function bindSessionActions(innerEl, ctx) {
         const data = await apiGetJson({ url: SESSIONS_URL, idToken: ctx.idToken });
         const sessions = Array.isArray(data?.sessions) ? data.sessions : [];
         const activeKarnet = data?.activeKarnet || null;
-        const roleKey = String(ctx?.session?.role_key || "");
-        const canEnroll = ENROLL_ROLES.has(roleKey);
+        const canEnroll = (ctx?.session?.allowed_actions ?? []).includes("basen.enroll");
 
         innerEl.innerHTML = `
           ${activeKarnet ? `
@@ -570,9 +566,9 @@ export function createBasenModule({ id, type, label, defaultRoute, order, enable
         return;
       }
 
-      const roleKey = String(ctx?.session?.role_key || "");
-      const isAdmin = ADMIN_ROLES.has(roleKey);
-      const canEnroll = ENROLL_ROLES.has(roleKey);
+      const actions = ctx?.session?.allowed_actions ?? [];
+      const isAdmin = actions.includes("basen.admin");
+      const canEnroll = actions.includes("basen.enroll");
 
       const requestedTab = String(routeId || "").trim();
       const validTabs = ["sessions", "karnet", ...(isAdmin ? ["admin"] : [])];

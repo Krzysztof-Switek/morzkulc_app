@@ -24,6 +24,7 @@ import {handleGodzinkiPurchase} from "./api/godzinkiPurchaseHandler";
 import {handleGetKayakReservations} from "./api/getKayakReservationsHandler";
 import {handleGetEvents} from "./api/getEventsHandler";
 import {handleGetAdminPending} from "./api/getAdminPendingHandler";
+import {handleAdminEventsSyncCalendar} from "./api/adminEventsSyncCalendarHandler";
 import {handleSubmitEvent} from "./api/submitEventHandler";
 import {handleGetBasenSessions} from "./api/getBasenSessionsHandler";
 import {handleBasenEnroll} from "./api/basenEnrollHandler";
@@ -162,6 +163,7 @@ type ModuleAccess = {
   rolesAllowed?: string[];
   testUsersAllow?: string[];
   usersBlock?: string[];
+  testUserGranted?: boolean; // set server-side when testUsersAllow overrides disabled/off state
 };
 
 type SetupModuleConfig = {
@@ -204,8 +206,12 @@ async function requireIdToken(req: Request) {
   const authHeader = String(req.headers.authorization || "");
   const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
   if (!idToken) return {error: "Missing token"} as const;
-  const decoded = await admin.auth().verifyIdToken(idToken);
-  return {decoded} as const;
+  try {
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    return {decoded} as const;
+  } catch {
+    return {error: "Invalid token"} as const;
+  }
 }
 
 async function getSetupApp(): Promise<SetupApp | null> {
@@ -214,16 +220,23 @@ async function getSetupApp(): Promise<SetupApp | null> {
   return (snap.data() as SetupApp) || null;
 }
 
-function defaultScreenForRoleKey(roleKey: string): string {
-  const map: Record<string, string> = {
-    rola_zarzad: "screen_board",
-    rola_kr: "screen_kr",
-    rola_czlonek: "screen_member",
-    rola_kandydat: "screen_candidate",
-    rola_sympatyk: "screen_supporter",
-    rola_kursant: "screen_trainee",
-  };
-  return map[roleKey] || "screen_supporter";
+function defaultScreenForRoleKey(_roleKey: string): string {
+  return "home";
+}
+
+function computeAllowedActions(roleKey: string): string[] {
+  const actions: string[] = [];
+  const {adminRoleKeys, memberRoleKeys, godzinkiRoleKeys} = svcCfg;
+  if (memberRoleKeys.includes(roleKey)) {
+    actions.push("gear.reserve", "basen.enroll", "events.submit");
+  }
+  if (godzinkiRoleKeys.includes(roleKey)) {
+    actions.push("godzinki.submit");
+  }
+  if (adminRoleKeys.includes(roleKey)) {
+    actions.push("admin.pending", "basen.admin", "events.admin");
+  }
+  return actions;
 }
 
 function requireAdminEmail(email: string): boolean {
@@ -232,19 +245,32 @@ function requireAdminEmail(email: string): boolean {
 
 
 /**
+ * Splits and normalises an array of email/uid strings stored in Firestore.
+ * Each element may contain multiple values separated by commas, which is
+ * convenient when editing the list in the Firebase console or admin tools.
+ */
+function flattenEmails(arr: unknown): string[] {
+  if (!Array.isArray(arr)) return [];
+  return (arr as unknown[])
+    .flatMap((e) => String(e).split(",").map((s) => s.trim().toLowerCase()))
+    .filter(Boolean);
+}
+
+/**
  * Filters setup.modules to only those the given user can see.
  *
  * Filtering rules (must match canSeeModule in access_control.js):
- *   - module.enabled !== true                        → hidden
+ *   - uid/email in access.usersBlock                 → hidden (always, even for test users)
  *   - statusMappings[statusKey].blocksAccess === true → all modules hidden
- *   - access.mode === "off"                          → hidden
- *   - uid/email in access.usersBlock                 → hidden
+ *   - module.enabled !== true                        → hidden UNLESS uid/email in testUsersAllow
+ *   - access.mode === "off"                          → hidden UNLESS uid/email in testUsersAllow
  *   - access.mode === "test" and uid/email not in testUsersAllow → hidden
  *   - access.mode === "prod" and rolesAllowed empty  → hidden
  *   - access.mode === "prod" and roleKey not in rolesAllowed → hidden
  *
- * Sensitive fields (testUsersAllow, usersBlock) are stripped from each module's
- * access object before returning so they do not leak to the client.
+ * When a module is shown via testUsersAllow override (enabled=false or mode=off),
+ * the response includes testUserGranted:true so the frontend can bypass its own guards.
+ * Sensitive fields (testUsersAllow, usersBlock) are otherwise stripped from the response.
  */
 function filterSetupForUser(
   setup: SetupApp,
@@ -256,27 +282,30 @@ function filterSetupForUser(
   const statusBlocked =
     setup.statusMappings?.[statusKey]?.blocksAccess === true;
 
+  const emailLower = email.toLowerCase();
   const filteredModules: Record<string, SetupModuleConfig> = {};
 
   for (const [id, cfg] of Object.entries(setup.modules || {})) {
-    if (!cfg.enabled) continue;
+    const access = cfg.access || {};
+
+    // testUsersAllow sprawdzamy najwcześniej — może nadpisać disabled/off
+    const testAllow = flattenEmails(access.testUsersAllow);
+    const isTestUser = testAllow.includes(uid) || testAllow.includes(emailLower);
+
+    // usersBlock wygrywa zawsze, nawet nad testUsersAllow
+    const usersBlock = flattenEmails(access.usersBlock);
+    if (usersBlock.includes(uid) || usersBlock.includes(emailLower)) continue;
+
+    if (!cfg.enabled && !isTestUser) continue;
     if (statusBlocked) continue;
 
-    const access = cfg.access || {};
     const mode = String(access.mode || "prod");
 
-    if (mode === "off") continue;
+    if (mode === "off" && !isTestUser) continue;
 
-    const usersBlock = Array.isArray(access.usersBlock) ?
-      access.usersBlock.map(String) :
-      [];
-    if (usersBlock.includes(uid) || usersBlock.includes(email)) continue;
-
-    if (mode === "test") {
-      const testAllow = Array.isArray(access.testUsersAllow) ?
-        access.testUsersAllow.map(String) :
-        [];
-      if (!testAllow.includes(uid) && !testAllow.includes(email)) continue;
+    if (mode === "test" || mode === "off") {
+      // Dla mode=test lub mode=off (z override) wymagamy bycia na liście testowej
+      if (!isTestUser) continue;
     } else {
       // prod
       const rolesAllowed = Array.isArray(access.rolesAllowed) ?
@@ -286,13 +315,17 @@ function filterSetupForUser(
       if (!rolesAllowed.includes(roleKey)) continue;
     }
 
-    // Moduł widoczny — pomiń wrażliwe pola z access przed zwróceniem
+    // Moduł widoczny — pomiń wrażliwe pola z access przed zwróceniem.
+    // Gdy testUsersAllow nadpisało disabled/off, dodaj flagę testUserGranted
+    // żeby frontend mógł pominąć swoje własne blokady.
+    const testUserOverride = isTestUser && (!cfg.enabled || mode === "off");
     const safeAccess: ModuleAccess = {
       mode: access.mode,
       rolesAllowed: access.rolesAllowed,
+      ...(testUserOverride ? {testUserGranted: true} : {}),
     };
 
-    filteredModules[id] = {...cfg, access: safeAccess};
+    filteredModules[id] = {...cfg, enabled: true, access: safeAccess};
   }
 
   return {
@@ -422,6 +455,7 @@ export const registerUser = onRequest({invoker: "private"}, async (req, res) => 
     requireIdToken,
     getSetupApp,
     defaultScreenForRoleKey,
+    computeAllowedActions,
     enqueueMemberSheetSync,
   });
 });
@@ -480,6 +514,7 @@ export const createGearReservation = onRequest({invoker: "private"}, async (req,
     setCorsHeaders,
     corsHandler,
     requireIdToken,
+    memberRoleKeys: svcCfg.memberRoleKeys,
   });
 });
 
@@ -494,6 +529,7 @@ export const createBundleGearReservation = onRequest({invoker: "private"}, async
     setCorsHeaders,
     corsHandler,
     requireIdToken,
+    memberRoleKeys: svcCfg.memberRoleKeys,
   });
 });
 
@@ -626,6 +662,7 @@ export const submitGodzinki = onRequest({invoker: "private"}, async (req, res) =
     setCorsHeaders,
     corsHandler,
     requireIdToken,
+    godzinkiRoleKeys: svcCfg.godzinkiRoleKeys,
     enqueueGodzinkiSheetWrite,
   });
 });
@@ -711,6 +748,22 @@ export const getEvents = onRequest({invoker: "private"}, async (req, res) => {
  */
 export const getAdminPending = onRequest({invoker: "private"}, async (req, res) => {
   return handleGetAdminPending(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    adminRoleKeys,
+  });
+});
+
+/**
+ * POST /api/admin/events/sync-calendar (authenticated, role: zarzad/kr)
+ * Kolejkuje job events.syncCalendar — synchronizuje zatwierdzone imprezy z Google Calendar.
+ */
+export const adminEventsSyncCalendar = onRequest({invoker: "private"}, async (req, res) => {
+  return handleAdminEventsSyncCalendar(req, res, {
     db,
     sendPreflight,
     requireAllowedHost,

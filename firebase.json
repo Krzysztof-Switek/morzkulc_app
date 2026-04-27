@@ -22,6 +22,7 @@
     "indexes": "firestore.indexes.json"
   },
   "hosting": {
+    "predeploy": ["node scripts/bump-sw-cache.js"],
     "public": "public",
     "ignore": [
       "firebase.json",
@@ -97,6 +98,20 @@
         "source": "/api/admin/setup",
         "function": {
           "functionId": "adminPutSetup",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/admin/pending",
+        "function": {
+          "functionId": "getAdminPending",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/admin/events/sync-calendar",
+        "function": {
+          "functionId": "adminEventsSyncCalendar",
           "region": "us-central1"
         }
       },

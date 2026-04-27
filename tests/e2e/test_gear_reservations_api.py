@@ -175,6 +175,9 @@ class TestAuthorization(unittest.TestCase):
         token = _token(cfg.suspended_user_email, cfg.suspended_user_password)
         start, end = _future_dates()
         result = _api.reserve_kayaks_soft(token, [kid], start, end)
+        # Cleanup — jeśli status nie blokuje (błąd konfiguracji), posprzątaj rezerwację
+        if result.get("ok") and result.get("reservationId"):
+            _try_cancel(token, result["reservationId"])
         self.assertFalse(result.get("ok"), f"Zawieszony nie powinien mieć dostępu: {result}")
         self.assertIn(result.get("code", ""), ["forbidden"],
                       f"Oczekiwano code=forbidden, got: {result}")
@@ -190,7 +193,7 @@ class TestAuthorization(unittest.TestCase):
         member_token = _token(cfg.member_user_email, cfg.member_user_password)
         candidate_token = _token(cfg.candidate_user_email, cfg.candidate_user_password)
 
-        start, end = _future_dates(20)
+        start, end = _future_dates(5)
         # Member tworzy rezerwację
         result = _api.reserve_kayaks_soft(member_token, [kid], start, end)
         if not result.get("ok"):
@@ -263,7 +266,7 @@ class TestSetupAsSourceOfTruth(unittest.TestCase):
             self.skipTest("Brak konta member")
         kid = _require_kayak()
         token = _token(cfg.member_user_email, cfg.member_user_password)
-        start, end = _future_dates(14, 3)  # 3 dni
+        start, end = _future_dates(5, 3)  # 3 dni
         result = _api.reserve_kayaks_soft(token, [kid], start, end)
         if not result.get("ok"):
             self.skipTest(f"Nie udało się zarezerwować: {result}")
@@ -284,7 +287,7 @@ class TestSetupAsSourceOfTruth(unittest.TestCase):
             self.skipTest("boardDoesNotPay=false w setup — pomiń test")
         kid = _require_kayak()
         token = _token(cfg.board_user_email, cfg.board_user_password)
-        start, end = _future_dates(14, 3)
+        start, end = _future_dates(5, 3)
         result = _api.reserve_kayaks_soft(token, [kid], start, end)
         if not result.get("ok"):
             self.skipTest(f"Nie udało się zarezerwować (zarząd): {result}")
@@ -302,7 +305,7 @@ class TestSetupAsSourceOfTruth(unittest.TestCase):
             self.skipTest("boardDoesNotPay=false w setup")
         kid = _require_kayak()
         token = _token(cfg.kr_user_email, cfg.kr_user_password)
-        start, end = _future_dates(14, 3)
+        start, end = _future_dates(5, 3)
         result = _api.reserve_kayaks_soft(token, [kid], start, end)
         if not result.get("ok"):
             self.skipTest(f"Nie udało się zarezerwować (kr): {result}")
@@ -335,7 +338,7 @@ class TestSetupAsSourceOfTruth(unittest.TestCase):
         kid1 = _require_kayak("test_kayak_id_1")
         kid2 = _require_kayak("test_kayak_id_2")
         token = _token(cfg.candidate_user_email, cfg.candidate_user_password)
-        start, end = _future_dates(14, 1)
+        start, end = _future_dates(2, 1)
         result = _api.reserve_kayaks_soft(token, [kid1, kid2], start, end)
         self.assertFalse(result.get("ok"),
                          f"Kandydat z 2 kajakami powinien być blokowany: {result}")
@@ -404,7 +407,7 @@ class TestConflictAndOffset(unittest.TestCase):
         member_token = _token(cfg.member_user_email, cfg.member_user_password)
         candidate_token = _token(cfg.candidate_user_email, cfg.candidate_user_password)
 
-        start, end = _future_dates(20, 3)
+        start, end = _future_dates(3, 3)
 
         # Pierwsza rezerwacja (member)
         result1 = _api.reserve_kayaks_soft(member_token, [kid], start, end)
@@ -420,7 +423,7 @@ class TestConflictAndOffset(unittest.TestCase):
                          f"Oczekiwano code=conflict, got: {result2}")
 
     def test_c02_offset_blocks_adjacent_day(self):
-        """C02: Offset=1: rezerwacja A [20-22.05], B próbuje [22-24.05] → konflikt (blockEnd A = 23.05)."""
+        """C02: Offset=1: rezerwacja A [+3,+5], B próbuje [+5,+7] → konflikt (blockEnd A = +6, blockStart B = +4)."""
         if not cfg.member_user_email or not cfg.member_user_password:
             self.skipTest("Brak konta member")
         if not cfg.candidate_user_email or not cfg.candidate_user_password:
@@ -431,9 +434,9 @@ class TestConflictAndOffset(unittest.TestCase):
         candidate_token = _token(cfg.candidate_user_email, cfg.candidate_user_password)
 
         today = datetime.now(timezone.utc).date()
-        a_start = today + timedelta(days=30)
-        a_end = a_start + timedelta(days=2)    # A: [+30, +32]
-        b_start = a_end                        # B: [+32, +34] — powinno być blokowane przez offset A (blockEnd=+33)
+        a_start = today + timedelta(days=3)
+        a_end = a_start + timedelta(days=2)    # A: [+3, +5]
+        b_start = a_end                        # B: [+5, +7] — powinno być blokowane przez offset A (blockEnd=+6)
         b_end = b_start + timedelta(days=2)
 
         result_a = _api.reserve_kayaks_soft(member_token, [kid], str(a_start), str(a_end))
@@ -442,14 +445,14 @@ class TestConflictAndOffset(unittest.TestCase):
         self._created_reservations.append((member_token, result_a["reservationId"]))
 
         result_b = _api.reserve_kayaks_soft(candidate_token, [kid], str(b_start), str(b_end))
-        # blockEndIso(A) = a_end + 1 dzień = +33, blockStartIso(B) = b_start - 1 dzień = +31
-        # overlap: [+29, +33] vs [+31, +35] → overlap → powinno być blokowane
+        # blockEndIso(A) = a_end + 1 = +6, blockStartIso(B) = b_start - 1 = +4
+        # overlap: [+2, +6] vs [+4, +8] → overlap → powinno być blokowane
         self.assertFalse(result_b.get("ok"),
                          f"Rezerwacja B powinna być blokowana przez offset A: {result_b}")
         self.assertEqual(result_b.get("code"), "conflict")
 
     def test_c03_after_offset_no_conflict(self):
-        """C03: Rezerwacja A [+30, +32], B [+34, +36] → brak konfliktu (offset=1 nie sięga tak daleko)."""
+        """C03: Rezerwacja A [+1, +3], B [+6, +6] → brak konfliktu (blockEnd A = +4, blockStart B = +5)."""
         if not cfg.member_user_email or not cfg.member_user_password:
             self.skipTest("Brak konta member")
         if not cfg.candidate_user_email or not cfg.candidate_user_password:
@@ -460,10 +463,10 @@ class TestConflictAndOffset(unittest.TestCase):
         candidate_token = _token(cfg.candidate_user_email, cfg.candidate_user_password)
 
         today = datetime.now(timezone.utc).date()
-        a_start = today + timedelta(days=30)
-        a_end = a_start + timedelta(days=2)    # blockEnd A = +33
-        b_start = a_end + timedelta(days=2)    # +34 > +33 → brak konfliktu
-        b_end = b_start + timedelta(days=2)
+        a_start = today + timedelta(days=1)
+        a_end = a_start + timedelta(days=2)    # A: [+1, +3], blockEnd A = +4
+        b_start = a_end + timedelta(days=3)    # +6 > +4 → brak konfliktu (offset=1: blockStart B = +5 > blockEnd A = +4)
+        b_end = b_start                         # 1-day reservation, b_end=+6 ≤ kandydat limit +7
 
         result_a = _api.reserve_kayaks_soft(member_token, [kid], str(a_start), str(a_end))
         if not result_a.get("ok"):
@@ -482,7 +485,7 @@ class TestConflictAndOffset(unittest.TestCase):
             self.skipTest("Brak konta member")
         kid = _require_kayak()
         token = _token(cfg.member_user_email, cfg.member_user_password)
-        start, end = _future_dates(14, 3)  # 3 dni
+        start, end = _future_dates(5, 3)  # 3 dni
 
         # Pobierz stawkę z setupClass (lub użyj domyślnej)
         try:
@@ -543,7 +546,7 @@ class TestHoursBalanceFlow(unittest.TestCase):
         if balance_before_api is None:
             self.skipTest("Nie udało się odczytać bilansu przed testem")
 
-        start, end = _future_dates(14, 3)  # 3 dni
+        start, end = _future_dates(5, 3)  # 3 dni
         result = _api.reserve_kayaks_soft(token, [kid], start, end)
         if not result.get("ok"):
             self.skipTest(f"Rezerwacja nie powiodła się (być może brak godzinek): {result}")
@@ -571,7 +574,7 @@ class TestHoursBalanceFlow(unittest.TestCase):
         if balance_before is None:
             self.skipTest("Nie udało się odczytać bilansu")
 
-        start, end = _future_dates(14, 3)
+        start, end = _future_dates(5, 3)
         result = _api.reserve_kayaks_soft(token, [kid], start, end)
         if not result.get("ok"):
             self.skipTest(f"Rezerwacja nie powiodła się: {result}")
@@ -646,7 +649,7 @@ class TestHoursBalanceFlow(unittest.TestCase):
         token = _token(cfg.board_user_email, cfg.board_user_password)
 
         balance_before = _api.get_godzinki(token).get("balance", 0)
-        start, end = _future_dates(14, 3)
+        start, end = _future_dates(5, 3)
         result = _api.reserve_kayaks_soft(token, [kid], start, end)
         if not result.get("ok"):
             self.skipTest(f"Rezerwacja nie powiodła się: {result}")
@@ -697,7 +700,7 @@ class TestReservationStates(unittest.TestCase):
         kid = _require_kayak()
         token = _token(cfg.member_user_email, cfg.member_user_password)
 
-        start, end = _future_dates(20, 2)
+        start, end = _future_dates(5, 2)
         result = _api.reserve_kayaks_soft(token, [kid], start, end)
         if not result.get("ok"):
             self.skipTest(f"Rezerwacja nie powiodła się: {result}")
@@ -721,7 +724,7 @@ class TestReservationStates(unittest.TestCase):
         kid = _require_kayak()
         token = _token(cfg.member_user_email, cfg.member_user_password)
 
-        start, end = _future_dates(20, 2)
+        start, end = _future_dates(5, 2)
         result = _api.reserve_kayaks_soft(token, [kid], start, end)
         if not result.get("ok"):
             self.skipTest(f"Rezerwacja nie powiodła się: {result}")
@@ -730,7 +733,7 @@ class TestReservationStates(unittest.TestCase):
         self._created_reservations.append((token, rsv_id))
 
         my_rsv = _api.get_my_reservations(token)
-        ids = [r.get("id") for r in my_rsv.get("reservations", [])]
+        ids = [r.get("id") for r in my_rsv.get("items", [])]
         self.assertIn(rsv_id, ids,
                       f"Rezerwacja {rsv_id} nie widoczna w my-reservations (znalezione: {ids[:5]})")
 
@@ -741,7 +744,7 @@ class TestReservationStates(unittest.TestCase):
         kid = _require_kayak()
         token = _token(cfg.member_user_email, cfg.member_user_password)
 
-        start, end = _future_dates(20, 2)
+        start, end = _future_dates(5, 2)
         result = _api.reserve_kayaks_soft(token, [kid], start, end)
         if not result.get("ok"):
             self.skipTest(f"Rezerwacja nie powiodła się: {result}")
@@ -750,7 +753,7 @@ class TestReservationStates(unittest.TestCase):
         _api.cancel_reservation_soft(token, rsv_id)
 
         my_rsv = _api.get_my_reservations(token)
-        cancelled = [r for r in my_rsv.get("reservations", []) if r.get("id") == rsv_id]
+        cancelled = [r for r in my_rsv.get("items", []) if r.get("id") == rsv_id]
         if cancelled:
             self.assertEqual(cancelled[0].get("status"), "cancelled",
                              f"Status powinien być 'cancelled': {cancelled[0]}")
@@ -795,7 +798,7 @@ class TestAccessoriesPricingGap(unittest.TestCase):
         except Exception:
             hours_per_kayak = 10
 
-        start, end = _future_dates(14, 3)  # 3 dni
+        start, end = _future_dates(5, 3)  # 3 dni
 
         resp = requests.post(
             f"{BASE}/api/gear/reservations/create-bundle",

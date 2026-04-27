@@ -83,7 +83,7 @@ class GearDiscovery:
                 k["id"] for k in kayaks
                 if k.get("isActive") is not False
                 and k.get("isOperational") is not False
-                and k.get("storage", "") != "basen"
+                and k.get("storage", "").lower() != "basen"
                 and not k.get("isPrivate", False)
             ]
             result = usable[:3]

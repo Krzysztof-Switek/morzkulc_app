@@ -15,6 +15,7 @@ export interface ServiceConfig {
 
   adminRoleKeys: string[];
   memberRoleKeys: string[];
+  godzinkiRoleKeys: string[];
 
   worker: {
     eventLockSeconds: number;
@@ -55,6 +56,11 @@ export interface ServiceConfig {
   basen: {
     adminEmail: string;
   };
+
+  // ✅ NEW: Google Calendar config
+  calendar: {
+    calendarId: string; // empty string = calendar sync disabled
+  };
 }
 
 export function getServiceConfig(): ServiceConfig {
@@ -72,7 +78,7 @@ export function getServiceConfig(): ServiceConfig {
   const delegatedSubject = process.env.SVC_WORKSPACE_DELEGATED_SUBJECT || "admin@morzkulc.pl";
 
   const adminRoleKeysRaw = process.env.SVC_ADMIN_ROLE_KEYS || "rola_zarzad,rola_kr";
-  const memberRoleKeysRaw = process.env.SVC_MEMBER_ROLE_KEYS || "rola_czlonek,rola_zarzad,rola_kr";
+  const memberRoleKeysRaw = process.env.SVC_MEMBER_ROLE_KEYS || "rola_czlonek,rola_zarzad,rola_kr,rola_kandydat";
 
   const membersSpreadsheetId =
     process.env.SVC_MEMBERS_SHEET_ID || "1lF5eDF9B6ip4G497qG1QGePXqrXdLPS8kt-3pX-ZBsM";
@@ -127,6 +133,10 @@ export function getServiceConfig(): ServiceConfig {
         "• Otwórz https://groups.google.com i wyszukaj grupę.",
         "• Sprawdź folder Spam w Gmailu.",
         "",
+        "Korzystasz z telefonu? Dodaj aplikację do ekranu głównego, żeby uruchamiać ją jak zwykłą apkę.",
+        "Android: otwórz aplikację w Chrome, kliknij menu przeglądarki i wybierz \"Dodaj do ekranu głównego\".",
+        "iPhone (iOS): otwórz aplikację w Safari, kliknij Udostępnij, a potem wybierz \"Do ekranu początkowego\".",
+        "",
         `Pytania? Odpisz na tego maila — odpowiedź trafi do: ${cfg?.welcomeReplyToEmail || "zarzad@morzkulc.pl"}.`,
         "",
         "SKK Morzkulc",
@@ -135,6 +145,12 @@ export function getServiceConfig(): ServiceConfig {
 
     adminRoleKeys: adminRoleKeysRaw.split(",").map((s) => s.trim()).filter(Boolean),
     memberRoleKeys: memberRoleKeysRaw.split(",").map((s) => s.trim()).filter(Boolean),
+    godzinkiRoleKeys: (() => {
+      const raw = process.env.SVC_GODZINKI_ROLE_KEYS || "";
+      if (raw) return raw.split(",").map((s) => s.trim()).filter(Boolean);
+      const base = memberRoleKeysRaw.split(",").map((s) => s.trim()).filter(Boolean);
+      return [...new Set([...base, "rola_kandydat"])];
+    })(),
 
     worker: {
       eventLockSeconds: Number(process.env.SVC_WORKER_EVENT_LOCK_SECONDS || 120),
@@ -170,6 +186,10 @@ export function getServiceConfig(): ServiceConfig {
 
     basen: {
       adminEmail: process.env.SVC_BASEN_ADMIN_EMAIL || "",
+    },
+
+    calendar: {
+      calendarId: process.env.SVC_CALENDAR_ID || "",
     },
   };
 

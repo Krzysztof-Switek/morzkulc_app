@@ -15,6 +15,14 @@ const ROLE_MAPPINGS = {
   rola_kursant:  { label: "Kursant",  groups: [] },
 };
 
+// Mapowanie statusów kont — blocksAccess: true blokuje dostęp (np. konto zawieszone).
+// Zmień tu gdy zmienia się polityka blokowania — potem uruchom syncSetupToFirestore().
+const STATUS_MAPPINGS = {
+  status_aktywny:    { label: "Aktywny",    blocksAccess: false },
+  status_zawieszony: { label: "Zawieszony", blocksAccess: true  },
+  status_pending:    { label: "Oczekujący", blocksAccess: false },
+};
+
 function syncSetupToFirestore() {
   assertBoardAccess_();
 
@@ -30,6 +38,7 @@ function syncSetupToFirestore() {
   const docApp = {
     modules: appSetupModules,
     roleMappings: ROLE_MAPPINGS,
+    statusMappings: STATUS_MAPPINGS,
     updatedAt: nowIso,
     updatedBy: who,
   };
