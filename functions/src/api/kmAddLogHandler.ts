@@ -14,7 +14,7 @@
  *   placeNameRaw?: string      — raw input, jeśli różny od placeName
  *   placeId?: string           — ID z km_places (jeśli wybrano z podpowiedzi)
  *   km: number                 — kilometry, > 0, <= 9999
- *   hoursOnWater?: number      — godziny na wodzie, >= 0
+ *   hoursOnWater: number       — godziny na wodzie, >= 0, wymagane (0 jeśli nie mierzono)
  *   activityType?: string      — typ aktywności
  *   difficultyScale?: string   — "WW"|"U" — wymagane dla mountains/lowlands, null dla reszty
  *   difficulty?: string        — "WW3", "U2", itp. — wymagane jeśli difficultyScale podane
@@ -116,7 +116,8 @@ export async function handleKmAddLog(
       const placeNameRaw = norm(body.placeNameRaw || body.placeName).slice(0, 200);
       const placeId = norm(body.placeId) || undefined;
       const kmRaw = toSafeFloat(body.km);
-      const hoursOnWater = body.hoursOnWater != null ? toSafeFloat(body.hoursOnWater) : undefined;
+      const hoursOnWaterRaw = body.hoursOnWater;
+      const hoursOnWater = hoursOnWaterRaw != null ? toSafeFloat(hoursOnWaterRaw) : null;
       const activityType = norm(body.activityType) || undefined;
       const difficultyScale = norm(body.difficultyScale) || null;
       const difficulty = norm(body.difficulty) || null;
@@ -157,9 +158,15 @@ export async function handleKmAddLog(
         return;
       }
 
-      // Walidacja km
-      if (kmRaw <= 0 || kmRaw > 9999) {
-        res.status(400).json({ok: false, code: "validation_failed", message: "Kilometry muszą być większe od 0 i nie większe niż 9999."});
+      // Walidacja km — wartość 0 jest dozwolona (np. playspot, trening bez przebytej trasy)
+      if (kmRaw < 0 || kmRaw > 9999) {
+        res.status(400).json({ok: false, code: "validation_failed", message: "Kilometry nie mogą być ujemne ani większe niż 9999."});
+        return;
+      }
+
+      // Walidacja hoursOnWater — wymagane, może być 0
+      if (hoursOnWater === null || isNaN(hoursOnWater) || hoursOnWater < 0 || hoursOnWater > 99) {
+        res.status(400).json({ok: false, code: "validation_failed", message: "Godziny na wodzie są wymagane (wpisz 0 jeśli nie mierzono). Wartość od 0 do 99."});
         return;
       }
 
@@ -234,7 +241,7 @@ export async function handleKmAddLog(
         lng,
         sectionDescription,
         km: kmRaw,
-        hoursOnWater,
+        hoursOnWater: hoursOnWater as number,
         activityType,
         difficultyScale: difficultyScale as any,
         difficulty,

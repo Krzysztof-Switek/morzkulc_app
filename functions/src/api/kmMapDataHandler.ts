@@ -6,6 +6,9 @@
  * Zwraca pre-computed cache lokalizacji aktywności z km_map_cache/v1.
  * Dane budowane przez task km.rebuildMapData (wywoływany z GAS menu).
  * O(1) read — jeden dokument Firestore.
+ *
+ * Query params:
+ *   year? — "YYYY" — jeśli podany, filtruje locations do tych z danym rokiem w yearsActive
  */
 
 import type {Request, Response} from "express";
@@ -20,7 +23,7 @@ export type KmMapDataDeps = {
   requireAllowedHost: (req: Request, res: Response) => boolean;
   setCorsHeaders: (req: Request, res: Response) => void;
   corsHandler: any;
-  requireIdToken?: (req: Request) => Promise<TokenCheck>;
+  requireIdToken: (req: Request) => Promise<TokenCheck>;
 };
 
 export async function handleKmMapData(
@@ -39,22 +42,40 @@ export async function handleKmMapData(
     }
 
     try {
+      const tokenCheck = await deps.requireIdToken(req);
+      if ("error" in tokenCheck) {
+        res.status(401).json({error: tokenCheck.error});
+        return;
+      }
+
+      const yearRaw = String(req.query.year || "").trim();
+      const filterYear = /^\d{4}$/.test(yearRaw) ? parseInt(yearRaw, 10) : null;
+
       const snap = await deps.db.collection("km_map_cache").doc("v1").get();
 
       if (!snap.exists) {
-        res.status(200).json({ok: true, locations: [], locationCount: 0, updatedAt: null});
+        res.status(200).json({ok: true, locations: [], locationCount: 0, years: [], updatedAt: null});
         return;
       }
 
       const data = snap.data() as any;
       const updatedAt = data.updatedAt?.toDate?.()?.toISOString() || null;
+      const allLocations: any[] = data.locations || [];
+      const years: number[] = data.years || [];
 
-      res.status(200).json({
+      const locations = filterYear != null ?
+        allLocations.filter((l: any) => Array.isArray(l.yearsActive) && l.yearsActive.includes(filterYear)) :
+        allLocations;
+
+      const responseBody: Record<string, any> = {
         ok: true,
         updatedAt,
-        locationCount: data.locationCount || 0,
-        locations: data.locations || [],
-      });
+        locationCount: locations.length,
+        locations,
+        years,
+      };
+      if (filterYear != null) responseBody.filteredByYear = filterYear;
+      res.status(200).json(responseBody);
     } catch (err: any) {
       res.status(500).json({error: "Server error", message: err?.message || String(err)});
     }

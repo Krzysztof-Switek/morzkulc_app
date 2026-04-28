@@ -359,6 +359,13 @@
           "functionId": "kmMapData",
           "region": "us-central1"
         }
+      },
+      {
+        "source": "/api/admin/km/places/merge",
+        "function": {
+          "functionId": "kmAdminMergePlaces",
+          "region": "us-central1"
+        }
       }
     ]
   }

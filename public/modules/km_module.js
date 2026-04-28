@@ -250,17 +250,17 @@ function renderFormView(inner, ctx, moduleId) {
 
         <div class="formRow">
           <label for="kmKm">Kilometry <span class="required">*</span></label>
-          <input type="number" id="kmKm" name="km" min="0.1" max="9999" step="0.1"
-            placeholder="np. 18.5" required />
+          <input type="number" id="kmKm" name="km" min="0" max="9999" step="0.1"
+            placeholder="np. 18.5 (wpisz 0 dla playspot / treningu bez trasy)" required />
         </div>
 
         <div class="formRow">
           <label for="kmHours">
-            Godziny na wodzie
-            ${infoTip("Całkowity czas na wodzie (w godzinach). Wpływa na punktację.")}
+            Godziny na wodzie <span class="required">*</span>
+            ${infoTip("Całkowity czas spędzony na wodzie (w godzinach). Wpisz 0 jeśli nie mierzono.")}
           </label>
           <input type="number" id="kmHours" name="hoursOnWater" min="0" max="99" step="0.5"
-            placeholder="np. 4.5" />
+            placeholder="np. 4.5 (wpisz 0 jeśli nie mierzono)" value="0" required />
         </div>
 
         <div class="formRow">
@@ -386,7 +386,7 @@ function renderFormView(inner, ctx, moduleId) {
     const waterType = String(form.waterType.value || "").trim();
     const placeName = String(form.placeName.value || "").trim();
     const km = parseFloat(form.km.value);
-    const hoursOnWater = form.hoursOnWater.value !== "" ? parseFloat(form.hoursOnWater.value) : undefined;
+    const hoursOnWater = parseFloat(form.hoursOnWater.value) || 0;
     const difficulty = String(form.difficulty?.value || "").trim() || null;
     const difficultyScale = difficulty
       ? (difficulty.startsWith("WW") ? "WW" : "U")
@@ -412,7 +412,8 @@ function renderFormView(inner, ctx, moduleId) {
     if (!date) { setErr("Podaj datę aktywności."); return; }
     if (!waterType) { setErr("Wybierz typ akwenu."); return; }
     if (!placeName) { setErr("Wpisz nazwę rzeki lub akwenu."); return; }
-    if (isNaN(km) || km <= 0) { setErr("Podaj prawidłową liczbę kilometrów (> 0)."); return; }
+    if (isNaN(km) || km < 0) { setErr("Podaj prawidłową liczbę kilometrów (0 lub więcej)."); return; }
+    if (isNaN(hoursOnWater) || hoursOnWater < 0 || hoursOnWater > 99) { setErr("Podaj prawidłową liczbę godzin na wodzie (0–99)."); return; }
 
     btn.disabled = true;
     btn.textContent = "Zapisywanie…";
@@ -482,8 +483,8 @@ async function renderRankingsView(inner, ctx) {
         <div class="kmControlGroup">
           <label>Okres:</label>
           <div class="kmBtnGroup" id="kmPeriodGroup">
-            <button class="kmRankBtn active" data-km-period="alltime">Wszech czasów</button>
-            <button class="kmRankBtn" data-km-period="year">Bieżący rok</button>
+            <button class="kmRankBtn" data-km-period="alltime">Wszech czasów</button>
+            <button class="kmRankBtn active" data-km-period="year">Bieżący rok</button>
             <button class="kmRankBtn" data-km-period="specificYear">Wybrany rok</button>
           </div>
         </div>
@@ -497,7 +498,7 @@ async function renderRankingsView(inner, ctx) {
   `;
 
   let activeType = "km";
-  let activePeriod = "alltime";
+  let activePeriod = "year";
 
   const yearGroup = inner.querySelector("#kmYearGroup");
   const yearSelect = inner.querySelector("#kmYearSelect");
@@ -748,14 +749,21 @@ async function renderMyLogsView(inner, ctx) {
 async function renderMapView(inner, ctx) {
   inner.innerHTML = `
     <div class="kmMapSection">
+      <div id="kmMapYearBar" style="display:none;margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+        <label for="kmMapYearFilter" style="font-size:0.85rem;color:var(--text-muted,#888);">Rok:</label>
+        <select id="kmMapYearFilter" style="background:var(--surface-2,#1e1e2e);color:var(--text-primary,#e0e0e0);border:1px solid var(--border,#333);border-radius:6px;padding:3px 8px;font-size:0.85rem;">
+          <option value="">Wszystkie lata</option>
+        </select>
+      </div>
       <div id="kmMapContainer" style="height:420px;border-radius:12px;overflow:hidden;background:#1a1a2e;"></div>
-      <div id="kmMapStatus" style="margin-top:8px;font-size:0.8rem;color:var(--text-muted, #888);text-align:right;"></div>
+      <div id="kmMapStatus" style="margin-top:8px;font-size:0.8rem;color:var(--text-muted,#888);text-align:right;"></div>
     </div>`;
 
-  const mapEl = inner.querySelector("#kmMapContainer");
+  const mapEl    = inner.querySelector("#kmMapContainer");
   const statusEl = inner.querySelector("#kmMapStatus");
+  const yearBar  = inner.querySelector("#kmMapYearBar");
+  const yearSel  = inner.querySelector("#kmMapYearFilter");
 
-  // Załaduj Leaflet CSS i JS dynamicznie
   async function loadLeaflet() {
     if (window.L) return;
     await new Promise((resolve, reject) => {
@@ -774,6 +782,33 @@ async function renderMapView(inner, ctx) {
     });
   }
 
+  function buildPopup(loc) {
+    const logWord = loc.logCount === 1 ? "wpis" : (loc.logCount < 5 ? "wpisy" : "wpisów");
+    const usersHtml = (loc.topUsers || []).length
+      ? `<br><span style="color:#aaa;font-size:0.82em">${loc.topUsers.map(u => esc(u.name)).join(", ")}</span>`
+      : "";
+    return `<strong>${esc(loc.placeName)}</strong><br>${loc.logCount} ${logWord}${usersHtml}`;
+  }
+
+  function renderMarkers(leafletMap, locations) {
+    leafletMap.eachLayer(l => { if (l instanceof window.L.CircleMarker) leafletMap.removeLayer(l); });
+    const markers = [];
+    for (const loc of locations) {
+      const radius = 4 + Math.sqrt(loc.logCount) * 3;
+      const marker = window.L.circleMarker([loc.lat, loc.lng], {
+        radius,
+        color: "#00bcd4",
+        fillColor: "#00bcd4",
+        fillOpacity: 0.65,
+        weight: 1.5,
+      });
+      marker.bindPopup(buildPopup(loc));
+      marker.addTo(leafletMap);
+      markers.push(marker);
+    }
+    return markers;
+  }
+
   try {
     mapEl.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#aaa;font-size:0.9rem;">Ładowanie mapy…</div>`;
 
@@ -784,39 +819,48 @@ async function renderMapView(inner, ctx) {
     const L = window.L;
     mapEl.innerHTML = "";
 
-    const map = L.map(mapEl, { zoomControl: true, attributionControl: true });
+    const allLocations = data?.locations || [];
+    const years = data?.years || [];
+
+    if (allLocations.length === 0) {
+      mapEl.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#aaa;font-size:0.9rem;padding:16px;text-align:center;">Brak danych lokalizacji.<br>Mapa aktualizuje się po uruchomieniu zadania z menu w arkuszu.</div>`;
+      return;
+    }
+
+    // Wypełnij dropdown roków
+    if (years.length > 0) {
+      yearBar.style.display = "flex";
+      for (const yr of years) {
+        const opt = document.createElement("option");
+        opt.value = String(yr);
+        opt.textContent = String(yr);
+        yearSel.appendChild(opt);
+      }
+    }
+
+    const leafletMap = L.map(mapEl, { zoomControl: true, attributionControl: true });
 
     L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
       attribution: "© <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors © <a href='https://carto.com/'>CARTO</a>",
       subdomains: "abcd",
       maxZoom: 19,
-    }).addTo(map);
+    }).addTo(leafletMap);
 
-    const locations = data?.locations || [];
+    let currentMarkers = renderMarkers(leafletMap, allLocations);
+    const group = L.featureGroup(currentMarkers);
+    if (currentMarkers.length) leafletMap.fitBounds(group.getBounds().pad(0.15));
 
-    if (locations.length === 0) {
-      mapEl.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#aaa;font-size:0.9rem;padding:16px;text-align:center;">Brak danych lokalizacji.<br>Mapa aktualizuje się po uruchomieniu zadania z menu w arkuszu.</div>`;
-      return;
-    }
-
-    const markers = [];
-    for (const loc of locations) {
-      const radius = 4 + Math.sqrt(loc.logCount) * 3;
-      const marker = L.circleMarker([loc.lat, loc.lng], {
-        radius,
-        color: "#00bcd4",
-        fillColor: "#00bcd4",
-        fillOpacity: 0.65,
-        weight: 1.5,
-      });
-      const logWord = loc.logCount === 1 ? "wpis" : (loc.logCount < 5 ? "wpisy" : "wpisów");
-      marker.bindPopup(`<strong>${esc(loc.placeName)}</strong><br>${loc.logCount} ${logWord} · ${fmtNum(loc.totalKm, 1)} km`);
-      marker.addTo(map);
-      markers.push(marker);
-    }
-
-    const group = L.featureGroup(markers);
-    map.fitBounds(group.getBounds().pad(0.15));
+    yearSel.addEventListener("change", () => {
+      const yr = parseInt(yearSel.value, 10);
+      const filtered = isNaN(yr)
+        ? allLocations
+        : allLocations.filter(l => Array.isArray(l.yearsActive) && l.yearsActive.includes(yr));
+      currentMarkers = renderMarkers(leafletMap, filtered);
+      if (currentMarkers.length) {
+        const fg = L.featureGroup(currentMarkers);
+        leafletMap.fitBounds(fg.getBounds().pad(0.15));
+      }
+    });
 
     if (data.updatedAt) {
       const d = new Date(data.updatedAt);

@@ -59,7 +59,8 @@ export async function listRecentEvents(db: FirebaseFirestore.Firestore): Promise
   return snap.docs
     .map((d) => d.data() as EventRecord)
     .filter((e) => String(e.startDate) <= todayIso)
-    .sort((a, b) => String(b.startDate).localeCompare(String(a.startDate)));
+    .sort((a, b) => String(b.startDate).localeCompare(String(a.startDate)))
+    .slice(0, 5);
 }
 
 /**

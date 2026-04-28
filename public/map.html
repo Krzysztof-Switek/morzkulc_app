@@ -9,6 +9,30 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; background: #0d1117; overflow: hidden; }
     #map { width: 100%; height: 100%; }
+    #yearBar {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background: rgba(13,17,23,0.85);
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 5px 12px;
+      backdrop-filter: blur(6px);
+    }
+    #yearBar label { font: 12px system-ui, sans-serif; color: #888; }
+    #yearFilter {
+      background: #1e1e2e;
+      color: #e0e0e0;
+      border: 1px solid #444;
+      border-radius: 5px;
+      padding: 3px 8px;
+      font: 12px system-ui, sans-serif;
+    }
     #status {
       position: fixed;
       bottom: 8px;
@@ -18,7 +42,7 @@
       pointer-events: none;
       z-index: 1000;
     }
-    #loading {
+    #overlay {
       position: fixed;
       inset: 0;
       display: flex;
@@ -28,82 +52,165 @@
       color: #aaa;
       font: 14px system-ui, sans-serif;
       z-index: 2000;
+      flex-direction: column;
+      gap: 12px;
+      text-align: center;
+      padding: 24px;
     }
+    #overlay.hidden { display: none; }
   </style>
 </head>
 <body>
-  <div id="loading">Ładowanie mapy…</div>
+  <div id="overlay">Sprawdzanie logowania…</div>
+  <div id="yearBar">
+    <label for="yearFilter">Rok:</label>
+    <select id="yearFilter"><option value="">Wszystkie lata</option></select>
+  </div>
   <div id="map"></div>
   <div id="status"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script>
-    (async function () {
-      const loadingEl = document.getElementById("loading");
-      const statusEl  = document.getElementById("status");
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-      function esc(s) {
-        return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-      }
-      function fmtNum(n) {
-        const v = parseFloat(n) || 0;
-        return v % 1 === 0 ? String(v) : v.toFixed(1);
-      }
+    const DEV_CONFIG = {
+      apiKey: "AIzaSyCzWcAgskiyp1AyibbiPLeAfCUfr7e3gtg",
+      authDomain: "sprzet-skk-morzkulc.web.app",
+      projectId: "sprzet-skk-morzkulc",
+      storageBucket: "sprzet-skk-morzkulc.firebasestorage.app",
+      messagingSenderId: "867472588411",
+      appId: "1:867472588411:web:2f92f3dfe7b34a76e2d5d1"
+    };
+    const PROD_CONFIG = {
+      apiKey: "AIzaSyDp8Gyd45RkSS6cdJ32oczHGe6Fb9RrWeo",
+      authDomain: "morzkulc-e9df7.web.app",
+      projectId: "morzkulc-e9df7",
+      storageBucket: "morzkulc-e9df7.firebasestorage.app",
+      messagingSenderId: "137214816080",
+      appId: "1:137214816080:web:e4a1a6a1e25a0c694ac655"
+    };
 
+    function getConfig() {
+      const host = window.location.hostname.toLowerCase();
+      if (host === "morzkulc-e9df7.web.app" || host === "morzkulc-e9df7.firebaseapp.com") return PROD_CONFIG;
+      return DEV_CONFIG;
+    }
+
+    const app  = initializeApp(getConfig());
+    const auth = getAuth(app);
+
+    const overlayEl = document.getElementById("overlay");
+    const yearBar   = document.getElementById("yearBar");
+    const yearSel   = document.getElementById("yearFilter");
+    const statusEl  = document.getElementById("status");
+
+    function esc(s) {
+      return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function buildPopup(loc) {
+      const cnt = loc.logCount;
+      const word = cnt === 1 ? "wpis" : cnt < 5 ? "wpisy" : "wpisów";
+      const usersHtml = (loc.topUsers || []).length
+        ? `<br><span style="color:#aaa;font-size:0.85em">${loc.topUsers.map(u => esc(u.name)).join(", ")}</span>`
+        : "";
+      return `<strong>${esc(loc.placeName)}</strong><br>${cnt} ${word}${usersHtml}`;
+    }
+
+    let leafletMap = null;
+    let allLocations = [];
+
+    function renderMarkers(locations) {
+      if (!leafletMap) return;
+      leafletMap.eachLayer(l => { if (l instanceof L.CircleMarker) leafletMap.removeLayer(l); });
+      const markers = [];
+      for (const loc of locations) {
+        const radius = 4 + Math.sqrt(loc.logCount) * 3;
+        const marker = L.circleMarker([loc.lat, loc.lng], {
+          radius,
+          color: "#00bcd4",
+          fillColor: "#00bcd4",
+          fillOpacity: 0.65,
+          weight: 1.5,
+        });
+        marker.bindPopup(buildPopup(loc));
+        marker.addTo(leafletMap);
+        markers.push(marker);
+      }
+      if (markers.length) {
+        leafletMap.fitBounds(L.featureGroup(markers).getBounds().pad(0.12));
+      }
+    }
+
+    yearSel.addEventListener("change", () => {
+      const yr = parseInt(yearSel.value, 10);
+      const filtered = isNaN(yr)
+        ? allLocations
+        : allLocations.filter(l => Array.isArray(l.yearsActive) && l.yearsActive.includes(yr));
+      renderMarkers(filtered);
+    });
+
+    async function initMap(idToken) {
       try {
-        const resp = await fetch("/api/km/map-data");
+        const resp = await fetch("/api/km/map-data", {
+          headers: { "Authorization": `Bearer ${idToken}` }
+        });
         if (!resp.ok) throw new Error("HTTP " + resp.status);
         const data = await resp.json();
 
-        loadingEl.remove();
+        overlayEl.classList.add("hidden");
 
-        const map = L.map("map", { zoomControl: true, attributionControl: true });
+        allLocations = data?.locations || [];
+        const years  = data?.years || [];
+
+        leafletMap = L.map("map", { zoomControl: true, attributionControl: true });
 
         L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
           attribution: "© <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors © <a href='https://carto.com/'>CARTO</a>",
           subdomains: "abcd",
           maxZoom: 19,
-        }).addTo(map);
+        }).addTo(leafletMap);
 
-        const locations = data?.locations || [];
-
-        if (locations.length === 0) {
+        if (allLocations.length === 0) {
           document.getElementById("map").innerHTML =
-            "<div style='display:flex;align-items:center;justify-content:center;height:100%;color:#aaa;font:14px system-ui,sans-serif;'>Brak danych lokalizacji.</div>";
+            "<div style='display:flex;align-items:center;justify-content:center;height:100%;color:#aaa;font:14px system-ui,sans-serif;padding:24px;text-align:center;'>Brak danych lokalizacji.<br>Mapa aktualizuje się po uruchomieniu zadania z menu w arkuszu.</div>";
           return;
         }
 
-        const markers = [];
-        for (const loc of locations) {
-          const radius = 4 + Math.sqrt(loc.logCount) * 3;
-          const marker = L.circleMarker([loc.lat, loc.lng], {
-            radius,
-            color: "#00bcd4",
-            fillColor: "#00bcd4",
-            fillOpacity: 0.65,
-            weight: 1.5,
-          });
-          const cnt = loc.logCount;
-          const word = cnt === 1 ? "wpis" : cnt < 5 ? "wpisy" : "wpisów";
-          const usersHtml = (loc.topUsers || []).length > 0
-            ? "<br><span style='color:#aaa;font-size:0.85em'>" + loc.topUsers.map(u => esc(u.name)).join(", ") + "</span>"
-            : "";
-          marker.bindPopup("<strong>" + esc(loc.placeName) + "</strong><br>" + cnt + " " + word + " · " + fmtNum(loc.totalKm) + " km" + usersHtml);
-          marker.addTo(map);
-          markers.push(marker);
+        if (years.length > 0) {
+          yearBar.style.display = "flex";
+          for (const yr of years) {
+            const opt = document.createElement("option");
+            opt.value = String(yr);
+            opt.textContent = String(yr);
+            yearSel.appendChild(opt);
+          }
         }
 
-        const group = L.featureGroup(markers);
-        map.fitBounds(group.getBounds().pad(0.12));
+        renderMarkers(allLocations);
 
         if (data.updatedAt) {
           const d = new Date(data.updatedAt);
           statusEl.textContent = "Aktualizacja: " + d.toLocaleDateString("pl-PL") + " " + d.toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
         }
       } catch (err) {
-        loadingEl.textContent = "Błąd ładowania mapy: " + (err?.message || String(err));
+        overlayEl.textContent = "Błąd ładowania mapy: " + (err?.message || String(err));
       }
-    })();
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        overlayEl.innerHTML = "Musisz być zalogowany, aby zobaczyć mapę.<br><small>Wróć do <a href='/' style='color:#00bcd4'>strony głównej</a> i zaloguj się.</small>";
+        return;
+      }
+      try {
+        const idToken = await user.getIdToken();
+        await initMap(idToken);
+      } catch (err) {
+        overlayEl.textContent = "Błąd autoryzacji: " + (err?.message || String(err));
+      }
+    });
   </script>
 </body>
 </html>

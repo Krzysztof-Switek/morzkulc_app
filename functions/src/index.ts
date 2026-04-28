@@ -44,6 +44,7 @@ import {handleKmRankings} from "./api/kmRankingsHandler";
 import {handleKmPlaces} from "./api/kmPlacesHandler";
 import {handleKmEventStats} from "./api/kmEventStatsHandler";
 import {handleKmMapData} from "./api/kmMapDataHandler";
+import {handleKmAdminMergePlaces} from "./api/kmAdminMergePlacesHandler";
 import {getServiceConfig} from "./service/service_config";
 
 setGlobalOptions({region: "us-central1"});
@@ -1075,6 +1076,22 @@ export const kmMapData = onRequest({invoker: "private"}, async (req, res) => {
     setCorsHeaders,
     corsHandler,
     requireIdToken,
+  });
+});
+
+/**
+ * POST /kmAdminMergePlaces (admin: rola_zarzad | rola_kr)
+ * Scala zduplikowane miejsca w km_places.
+ */
+export const kmAdminMergePlaces = onRequest({invoker: "private"}, async (req, res) => {
+  return handleKmAdminMergePlaces(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    adminRoleKeys,
   });
 });
 

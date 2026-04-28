@@ -19,24 +19,26 @@ import {ServiceTask} from "../types";
 
 type Payload = Record<string, never>;
 
-type TopUser = { name: string; km: number };
+type TopUser = { name: string; date: string };
 
 type LocationEntry = {
   lat: number;
   lng: number;
   placeName: string;
   logCount: number;
-  totalKm: number;
   topUsers: TopUser[];
+  yearsActive: number[];
 };
+
+type ActivityEntry = { uid: string; name: string; date: string };
 
 type GroupEntry = {
   lat: number;
   lng: number;
   placeName: string;
   logCount: number;
-  totalKm: number;
-  userKm: Map<string, { name: string; km: number }>;
+  recentActivities: ActivityEntry[];
+  yearsActive: Set<number>;
 };
 
 function resolveDisplayName(log: any): string {
@@ -52,7 +54,7 @@ function resolveDisplayName(log: any): string {
   if (parts.length >= 2) {
     return parts[0] + " " + parts[1][0].toUpperCase() + ".";
   }
-  return displayName; // pojedyncze słowo lub email
+  return displayName;
 }
 
 export const kmRebuildMapDataTask: ServiceTask<Payload> = {
@@ -66,27 +68,27 @@ export const kmRebuildMapDataTask: ServiceTask<Payload> = {
   run: async (_payload, ctx) => {
     ctx.logger.info("km.rebuildMapData: start");
 
-    // Pobierz wszystkie km_logs — filtr lat!=null nie jest obsługiwany w Firestore dla undefined
-    // Filtrujemy in-memory (tańsze niż scan po indeksie którego nie ma)
     const logsSnap = await ctx.firestore.collection("km_logs").get();
 
     ctx.logger.info("km.rebuildMapData: loaded logs", {total: logsSnap.size});
 
-    // Grupuj po placeId lub zaokrąglonym lat/lng
     const groups: Map<string, GroupEntry> = new Map();
 
     for (const doc of logsSnap.docs) {
       const log = doc.data() as any;
+
+      // Pomiń usunięte/ukryte wpisy
+      if (log.visibility === "hidden" || log.deletedAt != null) continue;
 
       const lat = typeof log.lat === "number" ? log.lat : null;
       const lng = typeof log.lng === "number" ? log.lng : null;
       if (lat == null || lng == null) continue;
 
       const placeName = String(log.placeName || "").trim() || "nieznane";
-      const km = typeof log.km === "number" ? log.km : 0;
       const uid = String(log.uid || "").trim();
+      const date = String(log.date || "").slice(0, 10);
+      const year = parseInt(date.slice(0, 4), 10);
 
-      // Klucz grupowania
       const groupKey: string = log.placeId ?
         String(log.placeId) :
         `${lat.toFixed(3)},${lng.toFixed(3)}`;
@@ -98,49 +100,53 @@ export const kmRebuildMapDataTask: ServiceTask<Payload> = {
           lng: Math.round(lng * 100000) / 100000,
           placeName,
           logCount: 0,
-          totalKm: 0,
-          userKm: new Map(),
+          recentActivities: [],
+          yearsActive: new Set(),
         };
         groups.set(groupKey, entry);
       }
-      entry.logCount += 1;
-      entry.totalKm = Math.round((entry.totalKm + km) * 100) / 100;
 
-      // Akumuluj km per użytkownik (pomijaj historical_unmatched i puste uid)
-      if (uid && uid !== "historical_unmatched") {
+      entry.logCount += 1;
+      if (year > 2000) entry.yearsActive.add(year);
+
+      if (uid && uid !== "historical_unmatched" && date) {
         const name = resolveDisplayName(log);
         if (name) {
-          const prev = entry.userKm.get(uid);
-          if (prev) {
-            prev.km = Math.round((prev.km + km) * 100) / 100;
-          } else {
-            entry.userKm.set(uid, {name, km: Math.round(km * 100) / 100});
-          }
+          entry.recentActivities.push({uid, name, date});
         }
       }
     }
 
     const locations: LocationEntry[] = Array.from(groups.values())
       .map((g) => {
-        const topUsers = Array.from(g.userKm.values())
-          .sort((a, b) => b.km - a.km)
+        // Sortuj aktywności po dacie DESC, deduplikuj po uid (zostaje najnowsza wizyta), weź 3
+        const topUsers: TopUser[] = g.recentActivities
+          .sort((a, b) => b.date.localeCompare(a.date))
+          .filter((a, i, arr) => arr.findIndex((x) => x.uid === a.uid) === i)
           .slice(0, 3)
-          .map(({name, km}) => ({name, km}));
+          .map(({name, date}) => ({name, date}));
+
         return {
           lat: g.lat,
           lng: g.lng,
           placeName: g.placeName,
           logCount: g.logCount,
-          totalKm: g.totalKm,
           topUsers,
+          yearsActive: Array.from(g.yearsActive).sort((a, b) => b - a),
         };
       })
       .sort((a, b) => b.logCount - a.logCount);
+
+    // Wszystkie lata z aktywnością (dla dropdownu w UI)
+    const allYears = Array.from(
+      new Set(locations.flatMap((l) => l.yearsActive))
+    ).sort((a, b) => b - a);
 
     const cacheDoc = {
       updatedAt: admin.firestore.Timestamp.now(),
       locationCount: locations.length,
       locations,
+      years: allYears,
     };
 
     await ctx.firestore.collection("km_map_cache").doc("v1").set(cacheDoc);

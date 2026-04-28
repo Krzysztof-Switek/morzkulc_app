@@ -18,6 +18,13 @@ Endpoint map (verified against functions/src/index.ts):
   POST /api/godzinki/submit        — body: {amount, grantedAt, reason}
                                      returns: {ok, recordId}
   GET  /api/gear/kayak-reservations?kayakId=X
+  POST /api/km/log/add         — body: {date, waterType, placeName, km, hoursOnWater, ...}
+  GET  /api/km/logs            — returns {ok, logs, count}
+  GET  /api/km/stats           — returns {ok, stats}
+  GET  /api/km/rankings        — returns {ok, type, period, entries, count}
+  GET  /api/km/places          — returns {ok, places, count}
+  GET  /api/km/map-data        — returns {ok, locations, locationCount, updatedAt}
+  GET  /api/km/event-stats     — returns {ok, eventId, participants, totals, count}
 """
 import logging
 import requests
@@ -253,3 +260,124 @@ class ApiHelper:
             timeout=30,
         )
         return self._soft(resp, "POST /api/gear/reservations/update (soft)")
+
+    # ------------------------------------------------------------------
+    # Kilometrówka / Ranking / Mapa
+    # ------------------------------------------------------------------
+
+    def km_add_log(self, token: str, body: dict) -> dict:
+        """POST /api/km/log/add — raises on HTTP error."""
+        resp = self._session.post(
+            f"{self.base_url}/api/km/log/add",
+            headers=self._headers(token),
+            json=body,
+            timeout=30,
+        )
+        return self._check(resp, "POST /api/km/log/add")
+
+    def km_add_log_soft(self, token: str, body: dict) -> dict:
+        """POST /api/km/log/add — does NOT raise on HTTP error."""
+        resp = self._session.post(
+            f"{self.base_url}/api/km/log/add",
+            headers=self._headers(token),
+            json=body,
+            timeout=30,
+        )
+        return self._soft(resp, "POST /api/km/log/add (soft)")
+
+    def km_my_logs(self, token: str, limit: int = 50, after_date: str = "") -> dict:
+        """GET /api/km/logs — returns {ok, logs, count}."""
+        params: dict = {"limit": limit}
+        if after_date:
+            params["afterDate"] = after_date
+        resp = self._session.get(
+            f"{self.base_url}/api/km/logs",
+            headers=self._headers(token),
+            params=params,
+            timeout=15,
+        )
+        return self._check(resp, "GET /api/km/logs")
+
+    def km_my_stats(self, token: str) -> dict:
+        """GET /api/km/stats — returns {ok, stats}."""
+        resp = self._session.get(
+            f"{self.base_url}/api/km/stats",
+            headers=self._headers(token),
+            timeout=15,
+        )
+        return self._check(resp, "GET /api/km/stats")
+
+    def km_rankings(self, token: str, type: str = "km", period: str = "alltime",
+                    limit: int = 50, year: str = "") -> dict:
+        """GET /api/km/rankings — returns {ok, type, period, entries, count}."""
+        params: dict = {"type": type, "period": period, "limit": limit}
+        if year:
+            params["year"] = year
+        resp = self._session.get(
+            f"{self.base_url}/api/km/rankings",
+            headers=self._headers(token),
+            params=params,
+            timeout=15,
+        )
+        return self._check(resp, "GET /api/km/rankings")
+
+    def km_places(self, token: str, q: str, limit: int = 10) -> dict:
+        """GET /api/km/places — returns {ok, places, count}."""
+        resp = self._session.get(
+            f"{self.base_url}/api/km/places",
+            headers=self._headers(token),
+            params={"q": q, "limit": limit},
+            timeout=15,
+        )
+        return self._check(resp, "GET /api/km/places")
+
+    def km_map_data(self, token: str) -> dict:
+        """GET /api/km/map-data — returns {ok, locations, locationCount, updatedAt}."""
+        resp = self._session.get(
+            f"{self.base_url}/api/km/map-data",
+            headers=self._headers(token),
+            timeout=15,
+        )
+        return self._check(resp, "GET /api/km/map-data")
+
+    def km_event_stats(self, token: str, event_id: str) -> dict:
+        """GET /api/km/event-stats — raises on HTTP error."""
+        resp = self._session.get(
+            f"{self.base_url}/api/km/event-stats",
+            headers=self._headers(token),
+            params={"eventId": event_id},
+            timeout=15,
+        )
+        return self._check(resp, "GET /api/km/event-stats")
+
+    def km_event_stats_soft(self, token: str, event_id: str = "") -> dict:
+        """GET /api/km/event-stats — does NOT raise on HTTP error."""
+        params = {"eventId": event_id} if event_id else {}
+        resp = self._session.get(
+            f"{self.base_url}/api/km/event-stats",
+            headers=self._headers(token),
+            params=params,
+            timeout=15,
+        )
+        return self._soft(resp, "GET /api/km/event-stats (soft)")
+
+    def km_admin_merge_places(self, token: str, keep_place_id: str, merge_ids: list[str]) -> dict:
+        """POST /api/admin/km/places/merge — raises on HTTP error."""
+        resp = self._session.post(
+            f"{self.base_url}/api/admin/km/places/merge",
+            headers=self._headers(token),
+            json={"keepPlaceId": keep_place_id, "mergeIds": merge_ids},
+            timeout=30,
+        )
+        return self._check(resp, "POST /api/admin/km/places/merge")
+
+    def km_admin_merge_places_soft(self, token: str, keep_place_id: str = "",
+                                   merge_ids: list | None = None) -> dict:
+        """POST /api/admin/km/places/merge — does NOT raise on HTTP error."""
+        resp = self._session.post(
+            f"{self.base_url}/api/admin/km/places/merge",
+            headers=self._headers(token),
+            json={"keepPlaceId": keep_place_id, "mergeIds": merge_ids or []},
+            timeout=30,
+        )
+        return self._soft(resp, "POST /api/admin/km/places/merge (soft)")

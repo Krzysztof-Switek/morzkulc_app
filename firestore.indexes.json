@@ -106,6 +106,14 @@
         { "fieldPath": "year", "order": "ASCENDING" },
         { "fieldPath": "pointsTotal", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "km_places",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "searchTerms", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "useCount", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
