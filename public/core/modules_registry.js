@@ -6,6 +6,7 @@ import { createImprezaModule } from "/modules/impreza_module.js";
 import { createBasenModule } from "/modules/basen_module.js";
 import { createAdminPendingModule } from "/modules/admin_pending_module.js";
 import { createKmModule } from "/modules/km_module.js";
+import { createKursModule } from "/modules/kurs_module.js";
 
 /**
  * Resolves the module component type from setup config.
@@ -13,9 +14,9 @@ import { createKmModule } from "/modules/km_module.js";
  * Priority: explicit `type` field (only if it matches a known type) → derived from PL label.
  * Returns a stable lowercase type string or null for unknown/generic modules.
  *
- * Known types: "gear" | "godzinki" | "imprezy" | "basen" | "km" | "admin_pending"
+ * Known types: "gear" | "godzinki" | "imprezy" | "basen" | "km" | "admin_pending" | "kurs"
  */
-const KNOWN_MODULE_TYPES = new Set(["gear", "godzinki", "imprezy", "basen", "km", "admin_pending"]);
+const KNOWN_MODULE_TYPES = new Set(["gear", "godzinki", "imprezy", "basen", "km", "admin_pending", "kurs"]);
 
 function resolveModuleType(cfg) {
   const typeField = String(cfg?.type || "").trim().toLowerCase();
@@ -100,6 +101,13 @@ export function buildModulesFromSetup(setup, allowedActions) {
       return createAdminPendingModule({
         ...base,
         defaultRoute: "list"
+      });
+    }
+
+    if (moduleType === "kurs") {
+      return createKursModule({
+        ...base,
+        defaultRoute: base.defaultRoute === "home" ? "skrypt" : base.defaultRoute
       });
     }
 

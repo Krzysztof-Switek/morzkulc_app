@@ -1065,7 +1065,7 @@ export const kmEventStats = onRequest({invoker: "private"}, async (req, res) => 
 });
 
 /**
- * GET /kmMapData (authenticated)
+ * GET /kmMapData (publiczny — bez auth, dane pre-computed)
  * Pre-computed cache lokalizacji aktywności km dla mapy.
  */
 export const kmMapData = onRequest({invoker: "private"}, async (req, res) => {
@@ -1075,7 +1075,6 @@ export const kmMapData = onRequest({invoker: "private"}, async (req, res) => {
     requireAllowedHost,
     setCorsHeaders,
     corsHandler,
-    requireIdToken,
   });
 });
 
@@ -1143,5 +1142,18 @@ export const eventsSyncCalendarDaily = onSchedule(
     logger.info("eventsSyncCalendarDaily: start");
     const result = await runTaskById("events.syncCalendar", {});
     logger.info("eventsSyncCalendarDaily: done", result as unknown as Record<string, unknown>);
+  }
+);
+
+/**
+ * SCHEDULER: Miesięczna przebudowa cache mapy aktywności km.
+ * Uruchamiany 1. dnia każdego miesiąca o 03:30 czasu warszawskiego.
+ */
+export const kmRebuildMapMonthly = onSchedule(
+  {schedule: "30 3 1 * *", timeZone: "Europe/Warsaw"},
+  async () => {
+    logger.info("kmRebuildMapMonthly: start");
+    const result = await runTaskById("km.rebuildMapData", {});
+    logger.info("kmRebuildMapMonthly: done", result as unknown as Record<string, unknown>);
   }
 );

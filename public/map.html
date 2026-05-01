@@ -6,50 +6,118 @@
   <title>Mapa aktywności — SKK Morzkulc</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
+    :root {
+      --bg: #0d1117;
+      --panel-bg: rgba(13,17,23,0.85);
+      --panel-border: #333;
+      --text: #888;
+      --text-dim: #555;
+      --input-bg: #1e1e2e;
+      --input-color: #e0e0e0;
+      --input-border: #444;
+      --status-color: #666;
+    }
+    body.light {
+      --bg: #f0f0eb;
+      --panel-bg: rgba(240,240,235,0.92);
+      --panel-border: #bbb;
+      --text: #555;
+      --text-dim: #aaa;
+      --input-bg: #fff;
+      --input-color: #222;
+      --input-border: #bbb;
+      --status-color: #999;
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; background: #0d1117; overflow: hidden; }
+    html, body { width: 100%; height: 100%; background: var(--bg); overflow: hidden; transition: background 0.2s; }
     #map { width: 100%; height: 100%; }
+
     #yearBar {
       position: fixed;
       top: 10px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 1000;
-      display: none;
+      display: flex;
       align-items: center;
       gap: 8px;
-      background: rgba(13,17,23,0.85);
-      border: 1px solid #333;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
       border-radius: 8px;
       padding: 5px 12px;
       backdrop-filter: blur(6px);
     }
-    #yearBar label { font: 12px system-ui, sans-serif; color: #888; }
+    #yearBar label { font: 12px system-ui, sans-serif; color: var(--text); }
     #yearFilter {
-      background: #1e1e2e;
-      color: #e0e0e0;
-      border: 1px solid #444;
+      background: var(--input-bg);
+      color: var(--input-color);
+      border: 1px solid var(--input-border);
       border-radius: 5px;
       padding: 3px 8px;
       font: 12px system-ui, sans-serif;
     }
+
+    #themeToggle {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 1000;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-size: 16px;
+      line-height: 1;
+      cursor: pointer;
+      backdrop-filter: blur(6px);
+    }
+
+    #legend {
+      position: fixed;
+      bottom: 32px;
+      left: 10px;
+      z-index: 1000;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      backdrop-filter: blur(6px);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font: 11px system-ui, sans-serif;
+      color: var(--text);
+    }
+    .legend-dot {
+      border-radius: 50%;
+      opacity: 0.75;
+      flex-shrink: 0;
+    }
+
     #status {
       position: fixed;
       bottom: 8px;
       right: 10px;
       font: 11px/1.4 system-ui, sans-serif;
-      color: #666;
+      color: var(--status-color);
       pointer-events: none;
       z-index: 1000;
     }
+
     #overlay {
       position: fixed;
       inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #0d1117;
-      color: #aaa;
+      background: var(--bg);
+      color: var(--text);
       font: 14px system-ui, sans-serif;
       z-index: 2000;
       flex-direction: column;
@@ -61,49 +129,52 @@
   </style>
 </head>
 <body>
-  <div id="overlay">Sprawdzanie logowania…</div>
+  <div id="overlay">Ładowanie mapy…</div>
   <div id="yearBar">
     <label for="yearFilter">Rok:</label>
     <select id="yearFilter"><option value="">Wszystkie lata</option></select>
   </div>
+  <button id="themeToggle" title="Przełącz motyw">☀️</button>
   <div id="map"></div>
+  <div id="legend">
+    <div class="legend-row">
+      <div class="legend-dot" style="width:10px;height:10px;background:#00bcd4;"></div>
+      <span>mało spływów</span>
+    </div>
+    <div class="legend-row">
+      <div class="legend-dot" style="width:22px;height:22px;background:#00bcd4;"></div>
+      <span>dużo spływów</span>
+    </div>
+    <div class="legend-row" style="color:var(--text-dim);margin-top:2px;">
+      Kliknij kółko, by sprawdzić
+    </div>
+  </div>
   <div id="status"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  <script>
+    const TILE_DARK  = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+    const TILE_LIGHT = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+    const TILE_ATTR  = "© <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors © <a href='https://carto.com/'>CARTO</a>";
+    const MARKER_DARK  = "#00bcd4";
+    const MARKER_LIGHT = "#0077cc";
 
-    const DEV_CONFIG = {
-      apiKey: "AIzaSyCzWcAgskiyp1AyibbiPLeAfCUfr7e3gtg",
-      authDomain: "sprzet-skk-morzkulc.web.app",
-      projectId: "sprzet-skk-morzkulc",
-      storageBucket: "sprzet-skk-morzkulc.firebasestorage.app",
-      messagingSenderId: "867472588411",
-      appId: "1:867472588411:web:2f92f3dfe7b34a76e2d5d1"
-    };
-    const PROD_CONFIG = {
-      apiKey: "AIzaSyDp8Gyd45RkSS6cdJ32oczHGe6Fb9RrWeo",
-      authDomain: "morzkulc-e9df7.web.app",
-      projectId: "morzkulc-e9df7",
-      storageBucket: "morzkulc-e9df7.firebasestorage.app",
-      messagingSenderId: "137214816080",
-      appId: "1:137214816080:web:e4a1a6a1e25a0c694ac655"
-    };
+    let darkMode   = true;
+    let leafletMap = null;
+    let tileLayer  = null;
+    let allLocations = [];
 
-    function getConfig() {
-      const host = window.location.hostname.toLowerCase();
-      if (host === "morzkulc-e9df7.web.app" || host === "morzkulc-e9df7.firebaseapp.com") return PROD_CONFIG;
-      return DEV_CONFIG;
+    const overlayEl     = document.getElementById("overlay");
+    const yearSel       = document.getElementById("yearFilter");
+    const statusEl      = document.getElementById("status");
+    const themeBtn      = document.getElementById("themeToggle");
+    const legendDots    = document.querySelectorAll(".legend-dot");
+
+    function markerColor() { return darkMode ? MARKER_DARK : MARKER_LIGHT; }
+
+    function updateLegendDots() {
+      legendDots.forEach(d => { d.style.background = markerColor(); });
     }
-
-    const app  = initializeApp(getConfig());
-    const auth = getAuth(app);
-
-    const overlayEl = document.getElementById("overlay");
-    const yearBar   = document.getElementById("yearBar");
-    const yearSel   = document.getElementById("yearFilter");
-    const statusEl  = document.getElementById("status");
 
     function esc(s) {
       return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -112,25 +183,31 @@
     function buildPopup(loc) {
       const cnt = loc.logCount;
       const word = cnt === 1 ? "wpis" : cnt < 5 ? "wpisy" : "wpisów";
-      const usersHtml = (loc.topUsers || []).length
-        ? `<br><span style="color:#aaa;font-size:0.85em">${loc.topUsers.map(u => esc(u.name)).join(", ")}</span>`
+      const users = loc.topUsers || [];
+      const usersHtml = users.length
+        ? `<br><span style="color:#aaa;font-size:0.85em">Ostatnio: ${users.map(u => esc(u.name)).join(", ")}</span>`
         : "";
       return `<strong>${esc(loc.placeName)}</strong><br>${cnt} ${word}${usersHtml}`;
     }
 
-    let leafletMap = null;
-    let allLocations = [];
+    function currentlyVisible() {
+      const yr = parseInt(yearSel.value, 10);
+      return isNaN(yr)
+        ? allLocations
+        : allLocations.filter(l => Array.isArray(l.yearsActive) && l.yearsActive.includes(yr));
+    }
 
     function renderMarkers(locations) {
       if (!leafletMap) return;
       leafletMap.eachLayer(l => { if (l instanceof L.CircleMarker) leafletMap.removeLayer(l); });
+      const color = markerColor();
       const markers = [];
       for (const loc of locations) {
-        const radius = 4 + Math.sqrt(loc.logCount) * 3;
+        const radius = Math.min(6 + Math.log2(loc.logCount + 1) * 3, 22);
         const marker = L.circleMarker([loc.lat, loc.lng], {
           radius,
-          color: "#00bcd4",
-          fillColor: "#00bcd4",
+          color,
+          fillColor: color,
           fillOpacity: 0.65,
           weight: 1.5,
         });
@@ -143,19 +220,29 @@
       }
     }
 
-    yearSel.addEventListener("change", () => {
-      const yr = parseInt(yearSel.value, 10);
-      const filtered = isNaN(yr)
-        ? allLocations
-        : allLocations.filter(l => Array.isArray(l.yearsActive) && l.yearsActive.includes(yr));
-      renderMarkers(filtered);
+    yearSel.addEventListener("change", () => renderMarkers(currentlyVisible()));
+
+    themeBtn.addEventListener("click", () => {
+      darkMode = !darkMode;
+      document.body.classList.toggle("light", !darkMode);
+      themeBtn.textContent = darkMode ? "☀️" : "🌙";
+      updateLegendDots();
+
+      if (tileLayer && leafletMap) {
+        leafletMap.removeLayer(tileLayer);
+        tileLayer = L.tileLayer(darkMode ? TILE_DARK : TILE_LIGHT, {
+          attribution: TILE_ATTR,
+          subdomains: "abcd",
+          maxZoom: 19,
+        }).addTo(leafletMap);
+      }
+
+      renderMarkers(currentlyVisible());
     });
 
-    async function initMap(idToken) {
+    async function initMap() {
       try {
-        const resp = await fetch("/api/km/map-data", {
-          headers: { "Authorization": `Bearer ${idToken}` }
-        });
+        const resp = await fetch("/api/km/map-data");
         if (!resp.ok) throw new Error("HTTP " + resp.status);
         const data = await resp.json();
 
@@ -166,8 +253,8 @@
 
         leafletMap = L.map("map", { zoomControl: true, attributionControl: true });
 
-        L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-          attribution: "© <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors © <a href='https://carto.com/'>CARTO</a>",
+        tileLayer = L.tileLayer(TILE_DARK, {
+          attribution: TILE_ATTR,
           subdomains: "abcd",
           maxZoom: 19,
         }).addTo(leafletMap);
@@ -178,14 +265,11 @@
           return;
         }
 
-        if (years.length > 0) {
-          yearBar.style.display = "flex";
-          for (const yr of years) {
-            const opt = document.createElement("option");
-            opt.value = String(yr);
-            opt.textContent = String(yr);
-            yearSel.appendChild(opt);
-          }
+        for (const yr of years) {
+          const opt = document.createElement("option");
+          opt.value = String(yr);
+          opt.textContent = String(yr);
+          yearSel.appendChild(opt);
         }
 
         renderMarkers(allLocations);
@@ -199,18 +283,7 @@
       }
     }
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        overlayEl.innerHTML = "Musisz być zalogowany, aby zobaczyć mapę.<br><small>Wróć do <a href='/' style='color:#00bcd4'>strony głównej</a> i zaloguj się.</small>";
-        return;
-      }
-      try {
-        const idToken = await user.getIdToken();
-        await initMap(idToken);
-      } catch (err) {
-        overlayEl.textContent = "Błąd autoryzacji: " + (err?.message || String(err));
-      }
-    });
+    initMap();
   </script>
 </body>
 </html>

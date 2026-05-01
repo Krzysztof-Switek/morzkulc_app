@@ -1,6 +1,1352 @@
 # Tests Context
 
-Files indexed here: 684
+Files indexed here: 849
+
+## `archived/functions/node_modules/@firebase/component/dist/esm/test/setup.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+- keywords:
+  - setup
+
+## `archived/functions/node_modules/@firebase/component/dist/esm/test/util.d.ts`
+
+- kind: `test`
+- lines: 6
+- size_bytes: 414
+- symbols:
+  - getFakeApp
+- local imports:
+  - ../src/component
+  - ../src/types
+
+## `archived/functions/node_modules/@firebase/component/dist/test/setup.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+- keywords:
+  - setup
+
+## `archived/functions/node_modules/@firebase/component/dist/test/util.d.ts`
+
+- kind: `test`
+- lines: 6
+- size_bytes: 414
+- symbols:
+  - getFakeApp
+- local imports:
+  - ../src/component
+  - ../src/types
+
+## `archived/functions/node_modules/@firebase/database-compat/dist/database-compat/test/browser/crawler_support.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/database-compat/dist/database-compat/test/database.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 628
+- keywords:
+  - index
+- local imports:
+  - ../src/index
+
+## `archived/functions/node_modules/@firebase/database-compat/dist/database-compat/test/datasnapshot.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/database-compat/dist/database-compat/test/helpers/events.d.ts`
+
+- kind: `test`
+- lines: 35
+- size_bytes: 1234
+- keywords:
+  - events
+- symbols:
+  - eventCleanup
+  - eventTestHelper
+
+## `archived/functions/node_modules/@firebase/database-compat/dist/database-compat/test/helpers/util.d.ts`
+
+- kind: `test`
+- lines: 43
+- size_bytes: 1886
+- keywords:
+  - index
+- symbols:
+  - canCreateExtraConnections
+  - createTestApp
+  - getFreshRepo
+  - getFreshRepoFromReference
+  - getPath
+  - getQueryValue
+  - getRandomNode
+  - getRootNode
+  - getSnap
+  - getVal
+  - pause
+  - shuffle
+- local imports:
+  - ../../../database/src/core/util/Path
+  - ../../src/api/Reference
+  - ../../src/index
+
+## `archived/functions/node_modules/@firebase/database-compat/dist/database-compat/test/info.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/database-compat/dist/database-compat/test/order.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/database-compat/dist/database-compat/test/order_by.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/database-compat/dist/database-compat/test/promise.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/database-compat/dist/database-compat/test/query.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/database-compat/dist/database-compat/test/servervalues.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/database-compat/dist/database-compat/test/transaction.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 628
+- keywords:
+  - index
+  - transaction
+- local imports:
+  - ../src/index
+
+## `archived/functions/node_modules/@firebase/database-compat/dist/node-esm/database-compat/test/browser/crawler_support.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/database-compat/dist/node-esm/database-compat/test/database.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 628
+- keywords:
+  - index
+- local imports:
+  - ../src/index
+
+## `archived/functions/node_modules/@firebase/database-compat/dist/node-esm/database-compat/test/datasnapshot.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/database-compat/dist/node-esm/database-compat/test/helpers/events.d.ts`
+
+- kind: `test`
+- lines: 35
+- size_bytes: 1234
+- keywords:
+  - events
+- symbols:
+  - eventCleanup
+  - eventTestHelper
+
+## `archived/functions/node_modules/@firebase/database-compat/dist/node-esm/database-compat/test/helpers/util.d.ts`
+
+- kind: `test`
+- lines: 43
+- size_bytes: 1886
+- keywords:
+  - index
+- symbols:
+  - canCreateExtraConnections
+  - createTestApp
+  - getFreshRepo
+  - getFreshRepoFromReference
+  - getPath
+  - getQueryValue
+  - getRandomNode
+  - getRootNode
+  - getSnap
+  - getVal
+  - pause
+  - shuffle
+- local imports:
+  - ../../../database/src/core/util/Path
+  - ../../src/api/Reference
+  - ../../src/index
+
+## `archived/functions/node_modules/@firebase/database-compat/dist/node-esm/database-compat/test/info.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/database-compat/dist/node-esm/database-compat/test/order.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/database-compat/dist/node-esm/database-compat/test/order_by.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/database-compat/dist/node-esm/database-compat/test/promise.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/database-compat/dist/node-esm/database-compat/test/query.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/database-compat/dist/node-esm/database-compat/test/servervalues.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/database-compat/dist/node-esm/database-compat/test/transaction.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 628
+- keywords:
+  - index
+  - transaction
+- local imports:
+  - ../src/index
+
+## `archived/functions/node_modules/@firebase/database/dist/node-esm/src/api/test_access.d.ts`
+
+- kind: `test`
+- lines: 32
+- size_bytes: 1245
+- local imports:
+  - ../core/PersistentConnection
+  - ../core/RepoInfo
+  - ../realtime/Connection
+
+## `archived/functions/node_modules/@firebase/database/dist/node-esm/test/helpers/EventAccumulator.d.ts`
+
+- kind: `test`
+- lines: 36
+- size_bytes: 1170
+- symbols:
+  - EventAccumulator
+
+## `archived/functions/node_modules/@firebase/database/dist/node-esm/test/helpers/syncpoint-util.d.ts`
+
+- kind: `test`
+- lines: 30
+- size_bytes: 1049
+- keywords:
+  - sync
+- symbols:
+  - SyncPointTestParser
+- local imports:
+  - ../../src/core/SyncTree
+  - ../../src/core/util/Path
+
+## `archived/functions/node_modules/@firebase/database/dist/node-esm/test/helpers/util.d.ts`
+
+- kind: `test`
+- lines: 37
+- size_bytes: 1824
+- symbols:
+  - getFreshRepo
+  - getRWRefs
+  - getUniqueRef
+  - repoInfoForConnectionTest
+  - shuffle
+  - testRepoInfo
+  - waitFor
+  - waitUntil
+  - writeAndValidate
+- local imports:
+  - ../../src
+  - ../../src/core/util/Path
+  - ./EventAccumulator
+
+## `archived/functions/node_modules/@firebase/database/dist/src/api/test_access.d.ts`
+
+- kind: `test`
+- lines: 32
+- size_bytes: 1245
+- local imports:
+  - ../core/PersistentConnection
+  - ../core/RepoInfo
+  - ../realtime/Connection
+
+## `archived/functions/node_modules/@firebase/database/dist/test/helpers/EventAccumulator.d.ts`
+
+- kind: `test`
+- lines: 36
+- size_bytes: 1170
+- symbols:
+  - EventAccumulator
+
+## `archived/functions/node_modules/@firebase/database/dist/test/helpers/syncpoint-util.d.ts`
+
+- kind: `test`
+- lines: 30
+- size_bytes: 1049
+- keywords:
+  - sync
+- symbols:
+  - SyncPointTestParser
+- local imports:
+  - ../../src/core/SyncTree
+  - ../../src/core/util/Path
+
+## `archived/functions/node_modules/@firebase/database/dist/test/helpers/util.d.ts`
+
+- kind: `test`
+- lines: 37
+- size_bytes: 1824
+- symbols:
+  - getFreshRepo
+  - getRWRefs
+  - getUniqueRef
+  - repoInfoForConnectionTest
+  - shuffle
+  - testRepoInfo
+  - waitFor
+  - waitUntil
+  - writeAndValidate
+- local imports:
+  - ../../src
+  - ../../src/core/util/Path
+  - ./EventAccumulator
+
+## `archived/functions/node_modules/@firebase/logger/dist/esm/test/custom-logger.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/logger/dist/esm/test/logger.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/logger/dist/test/custom-logger.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/logger/dist/test/logger.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/util/dist/node-esm/test/base64.test.d.ts`
+
+- kind: `test`
+- lines: 2
+- size_bytes: 11
+
+## `archived/functions/node_modules/@firebase/util/dist/node-esm/test/compat.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/util/dist/node-esm/test/deepCopy.test.d.ts`
+
+- kind: `test`
+- lines: 2
+- size_bytes: 11
+
+## `archived/functions/node_modules/@firebase/util/dist/node-esm/test/defaults.test.d.ts`
+
+- kind: `test`
+- lines: 2
+- size_bytes: 11
+
+## `archived/functions/node_modules/@firebase/util/dist/node-esm/test/emulator.test.d.ts`
+
+- kind: `test`
+- lines: 2
+- size_bytes: 11
+
+## `archived/functions/node_modules/@firebase/util/dist/node-esm/test/environments.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/util/dist/node-esm/test/errors.test.d.ts`
+
+- kind: `test`
+- lines: 2
+- size_bytes: 11
+
+## `archived/functions/node_modules/@firebase/util/dist/node-esm/test/exponential_backoff.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/util/dist/node-esm/test/object.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/util/dist/node-esm/test/subscribe.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/util/dist/test/base64.test.d.ts`
+
+- kind: `test`
+- lines: 2
+- size_bytes: 11
+
+## `archived/functions/node_modules/@firebase/util/dist/test/compat.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/util/dist/test/deepCopy.test.d.ts`
+
+- kind: `test`
+- lines: 2
+- size_bytes: 11
+
+## `archived/functions/node_modules/@firebase/util/dist/test/defaults.test.d.ts`
+
+- kind: `test`
+- lines: 2
+- size_bytes: 11
+
+## `archived/functions/node_modules/@firebase/util/dist/test/emulator.test.d.ts`
+
+- kind: `test`
+- lines: 2
+- size_bytes: 11
+
+## `archived/functions/node_modules/@firebase/util/dist/test/environments.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/util/dist/test/errors.test.d.ts`
+
+- kind: `test`
+- lines: 2
+- size_bytes: 11
+
+## `archived/functions/node_modules/@firebase/util/dist/test/exponential_backoff.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/util/dist/test/object.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@firebase/util/dist/test/subscribe.test.d.ts`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 616
+
+## `archived/functions/node_modules/@protobufjs/aspromise/tests/index.js`
+
+- kind: `test`
+- lines: 131
+- size_bytes: 4455
+- keywords:
+  - index
+- symbols:
+  - fn
+
+## `archived/functions/node_modules/@protobufjs/base64/tests/index.js`
+
+- kind: `test`
+- lines: 47
+- size_bytes: 1371
+- keywords:
+  - index
+
+## `archived/functions/node_modules/@protobufjs/codegen/tests/index.js`
+
+- kind: `test`
+- lines: 14
+- size_bytes: 356
+- keywords:
+  - index
+
+## `archived/functions/node_modules/@protobufjs/eventemitter/tests/index.js`
+
+- kind: `test`
+- lines: 48
+- size_bytes: 1488
+- keywords:
+  - events
+  - index
+
+## `archived/functions/node_modules/@protobufjs/fetch/tests/index.js`
+
+- kind: `test`
+- lines: 17
+- size_bytes: 410
+- keywords:
+  - index
+- route/api hints:
+  - NOTFOUND
+
+## `archived/functions/node_modules/@protobufjs/float/tests/index.js`
+
+- kind: `test`
+- lines: 100
+- size_bytes: 3102
+- keywords:
+  - index
+- symbols:
+  - checkValue
+  - runTest
+
+## `archived/functions/node_modules/@protobufjs/inquire/tests/data/array.js`
+
+- kind: `test`
+- lines: 2
+- size_bytes: 23
+
+## `archived/functions/node_modules/@protobufjs/inquire/tests/data/emptyArray.js`
+
+- kind: `test`
+- lines: 2
+- size_bytes: 22
+
+## `archived/functions/node_modules/@protobufjs/inquire/tests/data/emptyObject.js`
+
+- kind: `test`
+- lines: 2
+- size_bytes: 22
+
+## `archived/functions/node_modules/@protobufjs/inquire/tests/data/object.js`
+
+- kind: `test`
+- lines: 2
+- size_bytes: 28
+
+## `archived/functions/node_modules/@protobufjs/inquire/tests/index.js`
+
+- kind: `test`
+- lines: 21
+- size_bytes: 792
+- keywords:
+  - index
+
+## `archived/functions/node_modules/@protobufjs/path/tests/index.js`
+
+- kind: `test`
+- lines: 61
+- size_bytes: 2089
+- keywords:
+  - index
+
+## `archived/functions/node_modules/@protobufjs/pool/tests/index.js`
+
+- kind: `test`
+- lines: 33
+- size_bytes: 1517
+- keywords:
+  - index
+
+## `archived/functions/node_modules/@protobufjs/utf8/tests/index.js`
+
+- kind: `test`
+- lines: 58
+- size_bytes: 2244
+- keywords:
+  - sync
+  - index
+
+## `archived/functions/node_modules/@types/node/test.d.ts`
+
+- kind: `test`
+- lines: 2164
+- size_bytes: 101442
+- warnings:
+  - large file: 2164 lines
+- keywords:
+  - sync
+- symbols:
+  - LcovReporter
+  - SpecReporter
+  - addOne
+  - addTwo
+  - after
+  - afterEach
+  - asyncActivity
+  - before
+  - beforeEach
+  - being
+  - dot
+  - is
+  - junit
+  - only
+  - register
+  - run
+  - setDefaultSnapshotSerializers
+  - setResolveSnapshotPath
+  - skip
+  - suite
+  - tap
+  - test
+  - todo
+- route/api hints:
+  - some/uri
+
+## `archived/functions/node_modules/buffer-equal-constant-time/test.js`
+
+- kind: `test`
+- lines: 43
+- size_bytes: 1013
+- keywords:
+  - index
+
+## `archived/functions/node_modules/call-bind-apply-helpers/test/index.js`
+
+- kind: `test`
+- lines: 64
+- size_bytes: 2658
+- keywords:
+  - index
+
+## `archived/functions/node_modules/call-bound/test/index.js`
+
+- kind: `test`
+- lines: 62
+- size_bytes: 2418
+- keywords:
+  - index
+
+## `archived/functions/node_modules/dunder-proto/test/get.js`
+
+- kind: `test`
+- lines: 35
+- size_bytes: 1143
+
+## `archived/functions/node_modules/dunder-proto/test/index.js`
+
+- kind: `test`
+- lines: 5
+- size_bytes: 51
+- keywords:
+  - index
+
+## `archived/functions/node_modules/dunder-proto/test/set.js`
+
+- kind: `test`
+- lines: 51
+- size_bytes: 1695
+
+## `archived/functions/node_modules/duplexify/test.js`
+
+- kind: `test`
+- lines: 340
+- size_bytes: 7169
+- keywords:
+  - sync
+
+## `archived/functions/node_modules/es-define-property/test/index.js`
+
+- kind: `test`
+- lines: 57
+- size_bytes: 1299
+- keywords:
+  - index
+
+## `archived/functions/node_modules/es-errors/test/index.js`
+
+- kind: `test`
+- lines: 20
+- size_bytes: 356
+- keywords:
+  - index
+
+## `archived/functions/node_modules/es-object-atoms/test/index.js`
+
+- kind: `test`
+- lines: 39
+- size_bytes: 1097
+- keywords:
+  - index
+
+## `archived/functions/node_modules/es-set-tostringtag/test/index.js`
+
+- kind: `test`
+- lines: 86
+- size_bytes: 2235
+- keywords:
+  - index
+
+## `archived/functions/node_modules/firebase-functions/lib/v1/providers/testLab.d.ts`
+
+- kind: `test`
+- lines: 185
+- size_bytes: 7821
+- keywords:
+  - admin
+  - events
+  - map
+  - storage
+- symbols:
+  - ClientInfo
+  - ResultStorage
+  - TestMatrix
+  - TestMatrixBuilder
+  - specified
+  - testMatrix
+- local imports:
+  - ../cloud-functions
+
+## `archived/functions/node_modules/firebase-functions/lib/v1/providers/testLab.js`
+
+- kind: `test`
+- lines: 109
+- size_bytes: 4794
+- keywords:
+  - auth
+  - events
+  - storage
+- exports:
+  - ClientInfo
+  - PROVIDER
+  - ResultStorage
+  - SERVICE
+  - TEST_MATRIX_COMPLETE_EVENT_TYPE
+  - TestMatrix
+  - TestMatrixBuilder
+  - _testMatrixWithOpts
+  - testMatrix
+- symbols:
+  - ClientInfo
+  - ResultStorage
+  - TestMatrix
+  - TestMatrixBuilder
+  - _testMatrixWithOpts
+  - dataConstructor
+  - testMatrix
+- local imports:
+  - ../cloud-functions
+
+## `archived/functions/node_modules/firebase-functions/lib/v2/providers/testLab.d.ts`
+
+- kind: `test`
+- lines: 111
+- size_bytes: 4346
+- keywords:
+  - events
+  - map
+  - storage
+- symbols:
+  - onTestMatrixCompleted
+- local imports:
+  - ../core
+  - ../options
+
+## `archived/functions/node_modules/firebase-functions/lib/v2/providers/testLab.js`
+
+- kind: `test`
+- lines: 70
+- size_bytes: 3022
+- keywords:
+  - auth
+- exports:
+  - eventType
+  - onTestMatrixCompleted
+- symbols:
+  - baseOpts
+  - func
+  - onTestMatrixCompleted
+  - specificOpts
+- local imports:
+  - ../../common/onInit
+  - ../../runtime/manifest
+  - ../options
+  - ../trace
+
+## `archived/functions/node_modules/function-bind/test/index.js`
+
+- kind: `test`
+- lines: 253
+- size_bytes: 8991
+- keywords:
+  - index
+
+## `archived/functions/node_modules/functional-red-black-tree/bench/test.js`
+
+- kind: `test`
+- lines: 11
+- size_bytes: 201
+
+## `archived/functions/node_modules/functional-red-black-tree/test/test.js`
+
+- kind: `test`
+- lines: 480
+- size_bytes: 11782
+- warnings:
+  - large file: 480 lines
+- keywords:
+  - index
+- symbols:
+  - checkNode
+  - checkTree
+  - compareIterators
+  - print
+  - printTree
+
+## `archived/functions/node_modules/get-intrinsic/test/GetIntrinsic.js`
+
+- kind: `test`
+- lines: 275
+- size_bytes: 8758
+- keywords:
+  - member
+  - sync
+- symbols:
+  - propertyIsEnumerable
+  - toString
+
+## `archived/functions/node_modules/get-proto/test/index.js`
+
+- kind: `test`
+- lines: 69
+- size_bytes: 2359
+- keywords:
+  - index
+
+## `archived/functions/node_modules/gopd/test/index.js`
+
+- kind: `test`
+- lines: 37
+- size_bytes: 656
+- keywords:
+  - index
+
+## `archived/functions/node_modules/has-symbols/test/index.js`
+
+- kind: `test`
+- lines: 23
+- size_bytes: 654
+- keywords:
+  - index
+
+## `archived/functions/node_modules/has-symbols/test/shams/core-js.js`
+
+- kind: `test`
+- lines: 30
+- size_bytes: 797
+
+## `archived/functions/node_modules/has-symbols/test/shams/get-own-property-symbols.js`
+
+- kind: `test`
+- lines: 30
+- size_bytes: 760
+
+## `archived/functions/node_modules/has-symbols/test/tests.js`
+
+- kind: `test`
+- lines: 59
+- size_bytes: 2139
+- symbols:
+  - runSymbolTests
+
+## `archived/functions/node_modules/has-tostringtag/test/index.js`
+
+- kind: `test`
+- lines: 22
+- size_bytes: 679
+- keywords:
+  - index
+
+## `archived/functions/node_modules/has-tostringtag/test/shams/core-js.js`
+
+- kind: `test`
+- lines: 32
+- size_bytes: 935
+
+## `archived/functions/node_modules/has-tostringtag/test/shams/get-own-property-symbols.js`
+
+- kind: `test`
+- lines: 31
+- size_bytes: 828
+
+## `archived/functions/node_modules/has-tostringtag/test/tests.js`
+
+- kind: `test`
+- lines: 16
+- size_bytes: 532
+- symbols:
+  - runSymbolTests
+
+## `archived/functions/node_modules/limiter/test/ratelimiter-test.js`
+
+- kind: `test`
+- lines: 21
+- size_bytes: 879
+- keywords:
+  - batch
+
+## `archived/functions/node_modules/limiter/test/tokenbucket-test.js`
+
+- kind: `test`
+- lines: 68
+- size_bytes: 2254
+- keywords:
+  - batch
+
+## `archived/functions/node_modules/lru-memoizer/test/lru-memoizer.bypass.test.js`
+
+- kind: `test`
+- lines: 40
+- size_bytes: 822
+- keywords:
+  - index
+- local imports:
+  - ../lib/index.js
+
+## `archived/functions/node_modules/lru-memoizer/test/lru-memoizer.clone.test.js`
+
+- kind: `test`
+- lines: 45
+- size_bytes: 937
+- local imports:
+  - ./..
+
+## `archived/functions/node_modules/lru-memoizer/test/lru-memoizer.disable.test.js`
+
+- kind: `test`
+- lines: 50
+- size_bytes: 1112
+- local imports:
+  - ./..
+
+## `archived/functions/node_modules/lru-memoizer/test/lru-memoizer.events.test.js`
+
+- kind: `test`
+- lines: 133
+- size_bytes: 3166
+- keywords:
+  - events
+- symbols:
+  - onDone
+- local imports:
+  - ./..
+
+## `archived/functions/node_modules/lru-memoizer/test/lru-memoizer.freeze.test.js`
+
+- kind: `test`
+- lines: 44
+- size_bytes: 1008
+- local imports:
+  - ./..
+
+## `archived/functions/node_modules/lru-memoizer/test/lru-memoizer.itemmaxage.test.js`
+
+- kind: `test`
+- lines: 205
+- size_bytes: 6057
+- keywords:
+  - sync
+
+## `archived/functions/node_modules/lru-memoizer/test/lru-memoizer.lock.test.js`
+
+- kind: `test`
+- lines: 37
+- size_bytes: 804
+- local imports:
+  - ./..
+
+## `archived/functions/node_modules/lru-memoizer/test/lru-memoizer.nokey.test.js`
+
+- kind: `test`
+- lines: 44
+- size_bytes: 992
+- keywords:
+  - member
+  - sync
+
+## `archived/functions/node_modules/lru-memoizer/test/lru-memoizer.queumaxage.test.js`
+
+- kind: `test`
+- lines: 111
+- size_bytes: 2883
+- symbols:
+  - observer
+
+## `archived/functions/node_modules/lru-memoizer/test/lru-memoizer.sync.clone.test.js`
+
+- kind: `test`
+- lines: 77
+- size_bytes: 1759
+- keywords:
+  - sync
+- local imports:
+  - ./..
+
+## `archived/functions/node_modules/lru-memoizer/test/lru-memoizer.sync.events.test.js`
+
+- kind: `test`
+- lines: 96
+- size_bytes: 2232
+- keywords:
+  - events
+  - sync
+- local imports:
+  - ./..
+
+## `archived/functions/node_modules/lru-memoizer/test/lru-memoizer.sync.freeze.js`
+
+- kind: `test`
+- lines: 75
+- size_bytes: 1688
+- keywords:
+  - sync
+- local imports:
+  - ./..
+
+## `archived/functions/node_modules/lru-memoizer/test/lru-memoizer.sync.test.js`
+
+- kind: `test`
+- lines: 47
+- size_bytes: 1070
+- keywords:
+  - member
+  - sync
+
+## `archived/functions/node_modules/lru-memoizer/test/lru-memoizer.test.js`
+
+- kind: `test`
+- lines: 89
+- size_bytes: 2103
+- keywords:
+  - member
+  - sync
+
+## `archived/functions/node_modules/math-intrinsics/test/index.js`
+
+- kind: `test`
+- lines: 193
+- size_bytes: 6320
+- keywords:
+  - index
+
+## `archived/functions/node_modules/object-inspect/test-core-js.js`
+
+- kind: `test`
+- lines: 27
+- size_bytes: 534
+- keywords:
+  - km
+  - map
+
+## `archived/functions/node_modules/object-inspect/test/bigint.js`
+
+- kind: `test`
+- lines: 59
+- size_bytes: 2082
+
+## `archived/functions/node_modules/object-inspect/test/browser/dom.js`
+
+- kind: `test`
+- lines: 16
+- size_bytes: 416
+
+## `archived/functions/node_modules/object-inspect/test/circular.js`
+
+- kind: `test`
+- lines: 17
+- size_bytes: 451
+
+## `archived/functions/node_modules/object-inspect/test/deep.js`
+
+- kind: `test`
+- lines: 13
+- size_bytes: 400
+
+## `archived/functions/node_modules/object-inspect/test/element.js`
+
+- kind: `test`
+- lines: 54
+- size_bytes: 1575
+
+## `archived/functions/node_modules/object-inspect/test/err.js`
+
+- kind: `test`
+- lines: 49
+- size_bytes: 1536
+
+## `archived/functions/node_modules/object-inspect/test/fakes.js`
+
+- kind: `test`
+- lines: 30
+- size_bytes: 683
+
+## `archived/functions/node_modules/object-inspect/test/fn.js`
+
+- kind: `test`
+- lines: 77
+- size_bytes: 2227
+- symbols:
+  - f
+  - g
+  - toStr
+  - xxx
+
+## `archived/functions/node_modules/object-inspect/test/global.js`
+
+- kind: `test`
+- lines: 18
+- size_bytes: 372
+
+## `archived/functions/node_modules/object-inspect/test/has.js`
+
+- kind: `test`
+- lines: 16
+- size_bytes: 514
+
+## `archived/functions/node_modules/object-inspect/test/holes.js`
+
+- kind: `test`
+- lines: 16
+- size_bytes: 255
+
+## `archived/functions/node_modules/object-inspect/test/indent-option.js`
+
+- kind: `test`
+- lines: 272
+- size_bytes: 6633
+- keywords:
+  - map
+
+## `archived/functions/node_modules/object-inspect/test/inspect.js`
+
+- kind: `test`
+- lines: 140
+- size_bytes: 4946
+- symbols:
+  - custom
+  - stringInspect
+  - xyzInspect
+
+## `archived/functions/node_modules/object-inspect/test/lowbyte.js`
+
+- kind: `test`
+- lines: 13
+- size_bytes: 268
+
+## `archived/functions/node_modules/object-inspect/test/number.js`
+
+- kind: `test`
+- lines: 59
+- size_bytes: 2312
+
+## `archived/functions/node_modules/object-inspect/test/quoteStyle.js`
+
+- kind: `test`
+- lines: 27
+- size_bytes: 1530
+
+## `archived/functions/node_modules/object-inspect/test/toStringTag.js`
+
+- kind: `test`
+- lines: 41
+- size_bytes: 1546
+- symbols:
+  - C
+
+## `archived/functions/node_modules/object-inspect/test/undef.js`
+
+- kind: `test`
+- lines: 13
+- size_bytes: 302
+
+## `archived/functions/node_modules/object-inspect/test/values.js`
+
+- kind: `test`
+- lines: 262
+- size_bytes: 8407
+- keywords:
+  - km
+  - map
+  - index
+
+## `archived/functions/node_modules/protobufjs/ext/descriptor/test.js`
+
+- kind: `test`
+- lines: 55
+- size_bytes: 1461
+- keywords:
+  - sync
+
+## `archived/functions/node_modules/qs/test/empty-keys-cases.js`
+
+- kind: `test`
+- lines: 268
+- size_bytes: 7698
+
+## `archived/functions/node_modules/qs/test/parse.js`
+
+- kind: `test`
+- lines: 1513
+- size_bytes: 60341
+- warnings:
+  - large file: 1513 lines
+
+## `archived/functions/node_modules/qs/test/stringify.js`
+
+- kind: `test`
+- lines: 1311
+- size_bytes: 53382
+- warnings:
+  - large file: 1311 lines
+
+## `archived/functions/node_modules/qs/test/utils.js`
+
+- kind: `test`
+- lines: 398
+- size_bytes: 14962
+- keywords:
+  - index
+- symbols:
+  - f
+
+## `archived/functions/node_modules/safer-buffer/tests.js`
+
+- kind: `test`
+- lines: 407
+- size_bytes: 15735
+- keywords:
+  - index
+
+## `archived/functions/node_modules/send/node_modules/mime/src/test.js`
+
+- kind: `test`
+- lines: 61
+- size_bytes: 2334
+
+## `archived/functions/node_modules/setprototypeof/test/index.js`
+
+- kind: `test`
+- lines: 25
+- size_bytes: 690
+- keywords:
+  - index
+
+## `archived/functions/node_modules/side-channel-list/test/index.js`
+
+- kind: `test`
+- lines: 105
+- size_bytes: 2613
+- keywords:
+  - index
+
+## `archived/functions/node_modules/side-channel-map/test/index.js`
+
+- kind: `test`
+- lines: 115
+- size_bytes: 2875
+- keywords:
+  - map
+  - index
+
+## `archived/functions/node_modules/side-channel-weakmap/test/index.js`
+
+- kind: `test`
+- lines: 115
+- size_bytes: 2969
+- keywords:
+  - km
+  - map
+  - index
+
+## `archived/functions/node_modules/side-channel/test/index.js`
+
+- kind: `test`
+- lines: 105
+- size_bytes: 2573
+- keywords:
+  - index
+
+## `archived/functions/node_modules/stream-shift/test.js`
+
+- kind: `test`
+- lines: 49
+- size_bytes: 1166
+
+## `archived/functions/node_modules/strnum/strnum.test.js`
+
+- kind: `test`
+- lines: 174
+- size_bytes: 8649
+- local imports:
+  - ./strnum.js
+
+## `archived/functions/node_modules/strnum/test.js`
+
+- kind: `test`
+- lines: 9
+- size_bytes: 354
+- local imports:
+  - ./strnum.js
+
+## `archived/functions/node_modules/stubs/test.js`
+
+- kind: `test`
+- lines: 173
+- size_bytes: 3590
+- symbols:
+  - Class
 
 ## `functions/node_modules/@babel/helpers/lib/helpers/classCheckPrivateStaticAccess.js`
 
@@ -6099,8 +7445,8 @@ Files indexed here: 684
 ## `functions/src/service/tasks/gearPrivateStorage.ts`
 
 - kind: `test`
-- lines: 264
-- size_bytes: 8969
+- lines: 316
+- size_bytes: 11217
 - keywords:
   - admin
   - setup
@@ -6160,8 +7506,8 @@ Files indexed here: 684
 ## `tests/e2e/helpers/api_helper.py`
 
 - kind: `test`
-- lines: 255
-- size_bytes: 11152
+- lines: 383
+- size_bytes: 16624
 - keywords:
   - auth
   - setup
@@ -6169,6 +7515,8 @@ Files indexed here: 684
   - kayak
   - reservation
   - godzinki
+  - km
+  - ranking
   - map
   - status
   - sync
@@ -6185,6 +7533,17 @@ Files indexed here: 684
   - get_kayaks
   - get_my_reservations
   - get_setup
+  - km_add_log
+  - km_add_log_soft
+  - km_admin_merge_places
+  - km_admin_merge_places_soft
+  - km_event_stats
+  - km_event_stats_soft
+  - km_map_data
+  - km_my_logs
+  - km_my_stats
+  - km_places
+  - km_rankings
   - register
   - reserve_bundle
   - reserve_bundle_soft
@@ -6193,7 +7552,6 @@ Files indexed here: 684
   - submit_godzinki
   - submit_godzinki_soft
   - update_reservation
-  - update_reservation_soft
 
 ## `tests/e2e/helpers/firebase_auth.py`
 
@@ -6251,7 +7609,7 @@ Files indexed here: 684
 
 - kind: `test`
 - lines: 141
-- size_bytes: 5135
+- size_bytes: 5143
 - keywords:
   - auth
   - gear
@@ -6333,6 +7691,14 @@ Files indexed here: 684
   - get_all_records
   - get_member_row
   - update_member_role_and_status
+
+## `tests/e2e/oauth_client.json`
+
+- kind: `test`
+- lines: 1
+- size_bytes: 403
+- keywords:
+  - auth
 
 ## `tests/e2e/phases/__init__.py`
 
@@ -6536,6 +7902,66 @@ Files indexed here: 684
 - symbols:
   - run
 
+## `tests/e2e/reports/e2e_prod_20260409_100718.json`
+
+- kind: `test`
+- lines: 101
+- size_bytes: 3161
+- keywords:
+  - reservation
+  - godzinki
+  - km
+  - firestore
+  - role
+  - status
+  - sync
+
+## `tests/e2e/reports/e2e_prod_20260409_120139.json`
+
+- kind: `test`
+- lines: 103
+- size_bytes: 2921
+- keywords:
+  - reservation
+  - godzinki
+  - firestore
+  - role
+  - status
+  - sync
+
+## `tests/e2e/reports/e2e_prod_20260409_120535.json`
+
+- kind: `test`
+- lines: 117
+- size_bytes: 3695
+- keywords:
+  - admin
+  - gear
+  - kayak
+  - reservation
+  - godzinki
+  - firestore
+  - role
+  - status
+  - sync
+  - task
+
+## `tests/e2e/reports/e2e_prod_20260409_144924.json`
+
+- kind: `test`
+- lines: 114
+- size_bytes: 3563
+- keywords:
+  - gear
+  - kayak
+  - reservation
+  - godzinki
+  - firestore
+  - role
+  - status
+  - sync
+  - job
+
 ## `tests/e2e/run_e2e.py`
 
 - kind: `test`
@@ -6557,8 +7983,8 @@ Files indexed here: 684
 ## `tests/e2e/seed_test_accounts.py`
 
 - kind: `test`
-- lines: 310
-- size_bytes: 10245
+- lines: 316
+- size_bytes: 10620
 - keywords:
   - auth
   - admin
@@ -6575,13 +8001,52 @@ Files indexed here: 684
   - _seed_godzinki
   - main
 
+## `tests/e2e/test_gear_private_storage.py`
+
+- kind: `test`
+- lines: 525
+- size_bytes: 23027
+- warnings:
+  - large file: 525 lines
+- keywords:
+  - admin
+  - setup
+  - gear
+  - kayak
+  - godzinki
+  - map
+  - firestore
+  - storage
+  - member
+  - status
+  - task
+  - email
+- symbols:
+  - TestGearPrivateStorage
+  - _block_real_kayaks
+  - _create_kayak
+  - _ensure_enough_balance
+  - _find_spend_for_kayak
+  - _get_charge
+  - _run_task
+  - _skip_if_missing
+  - setUp
+  - tearDown
+  - test_PS01_empty_owner_contact_creates_failed_record
+  - test_PS01b_invalid_email_no_at_creates_failed_record
+  - test_PS01c_second_run_same_month_does_not_overwrite_failed
+  - test_PS02_board_exempt_creates_exempt_record_and_zero_spend
+  - test_PS02b_board_exempt_idempotency
+  - test_PS03_member_charge_creates_charged_record_and_deducts_balance
+  - test_PS03b_charged_record_idempotency
+
 ## `tests/e2e/test_gear_reservations_api.py`
 
 - kind: `test`
-- lines: 881
-- size_bytes: 40729
+- lines: 884
+- size_bytes: 41010
 - warnings:
-  - large file: 881 lines
+  - large file: 884 lines
 - keywords:
   - auth
   - admin
@@ -6675,6 +8140,99 @@ Files indexed here: 684
   - test_G09b_invalid_date_format_rejected
   - test_G10_missing_reason_rejected
   - test_G10b_empty_reason_rejected
+
+## `tests/e2e/test_km_api.py`
+
+- kind: `test`
+- lines: 1210
+- size_bytes: 52245
+- warnings:
+  - large file: 1210 lines
+- keywords:
+  - auth
+  - km
+  - ranking
+  - map
+  - firestore
+  - member
+  - status
+  - email
+- symbols:
+  - TestKmAddLogCapsizeRolls
+  - TestKmAddLogDateValidation
+  - TestKmAddLogDifficultyValidation
+  - TestKmAddLogFieldValidation
+  - TestKmAddLogHappyPath
+  - TestKmAddLogHoursValidation
+  - TestKmAddLogKmValidation
+  - TestKmAddLogOptionalFields
+  - TestKmAdminMergePlaces
+  - TestKmEventStats
+  - TestKmMapData
+  - TestKmMyLogs
+  - TestKmMyStats
+  - TestKmPlaces
+  - TestKmRankings
+  - TestKmRankingsSpecificYear
+  - TestKmSecurity
+  - _add_and_assert
+  - _assert_401
+  - _assert_validation_error
+  - _cleanup_km_logs
+  - _create_place
+  - _skip_if_missing
+  - _tokenize
+  - _valid_log_body
+  - setUpClass
+  - tearDownClass
+  - test_EV02_missing_event_id_400
+  - test_EV03_unknown_event_id_empty
+  - test_EV04_aggregation_multi_log
+
+## `tests/e2e/test_km_firestore.py`
+
+- kind: `test`
+- lines: 498
+- size_bytes: 20221
+- warnings:
+  - large file: 498 lines
+- keywords:
+  - auth
+  - setup
+  - km
+  - ranking
+  - map
+  - firestore
+  - member
+  - email
+- symbols:
+  - TestKmLogDocumentStructure
+  - TestKmPlacesUpsert
+  - TestKmScoring
+  - TestKmUserStatsAggregation
+  - _cleanup_km_logs
+  - _get_km_vars
+  - _read_stats
+  - _skip_if_missing
+  - _valid_log_body
+  - setUp
+  - setUpClass
+  - tearDownClass
+  - test_FS01_stats_created_or_incremented_after_log
+  - test_FS01b_stats_structure
+  - test_FS02_second_log_accumulates
+  - test_FS03_years_map_updated
+  - test_FS03b_historical_log_updates_years_map_not_current_year
+  - test_FS04_points_computed_from_vars
+  - test_FS04b_scoring_version_present
+  - test_FS05_zero_rolls_zero_points
+  - test_FS06_required_fields_present
+  - test_FS06b_static_fields_correct
+  - test_FS06c_logId_matches_document_key
+  - test_FS06d_uid_correct
+  - test_FS06e_year_derived_from_date
+  - test_FS06f_km_and_hours_saved
+  - test_FS07_place_created_after_log
 
 ## `tests/e2e/test_register_bo26.py`
 

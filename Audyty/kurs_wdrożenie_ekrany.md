@@ -100,6 +100,62 @@ Kursant NIE dostaje auto-injektowanego modułu `my_reservations` (bo gearModule 
 
 ---
 
+## Tryb podglądu kursanta (`kursPreviewMode`)
+
+Użytkownik z rolą `rola_czlonek`, `rola_zarzad` lub `rola_kr` może zostać dopisany do `modul_kurs.access.testUsersAllow` w `setup/app`. Od tej chwili widzi aplikację **dokładnie tak jak kursant** — jego normalne uprawnienia roli są zastąpione widokiem kursanta.
+
+### Mechanizm
+
+**Backend — `filterSetupForUser()` w `index.ts`:**
+1. Sprawdza, czy `uid` lub `email` użytkownika jest w `setup.modules.modul_kurs.access.testUsersAllow`
+2. Jeśli tak: używa `effectiveRoleKey = "rola_kursant"` do filtrowania modułów (zamiast rzeczywistego `role_key`)
+3. Zwraca `kursPreviewMode: true` w odpowiedzi `/api/setup`
+
+Endpoint `/api/kurs/info` przepuszcza użytkownika jeśli jego uid/email jest w `testUsersAllow` (niezależnie od roli).
+
+**Frontend — `app_shell.js`:**
+- Po odebraniu setup: jeśli `setup.kursPreviewMode === true` → zapisuje `ctx.kursPreviewMode = true`
+
+**Frontend — `render_shell.js` / `getDashboardConfig`:**
+- Gdy `ctx.kursPreviewMode === true`: zwraca config identyczny jak dla `rola_kursant`:
+  - `isKursant: true`
+  - `canReserveGear: false`
+  - `canSubmitGodzinki: false`
+  - `canSubmitEvents: false`
+  - `isAdmin: false`
+- Kafelki i sekcje dashboardu renderują się identycznie jak dla kursanta (Sprzęt · Basen · Kurs · Imprezy, bez Godzinki i Składki)
+
+### Ważne zastrzeżenia
+
+- `kursPreviewMode` zmienia wyłącznie warstwę UI — nie zmienia `allowed_actions` w sesji ani rzeczywistych uprawnień endpointów API. Jeśli testujący user ma `gear.reserve`, nadal może rezerwować przez bezpośrednie API — jest to akceptowalne dla trybu podglądu.
+- Wyjście z trybu: wystarczy usunąć uid/email z `testUsersAllow` w setup/app → przy następnym zalogowaniu user wraca do normalnego widoku.
+- Nie ma żadnego UI przełącznika — zmiana jest wyłącznie po stronie konfiguracji Firestore.
+
+### Konfiguracja Firestore
+
+```json
+{
+  "modul_kurs": {
+    "access": {
+      "mode": "prod",
+      "rolesAllowed": ["rola_kursant"],
+      "testUsersAllow": ["uid-or-email@morzkulc.pl"]
+    }
+  }
+}
+```
+
+### Pliki wymagające zmian (dodatkowe względem bazowego planu)
+
+| Plik | Zmiana |
+|---|---|
+| `functions/src/index.ts` | `filterSetupForUser`: wykryj kursPreviewMode, użyj `effectiveRoleKey = "rola_kursant"`, zwróć `kursPreviewMode: true` |
+| `functions/src/api/getKursInfoHandler.ts` | Autoryzacja: przepuść jeśli uid/email w `testUsersAllow` |
+| `public/core/app_shell.js` | Po odebraniu setup: propaguj `ctx.kursPreviewMode` |
+| `public/core/render_shell.js` | `getDashboardConfig`: jeśli `ctx.kursPreviewMode` — zwróć config jak dla kursanta |
+
+---
+
 ## Kontrola dostępu
 
 Moduły widziane przez kursanta (przez `access.rolesAllowed` w Firestore `setup/app`):

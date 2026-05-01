@@ -129,9 +129,53 @@ function attachInfoTips(container) {
   container.__closeKmPopover = closePopover;
 }
 
+// ─── dynamiczne ładowanie zasobów ────────────────────────────────────────────
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement("script");
+    s.src = src; s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+function loadCss(href) {
+  return new Promise((resolve) => {
+    if (document.querySelector(`link[href="${href}"]`)) { resolve(); return; }
+    const l = document.createElement("link");
+    l.rel = "stylesheet"; l.href = href; l.onload = resolve;
+    document.head.appendChild(l);
+  });
+}
+
+function injectKmLocStyles() {
+  if (document.getElementById("kmLocStyles")) return;
+  const s = document.createElement("style");
+  s.id = "kmLocStyles";
+  s.textContent = `
+    .kmLocBtns{display:flex;gap:6px;margin-top:6px;}
+    .kmLocBtn{font:12px system-ui,sans-serif;padding:4px 10px;border-radius:5px;border:1px solid #555;background:transparent;color:#ccc;cursor:pointer;display:inline-flex;align-items:center;gap:4px;}
+    .kmLocBtn:hover{background:rgba(255,255,255,0.08);}
+    .kmLocBtn:disabled{opacity:0.5;cursor:not-allowed;}
+    .kmLocDisplay{display:flex;align-items:center;gap:8px;margin-top:6px;font:12px system-ui,sans-serif;color:#7ec8a4;}
+    .kmLocClearBtn{background:none;border:none;color:#888;cursor:pointer;font-size:14px;padding:0 2px;line-height:1;}
+    .kmLocClearBtn:hover{color:#ccc;}
+    .kmMapModalOverlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9000;display:flex;align-items:center;justify-content:center;padding:16px;}
+    .kmMapModalBox{background:#1a1a2e;border:1px solid #333;border-radius:10px;width:100%;max-width:600px;display:flex;flex-direction:column;overflow:hidden;}
+    .kmMapModalHeader{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #333;font:13px system-ui,sans-serif;color:#ccc;}
+    .kmMapModalClose{background:none;border:none;color:#888;font-size:18px;cursor:pointer;line-height:1;padding:0;}
+    .kmMapModalClose:hover{color:#ccc;}
+    #kmMapPickerDiv{height:320px;}
+    .kmMapModalFooter{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid #333;gap:12px;}
+    .kmMapPickedText{font:12px system-ui,sans-serif;color:#888;flex:1;}
+  `;
+  document.head.appendChild(s);
+}
+
 // ─── autocomplete nazwy akwenu ────────────────────────────────────────────────
 
-function attachPlacesAutocomplete(input, hiddenPlaceId, ctx, hiddenLat, hiddenLng) {
+function attachPlacesAutocomplete(input, hiddenPlaceId, ctx, hiddenLat, hiddenLng, onLocationSet, onLocationClear) {
   let debounceTimer = null;
   let suggestionsList = null;
   let selectedPlaceId = null;
@@ -161,6 +205,8 @@ function attachPlacesAutocomplete(input, hiddenPlaceId, ctx, hiddenLat, hiddenLn
         hiddenPlaceId.value = p.placeId;
         if (hiddenLat) hiddenLat.value = p.lat != null ? p.lat : "";
         if (hiddenLng) hiddenLng.value = p.lng != null ? p.lng : "";
+        if (p.lat != null && p.lng != null && onLocationSet) onLocationSet(p.lat, p.lng, "Akwen");
+        else if (onLocationClear) onLocationClear();
         closeSuggestions();
       });
       suggestionsList.appendChild(li);
@@ -175,6 +221,7 @@ function attachPlacesAutocomplete(input, hiddenPlaceId, ctx, hiddenLat, hiddenLn
     hiddenPlaceId.value = "";
     if (hiddenLat) hiddenLat.value = "";
     if (hiddenLng) hiddenLng.value = "";
+    if (onLocationClear) onLocationClear();
     clearTimeout(debounceTimer);
     const q = input.value.trim();
     if (q.length < 2) { closeSuggestions(); return; }
@@ -240,6 +287,14 @@ function renderFormView(inner, ctx, moduleId) {
           <input type="hidden" id="kmPlaceId" name="placeId" />
           <input type="hidden" id="kmLat" />
           <input type="hidden" id="kmLng" />
+          <div class="kmLocBtns">
+            <button type="button" id="kmGpsBtn" class="kmLocBtn" title="Pobierz bieżącą lokalizację z GPS telefonu">📍 GPS</button>
+            <button type="button" id="kmMapBtn" class="kmLocBtn" title="Kliknij na mapie, aby wybrać lokalizację">🗺️ Wybierz na mapie</button>
+          </div>
+          <div id="kmLocDisplay" class="kmLocDisplay" hidden>
+            <span id="kmLocText"></span>
+            <button type="button" id="kmLocClear" class="kmLocClearBtn" title="Wyczyść lokalizację">✕</button>
+          </div>
         </div>
 
         <div class="formRow">
@@ -349,7 +404,149 @@ function renderFormView(inner, ctx, moduleId) {
   const placeIdHidden = inner.querySelector("#kmPlaceId");
   const latHidden = inner.querySelector("#kmLat");
   const lngHidden = inner.querySelector("#kmLng");
-  attachPlacesAutocomplete(placeInput, placeIdHidden, ctx, latHidden, lngHidden);
+
+  // ── Lokalizacja: GPS + mapa ─────────────────────────────────────────────────
+  injectKmLocStyles();
+
+  const gpsBtn   = inner.querySelector("#kmGpsBtn");
+  const mapBtn   = inner.querySelector("#kmMapBtn");
+  const locDisp  = inner.querySelector("#kmLocDisplay");
+  const locTxt   = inner.querySelector("#kmLocText");
+  const locClear = inner.querySelector("#kmLocClear");
+
+  function setLocationDisplay(lat, lng, source) {
+    latHidden.value = String(lat);
+    lngHidden.value = String(lng);
+    locTxt.textContent = (source ? source + ": " : "") + parseFloat(lat).toFixed(5) + ", " + parseFloat(lng).toFixed(5);
+    locDisp.hidden = false;
+  }
+
+  function clearLocationDisplay() {
+    latHidden.value = "";
+    lngHidden.value = "";
+    locDisp.hidden = true;
+    locTxt.textContent = "";
+  }
+
+  locClear.addEventListener("click", clearLocationDisplay);
+
+  attachPlacesAutocomplete(placeInput, placeIdHidden, ctx, latHidden, lngHidden,
+    (lat, lng, source) => setLocationDisplay(lat, lng, source),
+    () => clearLocationDisplay()
+  );
+
+  // GPS
+  gpsBtn.addEventListener("click", () => {
+    if (!navigator.geolocation) {
+      alert("Twoja przeglądarka nie obsługuje geolokalizacji.");
+      return;
+    }
+    gpsBtn.disabled = true;
+    gpsBtn.textContent = "⏳ GPS…";
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        setLocationDisplay(pos.coords.latitude, pos.coords.longitude, "GPS");
+        gpsBtn.disabled = false;
+        gpsBtn.textContent = "📍 GPS";
+      },
+      err => {
+        alert("Nie udało się pobrać lokalizacji: " + (err.message || "błąd GPS"));
+        gpsBtn.disabled = false;
+        gpsBtn.textContent = "📍 GPS";
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  });
+
+  // Mapa — picker
+  let pickedLat = null;
+  let pickedLng = null;
+
+  mapBtn.addEventListener("click", async () => {
+    if (!window.L) {
+      mapBtn.disabled = true;
+      mapBtn.textContent = "⏳ Ładowanie…";
+      await Promise.all([
+        loadCss("https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"),
+        loadScript("https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"),
+      ]).catch(() => {});
+      mapBtn.disabled = false;
+      mapBtn.textContent = "🗺️ Wybierz na mapie";
+    }
+
+    pickedLat = null;
+    pickedLng = null;
+
+    const overlay = document.createElement("div");
+    overlay.className = "kmMapModalOverlay";
+    overlay.innerHTML = `
+      <div class="kmMapModalBox">
+        <div class="kmMapModalHeader">
+          <span>Kliknij na mapie, aby wybrać lokalizację</span>
+          <button type="button" class="kmMapModalClose" id="kmMapClose">✕</button>
+        </div>
+        <div id="kmMapPickerDiv"></div>
+        <div class="kmMapModalFooter">
+          <span class="kmMapPickedText" id="kmMapPickedText">Kliknij w dowolne miejsce na mapie…</span>
+          <button type="button" class="primary" id="kmMapConfirm" disabled>Zatwierdź</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const closeBtn   = overlay.querySelector("#kmMapClose");
+    const confirmBtn = overlay.querySelector("#kmMapConfirm");
+    const pickedText = overlay.querySelector("#kmMapPickedText");
+
+    let pickerMap    = null;
+    let pickerMarker = null;
+
+    function closeModal() {
+      if (pickerMap) { pickerMap.remove(); pickerMap = null; pickerMarker = null; }
+      overlay.remove();
+    }
+
+    closeBtn.addEventListener("click", closeModal);
+    overlay.addEventListener("click", e => { if (e.target === overlay) closeModal(); });
+
+    confirmBtn.addEventListener("click", () => {
+      if (pickedLat != null && pickedLng != null) setLocationDisplay(pickedLat, pickedLng, "Mapa");
+      closeModal();
+    });
+
+    // Inicjalizacja mapy po wyrenderowaniu overlaya
+    setTimeout(() => {
+      const existLat = latHidden.value ? parseFloat(latHidden.value) : null;
+      const existLng = lngHidden.value ? parseFloat(lngHidden.value) : null;
+      const centerLat = existLat ?? 52.0;
+      const centerLng = existLng ?? 19.5;
+      const zoom = existLat != null ? 12 : 6;
+
+      pickerMap = window.L.map("kmMapPickerDiv").setView([centerLat, centerLng], zoom);
+      window.L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+        attribution: "© OpenStreetMap © CARTO",
+        subdomains: "abcd",
+        maxZoom: 19,
+      }).addTo(pickerMap);
+
+      if (existLat != null) {
+        pickedLat = existLat;
+        pickedLng = existLng;
+        pickerMarker = window.L.marker([pickedLat, pickedLng]).addTo(pickerMap);
+        pickedText.textContent = pickedLat.toFixed(5) + ", " + pickedLng.toFixed(5);
+        confirmBtn.disabled = false;
+      }
+
+      pickerMap.on("click", e => {
+        pickedLat = e.latlng.lat;
+        pickedLng = e.latlng.lng;
+        if (pickerMarker) pickerMap.removeLayer(pickerMarker);
+        pickerMarker = window.L.marker([pickedLat, pickedLng]).addTo(pickerMap);
+        pickedText.textContent = pickedLat.toFixed(5) + ", " + pickedLng.toFixed(5);
+        confirmBtn.disabled = false;
+      });
+    }, 50);
+  });
 
   // Załaduj listę aktualnych imprez asynchronicznie (mode=recent: od 30 dni wstecz do dziś)
   const eventSelect = inner.querySelector("#kmEvent");

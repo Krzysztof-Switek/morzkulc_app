@@ -5,7 +5,7 @@
  *
  * Zwraca pre-computed cache lokalizacji aktywności z km_map_cache/v1.
  * Dane budowane przez task km.rebuildMapData (wywoływany z GAS menu).
- * O(1) read — jeden dokument Firestore.
+ * O(1) read — jeden dokument Firestore. Endpoint publiczny (bez auth).
  *
  * Query params:
  *   year? — "YYYY" — jeśli podany, filtruje locations do tych z danym rokiem w yearsActive
@@ -13,17 +13,12 @@
 
 import type {Request, Response} from "express";
 
-type TokenCheck =
-  | {error: string}
-  | {decoded: {uid: string; email?: string; name?: string}};
-
 export type KmMapDataDeps = {
   db: FirebaseFirestore.Firestore;
   sendPreflight: (req: Request, res: Response) => boolean;
   requireAllowedHost: (req: Request, res: Response) => boolean;
   setCorsHeaders: (req: Request, res: Response) => void;
   corsHandler: any;
-  requireIdToken: (req: Request) => Promise<TokenCheck>;
 };
 
 export async function handleKmMapData(
@@ -42,12 +37,6 @@ export async function handleKmMapData(
     }
 
     try {
-      const tokenCheck = await deps.requireIdToken(req);
-      if ("error" in tokenCheck) {
-        res.status(401).json({error: tokenCheck.error});
-        return;
-      }
-
       const yearRaw = String(req.query.year || "").trim();
       const filterYear = /^\d{4}$/.test(yearRaw) ? parseInt(yearRaw, 10) : null;
 

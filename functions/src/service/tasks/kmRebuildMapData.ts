@@ -89,9 +89,7 @@ export const kmRebuildMapDataTask: ServiceTask<Payload> = {
       const date = String(log.date || "").slice(0, 10);
       const year = parseInt(date.slice(0, 4), 10);
 
-      const groupKey: string = log.placeId ?
-        String(log.placeId) :
-        `${lat.toFixed(3)},${lng.toFixed(3)}`;
+      const groupKey = `${lat.toFixed(3)},${lng.toFixed(3)}`;
 
       let entry = groups.get(groupKey);
       if (!entry) {

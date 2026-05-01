@@ -1,0 +1,135 @@
+% ============================================================
+%  Skrypt PrzeWrotka — Podstawy Kajakarstwa Górskiego
+%  Plik główny — kompiluj ten plik w Overleaf
+% ============================================================
+\documentclass[12pt, a4paper]{article}
+
+% --- Encoding & language ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[polish]{babel}
+
+% --- Layout ---
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage{parskip}
+\usepackage{microtype}
+
+% --- Typography ---
+\usepackage{lmodern}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+
+% --- Colours & boxes ---
+\usepackage[dvipsnames]{xcolor}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins}
+
+% --- Figures ---
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{chngcntr}
+\usepackage{subcaption}
+\counterwithin{figure}{section}   % figures numbered as 2.1, 2.2, 3.1 …
+
+% --- Hyperlinks ---
+\usepackage[hidelinks]{hyperref}
+
+% ============================================================
+%  Colours
+% ============================================================
+\definecolor{clubblue}{HTML}{1A5276}
+\definecolor{clubgray}{HTML}{F2F3F4}
+\definecolor{tiphint}{HTML}{D6EAF8}
+\definecolor{warnred}{HTML}{FDEDEC}
+\definecolor{warnframe}{HTML}{C0392B}
+
+% ============================================================
+%  Section formatting
+% ============================================================
+\titleformat{\section}
+  {\Large\bfseries\color{clubblue}}
+  {\thesection.}{0.8em}{}[\titlerule]
+
+\titleformat{\subsection}
+  {\large\bfseries\color{clubblue!80!black}}
+  {\thesubsection.}{0.6em}{}
+
+\titleformat{\subsubsection}
+  {\normalsize\bfseries}
+  {\thesubsubsection.}{0.5em}{}
+
+% ============================================================
+%  Blank figure placeholder
+%  Usage: \placeholder{width}{height}{caption}
+% ============================================================
+\newcommand{\placeholder}[3]{%
+  \begin{figure}[H]
+    \centering
+    \fcolorbox{clubblue!50}{clubgray}{%
+      \parbox[c][#2][c]{#1}{%
+        \centering\color{clubblue!70}\small[Miejsce na zdjęcie / rysunek]%
+      }%
+    }
+    \caption{#3}
+  \end{figure}%
+}
+
+% ============================================================
+%  Tip box  —  tip.png must be uploaded to Overleaf project
+% ============================================================
+\newtcolorbox{tipbox}{
+  colback=tiphint, colframe=clubblue!60,
+  fonttitle=\bfseries,
+  title={\includegraphics[height=1em]{tip.png}\enspace Wskazówka},
+  left=4pt, right=4pt, top=4pt, bottom=4pt
+}
+
+% ============================================================
+%  Warning box
+% ============================================================
+\newtcolorbox{warnbox}{
+  colback=warnred, colframe=warnframe,
+  fonttitle=\bfseries\color{warnframe}, title=Uwaga,
+  left=4pt, right=4pt, top=4pt, bottom=4pt
+}
+
+% ============================================================
+\begin{document}
+% ============================================================
+
+% ---- Title page ----
+\begin{titlepage}
+  \centering
+  \vspace*{\fill}
+  \includegraphics[width=\linewidth]{images/front_cover.png}
+  \vspace*{\fill}
+\end{titlepage}
+
+\newpage
+\tableofcontents
+\newpage
+
+% ---- Chapters ----
+\input{ch01_wstep}
+\input{ch02_sprzet}
+\input{ch03_locja}
+\input{ch04_pkp}
+\input{ch05_manewry}
+\input{ch06_bezpieczenstwo}
+\input{ch07_poszkoleniowkowe}
+\input{ch08_regulamin}
+
+% ---- Notes page ----
+\newpage
+\section*{Notatki}
+\addcontentsline{toc}{section}{Notatki}
+\emph{Miejsce na notatki i złote myśli:}\\[0.8cm]
+
+
+\end{document}

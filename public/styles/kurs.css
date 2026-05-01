@@ -1,0 +1,364 @@
+/* public/styles/kurs.css */
+/* ================= MODUŁ KURS ================= */
+
+/* ─── Zakładki modułu ─── */
+
+.kursTabs {
+  display: flex;
+  gap: 6px;
+  margin: 0 0 16px;
+  flex-wrap: wrap;
+}
+
+.kursTab {
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.kursTab.active,
+.kursTab:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: transparent;
+}
+
+/* ─── Nagłówek modułu ─── */
+
+.kursHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+/* ─── Zawartość skryptu ─── */
+
+.skryptContent {
+  line-height: 1.65;
+  font-size: 15px;
+  color: var(--text);
+}
+
+.skryptContent h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 24px 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.skryptContent h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 20px 0 8px;
+}
+
+.skryptContent h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 16px 0 6px;
+}
+
+.skryptContent h5 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin: 12px 0 4px;
+}
+
+.skryptContent p {
+  margin: 0 0 10px;
+  color: var(--text);
+}
+
+.skryptContent ul,
+.skryptContent ol {
+  margin: 0 0 12px 0;
+  padding-left: 1.5em;
+}
+
+.skryptContent li {
+  margin-bottom: 4px;
+  color: var(--text);
+}
+
+.skryptContent dl {
+  margin: 0 0 12px;
+}
+
+.skryptContent dt {
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 10px;
+}
+
+.skryptContent dd {
+  margin-left: 1.4em;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+/* ─── Wskazówka (tipbox) ─── */
+
+.skryptTip {
+  background: rgba(47, 111, 237, 0.10);
+  border-left: 4px solid var(--primary);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 14px;
+  margin: 14px 0;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.skryptTip::before {
+  content: "💡 Wskazówka";
+  display: block;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--primary);
+  font-size: 13px;
+}
+
+/* ─── Ostrzeżenie (warnbox) ─── */
+
+.skryptWarn {
+  background: var(--danger-2);
+  border-left: 4px solid var(--danger);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 14px;
+  margin: 14px 0;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.skryptWarn::before {
+  content: "⚠ Uwaga";
+  display: block;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.skryptWarn strong {
+  color: var(--danger);
+}
+
+/* ─── Porównanie side-by-side ─── */
+
+.skryptCompare {
+  display: flex;
+  gap: 12px;
+  margin: 14px 0;
+  flex-wrap: wrap;
+}
+
+.skryptCompare > * {
+  flex: 1 1 260px;
+}
+
+.skryptCompareGood {
+  background: rgba(47, 111, 237, 0.10);
+  border: 1px solid var(--primary);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 13px;
+}
+
+.skryptCompareGood .skryptCompareTitle {
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 8px;
+}
+
+.skryptCompareBad {
+  background: var(--danger-2);
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 13px;
+}
+
+.skryptCompareBad .skryptCompareTitle {
+  font-weight: 700;
+  color: var(--danger);
+  margin-bottom: 8px;
+}
+
+.skryptCompare dl {
+  margin: 0;
+}
+
+.skryptCompare dt {
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.skryptCompare dd {
+  margin-left: 0;
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+/* ─── Siatka obrazków ─── */
+
+.skryptFigGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.skryptFigGrid figure {
+  flex: 1 1 200px;
+  max-width: 320px;
+  text-align: center;
+  margin: 0;
+}
+
+/* ─── Figury ─── */
+
+.skryptContent figure {
+  text-align: center;
+  margin: 16px auto;
+  max-width: 100%;
+}
+
+.skryptContent figure img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.skryptContent figcaption {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+/* ─── Tabele ─── */
+
+.tableWrapper {
+  overflow-x: auto;
+  margin: 14px 0;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.skryptTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.skryptTable th {
+  background: var(--surface-2);
+  color: var(--text);
+  font-weight: 600;
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.skryptTable td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  color: var(--text);
+}
+
+.skryptTable tr:last-child td {
+  border-bottom: none;
+}
+
+.skryptTable ul {
+  margin: 0;
+  padding-left: 1.2em;
+}
+
+.skryptTable li {
+  margin-bottom: 2px;
+}
+
+/* ─── Nawigacja rozdziałów ─── */
+
+.skryptNav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.skryptNavChapter {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+/* ─── TOC (spis treści) ─── */
+
+.skryptToc {
+  margin-bottom: 16px;
+}
+
+.skryptTocItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  margin-bottom: 6px;
+  transition: background 0.15s;
+}
+
+.skryptTocItem:hover {
+  background: var(--surface-2);
+}
+
+.skryptTocNum {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary);
+  min-width: 20px;
+}
+
+/* ─── Placeholder zakładki Harmonogram ─── */
+
+.kursHarmonogramPlaceholder {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.kursHarmonogramPlaceholder p {
+  margin: 0;
+  font-size: 14px;
+}

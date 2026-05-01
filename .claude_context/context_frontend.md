@@ -1,6 +1,6 @@
 # Frontend Context
 
-Files indexed here: 30
+Files indexed here: 31
 
 ## `public/404.html`
 
@@ -11,8 +11,8 @@ Files indexed here: 30
 ## `public/core/access_control.js`
 
 - kind: `frontend_other`
-- lines: 33
-- size_bytes: 1298
+- lines: 38
+- size_bytes: 1542
 - keywords:
   - setup
   - map
@@ -46,13 +46,12 @@ Files indexed here: 30
 ## `public/core/app_shell.js`
 
 - kind: `frontend_other`
-- lines: 234
-- size_bytes: 7220
+- lines: 241
+- size_bytes: 7459
 - keywords:
   - auth
   - setup
   - storage
-  - role
   - sync
   - index
 - symbols:
@@ -122,8 +121,8 @@ Files indexed here: 30
 ## `public/core/modules_registry.js`
 
 - kind: `frontend_other`
-- lines: 136
-- size_bytes: 4201
+- lines: 146
+- size_bytes: 4724
 - keywords:
   - admin
   - setup
@@ -145,11 +144,12 @@ Files indexed here: 30
 ## `public/core/render_shell.js`
 
 - kind: `frontend_other`
-- lines: 838
-- size_bytes: 30883
+- lines: 976
+- size_bytes: 39218
 - warnings:
-  - large file: 838 lines
+  - large file: 976 lines
 - keywords:
+  - admin
   - setup
   - gear
   - kayak
@@ -157,10 +157,9 @@ Files indexed here: 30
   - godzinki
   - basen
   - events
-  - map
+  - km
   - member
   - role
-  - status
   - sync
 - exports:
   - renderNav
@@ -179,6 +178,7 @@ Files indexed here: 30
   - fieldErrorToPl
   - formatDatePL
   - formatDayMonth
+  - getDashboardConfig
   - getGearRoute
   - getHelloName
   - getHoursValue
@@ -188,16 +188,16 @@ Files indexed here: 30
   - getReservationKayakTitles
   - isIsoDateYYYYMMDD
   - isPhoneValid
+  - loadAdminPendingBadge
   - normalizePhoneDigits
-  - openGear
   - pluralizeDays
   - renderHomeDashboard
+  - renderHomeProfile
   - renderNav
   - renderProfileForm
   - renderView
-  - roleKeyToLabel
-  - setErr
 - route/api hints:
+  - /api/admin/pending
   - /api/basen/sessions
   - /api/events
   - /api/gear/kayaks
@@ -252,8 +252,8 @@ Files indexed here: 30
 ## `public/index.html`
 
 - kind: `frontend_other`
-- lines: 49
-- size_bytes: 1712
+- lines: 52
+- size_bytes: 2120
 - keywords:
   - godzinki
   - status
@@ -268,18 +268,21 @@ Files indexed here: 30
 ## `public/map.html`
 
 - kind: `frontend_other`
-- lines: 110
-- size_bytes: 3834
+- lines: 217
+- size_bytes: 7489
 - keywords:
+  - auth
   - events
-  - km
   - map
+  - storage
   - status
-  - sync
   - index
 - symbols:
+  - buildPopup
   - esc
-  - fmtNum
+  - getConfig
+  - initMap
+  - renderMarkers
   - usersHtml
 - route/api hints:
   - /api/km/map-data
@@ -287,15 +290,18 @@ Files indexed here: 30
 ## `public/modules/admin_pending_module.js`
 
 - kind: `frontend_module`
-- lines: 164
-- size_bytes: 6707
+- lines: 284
+- size_bytes: 13723
 - keywords:
   - admin
-  - gear
+  - kayak
   - godzinki
   - events
+  - calendar
   - map
   - sync
+  - job
+  - email
 - exports:
   - createAdminPendingModule
 - symbols:
@@ -306,26 +312,27 @@ Files indexed here: 30
   - renderContent
   - setErr
 - route/api hints:
+  - /api/admin/events/sync-calendar
   - /api/admin/pending
 
 ## `public/modules/basen_module.js`
 
 - kind: `frontend_module`
-- lines: 624
-- size_bytes: 24330
+- lines: 620
+- size_bytes: 24162
 - warnings:
-  - large file: 624 lines
+  - large file: 620 lines
 - keywords:
   - admin
   - basen
   - map
-  - role
   - status
 - exports:
   - createBasenModule
 - symbols:
   - bindAdminActions
   - bindSessionActions
+  - canEnroll
   - createBasenModule
   - esc
   - formatDate
@@ -355,10 +362,10 @@ Files indexed here: 30
 ## `public/modules/gear_module.js`
 
 - kind: `frontend_module`
-- lines: 1984
-- size_bytes: 82139
+- lines: 2153
+- size_bytes: 90416
 - warnings:
-  - large file: 1984 lines
+  - large file: 2153 lines
 - keywords:
   - gear
   - kayak
@@ -412,28 +419,34 @@ Files indexed here: 30
 ## `public/modules/godzinki_module.js`
 
 - kind: `frontend_module`
-- lines: 373
-- size_bytes: 13981
+- lines: 391
+- size_bytes: 14112
 - keywords:
+  - reservation
   - godzinki
   - map
   - sync
 - exports:
   - createGodzinkiModule
 - symbols:
+  - buildMeta
   - createGodzinkiModule
   - esc
   - formatBalanceSign
   - formatDate
+  - infoBarHtml
   - recordTypeClass
   - recordTypeLabel
-  - renderBalanceView
   - renderGodzinkiView
   - renderHistoryView
+  - renderHomeView
+  - renderPage
+  - renderRecordTable
   - renderSubmitView
   - renderTabsHtml
   - setErr
   - setOk
+  - shortenReason
   - spinnerHtml
   - todayIso
 - route/api hints:
@@ -443,19 +456,18 @@ Files indexed here: 30
 ## `public/modules/impreza_module.js`
 
 - kind: `frontend_module`
-- lines: 287
-- size_bytes: 10285
+- lines: 284
+- size_bytes: 10132
 - keywords:
-  - admin
   - events
   - map
-  - role
   - sync
 - exports:
   - createImprezaModule
 - symbols:
   - activeTab
   - bindSubmitForm
+  - canSubmit
   - createImprezaModule
   - esc
   - formatDate
@@ -475,10 +487,10 @@ Files indexed here: 30
 ## `public/modules/km_module.js`
 
 - kind: `frontend_module`
-- lines: 1038
-- size_bytes: 39878
+- lines: 1082
+- size_bytes: 42047
 - warnings:
-  - large file: 1038 lines
+  - large file: 1082 lines
 - keywords:
   - basen
   - events
@@ -490,6 +502,7 @@ Files indexed here: 30
 - symbols:
   - attachInfoTips
   - attachPlacesAutocomplete
+  - buildPopup
   - capsizeTotal
   - closePopover
   - closeSuggestions
@@ -505,6 +518,7 @@ Files indexed here: 30
   - renderFormView
   - renderKmView
   - renderMapView
+  - renderMarkers
   - renderMyLogsView
   - renderMyStatsView
   - renderRankingsView
@@ -514,6 +528,7 @@ Files indexed here: 30
   - spinnerHtml
   - todayIso
   - updateDifficultyField
+  - usersHtml
   - waterTypeLabel
 - route/api hints:
   - /api/events
@@ -573,10 +588,11 @@ Files indexed here: 30
 ## `public/styles/app.css`
 
 - kind: `frontend_other`
-- lines: 8
-- size_bytes: 196
+- lines: 9
+- size_bytes: 227
 - keywords:
   - gear
+  - godzinki
   - basen
   - events
   - km
@@ -584,8 +600,8 @@ Files indexed here: 30
 ## `public/styles/base.css`
 
 - kind: `frontend_other`
-- lines: 422
-- size_bytes: 9226
+- lines: 440
+- size_bytes: 9623
 - keywords:
   - index
 
@@ -617,13 +633,21 @@ Files indexed here: 30
 ## `public/styles/gear.css`
 
 - kind: `frontend_other`
-- lines: 1152
-- size_bytes: 20743
+- lines: 1169
+- size_bytes: 20867
 - warnings:
-  - large file: 1152 lines
+  - large file: 1169 lines
 - keywords:
   - gear
   - events
+
+## `public/styles/godzinki.css`
+
+- kind: `frontend_other`
+- lines: 120
+- size_bytes: 1997
+- keywords:
+  - godzinki
 
 ## `public/styles/km.css`
 
@@ -640,14 +664,16 @@ Files indexed here: 30
 ## `public/styles/start.css`
 
 - kind: `frontend_other`
-- lines: 176
-- size_bytes: 2724
+- lines: 206
+- size_bytes: 5071
+- keywords:
+  - events
 
 ## `public/sw.js`
 
 - kind: `frontend_other`
-- lines: 146
-- size_bytes: 4923
+- lines: 147
+- size_bytes: 4997
 - keywords:
   - auth
   - admin

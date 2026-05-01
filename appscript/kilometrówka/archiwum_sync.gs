@@ -19,7 +19,7 @@
  */
 
 var ARCHIWUM_REQUIRED_HEADERS = [
-  "trip_id", "rok", "data_raw", "miejsce", "km", "lat", "lng",
+  "rok", "data_raw", "miejsce", "km", "lat", "lng",
   "typ_lokalizacji", "kraj", "ksywa", "email",
 ];
 
@@ -116,7 +116,6 @@ function syncArchivumToFirestore() {
     }
 
     try {
-      const tripId = toStringOrEmpty_(row[idx("trip_id")]);
       const rok = toNumberOrNull_(row[idx("rok")]);
       const dataRaw = toStringOrEmpty_(row[idx("data_raw")]);
       const miejsce = toStringOrEmpty_(row[idx("miejsce")]);
@@ -147,8 +146,8 @@ function syncArchivumToFirestore() {
       // Punkty: 0 — archiwum nie zawiera danych o wywrotkach
       const pointsTotal = 0;
 
-      // Unikalne ID dokumentu oparte na trip_id
-      const docId = "hist_" + (tripId || (r + "_" + Date.now()));
+      // Unikalne ID dokumentu oparte na numerze wiersza w arkuszu
+      const docId = "hist_r" + r;
 
       const doc = {
         logId: docId,
@@ -175,7 +174,6 @@ function syncArchivumToFirestore() {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         rawImported: {
-          trip_id: tripId,
           data_raw: dataRaw,
           opis: opis,
           lat: lat,

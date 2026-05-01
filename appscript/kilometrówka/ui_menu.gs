@@ -8,10 +8,11 @@ function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu("Morzkulc")
     .addItem("Eksportuj archiwum do Firestore", "syncArchivumToFirestore")
-    .addItem("Ranking korekta do Firestore", "pushRankingCorrections")
-    .addItem("Ranking pobierz wszystko", "syncRankingFromFirestore")
-    .addItem("Przelicz ranking (po zmianie punktacji)", "enqueueRebuildRankings")
-    .addItem("Odśwież mapę aktywności", "enqueueRebuildMapData")
+    .addItem("Pobierz bieżące wpisy → Arkusz", "syncRankingFromFirestore")
+    .addItem("Wyślij korekty wpisów → Firestore", "pushRankingCorrections")
+    .addSeparator()
+    .addItem("Przelicz statystyki i ranking", "enqueueRebuildRankings")
+    .addItem("Przebuduj mapę aktywności", "enqueueRebuildMapData")
     .addToUi();
 }
 

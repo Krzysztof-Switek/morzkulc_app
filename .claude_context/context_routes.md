@@ -4,6 +4,9 @@ Use this file first for endpoint/API/function tasks.
 
 ## Firebase hosting rewrites
 
+- /api/admin/events/sync-calendar -> function:{'functionId': 'adminEventsSyncCalendar', 'region': 'us-central1'}
+- /api/admin/km/places/merge -> function:{'functionId': 'kmAdminMergePlaces', 'region': 'us-central1'}
+- /api/admin/pending -> function:{'functionId': 'getAdminPending', 'region': 'us-central1'}
 - /api/admin/setup -> function:{'functionId': 'adminPutSetup', 'region': 'us-central1'}
 - /api/basen/admin/godziny/add -> function:{'functionId': 'basenAdminAddGodziny', 'region': 'us-central1'}
 - /api/basen/admin/godziny/correct -> function:{'functionId': 'basenAdminCorrectGodziny', 'region': 'us-central1'}
@@ -74,10 +77,118 @@ Use this file first for endpoint/API/function tasks.
   - getSetup
   - onRequest
 
+### `archived/functions/node_modules/@google-cloud/firestore/build/src/v1/firestore_admin_client.js`
+- kind: `other`
+- lines: 1833
+- firebase function hints:
+  - onRequest
+
+### `archived/functions/node_modules/@protobufjs/fetch/tests/index.js`
+- kind: `test`
+- lines: 17
+- routes/api strings:
+  - NOTFOUND
+
+### `archived/functions/node_modules/@types/express-serve-static-core/index.d.ts`
+- kind: `other`
+- lines: 1282
+- routes/api strings:
+  - GET /user/:uid/photos/:file
+  - GET foo
+
+### `archived/functions/node_modules/@types/node/test.d.ts`
+- kind: `test`
+- lines: 2164
+- routes/api strings:
+  - some/uri
+
+### `archived/functions/node_modules/express/lib/request.js`
+- kind: `other`
+- lines: 526
+- routes/api strings:
+  - GET subdomain offset
+  - GET trust proxy fn
+
+### `archived/functions/node_modules/express/lib/response.js`
+- kind: `other`
+- lines: 1180
+- routes/api strings:
+  - GET /user/:uid/photos/:file
+  - GET etag fn
+  - GET json escape
+  - GET json replacer
+  - GET json spaces
+  - GET jsonp callback name
+
+### `archived/functions/node_modules/firebase-functions/lib/bin/firebase-functions.js`
+- kind: `other`
+- lines: 120
+- routes/api strings:
+  - GET /__/functions.yaml
+  - GET /__/quitquitquit
+  - POST /__/quitquitquit
+
+### `archived/functions/node_modules/firebase-functions/lib/v1/providers/https.d.ts`
+- kind: `other`
+- lines: 16
+- firebase function hints:
+  - onRequest
+
+### `archived/functions/node_modules/firebase-functions/lib/v1/providers/https.js`
+- kind: `other`
+- lines: 100
+- firebase function hints:
+  - onRequest
+
+### `archived/functions/node_modules/firebase-functions/lib/v2/providers/https.d.ts`
+- kind: `other`
+- lines: 240
+- firebase function hints:
+  - onRequest
+
+### `archived/functions/node_modules/firebase-functions/lib/v2/providers/https.js`
+- kind: `other`
+- lines: 260
+- firebase function hints:
+  - onRequest
+
+### `archived/functions/node_modules/google-gax/build/src/longRunningCalls/longrunning.js`
+- kind: `other`
+- lines: 280
+- firebase function hints:
+  - onRequest
+
+### `archived/functions/node_modules/node-forge/dist/forge.all.min.js`
+- kind: `other`
+- lines: 2
+- firebase function hints:
+  - onRequest
+
+### `archived/functions/node_modules/node-forge/dist/forge.min.js`
+- kind: `other`
+- lines: 2
+- firebase function hints:
+  - onRequest
+
+### `archived/functions/node_modules/node-forge/lib/x509.js`
+- kind: `other`
+- lines: 3243
+- firebase function hints:
+  - onRequest
+
+### `archived/functions/node_modules/undici-types/fetch.d.ts`
+- kind: `other`
+- lines: 210
+- routes/api strings:
+  - ...
+
 ### `firebase.json`
 - kind: `firebase_config`
-- lines: 351
+- lines: 373
 - routes/api strings:
+  - /api/admin/events/sync-calendar
+  - /api/admin/km/places/merge
+  - /api/admin/pending
   - /api/admin/setup
   - /api/basen/admin/godziny/add
   - /api/basen/admin/godziny/correct
@@ -105,9 +216,6 @@ Use this file first for endpoint/API/function tasks.
   - /api/gear/reservations/update
   - /api/godzinki
   - /api/godzinki/purchase
-  - /api/godzinki/submit
-  - /api/km/event-stats
-  - /api/km/log/add
 
 ### `functions/node_modules/@google-cloud/firestore/build/src/v1/firestore_admin_client.js`
 - kind: `other`
@@ -242,8 +350,9 @@ Use this file first for endpoint/API/function tasks.
 
 ### `functions/src/index.ts`
 - kind: `backend_other`
-- lines: 1065
+- lines: 1148
 - firebase function hints:
+  - adminEventsSyncCalendar
   - adminPutSetup
   - basenAdminAddGodziny
   - basenAdminCorrectGodziny
@@ -271,9 +380,8 @@ Use this file first for endpoint/API/function tasks.
   - getKayakReservations
   - getSetup
   - kmAddLog
+  - kmAdminMergePlaces
   - kmEventStats
-  - kmMapData
-  - kmMyLogs
 
 ### `functions/src/service/admin/adminRunTask.ts`
 - kind: `service_task`
@@ -288,39 +396,18 @@ Use this file first for endpoint/API/function tasks.
 - routes/api strings:
   - https://oauth2.googleapis.com/token
 
-### `project_optimization_snapshot.py`
-- kind: `other`
-- lines: 2383
-- routes/api strings:
-  - /api/gear/items
-  - /api/gear/kayaks
-  - /api/register
-  - /api/setup
-- firebase function hints:
-  - onRequest
-
-### `project_snapshot.py`
-- kind: `other`
-- lines: 1497
-- routes/api strings:
-  - /api/gear/items
-  - /api/gear/kayaks
-  - /api/register
-  - /api/setup
-- firebase function hints:
-  - onRequest
-
 ### `public/core/app_shell.js`
 - kind: `frontend_other`
-- lines: 234
+- lines: 241
 - routes/api strings:
   - /api/register
   - /api/setup
 
 ### `public/core/render_shell.js`
 - kind: `frontend_other`
-- lines: 838
+- lines: 976
 - routes/api strings:
+  - /api/admin/pending
   - /api/basen/sessions
   - /api/events
   - /api/gear/kayaks
@@ -331,19 +418,20 @@ Use this file first for endpoint/API/function tasks.
 
 ### `public/map.html`
 - kind: `frontend_other`
-- lines: 110
+- lines: 217
 - routes/api strings:
   - /api/km/map-data
 
 ### `public/modules/admin_pending_module.js`
 - kind: `frontend_module`
-- lines: 164
+- lines: 284
 - routes/api strings:
+  - /api/admin/events/sync-calendar
   - /api/admin/pending
 
 ### `public/modules/basen_module.js`
 - kind: `frontend_module`
-- lines: 624
+- lines: 620
 - routes/api strings:
   - /api/basen/cancel-enrollment
   - /api/basen/enroll
@@ -355,7 +443,7 @@ Use this file first for endpoint/API/function tasks.
 
 ### `public/modules/gear_module.js`
 - kind: `frontend_module`
-- lines: 1984
+- lines: 2153
 - routes/api strings:
   - /api/gear/favorites
   - /api/gear/favorites/toggle
@@ -367,21 +455,21 @@ Use this file first for endpoint/API/function tasks.
 
 ### `public/modules/godzinki_module.js`
 - kind: `frontend_module`
-- lines: 373
+- lines: 391
 - routes/api strings:
   - /api/godzinki
   - /api/godzinki/submit
 
 ### `public/modules/impreza_module.js`
 - kind: `frontend_module`
-- lines: 287
+- lines: 284
 - routes/api strings:
   - /api/events
   - /api/events/submit
 
 ### `public/modules/km_module.js`
 - kind: `frontend_module`
-- lines: 1038
+- lines: 1082
 - routes/api strings:
   - /api/events
   - /api/km/event-stats
