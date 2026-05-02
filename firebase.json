@@ -366,6 +366,13 @@
           "functionId": "kmAdminMergePlaces",
           "region": "us-central1"
         }
+      },
+      {
+        "source": "/api/kurs/info",
+        "function": {
+          "functionId": "getKursInfo",
+          "region": "us-central1"
+        }
       }
     ]
   }

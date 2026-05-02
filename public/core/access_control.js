@@ -11,7 +11,9 @@ export function canSeeModule({ ctx, module }) {
 
   const uid = String(ctx?.session?.uid || "");
   const email = String(ctx?.session?.email || "");
-  const roleKey = String(ctx?.session?.role_key || "rola_sympatyk");
+  const roleKey = ctx?.kursPreviewMode
+    ? "rola_kursant"
+    : String(ctx?.session?.role_key || "rola_sympatyk");
   const statusKey = String(ctx?.session?.status_key || "");
 
   const usersBlock = Array.isArray(access.usersBlock) ? access.usersBlock.map(String) : [];

@@ -45,6 +45,7 @@ import {handleKmPlaces} from "./api/kmPlacesHandler";
 import {handleKmEventStats} from "./api/kmEventStatsHandler";
 import {handleKmMapData} from "./api/kmMapDataHandler";
 import {handleKmAdminMergePlaces} from "./api/kmAdminMergePlacesHandler";
+import {handleGetKursInfo} from "./api/getKursInfoHandler";
 import {getServiceConfig} from "./service/service_config";
 
 setGlobalOptions({region: "us-central1"});
@@ -317,9 +318,9 @@ function filterSetupForUser(
     }
 
     // Moduł widoczny — pomiń wrażliwe pola z access przed zwróceniem.
-    // Gdy testUsersAllow nadpisało disabled/off, dodaj flagę testUserGranted
+    // Gdy testUsersAllow nadpisało disabled/off/test, dodaj flagę testUserGranted
     // żeby frontend mógł pominąć swoje własne blokady.
-    const testUserOverride = isTestUser && (!cfg.enabled || mode === "off");
+    const testUserOverride = isTestUser && (!cfg.enabled || mode === "off" || mode === "test");
     const safeAccess: ModuleAccess = {
       mode: access.mode,
       rolesAllowed: access.rolesAllowed,
@@ -357,9 +358,10 @@ export const getSetup = onRequest({invoker: "private"}, async (req, res) => {
       const uid = tokenCheck.decoded.uid;
       const email = String(tokenCheck.decoded.email || "").trim().toLowerCase();
 
-      const [setup, userSnap] = await Promise.all([
+      const [setup, userSnap, kursWypozyczaSnap] = await Promise.all([
         getSetupApp(),
         db.collection("users_active").doc(uid).get(),
+        db.collection("var_members").doc("kurs_wypożycza").get(),
       ]);
 
       if (!setup) {
@@ -371,9 +373,25 @@ export const getSetup = onRequest({invoker: "private"}, async (req, res) => {
       const roleKey = String(userData?.role_key || "");
       const statusKey = String(userData?.status_key || "");
 
-      const filteredSetup = filterSetupForUser(setup, uid, email, roleKey, statusKey);
+      const kursModuleCfg = Object.values(setup.modules || {}).find(
+        (m: any) => String(m?.type || "").toLowerCase() === "kurs" ||
+                    String(m?.label || "").toLowerCase() === "kurs"
+      ) as any;
+      const kursTestUsers = flattenEmails(kursModuleCfg?.access?.testUsersAllow);
+      const isKursPreview = kursTestUsers.includes(uid) || kursTestUsers.includes(email);
+      const effectiveRoleKey = isKursPreview ? "rola_kursant" : roleKey;
 
-      res.status(200).json({ok: true, setup: filteredSetup, setupMissing: false});
+      const filteredSetup = filterSetupForUser(setup, uid, email, effectiveRoleKey, statusKey);
+
+      const kursWypozycza = kursWypozyczaSnap.exists && kursWypozyczaSnap.data()?.value === true;
+
+      res.status(200).json({
+        ok: true,
+        setup: filteredSetup,
+        setupMissing: false,
+        kursWypozycza,
+        ...(isKursPreview ? {kursPreviewMode: true} : {}),
+      });
     } catch (err) {
       const e = err as {message?: string; code?: string; stack?: string};
       logger.error("getSetup failed", {message: e?.message, code: e?.code, stack: e?.stack});
@@ -1084,6 +1102,21 @@ export const kmMapData = onRequest({invoker: "private"}, async (req, res) => {
  */
 export const kmAdminMergePlaces = onRequest({invoker: "private"}, async (req, res) => {
   return handleKmAdminMergePlaces(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    adminRoleKeys,
+  });
+});
+
+/**
+ * GET /api/kurs/info (authenticated: rola_kursant, adminowie, testUsersAllow)
+ */
+export const getKursInfo = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetKursInfo(req, res, {
     db,
     sendPreflight,
     requireAllowedHost,

@@ -61,6 +61,12 @@ export interface ServiceConfig {
   calendar: {
     calendarId: string; // empty string = calendar sync disabled
   };
+
+  kurs: {
+    spreadsheetId: string;
+    tabName: string;
+    imprezaTabName: string;
+  };
 }
 
 export function getServiceConfig(): ServiceConfig {
@@ -96,6 +102,10 @@ export function getServiceConfig(): ServiceConfig {
   // ✅ events defaults — ten sam arkusz co członkowie, zakładka "imprezy"
   const eventsSpreadsheetId = process.env.SVC_EVENTS_SHEET_ID || membersSpreadsheetId;
   const eventsTabName = process.env.SVC_EVENTS_SHEET_TAB || "imprezy";
+
+  const kursSpreadsheetId = process.env.SVC_KURS_SHEET_ID || "";
+  const kursTabName = process.env.SVC_KURS_SHEET_TAB || "Kurs";
+  const kursImprezaTabName = process.env.SVC_KURS_IMPREZY_TAB || "Imprezy kursowe";
 
   const cfg: ServiceConfig = {
     envName,
@@ -194,6 +204,12 @@ export function getServiceConfig(): ServiceConfig {
 
     calendar: {
       calendarId: process.env.SVC_CALENDAR_ID || "",
+    },
+
+    kurs: {
+      spreadsheetId: kursSpreadsheetId,
+      tabName: kursTabName,
+      imprezaTabName: kursImprezaTabName,
     },
   };
 

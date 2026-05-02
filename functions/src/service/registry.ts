@@ -12,6 +12,7 @@ import { kmRebuildUserStatsTask } from "./tasks/kmRebuildUserStats";
 import { kmRebuildRankingsTask } from "./tasks/kmRebuildRankings";
 import { kmMergeHistoricalUserTask } from "./tasks/kmMergeHistoricalUser";
 import { kmRebuildMapDataTask } from "./tasks/kmRebuildMapData";
+import { kursSyncFromSheetTask } from "./tasks/kursSyncFromSheet";
 
 const tasks: ServiceTask[] = [
   onUserRegisteredWelcomeTask,
@@ -29,6 +30,7 @@ const tasks: ServiceTask[] = [
   kmRebuildRankingsTask,
   kmMergeHistoricalUserTask,
   kmRebuildMapDataTask,
+  kursSyncFromSheetTask,
 ];
 
 export function getTaskRegistry(): Map<string, ServiceTask> {

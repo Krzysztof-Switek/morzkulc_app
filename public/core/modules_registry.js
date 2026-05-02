@@ -7,6 +7,7 @@ import { createBasenModule } from "/modules/basen_module.js";
 import { createAdminPendingModule } from "/modules/admin_pending_module.js";
 import { createKmModule } from "/modules/km_module.js";
 import { createKursModule } from "/modules/kurs_module.js";
+import { createKursGodzinkiModule } from "/modules/kurs_godzinki_module.js";
 
 /**
  * Resolves the module component type from setup config.
@@ -16,7 +17,7 @@ import { createKursModule } from "/modules/kurs_module.js";
  *
  * Known types: "gear" | "godzinki" | "imprezy" | "basen" | "km" | "admin_pending" | "kurs"
  */
-const KNOWN_MODULE_TYPES = new Set(["gear", "godzinki", "imprezy", "basen", "km", "admin_pending", "kurs"]);
+const KNOWN_MODULE_TYPES = new Set(["gear", "godzinki", "imprezy", "basen", "km", "admin_pending", "kurs", "kurs_godzinki"]);
 
 function resolveModuleType(cfg) {
   const typeField = String(cfg?.type || "").trim().toLowerCase();
@@ -30,6 +31,8 @@ function resolveModuleType(cfg) {
   if (label === "basen") return "basen";
   if (label === "ranking") return "km";
   if (label === "zarząd") return "admin_pending";
+  if (label === "kurs") return "kurs";
+  if (label === "kurs_godzinki") return "kurs_godzinki";
 
   return null;
 }
@@ -108,6 +111,13 @@ export function buildModulesFromSetup(setup, allowedActions) {
       return createKursModule({
         ...base,
         defaultRoute: base.defaultRoute === "home" ? "skrypt" : base.defaultRoute
+      });
+    }
+
+    if (moduleType === "kurs_godzinki") {
+      return createKursGodzinkiModule({
+        ...base,
+        defaultRoute: base.defaultRoute === "home" ? "info" : base.defaultRoute
       });
     }
 

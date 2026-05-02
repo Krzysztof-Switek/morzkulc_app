@@ -15,6 +15,7 @@ const CANCEL_RESERVATION_URL = "/api/gear/reservations/cancel";
 const GODZINKI_URL = "/api/godzinki";
 const EVENTS_URL = "/api/events";
 const BASEN_SESSIONS_URL = "/api/basen/sessions";
+const KURS_INFO_URL = "/api/kurs/info";
 
 export function renderNav({ navEl, ctx }) {
   navEl.innerHTML = "";
@@ -25,7 +26,12 @@ export function renderNav({ navEl, ctx }) {
   navEl.appendChild(homeBtn);
 
   const modules = Array.isArray(ctx.modules) ? ctx.modules : [];
-  const visible = modules.filter((m) => canSeeModule({ ctx, module: m }) && m.id !== "my_reservations");
+  const visible = modules.filter((m) => {
+    if (m.id === "my_reservations") return false;
+    if (ctx.kursPreviewMode && m.type === "admin_pending") return false;
+    if (m.type === "kurs_godzinki") return false;
+    return canSeeModule({ ctx, module: m });
+  });
 
   for (const m of visible) {
     const btn = document.createElement("button");
@@ -85,15 +91,16 @@ export async function renderView({ viewEl, ctx }) {
 function getDashboardConfig(ctx) {
   const actions = ctx?.session?.allowed_actions ?? [];
   const roleKey = String(ctx?.session?.role_key || "");
+  const isKursant = roleKey === "rola_kursant" || ctx?.kursPreviewMode === true;
   return {
-    isAdmin:           actions.includes("admin.pending"),
-    canReserveGear:    actions.includes("gear.reserve"),
+    isKursant,
+    isAdmin:           !isKursant && actions.includes("admin.pending"),
+    canReserveGear:    !isKursant && actions.includes("gear.reserve"),
     canEnrollBasen:    actions.includes("basen.enroll"),
-    canSubmitGodzinki: actions.includes("godzinki.submit"),
-    canSubmitEvents:   actions.includes("events.submit"),
-    isKursant:         roleKey === "rola_kursant",
-    isSympatyk:        roleKey === "rola_sympatyk",
-    isKandydat:        roleKey === "rola_kandydat",
+    canSubmitGodzinki: !isKursant && actions.includes("godzinki.submit"),
+    canSubmitEvents:   !isKursant && actions.includes("events.submit"),
+    isSympatyk:        !isKursant && roleKey === "rola_sympatyk",
+    isKandydat:        !isKursant && roleKey === "rola_kandydat",
   };
 }
 
@@ -112,6 +119,12 @@ async function renderHomeDashboard({ viewEl, ctx }) {
 
   const kmModuleRoute = getModuleRouteByType(ctx, "km");
   const hasKmModule = kmModuleRoute.moduleId !== "home";
+
+  const kursModuleRoute = getModuleRouteByType(ctx, "kurs");
+  const hasKursModule = kursModuleRoute.moduleId !== "home";
+
+  const kursGodzinkiRoute = getModuleRouteByType(ctx, "kurs_godzinki");
+  const hasKursGodzinkiModule = kursGodzinkiRoute.moduleId !== "home";
 
   // Komunikat dla ról z ograniczonym dostępem
   const accessInfoMsg = dash.isSympatyk
@@ -149,15 +162,26 @@ async function renderHomeDashboard({ viewEl, ctx }) {
               <span class="startTile2Title">Sprzęt</span>
             </button>
 
+            ${!dash.isKursant ? `
             <button type="button" class="startTile2" data-home-action="add-hours">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               <span class="startTile2Title">Godzinki</span>
             </button>
+            ` : ""}
 
+            ${!dash.isKursant ? `
             <button type="button" class="startTile2" data-home-action="add-event">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg>
               <span class="startTile2Title">Imprezy</span>
             </button>
+            ` : ""}
+
+            ${dash.isKursant && hasKursGodzinkiModule ? `
+            <button type="button" class="startTile2" data-home-action="kurs-godzinki">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span class="startTile2Title">Godzinki</span>
+            </button>
+            ` : ""}
 
             <button type="button" class="startTile2" data-home-action="basen"${basenEnabledTile ? "" : " disabled"}>
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>
@@ -171,10 +195,19 @@ async function renderHomeDashboard({ viewEl, ctx }) {
             </button>
             ` : ""}
 
+            ${!dash.isKursant ? `
             <button type="button" class="startTile2${isSkladkiOverdue ? " danger" : ""}" data-home-action="skladki">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
               <span class="startTile2Title">Składki</span>
             </button>
+            ` : ""}
+
+            ${dash.isKursant && hasKursModule ? `
+            <button type="button" class="startTile2 primary" data-home-action="kurs">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+              <span class="startTile2Title">Kurs</span>
+            </button>
+            ` : ""}
 
             ${dash.isAdmin ? `
             <button type="button" class="startTile2" data-home-action="admin-pending" style="position:relative;">
@@ -190,7 +223,14 @@ async function renderHomeDashboard({ viewEl, ctx }) {
       ${dash.isKursant ? `
       <section class="dashCard startSection">
         <div class="dashCardHead"><h3>Witaj w SKK Morzkulc!</h3></div>
-        <p class="muted" style="padding:0 16px 12px;">Jesteś kursantem — poniżej znajdziesz moduły dostępne dla Ciebie. Zapoznaj się z imprezami i aktywnościami klubu.</p>
+        <p class="muted" style="padding:0 16px 12px;">Jesteś kursantem — masz dostęp do modułu Kurs, imprez i basenu. Po ukończeniu kursu możesz zostać pełnym członkiem klubu.</p>
+      </section>
+      <section class="dashCard startSection">
+        <div class="dashCardHead">
+          <h3>Imprezy kursowe</h3>
+          ${hasKursModule ? `<button type="button" class="ghost" data-home-action="kurs">Zobacz wszystkie</button>` : ""}
+        </div>
+        <div class="startList" id="homeKursEventsList">${spinnerHtml("Ładowanie...")}</div>
       </section>
       ` : ""}
 
@@ -288,6 +328,14 @@ async function renderHomeDashboard({ viewEl, ctx }) {
   const kmBtn = viewEl.querySelector("[data-home-action='km']");
   if (kmBtn) kmBtn.addEventListener("click", () => setHash(kmModuleRoute.moduleId, kmModuleRoute.routeId));
 
+  viewEl.querySelectorAll("[data-home-action='kurs']").forEach((btn) => {
+    btn.addEventListener("click", () => setHash(kursModuleRoute.moduleId, kursModuleRoute.routeId));
+  });
+
+  viewEl.querySelectorAll("[data-home-action='kurs-godzinki']").forEach((btn) => {
+    btn.addEventListener("click", () => setHash(kursGodzinkiRoute.moduleId, kursGodzinkiRoute.routeId));
+  });
+
   const skladkiBtn = viewEl.querySelector("[data-home-action='skladki']");
   if (skladkiBtn) skladkiBtn.addEventListener("click", () => setHash("home", "profile"));
 
@@ -362,6 +410,17 @@ async function renderHomeDashboard({ viewEl, ctx }) {
     }).catch(() => {
       const listEl = viewEl.querySelector("#homeBasenList");
       if (listEl) listEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać sesji.</div></div></div>`;
+    });
+  }
+
+  // Ładuj imprezy kursowe — tylko dla kursanta
+  if (dash.isKursant && ctx?.idToken) {
+    buildHomeKursEventsSection(ctx).then((html) => {
+      const listEl = viewEl.querySelector("#homeKursEventsList");
+      if (listEl) listEl.innerHTML = html;
+    }).catch(() => {
+      const listEl = viewEl.querySelector("#homeKursEventsList");
+      if (listEl) listEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać imprez kursowych.</div></div></div>`;
     });
   }
 }
@@ -541,6 +600,34 @@ async function buildHomeBasenSection(ctx) {
     }).join("");
   } catch {
     return `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać zajęć.</div></div></div>`;
+  }
+}
+
+async function buildHomeKursEventsSection(ctx) {
+  try {
+    const data = await apiGetJson({ url: KURS_INFO_URL, idToken: ctx.idToken });
+    const events = Array.isArray(data?.events) ? data.events : [];
+    const upcoming = events.slice(0, 3);
+
+    if (data.unconfigured || !upcoming.length) {
+      return `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Brak zaplanowanych imprez kursowych</div></div></div>`;
+    }
+
+    return upcoming.map((ev) => {
+      const start = formatDatePL(String(ev?.startDate || ""));
+      const end = formatDatePL(String(ev?.endDate || ""));
+      const dateRange = ev.startDate === ev.endDate ? start : `${start} – ${end}`;
+      return `
+        <div class="startListItem">
+          <div class="startListMain">
+            <div class="startListTitle">${escapeHtml(String(ev?.name || "Impreza kursowa"))}</div>
+            <div class="startListMeta">${escapeHtml(String(ev?.location || ""))}${ev?.location ? " · " : ""}${escapeHtml(dateRange)}</div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  } catch {
+    return `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać imprez kursowych.</div></div></div>`;
   }
 }
 

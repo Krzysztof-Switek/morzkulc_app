@@ -150,9 +150,13 @@ const SESSION_MAX_MS = 24 * 60 * 60 * 1000; // 24 godziny
     try {
       const setupResp = await apiGetJson({ url: SETUP_URL, idToken });
       ctx.setup = setupResp?.setup || null;
+      ctx.kursPreviewMode = setupResp?.kursPreviewMode === true;
+      ctx.kursWypozycza = setupResp?.kursWypozycza === true;
       window.__APP_CTX__ = ctx;
     } catch (_) {
       ctx.setup = null;
+      ctx.kursPreviewMode = false;
+      ctx.kursWypozycza = false;
       window.__APP_CTX__ = ctx;
     }
 

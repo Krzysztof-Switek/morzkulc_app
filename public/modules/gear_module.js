@@ -800,6 +800,9 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
         }
       };
 
+      const isKursant = ctx?.kursPreviewMode || ctx?.session?.role_key === "rola_kursant";
+      const canUserReserve = isKursant ? ctx?.kursWypozycza === true : true;
+
       const render = (items) => {
         if (!items.length) {
           listEl.innerHTML = `<div class="hint">Brak wyników.</div>`;
@@ -808,7 +811,7 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
         }
 
         const cards = isKayaksView
-          ? items.map((k) => renderKayakCard(k, favSet.has(String(k?.id || "")))).join("")
+          ? items.map((k) => renderKayakCard(k, favSet.has(String(k?.id || "")), canUserReserve)).join("")
           : isPaddlesView
             ? items.map((item) => renderPaddleCard(item, favSet.has(String(item?.id || "")))).join("")
             : isLifejacketsView
@@ -1474,7 +1477,7 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
   };
 }
 
-function renderKayakCard(k, isFav = false) {
+function renderKayakCard(k, isFav = false, canUserReserve = true) {
   const number = String(k?.number || "").trim();
   const brand = String(k?.brand || "").trim();
   const model = String(k?.model || "").trim();
@@ -1490,7 +1493,7 @@ function renderKayakCard(k, isFav = false) {
   const isPrivate = toBool(k?.isPrivate);
   const privateRent = toBool(k?.privateForRent) || toBool(k?.isPrivateRentable);
 
-  const canReserve = working && (!isPrivate || privateRent) && !isPool;
+  const canReserve = working && (!isPrivate || privateRent) && !isPool && canUserReserve;
 
   const workingBadge = working
     ? `<span class="badge ok">sprawny</span>`

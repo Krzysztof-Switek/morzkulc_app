@@ -350,15 +350,80 @@
   min-width: 20px;
 }
 
-/* ─── Placeholder zakładki Harmonogram ─── */
+/* ─── Zakładka Harmonogram — dane kursu z API ─── */
 
-.kursHarmonogramPlaceholder {
-  padding: 40px 20px;
-  text-align: center;
-  color: var(--text-muted);
+.kursInfoCard {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
 }
 
-.kursHarmonogramPlaceholder p {
+.kursInfoCard h3 {
+  margin: 0 0 12px;
+}
+
+.kursInfoDl {
   margin: 0;
-  font-size: 14px;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 16px;
 }
+
+.kursInfoDl dt {
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 0.85em;
+  white-space: nowrap;
+  padding-top: 2px;
+}
+
+.kursInfoDl dd {
+  margin: 0;
+}
+
+.kursLink {
+  color: var(--primary);
+}
+
+.kursEventsSection {
+  margin-top: 24px;
+}
+
+.kursEventsSection h3 {
+  margin-bottom: 10px;
+}
+
+.kursEventList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.kursEventRow {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+  padding: 8px 0;
+}
+
+.kursEventRow:last-child {
+  border-bottom: none;
+}
+
+.kursEventDate {
+  font-size: 0.85em;
+  color: var(--text-muted);
+  white-space: nowrap;
+  min-width: 130px;
+}
+
+.kursEventName {
+  flex: 1;
+}
+
+.kursGodzinkiPrzyklad { border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; margin: 20px 0; }
+.kursGodzinkiPrzyklad h3 { margin: 0 0 12px; }
+.kursGodzinkiRegulamin { margin-top: 20px; }

@@ -1,12 +1,15 @@
 // public/modules/kurs_module.js
+import { apiGetJson } from "/core/api_client.js";
+
+const KURS_INFO_URL = "/api/kurs/info";
 
 const CHAPTERS = [
-  { id: "ch1", num: 1, title: "Wstęp" },
-  { id: "ch2", num: 2, title: "Sprzęt" },
-  { id: "ch3", num: 3, title: "Locja" },
-  { id: "ch4", num: 4, title: "PKP — Prędkość, Kąt, Przechył" },
-  { id: "ch5", num: 5, title: "Manewry" },
-  { id: "ch6", num: 6, title: "Bezpieczeństwo" },
+  { id: "ch01", num: 1, title: "Wstęp" },
+  { id: "ch02", num: 2, title: "Sprzęt" },
+  { id: "ch03", num: 3, title: "Locja" },
+  { id: "ch04", num: 4, title: "PKP — Podstawy Kajakarstwa" },
+  { id: "ch05", num: 5, title: "Manewry" },
+  { id: "ch06", num: 6, title: "Bezpieczeństwo" },
 ];
 
 const NAV_BACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`;
@@ -123,14 +126,87 @@ async function renderChapter(innerEl, moduleId, chId) {
   innerEl.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-// ─── Harmonogram placeholder ──────────────────────────────────────────────────
+// ─── Harmonogram — dane z API ─────────────────────────────────────────────────
 
-function renderHarmonogram(innerEl) {
-  innerEl.innerHTML = `
-    <div class="kursHarmonogramPlaceholder">
-      <p>Harmonogram zajęć pojawi się tutaj gdy kurs zostanie skonfigurowany przez instruktora.</p>
+function formatDate(iso) {
+  if (!iso) return "—";
+  const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return iso;
+  return `${m[3]}.${m[2]}.${m[1]}`;
+}
+
+function formatDateRange(start, end) {
+  if (!start && !end) return "—";
+  if (!end || start === end) return formatDate(start);
+  return `${formatDate(start)} – ${formatDate(end)}`;
+}
+
+function kursInfoCardHtml(info) {
+  const linkHtml = info.link
+    ? `<a href="${esc(info.link)}" target="_blank" rel="noopener" class="kursLink">Strona kursu →</a>`
+    : "";
+  const rows = [
+    info.startDate || info.endDate ? `<dt>Termin</dt><dd>${esc(formatDateRange(info.startDate, info.endDate))}</dd>` : "",
+    info.location ? `<dt>Miejsce zajęć</dt><dd>${esc(info.location)}</dd>` : "",
+    info.instructor ? `<dt>Instruktor</dt><dd>${esc(info.instructor)}</dd>` : "",
+    info.instructorContact ? `<dt>Kontakt</dt><dd>${esc(info.instructorContact)}</dd>` : "",
+    info.description ? `<dt>Opis</dt><dd>${esc(info.description)}</dd>` : "",
+    linkHtml ? `<dt></dt><dd>${linkHtml}</dd>` : "",
+  ].filter(Boolean).join("");
+  return `
+    <div class="kursInfoCard">
+      <h3>${esc(info.name)}</h3>
+      <dl class="kursInfoDl">${rows}</dl>
     </div>
   `;
+}
+
+function kursEventRowHtml(ev) {
+  const locationHtml = ev.location ? ` · ${esc(ev.location)}` : "";
+  const linkHtml = ev.link ? ` <a href="${esc(ev.link)}" target="_blank" rel="noopener">→</a>` : "";
+  return `
+    <div class="kursEventRow">
+      <span class="kursEventDate">${esc(formatDateRange(ev.startDate, ev.endDate))}</span>
+      <span class="kursEventName">${esc(ev.name)}${locationHtml}${linkHtml}</span>
+    </div>
+  `;
+}
+
+async function renderHarmonogram(innerEl, ctx) {
+  innerEl.innerHTML = spinnerHtml("Ładowanie danych kursu…");
+
+  let data;
+  try {
+    data = await apiGetJson({ url: KURS_INFO_URL, idToken: ctx.idToken });
+  } catch (e) {
+    innerEl.innerHTML = `<p class="err">Nie udało się załadować danych kursu: ${esc(e?.message || "błąd sieci")}</p>`;
+    return;
+  }
+
+  if (data.unconfigured) {
+    innerEl.innerHTML = `<p class="muted">Dane kursu nie zostały jeszcze skonfigurowane.</p>`;
+    return;
+  }
+
+  let html = "";
+
+  if (data.info && data.info.length > 0) {
+    html += data.info.map(kursInfoCardHtml).join("");
+  } else {
+    html += `<p class="muted">Brak aktywnych kursów.</p>`;
+  }
+
+  if (data.events && data.events.length > 0) {
+    const eventsHtml = data.events.map(kursEventRowHtml).join("");
+    html += `
+      <div class="kursEventsSection">
+        <h3>Imprezy kursowe</h3>
+        <div class="kursEventList">${eventsHtml}</div>
+      </div>
+    `;
+  }
+
+  innerEl.innerHTML = html;
 }
 
 // ─── Module ───────────────────────────────────────────────────────────────────
@@ -195,7 +271,7 @@ export function createKursModule({ id, type, label, defaultRoute, order, enabled
       });
 
       if (activeTab === "harmonogram") {
-        renderHarmonogram(innerEl);
+        await renderHarmonogram(innerEl, ctx);
       } else if (isChapter) {
         await renderChapter(innerEl, id, route);
       } else {
