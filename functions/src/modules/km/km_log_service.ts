@@ -110,9 +110,12 @@ export async function addKmLog(
   if (input.eventId) logDoc.eventId = input.eventId;
   if (input.eventName) logDoc.eventName = input.eventName;
 
+  const statsRef = db.collection("km_user_stats").doc(input.uid);
+
   await db.runTransaction(async (tx) => {
+    const statsSnap = await tx.get(statsRef); // READ przed zapisami
     tx.set(logRef, logDoc);
-    await updateUserStatsInTransaction(tx, db, input.uid, input.userSnapshot, {
+    updateUserStatsWriteInTransaction(tx, statsRef, statsSnap, input.uid, input.userSnapshot, {
       km: input.km,
       hoursOnWater: input.hoursOnWater ?? 0,
       pointsTotal: scoring.pointsTotal,
@@ -139,18 +142,17 @@ type StatsIncrement = {
 };
 
 /**
- * Aktualizuje km_user_stats/{uid} w ramach istniejącej transakcji.
- * Jeśli dokument nie istnieje — tworzy go z wartościami inicjalnymi.
+ * Zapisuje km_user_stats/{uid} w ramach istniejącej transakcji.
+ * Snapshot musi być odczytany wcześniej (przed jakimikolwiek zapisami w tej transakcji).
  */
-async function updateUserStatsInTransaction(
+function updateUserStatsWriteInTransaction(
   tx: FirebaseFirestore.Transaction,
-  db: FirebaseFirestore.Firestore,
+  statsRef: FirebaseFirestore.DocumentReference,
+  statsSnap: FirebaseFirestore.DocumentSnapshot,
   uid: string,
   userSnapshot: {displayName: string; nickname: string; email: string},
   inc: StatsIncrement
-): Promise<void> {
-  const statsRef = db.collection("km_user_stats").doc(uid);
-  const statsSnap = await tx.get(statsRef);
+): void {
   const existing = statsSnap.exists ? (statsSnap.data() as any) : null;
 
   const currentYearKey = String(new Date().getFullYear());

@@ -126,10 +126,43 @@
       padding: 24px;
     }
     #overlay.hidden { display: none; }
+
+    #mapBackBtn {
+      display: none;
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1100;
+      background: var(--panel-bg, rgba(13,17,23,0.85));
+      color: var(--input-color, #e0e0e0);
+      border: 1px solid var(--panel-border, #333);
+      border-radius: 20px;
+      padding: 10px 22px;
+      font: 600 14px system-ui, sans-serif;
+      cursor: pointer;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+    #mapBackBtn:active { opacity: 0.7; }
   </style>
 </head>
 <body>
   <div id="overlay">Ładowanie mapy…</div>
+  <button id="mapBackBtn" type="button">← Wróć do aplikacji</button>
+  <script>
+    (function() {
+      const isStandalone = window.matchMedia("(display-mode: standalone)").matches ||
+        window.navigator.standalone === true;
+      if (isStandalone) {
+        const btn = document.getElementById("mapBackBtn");
+        if (btn) {
+          btn.style.display = "block";
+          btn.addEventListener("click", () => history.back());
+        }
+      }
+    })();
+  </script>
   <div id="yearBar">
     <label for="yearFilter">Rok:</label>
     <select id="yearFilter"><option value="">Wszystkie lata</option></select>

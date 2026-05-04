@@ -46,6 +46,8 @@ function syncEventsToFirestore() {
         contact: rowItem.data.contact,
         link: rowItem.data.link,
         approved: rowItem.data.approved,
+        ranking: rowItem.data.ranking,
+        kursowa: rowItem.data.kursowa,
         source: "sheet",
         userUid: "",
         userEmail: "",
@@ -151,6 +153,8 @@ function readEventsForSync_() {
     "link_do_strony_zgloszen",
     "zatwierdzona",
     "zsynchronizowano",
+    "ranking",
+    "kursowa",
   ];
 
   const missing = required.filter(function(name) {
@@ -189,6 +193,8 @@ function readEventsForSync_() {
         contact: normalizeStringForEvents_(row[idx("kontakt")]),
         link: normalizeStringForEvents_(row[idx("link_do_strony_zgloszen")]),
         approved: normalizeBoolish_(row[idx("zatwierdzona")]),
+        ranking: normalizeBoolish_(row[idx("ranking")]),
+        kursowa: normalizeBoolish_(row[idx("kursowa")]),
       },
     });
   }
@@ -207,6 +213,8 @@ function buildEventDiff_(sheetEvent, firestoreEvent, sheetRowNumber, who) {
   addChangedPathIfNeededForEvents_(diff, "contact", sheetEvent.contact, firestoreEvent.contact);
   addChangedPathIfNeededForEvents_(diff, "link", sheetEvent.link, firestoreEvent.link);
   addChangedPathIfNeededForEvents_(diff, "approved", sheetEvent.approved, firestoreEvent.approved);
+  addChangedPathIfNeededForEvents_(diff, "ranking", sheetEvent.ranking, firestoreEvent.ranking);
+  addChangedPathIfNeededForEvents_(diff, "kursowa", sheetEvent.kursowa, firestoreEvent.kursowa);
   addChangedPathIfNeededForEvents_(diff, "source", "sheet", firestoreEvent.source);
   addChangedPathIfNeededForEvents_(diff, "id", firestoreEvent.id || "", sheetEvent.id || firestoreEvent.id);
 

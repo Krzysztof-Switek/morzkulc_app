@@ -1,7 +1,4 @@
 // public/modules/kurs_module.js
-import { apiGetJson } from "/core/api_client.js";
-
-const KURS_INFO_URL = "/api/kurs/info";
 
 const CHAPTERS = [
   { id: "ch01", num: 1, title: "Wstęp" },
@@ -27,27 +24,11 @@ function spinnerHtml(text = "Ładowanie…") {
   return `<div class="thinking">${esc(text)}<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></div>`;
 }
 
-// ─── Tab bar ──────────────────────────────────────────────────────────────────
-
-function renderTabsHtml(activeTab) {
-  const tabs = [
-    { id: "skrypt", label: "Skrypt" },
-    { id: "harmonogram", label: "Harmonogram" },
-  ];
-  return `<div class="kursTabs">
-    ${tabs.map((t) => `
-      <button type="button"
-        class="kursTab${t.id === activeTab ? " active" : ""}"
-        data-kurs-tab="${esc(t.id)}"
-      >${esc(t.label)}</button>
-    `).join("")}
-  </div>`;
-}
-
 // ─── TOC view ─────────────────────────────────────────────────────────────────
 
 function renderToc(innerEl, moduleId) {
   innerEl.innerHTML = `
+    <p style="font-style:italic; color:var(--text-muted,#666); background:rgba(0,0,0,.04); border-left:3px solid var(--accent,#4a90e2); padding:10px 14px; border-radius:4px; margin:0 0 16px; font-size:.93em;"><em>skrypt zebrała do kupy i przygotowała Karolia z PrzeWrotki, Karolina jest fanem 50cm kebabów i białego półwytrawnego wina (najlepiej z lodem) — wiecie jak się odwdzięczyć&nbsp;;)</em></p>
     <div class="skryptToc">
       ${CHAPTERS.map((ch) => `
         <button type="button" class="skryptTocItem" data-ch-id="${esc(ch.id)}">
@@ -126,89 +107,6 @@ async function renderChapter(innerEl, moduleId, chId) {
   innerEl.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-// ─── Harmonogram — dane z API ─────────────────────────────────────────────────
-
-function formatDate(iso) {
-  if (!iso) return "—";
-  const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!m) return iso;
-  return `${m[3]}.${m[2]}.${m[1]}`;
-}
-
-function formatDateRange(start, end) {
-  if (!start && !end) return "—";
-  if (!end || start === end) return formatDate(start);
-  return `${formatDate(start)} – ${formatDate(end)}`;
-}
-
-function kursInfoCardHtml(info) {
-  const linkHtml = info.link
-    ? `<a href="${esc(info.link)}" target="_blank" rel="noopener" class="kursLink">Strona kursu →</a>`
-    : "";
-  const rows = [
-    info.startDate || info.endDate ? `<dt>Termin</dt><dd>${esc(formatDateRange(info.startDate, info.endDate))}</dd>` : "",
-    info.location ? `<dt>Miejsce zajęć</dt><dd>${esc(info.location)}</dd>` : "",
-    info.instructor ? `<dt>Instruktor</dt><dd>${esc(info.instructor)}</dd>` : "",
-    info.instructorContact ? `<dt>Kontakt</dt><dd>${esc(info.instructorContact)}</dd>` : "",
-    info.description ? `<dt>Opis</dt><dd>${esc(info.description)}</dd>` : "",
-    linkHtml ? `<dt></dt><dd>${linkHtml}</dd>` : "",
-  ].filter(Boolean).join("");
-  return `
-    <div class="kursInfoCard">
-      <h3>${esc(info.name)}</h3>
-      <dl class="kursInfoDl">${rows}</dl>
-    </div>
-  `;
-}
-
-function kursEventRowHtml(ev) {
-  const locationHtml = ev.location ? ` · ${esc(ev.location)}` : "";
-  const linkHtml = ev.link ? ` <a href="${esc(ev.link)}" target="_blank" rel="noopener">→</a>` : "";
-  return `
-    <div class="kursEventRow">
-      <span class="kursEventDate">${esc(formatDateRange(ev.startDate, ev.endDate))}</span>
-      <span class="kursEventName">${esc(ev.name)}${locationHtml}${linkHtml}</span>
-    </div>
-  `;
-}
-
-async function renderHarmonogram(innerEl, ctx) {
-  innerEl.innerHTML = spinnerHtml("Ładowanie danych kursu…");
-
-  let data;
-  try {
-    data = await apiGetJson({ url: KURS_INFO_URL, idToken: ctx.idToken });
-  } catch (e) {
-    innerEl.innerHTML = `<p class="err">Nie udało się załadować danych kursu: ${esc(e?.message || "błąd sieci")}</p>`;
-    return;
-  }
-
-  if (data.unconfigured) {
-    innerEl.innerHTML = `<p class="muted">Dane kursu nie zostały jeszcze skonfigurowane.</p>`;
-    return;
-  }
-
-  let html = "";
-
-  if (data.info && data.info.length > 0) {
-    html += data.info.map(kursInfoCardHtml).join("");
-  } else {
-    html += `<p class="muted">Brak aktywnych kursów.</p>`;
-  }
-
-  if (data.events && data.events.length > 0) {
-    const eventsHtml = data.events.map(kursEventRowHtml).join("");
-    html += `
-      <div class="kursEventsSection">
-        <h3>Imprezy kursowe</h3>
-        <div class="kursEventList">${eventsHtml}</div>
-      </div>
-    `;
-  }
-
-  innerEl.innerHTML = html;
-}
-
 // ─── Module ───────────────────────────────────────────────────────────────────
 
 export function createKursModule({ id, type, label, defaultRoute, order, enabled, access }) {
@@ -225,7 +123,6 @@ export function createKursModule({ id, type, label, defaultRoute, order, enabled
       const route = String(routeId || "skrypt").trim();
 
       const isChapter = CHAPTERS.some((ch) => ch.id === route);
-      const activeTab = route === "harmonogram" ? "harmonogram" : "skrypt";
 
       viewEl.innerHTML = `
         <div class="card wide">
@@ -239,7 +136,6 @@ export function createKursModule({ id, type, label, defaultRoute, order, enabled
               </div>
             </div>
           </div>
-          ${renderTabsHtml(activeTab)}
           <div id="kursInner"></div>
         </div>
       `;
@@ -259,20 +155,11 @@ export function createKursModule({ id, type, label, defaultRoute, order, enabled
         }
       });
 
-      viewEl.querySelector(".kursTabs")?.addEventListener("click", (ev) => {
-        const btn = ev.target.closest("[data-kurs-tab]");
-        if (!btn) return;
-        const tab = btn.getAttribute("data-kurs-tab");
-        window.location.hash = `#${id}/${tab}`;
-      });
-
       viewEl.querySelector(".kursPrintBtn")?.addEventListener("click", () => {
         window.print();
       });
 
-      if (activeTab === "harmonogram") {
-        await renderHarmonogram(innerEl, ctx);
-      } else if (isChapter) {
+      if (isChapter) {
         await renderChapter(innerEl, id, route);
       } else {
         renderToc(innerEl, id);

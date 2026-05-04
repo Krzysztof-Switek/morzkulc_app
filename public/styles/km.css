@@ -453,3 +453,43 @@
     gap: 6px;
   }
 }
+
+/* ─── Ranking kursantów ─────────────────────────────────────────────────────── */
+
+.kmRankingTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+
+.kmRankingTable th,
+.kmRankingTable td {
+  padding: 8px 10px;
+  text-align: center;
+  border-bottom: 1px solid var(--border, #e0e0e0);
+}
+
+.kmRankingTable th {
+  font-weight: 600;
+  color: var(--text-muted, #666);
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.kmRankingTable td:nth-child(2) {
+  text-align: left;
+}
+
+.kmRankingTable tbody tr:hover {
+  background: var(--hover-bg, rgba(0,0,0,.03));
+}
+
+.kmRankingRowMe {
+  background: var(--accent-bg, #eef4ff);
+  font-weight: 600;
+}
+
+.kmRankingRowMe td {
+  color: var(--accent, #2563eb);
+}

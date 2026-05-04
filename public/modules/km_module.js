@@ -26,13 +26,24 @@ const NAV_BACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height=
 const NAV_HOME_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
 const INFO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`;
 
+function openMap() {
+  const isStandalone = window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true;
+  if (isStandalone) {
+    window.location.href = "/map.html";
+  } else {
+    window.open("/map.html", "_blank", "noopener");
+  }
+}
+
 const TABS = [
-  { id: "form",     label: "Dodaj wpis" },
-  { id: "rankings", label: "Ranking" },
-  { id: "events",   label: "Imprezy" },
-  { id: "map",      label: "Mapa" },
-  { id: "my-stats", label: "Moje statystyki" },
-  { id: "my-logs",  label: "Moje wpisy" },
+  { id: "form",            label: "Dodaj wpis" },
+  { id: "rankings",        label: "Wywrotolotek" },
+  { id: "events",          label: "Imprezy" },
+  { id: "map",             label: "Gdzie pływamy" },
+  { id: "my-stats",        label: "Moje statystyki" },
+  { id: "my-logs",         label: "Moje wpisy" },
+  { id: "kursant-ranking", label: "Wywrotolotek" },
 ];
 
 const WATER_TYPES = [
@@ -76,7 +87,7 @@ function formatDate(iso) {
 
 function fmtNum(n, decimals = 1) {
   const v = parseFloat(n) || 0;
-  return v % 1 === 0 ? String(v) : v.toFixed(decimals);
+  return v % 1 === 0 ? String(v) : parseFloat(v.toFixed(decimals)).toString();
 }
 
 function waterTypeLabel(wt) {
@@ -242,6 +253,138 @@ function attachPlacesAutocomplete(input, hiddenPlaceId, ctx, hiddenLat, hiddenLn
   });
 }
 
+// ─── WIDOK: formularz kursanta ────────────────────────────────────────────────
+
+function renderKursantFormView(inner, ctx) {
+  inner.innerHTML = `
+    <div class="kmFormSection">
+      <form id="kmKursantForm" class="kmForm" novalidate>
+
+        <div class="formRow">
+          <label for="kmKursantEvent">Impreza kursowa <span class="required">*</span></label>
+          <select id="kmKursantEvent" name="event" required>
+            <option value="">Ładowanie…</option>
+          </select>
+        </div>
+
+        <fieldset class="kmCapsizeFieldset">
+          <legend>Wywrotolotek</legend>
+          <div class="kmCapsizeGrid">
+            <div class="kmCapsizeItem">
+              <label for="kmKKabina">Kabina</label>
+              <input type="number" id="kmKKabina" name="kabina" min="0" max="999" step="1" placeholder="0" />
+            </div>
+            <div class="kmCapsizeItem">
+              <label for="kmKRolka">Rolka</label>
+              <input type="number" id="kmKRolka" name="rolka" min="0" max="999" step="1" placeholder="0" />
+            </div>
+            <div class="kmCapsizeItem">
+              <label for="kmKDziubek">Dziubek</label>
+              <input type="number" id="kmKDziubek" name="dziubek" min="0" max="999" step="1" placeholder="0" />
+            </div>
+          </div>
+        </fieldset>
+
+        <div id="kmKursantFormError" class="errorMsg" hidden></div>
+        <div id="kmKursantFormSuccess" class="successMsg" hidden></div>
+
+        <div class="formActions">
+          <button type="submit" id="kmKursantSubmitBtn" class="primary">Zapisz</button>
+        </div>
+      </form>
+    </div>
+  `;
+
+  const eventSelect = inner.querySelector("#kmKursantEvent");
+  const form = inner.querySelector("#kmKursantForm");
+  const errEl = inner.querySelector("#kmKursantFormError");
+  const okEl = inner.querySelector("#kmKursantFormSuccess");
+  const btn = inner.querySelector("#kmKursantSubmitBtn");
+
+  function setErr(msg) { errEl.textContent = msg; errEl.hidden = !msg; okEl.hidden = true; }
+  function setOk(msg)  { okEl.textContent = msg; okEl.hidden = false; errEl.hidden = true; }
+
+  // Załaduj imprezy kursowe asynchronicznie
+  apiGetJson({ url: EVENTS_URL + "?mode=all", idToken: ctx.idToken })
+    .then(data => {
+      const events = (data?.events || []).filter(ev => ev.kursowa === true && ev.ranking === true);
+      eventSelect.innerHTML = "";
+      if (!events.length) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "Brak aktywnych imprez kursowych";
+        eventSelect.appendChild(opt);
+        return;
+      }
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "— wybierz imprezę —";
+      eventSelect.appendChild(placeholder);
+      events.forEach(ev => {
+        const opt = document.createElement("option");
+        opt.value = ev.id;
+        opt.dataset.eventName = ev.name;
+        const dateRange = ev.startDate === ev.endDate ?
+          ev.startDate :
+          `${ev.startDate} – ${ev.endDate}`;
+        opt.textContent = `${ev.name} (${dateRange})`;
+        eventSelect.appendChild(opt);
+      });
+    })
+    .catch(() => {
+      eventSelect.innerHTML = `<option value="">Nie udało się pobrać imprez</option>`;
+    });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    setErr("");
+
+    const selectedOpt = eventSelect.options[eventSelect.selectedIndex];
+    const eventId = selectedOpt?.value || "";
+    const eventName = eventId ? (selectedOpt?.dataset?.eventName || "") : "";
+
+    if (!eventId) { setErr("Wybierz imprezę kursową."); return; }
+
+    const kabina = parseInt(inner.querySelector("#kmKKabina").value, 10) || 0;
+    const rolka = parseInt(inner.querySelector("#kmKRolka").value, 10) || 0;
+    const dziubek = parseInt(inner.querySelector("#kmKDziubek").value, 10) || 0;
+
+    btn.disabled = true;
+    btn.textContent = "Zapisywanie…";
+
+    try {
+      const resp = await apiPostJson({
+        url: KM_ADD_LOG_URL,
+        idToken: ctx.idToken,
+        body: {
+          date: todayIso(),
+          waterType: "lowlands",
+          placeName: eventName,
+          placeNameRaw: eventName,
+          eventId,
+          eventName,
+          km: 0,
+          hoursOnWater: 0,
+          capsizeRolls: { kabina, rolka, dziubek },
+        },
+      });
+
+      if (resp?.ok) {
+        setOk("Zapisano! Punkty dodane do rankingu kursantów.");
+        form.reset();
+        if (eventSelect.options.length > 0) eventSelect.selectedIndex = 0;
+      } else {
+        setErr(resp?.message || "Nie udało się zapisać.");
+      }
+    } catch (err) {
+      setErr("Błąd: " + (err?.message || String(err)));
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Zapisz";
+    }
+  });
+}
+
 // ─── WIDOK: formularz dodawania wpisu ────────────────────────────────────────
 
 function renderFormView(inner, ctx, moduleId) {
@@ -315,7 +458,7 @@ function renderFormView(inner, ctx, moduleId) {
             ${infoTip("Całkowity czas spędzony na wodzie (w godzinach). Wpisz 0 jeśli nie mierzono.")}
           </label>
           <input type="number" id="kmHours" name="hoursOnWater" min="0" max="99" step="0.5"
-            placeholder="np. 4.5 (wpisz 0 jeśli nie mierzono)" value="0" required />
+            placeholder="np. 4.5 (wpisz 0 jeśli nie mierzono)" required />
         </div>
 
         <div class="formRow">
@@ -347,15 +490,15 @@ function renderFormView(inner, ctx, moduleId) {
           <div class="kmCapsizeGrid">
             <div class="kmCapsizeItem">
               <label for="kmKabina">Kabina</label>
-              <input type="number" id="kmKabina" name="kabina" min="0" max="999" step="1" value="0" />
+              <input type="number" id="kmKabina" name="kabina" min="0" max="999" step="1" placeholder="0" />
             </div>
             <div class="kmCapsizeItem">
               <label for="kmRolka">Rolka</label>
-              <input type="number" id="kmRolka" name="rolka" min="0" max="999" step="1" value="0" />
+              <input type="number" id="kmRolka" name="rolka" min="0" max="999" step="1" placeholder="0" />
             </div>
             <div class="kmCapsizeItem">
               <label for="kmDziubek">Dziubek</label>
-              <input type="number" id="kmDziubek" name="dziubek" min="0" max="999" step="1" value="0" />
+              <input type="number" id="kmDziubek" name="dziubek" min="0" max="999" step="1" placeholder="0" />
             </div>
           </div>
         </fieldset>
@@ -920,17 +1063,21 @@ async function renderMyLogsView(inner, ctx) {
                 <span class="kmLogDate">${esc(formatDate(log.date))}</span>
                 ${isHistorical ? `<span class="kmLogBadge">historyczny</span>` : ""}
                 ${log.eventName ? `<span class="kmLogBadge kmLogBadgeEvent">${esc(log.eventName)}</span>` : ""}
-                <span class="kmLogPts">${fmtNum(log.pointsTotal, 1)} pkt</span>
+                <span class="kmLogPts">${fmtNum(log.pointsTotal, 2)} pkt</span>
               </div>
               <div class="kmLogBody">
                 <span class="kmLogPlace">${esc(log.placeName || "—")}</span>
                 ${!isHistorical ? `<span class="kmLogType">${esc(waterTypeLabel(log.waterType))}</span>` : ""}
               </div>
               <div class="kmLogMeta">
-                <span>${fmtNum(log.km)} km</span>
+                ${log.km > 0 ? `<span>${fmtNum(log.km)} km</span>` : ""}
                 ${log.hoursOnWater ? `<span>${fmtNum(log.hoursOnWater)} h</span>` : ""}
                 ${log.difficulty ? `<span>${esc(log.difficulty)}</span>` : ""}
-                ${capsizeTotal > 0 ? `<span>${capsizeTotal} wywrotolotek</span>` : ""}
+                ${capsizeTotal > 0 ? `<span>${[
+                  (log.capsizeRolls?.kabina || 0) > 0 ? `${log.capsizeRolls.kabina}× kabina` : "",
+                  (log.capsizeRolls?.rolka || 0) > 0 ? `${log.capsizeRolls.rolka}× rolka` : "",
+                  (log.capsizeRolls?.dziubek || 0) > 0 ? `${log.capsizeRolls.dziubek}× dziubek` : "",
+                ].filter(Boolean).join(", ")}</span>` : ""}
               </div>
               ${log.note ? `<div class="kmLogNote">${esc(log.note)}</div>` : ""}
             </div>
@@ -1182,10 +1329,58 @@ async function renderEventStatsView(inner, ctx) {
   });
 }
 
+// ─── ranking kursantów ─────────────────────────────────────────────────────────
+
+async function renderKursantRankingView(inner, ctx) {
+  inner.innerHTML = spinnerHtml("Pobieranie rankingu…");
+
+  let data;
+  try {
+    data = await apiGetJson({ url: "/api/km/kursant-stats", idToken: ctx.idToken });
+  } catch (e) {
+    inner.innerHTML = `<p class="errorMsg">Błąd: ${esc(e?.message || String(e))}</p>`;
+    return;
+  }
+
+  const leaderboard = data?.leaderboard || [];
+
+  if (!leaderboard.length) {
+    inner.innerHTML = `<div class="kmStatsEmpty"><p>Brak danych rankingowych. Dodaj pierwsze wywrotolotek!</p></div>`;
+    return;
+  }
+
+  inner.innerHTML = `
+    <div class="kmStatsSection">
+      <table class="kmRankingTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Kursant</th>
+            <th>Punkty</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${leaderboard.map(row => `
+            <tr class="${row.isMe ? "kmRankingRowMe" : ""}">
+              <td>${row.rank}</td>
+              <td>${esc(row.name)}${row.isMe ? " ★" : ""}</td>
+              <td><strong>${row.total}</strong></td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
 // ─── główny render ─────────────────────────────────────────────────────────────
 
 async function renderKmView(viewEl, routeId, ctx, moduleId) {
+  const isKursant = ctx?.session?.role_key === "rola_kursant" || ctx?.kursPreviewMode === true;
   const activeTab = TABS.find(t => t.id === routeId)?.id || "form";
+  const visibleTabs = isKursant
+    ? TABS.filter(t => t.id !== "rankings" && t.id !== "events" && t.id !== "my-stats")
+    : TABS.filter(t => t.id !== "kursant-ranking");
 
   if (!ctx?.idToken) {
     viewEl.innerHTML = `<div class="card center"><p>Brak tokenu sesji. Odśwież stronę.</p></div>`;
@@ -1195,14 +1390,14 @@ async function renderKmView(viewEl, routeId, ctx, moduleId) {
   viewEl.innerHTML = `
     <div class="card wide kmModule">
       <div class="moduleHeader">
-        <h2>Kilometrówka</h2>
+        <h2>${isKursant ? "Wywrotolotek" : "Kilometrówka"}</h2>
         <div class="moduleNav">
           <button type="button" class="moduleNavBtn" data-mod-back title="Wróć">${NAV_BACK_SVG}</button>
           <button type="button" class="moduleNavBtn" data-mod-home title="Strona główna">${NAV_HOME_SVG}</button>
         </div>
       </div>
       <div class="kmTabs">
-        ${TABS.map(t => `
+        ${visibleTabs.map(t => `
           <button type="button" class="kmTab${t.id === activeTab ? " active" : ""}"
             data-km-tab="${esc(t.id)}">${esc(t.label)}</button>
         `).join("")}
@@ -1231,7 +1426,7 @@ async function renderKmView(viewEl, routeId, ctx, moduleId) {
   viewEl.querySelectorAll("[data-km-tab]").forEach(btn => {
     btn.addEventListener("click", () => {
       if (btn.dataset.kmTab === "map") {
-        window.open("/map.html", "_blank", "noopener");
+        openMap();
         return;
       }
       import("/core/router.js").then(({ setHash }) => {
@@ -1245,7 +1440,11 @@ async function renderKmView(viewEl, routeId, ctx, moduleId) {
 
   // Renderuj aktywną zakładkę
   if (activeTab === "form") {
-    renderFormView(inner, ctx, moduleId);
+    if (isKursant) {
+      renderKursantFormView(inner, ctx);
+    } else {
+      renderFormView(inner, ctx, moduleId);
+    }
   } else if (activeTab === "rankings") {
     await renderRankingsView(inner, ctx);
   } else if (activeTab === "events") {
@@ -1256,6 +1455,8 @@ async function renderKmView(viewEl, routeId, ctx, moduleId) {
     await renderMyStatsView(inner, ctx);
   } else if (activeTab === "my-logs") {
     await renderMyLogsView(inner, ctx);
+  } else if (activeTab === "kursant-ranking") {
+    await renderKursantRankingView(inner, ctx);
   }
 }
 

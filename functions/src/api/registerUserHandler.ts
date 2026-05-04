@@ -45,6 +45,7 @@ type ProfileInput = {
   dateOfBirth?: string; // YYYY-MM-DD
   consentRodo?: boolean;
   consentStatute?: boolean;
+  iAmKursant?: boolean;
 };
 
 type ValidationResult = {
@@ -85,8 +86,8 @@ function normalizePhoneDigits(v: string): string {
 function isPhoneValid(v: string): boolean {
   const n = normalizePhoneDigits(v);
   const digitsCount = n.replace(/[^\d]/g, "").length;
-  // liberal but sane: 9..15 digits
-  if (digitsCount < 9) return false;
+  // liberal but sane: 8..15 digits
+  if (digitsCount < 8) return false;
   if (digitsCount > 15) return false;
   return true;
 }
@@ -127,6 +128,7 @@ function readProfileInput(req: Request): ProfileInput {
   const dateOfBirth = normalizeStr(b.dateOfBirth);
   const consentRodo = normalizeBool(b.consentRodo);
   const consentStatute = normalizeBool(b.consentStatute);
+  const iAmKursant = normalizeBool(b.iAmKursant);
 
   const out: ProfileInput = {};
   if (firstName) out.firstName = firstName;
@@ -138,6 +140,7 @@ function readProfileInput(req: Request): ProfileInput {
   if (dateOfBirth) out.dateOfBirth = dateOfBirth;
   if (typeof consentRodo === "boolean") out.consentRodo = consentRodo;
   if (typeof consentStatute === "boolean") out.consentStatute = consentStatute;
+  if (typeof iAmKursant === "boolean") out.iAmKursant = iAmKursant;
 
   return out;
 }
@@ -391,6 +394,29 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
           }
         }
 
+        // Jeśli użytkownik zaznaczył "jestem kursantem" i nie ma jeszcze wyższej roli
+        if (incomingProfile.iAmKursant === true && roleKey === newUserRoleCode) {
+          const kursantSnap = await db.collection("kurs_uczestnicy").doc(email).get();
+          if (!kursantSnap.exists) {
+            res.status(403).json({
+              ok: false,
+              code: "kursant_not_found",
+              message: "Twój adres e-mail nie figuruje na liście kursantów. Jeśli to błąd, skontaktuj się z zarządem: zarzad@morzkulc.pl",
+            });
+            return;
+          }
+          roleKey = "rola_kursant";
+          await userRef.set(
+            {
+              role_key: roleKey,
+              kursantSelfDeclared: true,
+              kursantSelfDeclaredAt: admin.firestore.FieldValue.serverTimestamp(),
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            },
+            {merge: true}
+          );
+        }
+
         let profileComplete = isProfileComplete((data as any).profile);
 
         // jeśli front wysłał profil → dopisz profile.* (merge)
@@ -469,15 +495,23 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
       // =========================
       // NEW USER (BOOTSTRAP FROM BO26)
       // =========================
-      const found = await findOpeningBalance(
-        db,
-        email,
-        incomingProfile.firstName,
-        incomingProfile.lastName
-      );
+      const found = incomingProfile.iAmKursant === true ?
+        {openingMatch: false as const, obData: null, matchMethod: null as null} :
+        await findOpeningBalance(db, email, incomingProfile.firstName, incomingProfile.lastName);
 
       let roleKey: string = newUserRoleCode;
-      if (found.openingMatch && found.obData) {
+      if (incomingProfile.iAmKursant === true) {
+        const kursantSnap = await db.collection("kurs_uczestnicy").doc(email).get();
+        if (!kursantSnap.exists) {
+          res.status(403).json({
+            ok: false,
+            code: "kursant_not_found",
+            message: "Twój adres e-mail nie figuruje na liście kursantów. Jeśli to błąd, skontaktuj się z zarządem: zarzad@morzkulc.pl",
+          });
+          return;
+        }
+        roleKey = "rola_kursant";
+      } else if (found.openingMatch && found.obData) {
         roleKey = computeRoleKeyFromOpeningBalance(found.obData, obMemberField, obMemberRoleCode, newUserRoleCode);
       }
 
@@ -500,6 +534,11 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
         docToCreate.openingMatchMethod = found.matchMethod;
         docToCreate.openingBalance = found.obData;
         docToCreate.openingMatchedAt = admin.firestore.FieldValue.serverTimestamp();
+      }
+
+      if (incomingProfile.iAmKursant === true) {
+        docToCreate.kursantSelfDeclared = true;
+        docToCreate.kursantSelfDeclaredAt = admin.firestore.FieldValue.serverTimestamp();
       }
 
       if (Object.keys(incomingProfile).length > 0) {

@@ -79,7 +79,7 @@ export async function handleGetKursInfo(req: Request, res: Response, deps: GetKu
 
       const [infoSnap, eventsSnap] = await Promise.all([
         db.collection("kurs_info").where("isActive", "==", true).get(),
-        db.collection("kurs_events").where("approved", "==", true).orderBy("startDate", "asc").get(),
+        db.collection("events").where("kursowa", "==", true).get(),
       ]);
 
       const info = infoSnap.docs.map((d) => {
@@ -97,19 +97,22 @@ export async function handleGetKursInfo(req: Request, res: Response, deps: GetKu
         };
       });
 
-      const events = eventsSnap.docs.map((d) => {
-        const data = d.data();
-        return {
-          id: norm(data.id),
-          name: norm(data.name),
-          startDate: norm(data.startDate),
-          endDate: norm(data.endDate),
-          location: norm(data.location),
-          description: norm(data.description),
-          contact: norm(data.contact),
-          link: norm(data.link),
-        };
-      });
+      const events = eventsSnap.docs
+        .filter((d) => d.data().approved === true)
+        .sort((a, b) => norm(a.data().startDate).localeCompare(norm(b.data().startDate)))
+        .map((d) => {
+          const data = d.data();
+          return {
+            id: norm(data.id),
+            name: norm(data.name),
+            startDate: norm(data.startDate),
+            endDate: norm(data.endDate),
+            location: norm(data.location),
+            description: norm(data.description),
+            contact: norm(data.contact),
+            link: norm(data.link),
+          };
+        });
 
       res.status(200).json({ok: true, info, events});
     } catch (err: any) {

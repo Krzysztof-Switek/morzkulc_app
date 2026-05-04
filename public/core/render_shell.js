@@ -141,6 +141,16 @@ async function renderHomeDashboard({ viewEl, ctx }) {
           <h2>Cześć${helloName ? `, ${escapeHtml(helloName)}` : ""}</h2>
 
           <div class="startStatInline">
+            ${dash.isKursant ? `
+            <span class="startStatInlineItem">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>
+              <span id="homeKursantCapsizesCell">— wywrotolotek</span>
+            </span>
+            <span class="startStatInlineItem">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
+              <span id="homeKursantRankCell">— miejsce</span>
+            </span>
+            ` : `
             <span class="startStatInlineItem">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
               <span id="homeKmCell">— km</span>
@@ -153,6 +163,7 @@ async function renderHomeDashboard({ viewEl, ctx }) {
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               <span id="homeHoursCell"><strong class="startStatVal">${escapeHtml(hoursValue || "…")}</strong></span>
             </span>
+            `}
           </div>
 
           <div class="startTileGrid">
@@ -191,7 +202,7 @@ async function renderHomeDashboard({ viewEl, ctx }) {
             ${hasKmModule ? `
             <button type="button" class="startTile2" data-home-action="km">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              <span class="startTile2Title">Ranking</span>
+              <span class="startTile2Title">${dash.isKursant ? "Wywrotolotek" : "Ranking"}</span>
             </button>
             ` : ""}
 
@@ -205,7 +216,14 @@ async function renderHomeDashboard({ viewEl, ctx }) {
             ${dash.isKursant && hasKursModule ? `
             <button type="button" class="startTile2 primary" data-home-action="kurs">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-              <span class="startTile2Title">Kurs</span>
+              <span class="startTile2Title">Skrypt</span>
+            </button>
+            ` : ""}
+
+            ${dash.isKursant ? `
+            <button type="button" class="startTile2" data-home-action="mapa-kursant">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+              <span class="startTile2Title">Gdzie pływamy</span>
             </button>
             ` : ""}
 
@@ -222,13 +240,8 @@ async function renderHomeDashboard({ viewEl, ctx }) {
 
       ${dash.isKursant ? `
       <section class="dashCard startSection">
-        <div class="dashCardHead"><h3>Witaj w SKK Morzkulc!</h3></div>
-        <p class="muted" style="padding:0 16px 12px;">Jesteś kursantem — masz dostęp do modułu Kurs, imprez i basenu. Po ukończeniu kursu możesz zostać pełnym członkiem klubu.</p>
-      </section>
-      <section class="dashCard startSection">
         <div class="dashCardHead">
-          <h3>Imprezy kursowe</h3>
-          ${hasKursModule ? `<button type="button" class="ghost" data-home-action="kurs">Zobacz wszystkie</button>` : ""}
+          <h3>Wydarzenia kursowe</h3>
         </div>
         <div class="startList" id="homeKursEventsList">${spinnerHtml("Ładowanie...")}</div>
       </section>
@@ -254,6 +267,7 @@ async function renderHomeDashboard({ viewEl, ctx }) {
       </section>
       ` : ""}
 
+      ${!dash.isKursant ? `
       <section class="dashCard startSection">
         <div class="dashCardHead">
           <h3>Najbliższe wydarzenia</h3>
@@ -264,6 +278,7 @@ async function renderHomeDashboard({ viewEl, ctx }) {
           ${spinnerHtml("Ładowanie wydarzeń...")}
         </div>
       </section>
+      ` : ""}
 
       <section class="dashCard startSection" id="homeBasenSection" style="display:none;">
         <div class="dashCardHead">
@@ -332,8 +347,21 @@ async function renderHomeDashboard({ viewEl, ctx }) {
     btn.addEventListener("click", () => setHash(kursModuleRoute.moduleId, kursModuleRoute.routeId));
   });
 
+
   viewEl.querySelectorAll("[data-home-action='kurs-godzinki']").forEach((btn) => {
     btn.addEventListener("click", () => setHash(kursGodzinkiRoute.moduleId, kursGodzinkiRoute.routeId));
+  });
+
+  viewEl.querySelectorAll("[data-home-action='mapa-kursant']").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const isStandalone = window.matchMedia("(display-mode: standalone)").matches ||
+        window.navigator.standalone === true;
+      if (isStandalone) {
+        window.location.href = "/map.html";
+      } else {
+        window.open("/map.html", "_blank", "noopener");
+      }
+    });
   });
 
   const skladkiBtn = viewEl.querySelector("[data-home-action='skladki']");
@@ -377,24 +405,36 @@ async function renderHomeDashboard({ viewEl, ctx }) {
     });
   }
 
-  // Ładuj saldo godzinek asynchronicznie
+  // Ładuj statystyki asynchronicznie
   if (ctx?.idToken) {
-    buildHomeHoursCell(ctx).then((html) => {
-      const cell = viewEl.querySelector("#homeHoursCell");
-      if (cell) cell.innerHTML = html;
-    }).catch(() => {
-      // cicha porażka — komórka zostaje z placeholder "…"
-    });
+    if (dash.isKursant) {
+      apiGetJson({ url: "/api/km/kursant-stats", idToken: ctx.idToken })
+        .then((data) => {
+          const capsizesEl = viewEl.querySelector("#homeKursantCapsizesCell");
+          if (capsizesEl) capsizesEl.innerHTML = `wywrotolotek: <strong class="startStatVal">${Number(data?.myCapsizes) || 0}</strong> punkty`;
+          const rankEl = viewEl.querySelector("#homeKursantRankCell");
+          if (rankEl) rankEl.innerHTML = `<strong class="startStatVal">${data?.myRank ?? "—"}</strong> miejsce`;
+        }).catch(() => { /* cicha porażka */ });
+    } else {
+      buildHomeHoursCell(ctx).then((html) => {
+        const cell = viewEl.querySelector("#homeHoursCell");
+        if (cell) cell.innerHTML = html;
+      }).catch(() => {
+        // cicha porażka — komórka zostaje z placeholder "…"
+      });
+    }
   }
 
-  // Ładuj nadchodzące imprezy asynchronicznie
-  buildHomeEventsSection(ctx).then((html) => {
-    const listEl = viewEl.querySelector("#homeEventsList");
-    if (listEl) listEl.innerHTML = html;
-  }).catch(() => {
-    const listEl = viewEl.querySelector("#homeEventsList");
-    if (listEl) listEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać imprez.</div></div></div>`;
-  });
+  // Ładuj nadchodzące imprezy asynchronicznie — ukryte dla kursantów
+  if (!dash.isKursant) {
+    buildHomeEventsSection(ctx).then((html) => {
+      const listEl = viewEl.querySelector("#homeEventsList");
+      if (listEl) listEl.innerHTML = html;
+    }).catch(() => {
+      const listEl = viewEl.querySelector("#homeEventsList");
+      if (listEl) listEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać imprez.</div></div></div>`;
+    });
+  }
 
   // Ładuj zajęcia basenowe — sekcja widoczna tylko jeśli moduł "Basen" dostępny
   const basenModule = (ctx.modules || []).find((m) =>
@@ -428,9 +468,11 @@ async function renderHomeDashboard({ viewEl, ctx }) {
 function renderHomeProfile({ viewEl, ctx }) {
   const name = getHelloName(ctx);
   const email = String(ctx?.user?.email || "").trim();
-  const roleLabel = roleKeyToLabel(String(ctx?.session?.role_key || ""), ctx?.setup?.roleMappings);
+  const roleKey = String(ctx?.session?.role_key || "");
+  const roleLabel = roleKeyToLabel(roleKey, ctx?.setup?.roleMappings);
   const statusLabel = statusKeyToLabel(String(ctx?.session?.status_key || ""), ctx?.setup?.statusMappings);
   const hoursValue = getHoursValue(ctx);
+  const isKursant = roleKey === "rola_kursant";
 
   viewEl.innerHTML = `
     <div class="card center">
@@ -448,6 +490,36 @@ function renderHomeProfile({ viewEl, ctx }) {
         </div>
       </div>
 
+      ${isKursant ? `
+      <div class="startStatBar" style="margin-bottom:10px;">
+        <div class="startStatChip">
+          <span class="startStatChipKey">Opłata</span>
+          <span class="startStatChipVal" id="profileKursantFee">…</span>
+        </div>
+        <div class="startStatChip">
+          <span class="startStatChipKey">Cena kursu</span>
+          <span class="startStatChipVal" id="profileKursantCena">…</span>
+        </div>
+      </div>
+      <div class="startStatBar" style="margin-bottom:16px;">
+        <div class="startStatChip">
+          <span class="startStatChipKey">Wzrost</span>
+          <span class="startStatChipVal" id="profileKursantHeight">…</span>
+        </div>
+        <div class="startStatChip">
+          <span class="startStatChipKey">Waga</span>
+          <span class="startStatChipVal" id="profileKursantWeight">…</span>
+        </div>
+        <div class="startStatChip">
+          <span class="startStatChipKey">Telefon</span>
+          <span class="startStatChipVal" id="profileKursantPhone">…</span>
+        </div>
+        <div class="startStatChip">
+          <span class="startStatChipKey">PESEL</span>
+          <span class="startStatChipVal" id="profileKursantPesel">…</span>
+        </div>
+      </div>
+      ` : `
       <div class="startStatInline" style="margin-bottom:16px;">
         <span class="startStatInlineItem">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -462,8 +534,9 @@ function renderHomeProfile({ viewEl, ctx }) {
           <span>${escapeHtml(hoursValue || "— h")}</span>
         </span>
       </div>
+      `}
 
-      <p class="muted">Więcej opcji dostępnych wkrótce.</p>
+      ${!isKursant ? `<p class="muted">Więcej opcji dostępnych wkrótce.</p>` : ""}
       <div class="actions">
         <button type="button" class="ghost" id="profileBackBtn">← Wróć</button>
       </div>
@@ -472,6 +545,27 @@ function renderHomeProfile({ viewEl, ctx }) {
 
   const backBtn = viewEl.querySelector("#profileBackBtn");
   if (backBtn) backBtn.addEventListener("click", () => setHash("home", "home"));
+
+  if (isKursant && ctx?.idToken) {
+    apiGetJson({ url: "/api/km/kursant-stats", idToken: ctx.idToken })
+      .then((data) => {
+        const set = (id, val, suffix) => {
+          const el = viewEl.querySelector(id);
+          if (el) el.textContent = val != null ? val + (suffix || "") : "—";
+        };
+        set("#profileKursantFee",    data?.fee,       " zł");
+        set("#profileKursantCena",   data?.cena_kursu," zł");
+        set("#profileKursantHeight", data?.height,    " cm");
+        set("#profileKursantWeight", data?.weight,    " kg");
+        set("#profileKursantPhone",  data?.phone,     "");
+        set("#profileKursantPesel",  data?.pesel,     "");
+      })
+      .catch(() => {
+        ["#profileKursantFee","#profileKursantCena","#profileKursantHeight",
+         "#profileKursantWeight","#profileKursantPhone","#profileKursantPesel"]
+          .forEach((id) => { const el = viewEl.querySelector(id); if (el) el.textContent = "—"; });
+      });
+  }
 }
 
 const _ADMIN_BADGE_CACHE_KEY = "adminPendingGodzinkiCount";
@@ -607,13 +701,12 @@ async function buildHomeKursEventsSection(ctx) {
   try {
     const data = await apiGetJson({ url: KURS_INFO_URL, idToken: ctx.idToken });
     const events = Array.isArray(data?.events) ? data.events : [];
-    const upcoming = events.slice(0, 3);
 
-    if (data.unconfigured || !upcoming.length) {
-      return `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Brak zaplanowanych imprez kursowych</div></div></div>`;
+    if (data.unconfigured || !events.length) {
+      return `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Brak zaplanowanych wydarzeń kursowych</div></div></div>`;
     }
 
-    return upcoming.map((ev) => {
+    return events.map((ev) => {
       const start = formatDatePL(String(ev?.startDate || ""));
       const end = formatDatePL(String(ev?.endDate || ""));
       const dateRange = ev.startDate === ev.endDate ? start : `${start} – ${end}`;
@@ -761,7 +854,7 @@ function renderProfileForm({ viewEl, ctx }) {
       <div class="row">
         <label for="phone">Telefon</label>
         <input id="phone" autocomplete="tel" />
-        <div class="hint">Min. 9 cyfr (np. +48 600 700 800)</div>
+        <div class="hint">Min. 8 cyfr (np. +48 600 700 800)</div>
       </div>
 
       <div class="row">
@@ -771,12 +864,17 @@ function renderProfileForm({ viewEl, ctx }) {
 
       <div class="checkRow">
         <input id="consentRodo" type="checkbox" />
-        <label for="consentRodo">Zapoznałem(-am) się z RODO i akceptuję.</label>
+        <label for="consentRodo">Zapoznałem(-am) się z <a href="https://drive.google.com/file/d/1GHvC5pbLQpFJA41BgyiZmnPr5A18XHs4/view?usp=drive_link" target="_blank" rel="noopener">polityką prywatności</a> i akceptuję.</label>
       </div>
 
       <div class="checkRow">
         <input id="consentStatute" type="checkbox" />
-        <label for="consentStatute">Akceptuję statut i regulaminy.</label>
+        <label for="consentStatute">Akceptuję <a href="https://drive.google.com/drive/folders/1eLpLom1583AkTuq9bojFyf4vFcENeWBU?usp=drive_link" target="_blank" rel="noopener">statut i regulaminy</a>.</label>
+      </div>
+
+      <div class="checkRow">
+        <input id="iAmKursant" type="checkbox" />
+        <label for="iAmKursant">Jestem kursantem.</label>
       </div>
 
       <div class="actions">
@@ -806,13 +904,14 @@ function renderProfileForm({ viewEl, ctx }) {
     const dob = String(document.getElementById("dateOfBirth").value || "").trim();
     const consentRodo = document.getElementById("consentRodo").checked === true;
     const consentStatute = document.getElementById("consentStatute").checked === true;
+    const iAmKursant = document.getElementById("iAmKursant").checked === true;
 
     if (!fn || !ln || !ph || !dob) {
       setErr("Uzupełnij: imię, nazwisko, telefon i datę urodzenia.");
       return;
     }
     if (!isPhoneValid(ph)) {
-      setErr("Telefon ma nieprawidłowy format (min. 9 cyfr).");
+      setErr("Telefon ma nieprawidłowy format (min. 8 cyfr).");
       return;
     }
     if (!isIsoDateYYYYMMDD(dob)) {
@@ -843,7 +942,8 @@ function renderProfileForm({ viewEl, ctx }) {
           phone: ph,
           dateOfBirth: dob,
           consentRodo,
-          consentStatute
+          consentStatute,
+          iAmKursant
         }
       });
 
@@ -856,6 +956,11 @@ function renderProfileForm({ viewEl, ctx }) {
       if (json?.code === "validation_failed" && json?.fields) {
         const lines = Object.entries(json.fields).map(([k, v]) => fieldErrorToPl(k, v));
         setErr("Błąd walidacji: " + lines.join("; "));
+      } else if (json?.code === "kursant_not_found") {
+        setErr(
+          "Twój adres e-mail nie figuruje na liście kursantów. " +
+          "Jeśli to błąd, skontaktuj się z zarządem: zarzad@morzkulc.pl"
+        );
       } else {
         setErr("Błąd zapisu: " + msg);
       }
@@ -989,7 +1094,7 @@ function normalizePhoneDigits(v) {
 function isPhoneValid(v) {
   const n = normalizePhoneDigits(v);
   const digitsCount = n.replace(/[^\d]/g, "").length;
-  return digitsCount >= 9 && digitsCount <= 15;
+  return digitsCount >= 8 && digitsCount <= 15;
 }
 
 function isIsoDateYYYYMMDD(v) {

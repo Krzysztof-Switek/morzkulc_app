@@ -9,7 +9,7 @@ import {getServiceConfig} from "../service_config";
  *
  * Czyta zakładkę "imprezy" z arkusza Google i synchronizuje imprezy do Firestore (kolekcja `events`).
  * Kolumny arkusza:
- *   ID | data rozpoczęcia | data zakończenia | nazwa imprezy | miejsce | opis | kontakt | link do strony / zgłoszeń | Zatwierdzona
+ *   ID | data rozpoczęcia | data zakończenia | nazwa imprezy | miejsce | opis | kontakt | link do strony / zgłoszeń | Zatwierdzona | ranking? | kursowa?
  *
  * Pole "Zatwierdzona" = TAK ustawia approved=true w Firestore.
  * Pole "ID" to Firestore document ID (upsert).
@@ -117,6 +117,8 @@ export const eventsSyncFromSheetTask: ServiceTask<Payload> = {
       }
 
       const approved = isApproved(row["Zatwierdzona"]);
+      const ranking = isApproved(row["ranking?"]);
+      const kursowa = isApproved(row["kursowa?"]);
       const location = norm(row["miejsce"]);
       const description = norm(row["opis"]);
       const contact = norm(row["kontakt"]);
@@ -132,6 +134,8 @@ export const eventsSyncFromSheetTask: ServiceTask<Payload> = {
         contact,
         link,
         approved,
+        ranking,
+        kursowa,
         source: "sheet",
         updatedAt: ctx.now,
         syncedAt: ctx.now,
@@ -252,6 +256,8 @@ export const eventsWriteToSheetTask: ServiceTask<WritePayload> = {
       "kontakt": norm(data?.contact),
       "link do strony / zgłoszeń": norm(data?.link),
       "Zatwierdzona": "NIE",
+      "ranking?": "NIE",
+      "kursowa?": "NIE",
     };
 
     const sheets = new GoogleSheetsProvider(delegated);

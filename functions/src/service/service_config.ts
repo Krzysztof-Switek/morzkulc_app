@@ -65,7 +65,6 @@ export interface ServiceConfig {
   kurs: {
     spreadsheetId: string;
     tabName: string;
-    imprezaTabName: string;
   };
 }
 
@@ -105,7 +104,6 @@ export function getServiceConfig(): ServiceConfig {
 
   const kursSpreadsheetId = process.env.SVC_KURS_SHEET_ID || "";
   const kursTabName = process.env.SVC_KURS_SHEET_TAB || "Kurs";
-  const kursImprezaTabName = process.env.SVC_KURS_IMPREZY_TAB || "Imprezy kursowe";
 
   const cfg: ServiceConfig = {
     envName,
@@ -209,7 +207,6 @@ export function getServiceConfig(): ServiceConfig {
     kurs: {
       spreadsheetId: kursSpreadsheetId,
       tabName: kursTabName,
-      imprezaTabName: kursImprezaTabName,
     },
   };
 

@@ -373,6 +373,20 @@
           "functionId": "getKursInfo",
           "region": "us-central1"
         }
+      },
+      {
+        "source": "/api/km/kursant-stats",
+        "function": {
+          "functionId": "getKursantStats",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/user/weight",
+        "function": {
+          "functionId": "userWeight",
+          "region": "us-central1"
+        }
       }
     ]
   }

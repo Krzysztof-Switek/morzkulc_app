@@ -25,7 +25,7 @@ function parseBool(v: any): boolean {
 
 export const kursSyncFromSheetTask: ServiceTask<Payload> = {
   id: "kursSyncFromSheet",
-  description: "Sync kurs info and events from Google Sheets to Firestore (kurs_info + kurs_events).",
+  description: "Sync kurs info from Google Sheets to Firestore (kurs_info).",
 
   validate: (_payload) => {
     // brak wymaganych pól
@@ -38,19 +38,16 @@ export const kursSyncFromSheetTask: ServiceTask<Payload> = {
 
     const spreadsheetId = cfg.kurs.spreadsheetId;
     const tabName = cfg.kurs.tabName;
-    const imprezaTabName = cfg.kurs.imprezaTabName;
 
     if (!spreadsheetId) {
       return {ok: true, message: "kurs spreadsheetId not configured — skipping", details: {unconfigured: true}};
     }
 
-    ctx.logger.info("kursSyncFromSheet: start", {spreadsheetId, tabName, imprezaTabName, dryRun});
+    ctx.logger.info("kursSyncFromSheet: start", {spreadsheetId, tabName, dryRun});
 
     const sheets = new GoogleSheetsProvider(delegated);
     let infoUpserted = 0;
     let infoSkipped = 0;
-    let eventsUpserted = 0;
-    let eventsSkipped = 0;
     let errors = 0;
 
     // Part A: sync zakładki "Kurs" → kolekcja kurs_info
@@ -102,91 +99,13 @@ export const kursSyncFromSheetTask: ServiceTask<Payload> = {
       }
     }
 
-    // Part B: sync zakładki "Imprezy kursowe" → kolekcja kurs_events
-    let eventsTable;
-    try {
-      eventsTable = await sheets.readTableAsObjects({spreadsheetId, tabName: imprezaTabName});
-    } catch (e: any) {
-      ctx.logger.error("kursSyncFromSheet: cannot read Imprezy kursowe tab", {message: e?.message});
-      return {ok: false, message: "Cannot read Imprezy kursowe tab: " + e?.message};
-    }
-
-    ctx.logger.info("kursSyncFromSheet: imprezy kursowe rows loaded", {count: eventsTable.rows.length});
-
-    for (const row of eventsTable.rows) {
-      let sheetId = norm(row["ID"]);
-      const rowNumber = Number(row["_rowNumber"]);
-
-      const startDate = normDate(row["data rozpoczęcia"]);
-      const endDate = normDate(row["data zakończenia"]);
-      const name = norm(row["nazwa imprezy"]);
-
-      if (!sheetId) {
-        if (!startDate || !endDate || !name) {
-          eventsSkipped++;
-          continue;
-        }
-
-        sheetId = ctx.firestore.collection("kurs_events").doc().id;
-
-        if (!dryRun && rowNumber > 0) {
-          try {
-            await sheets.writeSingleCell({spreadsheetId, tabName: imprezaTabName}, rowNumber, "ID", sheetId);
-            ctx.logger.info("kursSyncFromSheet: wrote auto-generated ID to sheet", {sheetId, rowNumber});
-          } catch (e: any) {
-            ctx.logger.error("kursSyncFromSheet: failed to write ID back to sheet", {sheetId, rowNumber, message: e?.message});
-            errors++;
-            continue;
-          }
-        } else {
-          ctx.logger.info("kursSyncFromSheet: [DRY RUN] would auto-generate ID", {sheetId, rowNumber});
-        }
-      }
-
-      if (!startDate || !endDate || !name) {
-        ctx.logger.warn("kursSyncFromSheet: skipping impreza row with missing required fields", {sheetId});
-        eventsSkipped++;
-        continue;
-      }
-
-      const doc = {
-        id: sheetId,
-        startDate,
-        endDate,
-        name,
-        location: norm(row["miejsce"]),
-        description: norm(row["opis"]),
-        contact: norm(row["kontakt"]),
-        link: norm(row["link do strony / zgłoszeń"]),
-        approved: parseBool(row["Zatwierdzona"]),
-        source: "sheet",
-        updatedAt: ctx.now,
-        syncedAt: ctx.now,
-      };
-
-      if (dryRun) {
-        ctx.logger.info("kursSyncFromSheet: [DRY RUN] would upsert kurs_events", {sheetId});
-        eventsUpserted++;
-        continue;
-      }
-
-      try {
-        await ctx.firestore.collection("kurs_events").doc(sheetId).set(doc, {merge: true});
-        eventsUpserted++;
-        ctx.logger.info("kursSyncFromSheet: upserted kurs_events", {sheetId});
-      } catch (e: any) {
-        ctx.logger.error("kursSyncFromSheet: error upserting kurs_events", {sheetId, message: e?.message});
-        errors++;
-      }
-    }
-
-    const message = `kurs_info: upserted=${infoUpserted}, skipped=${infoSkipped}; kurs_events: upserted=${eventsUpserted}, skipped=${eventsSkipped}; errors=${errors}`;
-    ctx.logger.info("kursSyncFromSheet: done", {infoUpserted, infoSkipped, eventsUpserted, eventsSkipped, errors, dryRun});
+    const message = `kurs_info: upserted=${infoUpserted}, skipped=${infoSkipped}; errors=${errors}`;
+    ctx.logger.info("kursSyncFromSheet: done", {infoUpserted, infoSkipped, errors, dryRun});
 
     return {
       ok: errors === 0,
       message,
-      details: {infoUpserted, infoSkipped, eventsUpserted, eventsSkipped, errors, dryRun},
+      details: {infoUpserted, infoSkipped, errors, dryRun},
     };
   },
 };

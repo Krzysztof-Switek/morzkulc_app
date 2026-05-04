@@ -46,6 +46,8 @@ import {handleKmEventStats} from "./api/kmEventStatsHandler";
 import {handleKmMapData} from "./api/kmMapDataHandler";
 import {handleKmAdminMergePlaces} from "./api/kmAdminMergePlacesHandler";
 import {handleGetKursInfo} from "./api/getKursInfoHandler";
+import {handleGetKursantStats} from "./api/getKursantStatsHandler";
+import {handleUserWeight} from "./api/userWeightHandler";
 import {getServiceConfig} from "./service/service_config";
 
 setGlobalOptions({region: "us-central1"});
@@ -298,23 +300,26 @@ function filterSetupForUser(
     const usersBlock = flattenEmails(access.usersBlock);
     if (usersBlock.includes(uid) || usersBlock.includes(emailLower)) continue;
 
-    if (!cfg.enabled && !isTestUser) continue;
+    // Czytamy mode i rolesAllowed przed sprawdzeniem enabled —
+    // mode=test z pasującą rolą może ominąć blokadę enabled:false
+    const mode = String(access.mode || "prod");
+    const rolesAllowed = Array.isArray(access.rolesAllowed) ?
+      access.rolesAllowed.map(String) :
+      [];
+    const isRoleAllowed = rolesAllowed.includes(roleKey);
+
+    const canBypassEnabled = isTestUser || (mode === "test" && isRoleAllowed);
+    if (!cfg.enabled && !canBypassEnabled) continue;
     if (statusBlocked) continue;
 
-    const mode = String(access.mode || "prod");
-
-    if (mode === "off" && !isTestUser) continue;
-
-    if (mode === "test" || mode === "off") {
-      // Dla mode=test lub mode=off (z override) wymagamy bycia na liście testowej
+    if (mode === "off") {
       if (!isTestUser) continue;
+    } else if (mode === "test") {
+      if (!isTestUser && !isRoleAllowed) continue;
     } else {
       // prod
-      const rolesAllowed = Array.isArray(access.rolesAllowed) ?
-        access.rolesAllowed.map(String) :
-        [];
       if (rolesAllowed.length === 0) continue;
-      if (!rolesAllowed.includes(roleKey)) continue;
+      if (!isRoleAllowed) continue;
     }
 
     // Moduł widoczny — pomiń wrażliwe pola z access przed zwróceniem.
@@ -1124,6 +1129,32 @@ export const getKursInfo = onRequest({invoker: "private"}, async (req, res) => {
     corsHandler,
     requireIdToken,
     adminRoleKeys,
+  });
+});
+
+/**
+ * GET /api/km/kursant-stats (authenticated: rola_kursant, adminowie)
+ */
+export const getKursantStats = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetKursantStats(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    adminRoleKeys,
+  });
+});
+
+export const userWeight = onRequest({invoker: "private"}, async (req, res) => {
+  return handleUserWeight(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
   });
 });
 

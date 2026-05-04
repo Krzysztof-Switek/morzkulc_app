@@ -110,6 +110,7 @@ export function buildModulesFromSetup(setup, allowedActions) {
     if (moduleType === "kurs") {
       return createKursModule({
         ...base,
+        label: "Skrypt",
         defaultRoute: base.defaultRoute === "home" ? "skrypt" : base.defaultRoute
       });
     }

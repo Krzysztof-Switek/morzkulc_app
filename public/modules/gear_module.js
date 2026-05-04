@@ -12,6 +12,7 @@ const GEAR_ITEM_AVAILABILITY_URL = "/api/gear/items/availability";
 const GEAR_FAVORITES_URL = "/api/gear/favorites";
 const GEAR_FAVORITES_TOGGLE_URL = "/api/gear/favorites/toggle";
 const KAYAK_RESERVATIONS_URL = "/api/gear/kayak-reservations";
+const USER_WEIGHT_URL = "/api/user/weight";
 
 // Lokalny placeholder dostępny zawsze z aplikacji
 const PLACEHOLDER_SVG = "/assets/kayak-placeholder.png";
@@ -129,14 +130,19 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
                     <span>Sprawny</span>
                   </label>
 
-                  <label class="gearCheckPill" for="filterAvailableNowOnly">
-                    <input id="filterAvailableNowOnly" type="checkbox" />
-                    <span>Dostępny</span>
+                  <label class="gearCheckPill" for="filterMyWeightOnly">
+                    <input id="filterMyWeightOnly" type="checkbox" />
+                    <span>W mojej wadze</span>
                   </label>
 
                   <label class="gearCheckPill" for="filterFavoritesOnly">
                     <input id="filterFavoritesOnly" type="checkbox" />
                     <span>Ulubione</span>
+                  </label>
+
+                  <label class="gearCheckPill" for="filterAvailableNowOnly">
+                    <input id="filterAvailableNowOnly" type="checkbox" />
+                    <span>Dostępny</span>
                   </label>
 
                   <label class="gearCheckPill" for="filterPoolOnly">
@@ -340,6 +346,30 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
             </div>
           </div>
         </div>
+
+        <div id="gearWeightModal" class="gearModal hidden" aria-hidden="true">
+          <div class="gearModalBackdrop" data-gear-weight-close="1"></div>
+          <div class="gearModalCard" role="dialog" aria-modal="true" aria-label="Twoja waga">
+            <div class="gearModalTop">
+              <div class="gearModalTitle">Podaj swoją wagę</div>
+              <button class="gearModalClose" type="button" data-gear-weight-close="1" aria-label="Zamknij">✕</button>
+            </div>
+            <div class="gearModalBody">
+              <div style="width:100%; max-width:400px;">
+                <p class="hint" style="margin-bottom:12px;">Potrzebujemy Twojej wagi, żeby pokazać kajaki w odpowiednim zakresie. Dane są zapisywane na Twoim koncie.</p>
+                <div id="gearWeightErr" class="err hidden" style="margin-bottom:10px;"></div>
+                <div class="row" style="margin:0;">
+                  <label for="gearWeightInput">Waga (kg)</label>
+                  <input id="gearWeightInput" type="number" min="30" max="250" placeholder="np. 75" />
+                </div>
+              </div>
+            </div>
+            <div class="gearModalActions">
+              <button id="gearWeightSaveBtn" type="button" class="primary">Zapisz</button>
+              <button type="button" class="ghost" data-gear-weight-close="1">Anuluj</button>
+            </div>
+          </div>
+        </div>
       `;
 
       const tabButtons = viewEl.querySelectorAll("[data-gear-tab]");
@@ -370,7 +400,13 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
       const filterFavoritesOnlyEl = viewEl.querySelector("#filterFavoritesOnly");
       const filterPoolOnlyEl = viewEl.querySelector("#filterPoolOnly");
       const filterPrivateOnlyEl = viewEl.querySelector("#filterPrivateOnly");
+      const filterMyWeightOnlyEl = viewEl.querySelector("#filterMyWeightOnly");
       const filterBrokenOnlyEl = viewEl.querySelector("#filterBrokenOnly");
+
+      const weightModalEl = viewEl.querySelector("#gearWeightModal");
+      const weightInputEl = viewEl.querySelector("#gearWeightInput");
+      const weightSaveBtnEl = viewEl.querySelector("#gearWeightSaveBtn");
+      const weightErrEl = viewEl.querySelector("#gearWeightErr");
       const filterSizeSelectEl = viewEl.querySelector("#filterSizeSelect");
       const filterPaddlePoolSelectEl = viewEl.querySelector("#filterPaddlePoolSelect");
 
@@ -421,12 +457,33 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
       let all = [];
       let favSet = new Set();
       let selectedKayak = null;
+      let userWeight = null;
       // Per-card photo state for in-list swipe: Map<kayakNumber, { urls: string[], idx: number, loaded: boolean }>
       const photoState = new Map();
 
       const setErr = (msg) => {
         errEl.textContent = String(msg || "");
         errEl.classList.toggle("hidden", !errEl.textContent);
+      };
+
+      const setWeightErr = (msg) => {
+        if (!weightErrEl) return;
+        weightErrEl.textContent = String(msg || "");
+        weightErrEl.classList.toggle("hidden", !weightErrEl.textContent);
+      };
+
+      const openWeightModal = () => {
+        if (!weightModalEl) return;
+        weightModalEl.classList.remove("hidden");
+        weightModalEl.setAttribute("aria-hidden", "false");
+        if (weightInputEl) weightInputEl.value = "";
+        setWeightErr("");
+      };
+
+      const closeWeightModal = () => {
+        if (!weightModalEl) return;
+        weightModalEl.classList.add("hidden");
+        weightModalEl.setAttribute("aria-hidden", "true");
       };
 
       const setReservationErr = (msg) => {
@@ -915,6 +972,7 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
             const availableNowOnly = filterAvailableNowOnlyEl?.checked === true;
             const poolOnly = filterPoolOnlyEl?.checked === true;
             const privateOnly = filterPrivateOnlyEl?.checked === true;
+            const myWeightOnly = filterMyWeightOnlyEl?.checked === true;
             const brokenOnly = filterBrokenOnlyEl?.checked === true;
 
             if (workingOnly && !isWorking(item)) return false;
@@ -925,6 +983,12 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
               if (storageVal !== "basen") return false;
             }
             if (privateOnly && !toBool(item?.isPrivate)) return false;
+            if (myWeightOnly) {
+              if (userWeight === null) return false;
+              const maxW = parseWeightRangeMax(item?.weightRange);
+              if (maxW === null) return false;
+              if (maxW - userWeight < 5) return false;
+            }
           } else if (isPaddlesView) {
             const poolFilter = filterPaddlePoolSelectEl?.value || "";
             if (poolFilter) {
@@ -1458,6 +1522,57 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
       if (filterPrivateOnlyEl) filterPrivateOnlyEl.addEventListener("change", applyFilter);
       if (filterBrokenOnlyEl) filterBrokenOnlyEl.addEventListener("change", applyFilter);
       if (filterTypeSelectEl) filterTypeSelectEl.addEventListener("change", applyFilter);
+
+      if (filterMyWeightOnlyEl) {
+        filterMyWeightOnlyEl.addEventListener("change", async () => {
+          if (!filterMyWeightOnlyEl.checked) { applyFilter(); return; }
+          if (userWeight !== null) { applyFilter(); return; }
+
+          filterMyWeightOnlyEl.disabled = true;
+          try {
+            const resp = await apiGetJson({ url: USER_WEIGHT_URL, idToken: ctx.idToken });
+            const w = resp?.weight;
+            if (typeof w === "number" && Number.isFinite(w)) {
+              userWeight = w;
+              applyFilter();
+            } else {
+              filterMyWeightOnlyEl.checked = false;
+              openWeightModal();
+            }
+          } catch {
+            filterMyWeightOnlyEl.checked = false;
+            setErr("Nie udało się pobrać danych o wadze.");
+          } finally {
+            filterMyWeightOnlyEl.disabled = false;
+          }
+        });
+      }
+
+      if (weightSaveBtnEl) {
+        weightSaveBtnEl.addEventListener("click", async () => {
+          const val = parseInt(String(weightInputEl?.value || ""), 10);
+          if (!Number.isFinite(val) || val < 30 || val > 250) {
+            setWeightErr("Podaj wagę od 30 do 250 kg.");
+            return;
+          }
+          weightSaveBtnEl.disabled = true;
+          try {
+            await apiPostJson({ url: USER_WEIGHT_URL, idToken: ctx.idToken, body: { weight: val } });
+            userWeight = val;
+            closeWeightModal();
+            if (filterMyWeightOnlyEl) filterMyWeightOnlyEl.checked = true;
+            applyFilter();
+          } catch {
+            setWeightErr("Nie udało się zapisać wagi. Spróbuj ponownie.");
+          } finally {
+            weightSaveBtnEl.disabled = false;
+          }
+        });
+      }
+
+      viewEl.addEventListener("click", (e) => {
+        if (e.target?.closest("[data-gear-weight-close]")) closeWeightModal();
+      });
       if (filterSizeSelectEl) filterSizeSelectEl.addEventListener("change", applyFilter);
       if (filterPaddlePoolSelectEl) filterPaddlePoolSelectEl.addEventListener("change", applyFilter);
 
@@ -2020,6 +2135,12 @@ function renderLifejacketCard(item, isFav = false) {
       </div>
     </div>
   `;
+}
+
+function parseWeightRangeMax(weightRange) {
+  const nums = String(weightRange || "").match(/\d+/g);
+  if (!nums || nums.length < 2) return null;
+  return parseInt(nums[nums.length - 1], 10);
 }
 
 function normalizeTypeValue(v) {
