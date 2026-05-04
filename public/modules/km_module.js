@@ -43,7 +43,7 @@ const TABS = [
   { id: "map",             label: "Gdzie pływamy" },
   { id: "my-stats",        label: "Moje statystyki" },
   { id: "my-logs",         label: "Moje wpisy" },
-  { id: "kursant-ranking", label: "Wywrotolotek" },
+  { id: "kursant-ranking", label: "Wywrotolotek - wyniki" },
 ];
 
 const WATER_TYPES = [
@@ -1379,7 +1379,7 @@ async function renderKmView(viewEl, routeId, ctx, moduleId) {
   const isKursant = ctx?.session?.role_key === "rola_kursant" || ctx?.kursPreviewMode === true;
   const activeTab = TABS.find(t => t.id === routeId)?.id || "form";
   const visibleTabs = isKursant
-    ? TABS.filter(t => t.id !== "rankings" && t.id !== "events" && t.id !== "my-stats")
+    ? TABS.filter(t => t.id !== "rankings" && t.id !== "events" && t.id !== "my-stats" && t.id !== "map")
     : TABS.filter(t => t.id !== "kursant-ranking");
 
   if (!ctx?.idToken) {

@@ -26,6 +26,7 @@ export function renderNav({ navEl, ctx }) {
   navEl.appendChild(homeBtn);
 
   const modules = Array.isArray(ctx.modules) ? ctx.modules : [];
+  const isKursant = ctx?.session?.role_key === "rola_kursant" || ctx?.kursPreviewMode === true;
   const visible = modules.filter((m) => {
     if (m.id === "my_reservations") return false;
     if (ctx.kursPreviewMode && m.type === "admin_pending") return false;
@@ -35,7 +36,7 @@ export function renderNav({ navEl, ctx }) {
 
   for (const m of visible) {
     const btn = document.createElement("button");
-    btn.textContent = m.label;
+    btn.textContent = (isKursant && m.type === "km") ? "Wywrotolotek" : m.label;
     btn.addEventListener("click", () => setHash(m.id, m.defaultRoute || "home"));
     navEl.appendChild(btn);
   }
