@@ -56,8 +56,8 @@ If task is test-only:
 
 ## Project summary
 
-- indexed files: 20622
-- indexed source lines: 4948691
+- indexed files: 20636
+- indexed source lines: 4951660
 - large files: 1547
 
 ## Large files warning
@@ -434,6 +434,7 @@ If task is test-only:
 - `functions/node_modules/googleapis/build/src/apis/firebasehosting/v1beta1.js` — 2284 lines
 - `functions/node_modules/eslint/lib/rules/utils/ast-utils.js` — 2283 lines
 - `functions/node_modules/googleapis/build/src/apis/authorizedbuyersmarketplace/v1.d.ts` — 2283 lines
+- `public/modules/gear_module.js` — 2277 lines
 - `functions/node_modules/googleapis/build/src/apis/container/v1.js` — 2263 lines
 - `functions/node_modules/googleapis/build/src/apis/cloudchannel/v1.js` — 2261 lines
 - `functions/node_modules/googleapis/build/src/apis/monitoring/v1.d.ts` — 2258 lines
@@ -453,7 +454,6 @@ If task is test-only:
 - `functions/node_modules/@sinonjs/fake-timers/src/fake-timers-src.js` — 2164 lines
 - `functions/node_modules/@types/node/test.d.ts` — 2164 lines
 - `functions/node_modules/googleapis/build/src/apis/gkehub/v1alpha.js` — 2158 lines
-- `public/modules/gear_module.js` — 2153 lines
 - `functions/node_modules/googleapis/build/src/apis/deploymentmanager/v2beta.d.ts` — 2150 lines
 - `functions/node_modules/googleapis/build/src/apis/networkmanagement/v1beta1.d.ts` — 2149 lines
 - `functions/node_modules/@types/lodash/common/array.d.ts` — 2139 lines
@@ -665,6 +665,7 @@ If task is test-only:
 - `functions/node_modules/googleapis/build/src/apis/firebaseappdistribution/v1.d.ts` — 1502 lines
 - `functions/node_modules/googleapis/build/src/apis/admob/v1beta.d.ts` — 1494 lines
 - `functions/node_modules/googleapis/build/src/apis/plus/v1.d.ts` — 1485 lines
+- `public/modules/km_module.js` — 1480 lines
 - `archived/functions/node_modules/@types/node/child_process.d.ts` — 1477 lines
 - `functions/node_modules/@types/node/child_process.d.ts` — 1477 lines
 - `functions/node_modules/googleapis/build/src/apis/genomics/v1alpha2.d.ts` — 1466 lines
@@ -771,6 +772,7 @@ If task is test-only:
 - `functions/node_modules/googleapis/build/src/apis/looker/v1.d.ts` — 1243 lines
 - `functions/node_modules/googleapis/build/src/apis/appengine/v1alpha.d.ts` — 1236 lines
 - `functions/node_modules/es-abstract/operations/2020.js` — 1229 lines
+- `functions/src/index.ts` — 1224 lines
 - `functions/node_modules/@types/lodash/common/util.d.ts` — 1221 lines
 - `archived/functions/node_modules/@google-cloud/firestore/types/v1beta1/firestore_client.d.ts` — 1212 lines
 - `functions/node_modules/@google-cloud/firestore/types/v1beta1/firestore_client.d.ts` — 1212 lines
@@ -801,6 +803,7 @@ If task is test-only:
 - `functions/node_modules/googleapis/build/src/apis/deploymentmanager/alpha.js` — 1172 lines
 - `archived/functions/node_modules/@google-cloud/storage/build/esm/src/storage.js` — 1171 lines
 - `functions/node_modules/@google-cloud/storage/build/esm/src/storage.js` — 1171 lines
+- `public/core/render_shell.js` — 1169 lines
 - `public/styles/gear.css` — 1169 lines
 - `functions/node_modules/googleapis/build/src/apis/script/v1.d.ts` — 1168 lines
 - `functions/node_modules/googleapis/build/src/apis/containeranalysis/v1alpha1.js` — 1165 lines
@@ -821,7 +824,6 @@ If task is test-only:
 - `functions/node_modules/@google-cloud/firestore/build/src/reference/query.js` — 1152 lines
 - `functions/node_modules/googleapis/build/src/apis/toolresults/v1beta3.js` — 1152 lines
 - `functions/node_modules/@jest/types/build/index.d.ts` — 1149 lines
-- `functions/src/index.ts` — 1148 lines
 - `functions/node_modules/source-map/lib/source-map-consumer.js` — 1146 lines
 - `functions/node_modules/googleapis/build/src/apis/datastream/v1.js` — 1144 lines
 - `archived/functions/node_modules/send/index.js` — 1143 lines
@@ -866,7 +868,6 @@ If task is test-only:
 - `functions/node_modules/firebase-admin/lib/utils/error.js` — 1087 lines
 - `functions/node_modules/googleapis/build/src/index.js` — 1087 lines
 - `functions/node_modules/jest-util/node_modules/picomatch/lib/parse.js` — 1086 lines
-- `public/modules/km_module.js` — 1082 lines
 - `functions/node_modules/googleapis/build/src/apis/iap/v1.d.ts` — 1080 lines
 - `archived/functions/node_modules/@types/node/assert.d.ts` — 1079 lines
 - `archived/functions/node_modules/node-forge/lib/pkcs12.js` — 1079 lines
@@ -960,7 +961,6 @@ If task is test-only:
 - `functions/node_modules/@types/node/events.d.ts` — 977 lines
 - `archived/functions/node_modules/@js-sdsl/ordered-map/dist/esm/index.js` — 976 lines
 - `functions/node_modules/@js-sdsl/ordered-map/dist/esm/index.js` — 976 lines
-- `public/core/render_shell.js` — 976 lines
 - `functions/node_modules/googleapis/build/src/apis/artifactregistry/v1beta2.js` — 974 lines
 - `functions/node_modules/googleapis/build/src/apis/servicedirectory/v1beta1.js` — 972 lines
 - `archived/functions/node_modules/protobufjs/src/parse.js` — 970 lines
@@ -1311,6 +1311,7 @@ If task is test-only:
 - `functions/node_modules/jose/dist/types/types.d.ts` — 611 lines
 - `functions/node_modules/googleapis/build/src/apis/index.d.ts` — 610 lines
 - `functions/node_modules/@babel/traverse/lib/path/conversion.js` — 609 lines
+- `functions/src/api/registerUserHandler.ts` — 609 lines
 - `functions/node_modules/googleapis/build/src/apis/meet/v2.js` — 608 lines
 - `functions/node_modules/emittery/index.d.ts` — 607 lines
 - `functions/node_modules/googleapis/build/src/apis/airquality/v1.d.ts` — 606 lines
@@ -1377,7 +1378,6 @@ If task is test-only:
 - `functions/node_modules/@grpc/grpc-js/build/src/load-balancer-outlier-detection.js` — 571 lines
 - `functions/node_modules/googleapis/build/src/apis/biglake/v1.js` — 571 lines
 - `functions/node_modules/lodash/fp/_baseConvert.js` — 570 lines
-- `functions/src/api/registerUserHandler.ts` — 570 lines
 - `functions/node_modules/eslint/lib/rules/one-var.js` — 568 lines
 - `functions/node_modules/googleapis/build/src/apis/accesscontextmanager/v1beta.js` — 568 lines
 - `functions/node_modules/source-map-support/source-map-support.js` — 568 lines
@@ -1513,6 +1513,7 @@ If task is test-only:
 - `functions/node_modules/@babel/types/lib/definitions/flow.js` — 496 lines
 - `functions/node_modules/@typescript-eslint/eslint-plugin/dist/rules/naming-convention.js` — 496 lines
 - `functions/node_modules/@typescript-eslint/eslint-plugin/dist/rules/no-unnecessary-condition.js` — 496 lines
+- `public/styles/km.css` — 496 lines
 - `archived/functions/node_modules/@grpc/grpc-js/src/load-balancer-weighted-round-robin.ts` — 495 lines
 - `archived/functions/node_modules/firebase-functions/lib/common/providers/identity.js` — 495 lines
 - `functions/node_modules/@grpc/grpc-js/src/load-balancer-weighted-round-robin.ts` — 495 lines
@@ -1591,7 +1592,6 @@ If task is test-only:
 - `functions/node_modules/googleapis/build/src/apis/merchantapi/inventories_v1beta.d.ts` — 457 lines
 - `archived/functions/node_modules/@google-cloud/firestore/build/src/serializer.js` — 456 lines
 - `functions/node_modules/@google-cloud/firestore/build/src/serializer.js` — 456 lines
-- `public/styles/km.css` — 456 lines
 - `archived/functions/node_modules/object-hash/index.js` — 454 lines
 - `archived/functions/node_modules/protobufjs/src/field.js` — 454 lines
 - `functions/node_modules/object-hash/index.js` — 454 lines

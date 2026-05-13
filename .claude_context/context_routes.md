@@ -36,14 +36,17 @@ Use this file first for endpoint/API/function tasks.
 - /api/godzinki/purchase -> function:{'functionId': 'purchaseGodzinki', 'region': 'us-central1'}
 - /api/godzinki/submit -> function:{'functionId': 'submitGodzinki', 'region': 'us-central1'}
 - /api/km/event-stats -> function:{'functionId': 'kmEventStats', 'region': 'us-central1'}
+- /api/km/kursant-stats -> function:{'functionId': 'getKursantStats', 'region': 'us-central1'}
 - /api/km/log/add -> function:{'functionId': 'kmAddLog', 'region': 'us-central1'}
 - /api/km/logs -> function:{'functionId': 'kmMyLogs', 'region': 'us-central1'}
 - /api/km/map-data -> function:{'functionId': 'kmMapData', 'region': 'us-central1'}
 - /api/km/places -> function:{'functionId': 'kmPlaces', 'region': 'us-central1'}
 - /api/km/rankings -> function:{'functionId': 'kmRankings', 'region': 'us-central1'}
 - /api/km/stats -> function:{'functionId': 'kmMyStats', 'region': 'us-central1'}
+- /api/kurs/info -> function:{'functionId': 'getKursInfo', 'region': 'us-central1'}
 - /api/register -> function:{'functionId': 'registerUser', 'region': 'us-central1'}
 - /api/setup -> function:{'functionId': 'getSetup', 'region': 'us-central1'}
+- /api/user/weight -> function:{'functionId': 'userWeight', 'region': 'us-central1'}
 
 ## Files with route/function hints
 
@@ -184,7 +187,7 @@ Use this file first for endpoint/API/function tasks.
 
 ### `firebase.json`
 - kind: `firebase_config`
-- lines: 373
+- lines: 394
 - routes/api strings:
   - /api/admin/events/sync-calendar
   - /api/admin/km/places/merge
@@ -350,7 +353,7 @@ Use this file first for endpoint/API/function tasks.
 
 ### `functions/src/index.ts`
 - kind: `backend_other`
-- lines: 1148
+- lines: 1224
 - firebase function hints:
   - adminEventsSyncCalendar
   - adminPutSetup
@@ -378,10 +381,10 @@ Use this file first for endpoint/API/function tasks.
   - getGearMyReservations
   - getGodzinki
   - getKayakReservations
+  - getKursInfo
+  - getKursantStats
   - getSetup
   - kmAddLog
-  - kmAdminMergePlaces
-  - kmEventStats
 
 ### `functions/src/service/admin/adminRunTask.ts`
 - kind: `service_task`
@@ -398,14 +401,14 @@ Use this file first for endpoint/API/function tasks.
 
 ### `public/core/app_shell.js`
 - kind: `frontend_other`
-- lines: 241
+- lines: 245
 - routes/api strings:
   - /api/register
   - /api/setup
 
 ### `public/core/render_shell.js`
 - kind: `frontend_other`
-- lines: 976
+- lines: 1169
 - routes/api strings:
   - /api/admin/pending
   - /api/basen/sessions
@@ -414,11 +417,13 @@ Use this file first for endpoint/API/function tasks.
   - /api/gear/my-reservations
   - /api/gear/reservations/cancel
   - /api/godzinki
+  - /api/km/kursant-stats
+  - /api/kurs/info
   - /api/register
 
 ### `public/map.html`
 - kind: `frontend_other`
-- lines: 217
+- lines: 323
 - routes/api strings:
   - /api/km/map-data
 
@@ -443,7 +448,7 @@ Use this file first for endpoint/API/function tasks.
 
 ### `public/modules/gear_module.js`
 - kind: `frontend_module`
-- lines: 2153
+- lines: 2277
 - routes/api strings:
   - /api/gear/favorites
   - /api/gear/favorites/toggle
@@ -452,6 +457,7 @@ Use this file first for endpoint/API/function tasks.
   - /api/gear/kayaks
   - /api/gear/reservations/create
   - /api/gear/reservations/create-bundle
+  - /api/user/weight
 
 ### `public/modules/godzinki_module.js`
 - kind: `frontend_module`
@@ -469,10 +475,11 @@ Use this file first for endpoint/API/function tasks.
 
 ### `public/modules/km_module.js`
 - kind: `frontend_module`
-- lines: 1082
+- lines: 1480
 - routes/api strings:
   - /api/events
   - /api/km/event-stats
+  - /api/km/kursant-stats
   - /api/km/log/add
   - /api/km/logs
   - /api/km/map-data

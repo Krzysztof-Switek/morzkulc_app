@@ -1,6 +1,6 @@
 # Frontend Context
 
-Files indexed here: 31
+Files indexed here: 40
 
 ## `public/404.html`
 
@@ -11,8 +11,8 @@ Files indexed here: 31
 ## `public/core/access_control.js`
 
 - kind: `frontend_other`
-- lines: 38
-- size_bytes: 1542
+- lines: 41
+- size_bytes: 1624
 - keywords:
   - setup
   - map
@@ -46,8 +46,8 @@ Files indexed here: 31
 ## `public/core/app_shell.js`
 
 - kind: `frontend_other`
-- lines: 241
-- size_bytes: 7459
+- lines: 245
+- size_bytes: 7653
 - keywords:
   - auth
   - setup
@@ -121,8 +121,8 @@ Files indexed here: 31
 ## `public/core/modules_registry.js`
 
 - kind: `frontend_other`
-- lines: 146
-- size_bytes: 4724
+- lines: 165
+- size_bytes: 5393
 - keywords:
   - admin
   - setup
@@ -134,7 +134,6 @@ Files indexed here: 31
   - km
   - ranking
   - map
-  - role
 - exports:
   - buildModulesFromSetup
 - symbols:
@@ -144,10 +143,10 @@ Files indexed here: 31
 ## `public/core/render_shell.js`
 
 - kind: `frontend_other`
-- lines: 976
-- size_bytes: 39218
+- lines: 1169
+- size_bytes: 49444
 - warnings:
-  - large file: 976 lines
+  - large file: 1169 lines
 - keywords:
   - admin
   - setup
@@ -171,6 +170,7 @@ Files indexed here: 31
   - buildHomeBasenSection
   - buildHomeEventsSection
   - buildHomeHoursCell
+  - buildHomeKursEventsSection
   - buildHomeReservationsSection
   - buildKayakTitle
   - countReservationDays
@@ -195,7 +195,6 @@ Files indexed here: 31
   - renderHomeProfile
   - renderNav
   - renderProfileForm
-  - renderView
 - route/api hints:
   - /api/admin/pending
   - /api/basen/sessions
@@ -204,6 +203,8 @@ Files indexed here: 31
   - /api/gear/my-reservations
   - /api/gear/reservations/cancel
   - /api/godzinki
+  - /api/km/kursant-stats
+  - /api/kurs/info
   - /api/register
 
 ## `public/core/router.js`
@@ -268,22 +269,21 @@ Files indexed here: 31
 ## `public/map.html`
 
 - kind: `frontend_other`
-- lines: 217
-- size_bytes: 7489
+- lines: 323
+- size_bytes: 9987
 - keywords:
-  - auth
   - events
   - map
-  - storage
   - status
   - index
 - symbols:
   - buildPopup
+  - currentlyVisible
   - esc
-  - getConfig
   - initMap
+  - markerColor
   - renderMarkers
-  - usersHtml
+  - updateLegendDots
 - route/api hints:
   - /api/km/map-data
 
@@ -362,10 +362,10 @@ Files indexed here: 31
 ## `public/modules/gear_module.js`
 
 - kind: `frontend_module`
-- lines: 2153
-- size_bytes: 90416
+- lines: 2277
+- size_bytes: 95814
 - warnings:
-  - large file: 2153 lines
+  - large file: 2277 lines
 - keywords:
   - gear
   - kayak
@@ -393,6 +393,7 @@ Files indexed here: 31
   - closeBundleModal
   - closeModal
   - closeReservationModal
+  - closeWeightModal
   - createGearModule
   - dotsIconSvg
   - escapeAttr
@@ -406,7 +407,6 @@ Files indexed here: 31
   - loadGear
   - lockIconSvg
   - normalizeSimpleValue
-  - normalizeTypeValue
 - route/api hints:
   - /api/gear/favorites
   - /api/gear/favorites/toggle
@@ -415,6 +415,7 @@ Files indexed here: 31
   - /api/gear/kayaks
   - /api/gear/reservations/create
   - /api/gear/reservations/create-bundle
+  - /api/user/weight
 
 ## `public/modules/godzinki_module.js`
 
@@ -487,10 +488,10 @@ Files indexed here: 31
 ## `public/modules/km_module.js`
 
 - kind: `frontend_module`
-- lines: 1082
-- size_bytes: 42047
+- lines: 1480
+- size_bytes: 58027
 - warnings:
-  - large file: 1082 lines
+  - large file: 1480 lines
 - keywords:
   - basen
   - events
@@ -504,41 +505,76 @@ Files indexed here: 31
   - attachPlacesAutocomplete
   - buildPopup
   - capsizeTotal
+  - clearLocationDisplay
+  - closeModal
   - closePopover
   - closeSuggestions
   - createKmModule
   - esc
+  - events
   - fmtNum
   - formatDate
   - infoTip
+  - injectKmLocStyles
+  - loadCss
   - loadLeaflet
   - loadRanking
+  - loadScript
+  - openMap
   - rankMedal
   - renderEventStatsView
   - renderFormView
   - renderKmView
+  - renderKursantFormView
+  - renderKursantRankingView
   - renderMapView
   - renderMarkers
   - renderMyLogsView
   - renderMyStatsView
-  - renderRankingsView
-  - setErr
-  - setOk
-  - showSuggestions
-  - spinnerHtml
-  - todayIso
-  - updateDifficultyField
-  - usersHtml
-  - waterTypeLabel
 - route/api hints:
   - /api/events
   - /api/km/event-stats
+  - /api/km/kursant-stats
   - /api/km/log/add
   - /api/km/logs
   - /api/km/map-data
   - /api/km/places
   - /api/km/rankings
   - /api/km/stats
+
+## `public/modules/kurs_godzinki_module.js`
+
+- kind: `frontend_module`
+- lines: 61
+- size_bytes: 2643
+- keywords:
+  - godzinki
+  - basen
+  - sync
+- exports:
+  - createKursGodzinkiModule
+- symbols:
+  - createKursGodzinkiModule
+  - renderKursGodzinki
+
+## `public/modules/kurs_module.js`
+
+- kind: `frontend_module`
+- lines: 170
+- size_bytes: 6598
+- keywords:
+  - map
+  - status
+  - sync
+  - index
+- exports:
+  - createKursModule
+- symbols:
+  - createKursModule
+  - esc
+  - renderChapter
+  - renderToc
+  - spinnerHtml
 
 ## `public/modules/my_reservations_module.js`
 
@@ -585,11 +621,47 @@ Files indexed here: 31
   - /api/gear/reservations/cancel
   - /api/gear/reservations/update
 
+## `public/skrypt_kurs/chapters/ch01.html`
+
+- kind: `frontend_other`
+- lines: 6
+- size_bytes: 547
+
+## `public/skrypt_kurs/chapters/ch02.html`
+
+- kind: `frontend_other`
+- lines: 201
+- size_bytes: 11069
+
+## `public/skrypt_kurs/chapters/ch03.html`
+
+- kind: `frontend_other`
+- lines: 169
+- size_bytes: 9113
+
+## `public/skrypt_kurs/chapters/ch04.html`
+
+- kind: `frontend_other`
+- lines: 21
+- size_bytes: 1160
+
+## `public/skrypt_kurs/chapters/ch05.html`
+
+- kind: `frontend_other`
+- lines: 132
+- size_bytes: 7205
+
+## `public/skrypt_kurs/chapters/ch06.html`
+
+- kind: `frontend_other`
+- lines: 265
+- size_bytes: 13264
+
 ## `public/styles/app.css`
 
 - kind: `frontend_other`
-- lines: 9
-- size_bytes: 227
+- lines: 10
+- size_bytes: 254
 - keywords:
   - gear
   - godzinki
@@ -652,14 +724,20 @@ Files indexed here: 31
 ## `public/styles/km.css`
 
 - kind: `frontend_other`
-- lines: 456
-- size_bytes: 9374
+- lines: 496
+- size_bytes: 10234
 - warnings:
-  - large file: 456 lines
+  - large file: 496 lines
 - keywords:
   - km
   - ranking
   - index
+
+## `public/styles/kurs.css`
+
+- kind: `frontend_other`
+- lines: 430
+- size_bytes: 7128
 
 ## `public/styles/start.css`
 

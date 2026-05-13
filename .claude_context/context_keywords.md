@@ -4,6 +4,7 @@ Use this file when the task is described by feature name.
 
 ## admin
 - `appscript/kilometrówka/appsscript.json`
+- `appscript/kurs/appsscript.json`
 - `archived/functions/node_modules/@firebase/database-compat/dist/database-compat/src/api/internal.d.ts`
 - `archived/functions/node_modules/@firebase/database-compat/dist/database-compat/src/index.standalone.d.ts`
 - `archived/functions/node_modules/@firebase/database-compat/dist/node-esm/database-compat/src/api/internal.d.ts`
@@ -844,6 +845,8 @@ Use this file when the task is described by feature name.
 - `functions/src/api/getAdminPendingHandler.ts`
 - `functions/src/api/getBasenGodzinyHandler.ts`
 - `functions/src/api/getGearKayaksHandler.ts`
+- `functions/src/api/getKursInfoHandler.ts`
+- `functions/src/api/getKursantStatsHandler.ts`
 - `functions/src/api/godzinkiPurchaseHandler.ts`
 - `functions/src/api/kmAdminMergePlacesHandler.ts`
 - `functions/src/api/registerUserHandler.ts`
@@ -896,6 +899,7 @@ Use this file when the task is described by feature name.
 ## auth
 - `ai_full_audit_report.json`
 - `appscript/kilometrówka/appsscript.json`
+- `appscript/kurs/appsscript.json`
 - `archived/functions/node_modules/.package-lock.json`
 - `archived/functions/node_modules/@fastify/busboy/deps/streamsearch/sbmh.js`
 - `archived/functions/node_modules/@fastify/busboy/package.json`
@@ -4873,7 +4877,7 @@ Use this file when the task is described by feature name.
 - `functions/node_modules/yargs/node_modules/string-width/package.json`
 - `functions/node_modules/yocto-queue/package.json`
 - `functions/src/api/kmAdminMergePlacesHandler.ts`
-- `functions/src/index.ts`
+- `functions/src/api/kmMapDataHandler.ts`
 - `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
 - `functions/src/service/admin/adminRunTask.ts`
 - `functions/src/service/providers/googleAuth.ts`
@@ -4883,7 +4887,6 @@ Use this file when the task is described by feature name.
 - `public/core/api_client.js`
 - `public/core/app_shell.js`
 - `public/core/firebase_client.js`
-- `public/map.html`
 - `public/sw.js`
 - `tests/e2e/config.py`
 - `tests/e2e/helpers/api_helper.py`
@@ -5026,6 +5029,7 @@ Use this file when the task is described by feature name.
 - `public/core/render_shell.js`
 - `public/modules/basen_module.js`
 - `public/modules/km_module.js`
+- `public/modules/kurs_godzinki_module.js`
 - `public/styles/app.css`
 - `public/styles/basen.css`
 - `public/sw.js`
@@ -5398,6 +5402,8 @@ Use this file when the task is described by feature name.
 - `functions/src/api/getGearKayaksHandler.ts`
 - `functions/src/api/getGodzinkiHandler.ts`
 - `functions/src/api/getKayakReservationsHandler.ts`
+- `functions/src/api/getKursInfoHandler.ts`
+- `functions/src/api/getKursantStatsHandler.ts`
 - `functions/src/api/godzinkiPurchaseHandler.ts`
 - `functions/src/api/kmAddLogHandler.ts`
 - `functions/src/api/kmAdminMergePlacesHandler.ts`
@@ -5410,6 +5416,7 @@ Use this file when the task is described by feature name.
 - `functions/src/api/registerUserHandler.ts`
 - `functions/src/api/submitEventHandler.ts`
 - `functions/src/api/submitGodzinkiHandler.ts`
+- `functions/src/api/userWeightHandler.ts`
 - `functions/src/index.ts`
 - `tests/e2e/test_security_http.py`
 
@@ -5418,6 +5425,7 @@ Use this file when the task is described by feature name.
 
 ## email
 - `appscript/kilometrówka/appsscript.json`
+- `appscript/kurs/appsscript.json`
 - `archived/functions/node_modules/@fastify/busboy/package.json`
 - `archived/functions/node_modules/@firebase/util/dist/node-esm/src/emulator.d.ts`
 - `archived/functions/node_modules/@firebase/util/dist/src/emulator.d.ts`
@@ -5923,11 +5931,12 @@ Use this file when the task is described by feature name.
 - `functions/src/api/getGearKayaksHandler.ts`
 - `functions/src/api/getGodzinkiHandler.ts`
 - `functions/src/api/getKayakReservationsHandler.ts`
+- `functions/src/api/getKursInfoHandler.ts`
+- `functions/src/api/getKursantStatsHandler.ts`
 - `functions/src/api/godzinkiPurchaseHandler.ts`
 - `functions/src/api/kmAddLogHandler.ts`
 - `functions/src/api/kmAdminMergePlacesHandler.ts`
 - `functions/src/api/kmEventStatsHandler.ts`
-- `functions/src/api/kmMapDataHandler.ts`
 - `functions/src/api/kmMyLogsHandler.ts`
 - `functions/src/api/kmMyStatsHandler.ts`
 - `functions/src/api/kmPlacesHandler.ts`
@@ -5935,6 +5944,7 @@ Use this file when the task is described by feature name.
 - `functions/src/api/registerUserHandler.ts`
 - `functions/src/api/submitEventHandler.ts`
 - `functions/src/api/submitGodzinkiHandler.ts`
+- `functions/src/api/userWeightHandler.ts`
 - `functions/src/modules/basen/basen_service.ts`
 - `functions/src/modules/calendar/events_service.ts`
 - `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
@@ -6611,6 +6621,7 @@ Use this file when the task is described by feature name.
 - `functions/src/api/adminEventsSyncCalendarHandler.ts`
 - `functions/src/api/getAdminPendingHandler.ts`
 - `functions/src/api/getEventsHandler.ts`
+- `functions/src/api/getKursInfoHandler.ts`
 - `functions/src/api/kmEventStatsHandler.ts`
 - `functions/src/api/submitEventHandler.ts`
 - `functions/src/index.ts`
@@ -7068,6 +7079,8 @@ Use this file when the task is described by feature name.
 - `functions/src/api/getGearKayaksHandler.ts`
 - `functions/src/api/getGodzinkiHandler.ts`
 - `functions/src/api/getKayakReservationsHandler.ts`
+- `functions/src/api/getKursInfoHandler.ts`
+- `functions/src/api/getKursantStatsHandler.ts`
 - `functions/src/api/godzinkiPurchaseHandler.ts`
 - `functions/src/api/kmAddLogHandler.ts`
 - `functions/src/api/kmAdminMergePlacesHandler.ts`
@@ -7080,6 +7093,7 @@ Use this file when the task is described by feature name.
 - `functions/src/api/registerUserHandler.ts`
 - `functions/src/api/submitEventHandler.ts`
 - `functions/src/api/submitGodzinkiHandler.ts`
+- `functions/src/api/userWeightHandler.ts`
 - `functions/src/index.ts`
 - `functions/src/modules/basen/basen_godziny_service.ts`
 - `functions/src/modules/basen/basen_service.ts`
@@ -7106,6 +7120,7 @@ Use this file when the task is described by feature name.
 - `functions/src/service/tasks/kmRebuildMapData.ts`
 - `functions/src/service/tasks/kmRebuildRankings.ts`
 - `functions/src/service/tasks/kmRebuildUserStats.ts`
+- `functions/src/service/tasks/kursSyncFromSheet.ts`
 - `functions/src/service/tasks/membersSyncToSheet.ts`
 - `functions/src/service/tasks/onUserRegisteredWelcome.ts`
 - `functions/src/service/tasks/usersSyncRolesFromSheet.ts`
@@ -7218,6 +7233,7 @@ Use this file when the task is described by feature name.
 - `public/index.html`
 - `public/modules/admin_pending_module.js`
 - `public/modules/godzinki_module.js`
+- `public/modules/kurs_godzinki_module.js`
 - `public/styles/app.css`
 - `public/styles/godzinki.css`
 - `public/sw.js`
@@ -13307,6 +13323,7 @@ Use this file when the task is described by feature name.
 - `functions/node_modules/yocto-queue/index.js`
 - `functions/node_modules/yocto-queue/package.json`
 - `functions/package.json`
+- `functions/src/api/getKursantStatsHandler.ts`
 - `functions/src/api/kmEventStatsHandler.ts`
 - `functions/src/index.ts`
 - `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
@@ -13317,6 +13334,7 @@ Use this file when the task is described by feature name.
 - `public/core/user_error_messages.js`
 - `public/index.html`
 - `public/map.html`
+- `public/modules/kurs_module.js`
 - `public/styles/base.css`
 - `public/styles/km.css`
 - `public/sw.js`
@@ -13799,6 +13817,7 @@ Use this file when the task is described by feature name.
 - `functions/node_modules/which-collection/package.json`
 - `functions/node_modules/which-collection/test/index.js`
 - `functions/node_modules/yargs/locales/tr.json`
+- `functions/src/api/getKursantStatsHandler.ts`
 - `functions/src/api/kmAddLogHandler.ts`
 - `functions/src/api/kmAdminMergePlacesHandler.ts`
 - `functions/src/api/kmEventStatsHandler.ts`
@@ -18202,6 +18221,8 @@ Use this file when the task is described by feature name.
 - `functions/src/api/getGearKayaksHandler.ts`
 - `functions/src/api/getGodzinkiHandler.ts`
 - `functions/src/api/getKayakReservationsHandler.ts`
+- `functions/src/api/getKursInfoHandler.ts`
+- `functions/src/api/getKursantStatsHandler.ts`
 - `functions/src/api/kmAdminMergePlacesHandler.ts`
 - `functions/src/api/kmEventStatsHandler.ts`
 - `functions/src/api/kmMapDataHandler.ts`
@@ -18236,6 +18257,7 @@ Use this file when the task is described by feature name.
 - `public/modules/godzinki_module.js`
 - `public/modules/impreza_module.js`
 - `public/modules/km_module.js`
+- `public/modules/kurs_module.js`
 - `public/modules/my_reservations_module.js`
 - `public/sw.js`
 - `tests/e2e/helpers/api_helper.py`
@@ -18248,6 +18270,7 @@ Use this file when the task is described by feature name.
 
 ## member
 - `appscript/kilometrówka/appsscript.json`
+- `appscript/kurs/appsscript.json`
 - `archived/functions/node_modules/@firebase/database/dist/node-esm/src/core/SparseSnapshotTree.d.ts`
 - `archived/functions/node_modules/@firebase/database/dist/src/core/SparseSnapshotTree.d.ts`
 - `archived/functions/node_modules/@google-cloud/firestore/build/src/reference/field-order.d.ts`
@@ -19296,6 +19319,7 @@ Use this file when the task is described by feature name.
 - `functions/src/api/kmRankingsHandler.ts`
 - `functions/src/index.ts`
 - `functions/src/service/registry.ts`
+- `functions/src/service/tasks/eventsSyncFromSheet.ts`
 - `functions/src/service/tasks/kmRebuildRankings.ts`
 - `functions/src/service/tasks/kmRebuildUserStats.ts`
 - `public/core/modules_registry.js`
@@ -19485,10 +19509,13 @@ Use this file when the task is described by feature name.
 - `functions/src/api/gearReservationCreateHandler.ts`
 - `functions/src/api/getAdminPendingHandler.ts`
 - `functions/src/api/getBasenGodzinyHandler.ts`
+- `functions/src/api/getKursInfoHandler.ts`
+- `functions/src/api/getKursantStatsHandler.ts`
 - `functions/src/api/kmAdminMergePlacesHandler.ts`
 - `functions/src/api/registerUserHandler.ts`
 - `functions/src/api/submitEventHandler.ts`
 - `functions/src/api/submitGodzinkiHandler.ts`
+- `functions/src/api/userWeightHandler.ts`
 - `functions/src/index.ts`
 - `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
 - `functions/src/modules/equipment/kayaks/gear_kayaks_service.ts`
@@ -19503,7 +19530,6 @@ Use this file when the task is described by feature name.
 - `functions/src/service/tasks/usersSyncRolesFromSheet.ts`
 - `public/core/access_control.js`
 - `public/core/module_stub.js`
-- `public/core/modules_registry.js`
 - `public/core/render_shell.js`
 - `public/modules/gear_module.js`
 - `public/modules/my_reservations_module.js`
@@ -19652,6 +19678,8 @@ Use this file when the task is described by feature name.
 - `functions/node_modules/walker/lib/walker.js`
 - `functions/node_modules/whatwg-url/lib/URL.js`
 - `functions/src/api/basenEnrollHandler.ts`
+- `functions/src/api/getKursInfoHandler.ts`
+- `functions/src/api/getKursantStatsHandler.ts`
 - `functions/src/api/registerUserHandler.ts`
 - `functions/src/modules/basen/basen_service.ts`
 - `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
@@ -20363,6 +20391,8 @@ Use this file when the task is described by feature name.
 - `functions/src/api/getGearKayaksHandler.ts`
 - `functions/src/api/getGodzinkiHandler.ts`
 - `functions/src/api/getKayakReservationsHandler.ts`
+- `functions/src/api/getKursInfoHandler.ts`
+- `functions/src/api/getKursantStatsHandler.ts`
 - `functions/src/api/godzinkiPurchaseHandler.ts`
 - `functions/src/api/kmAddLogHandler.ts`
 - `functions/src/api/kmAdminMergePlacesHandler.ts`
@@ -20375,7 +20405,7 @@ Use this file when the task is described by feature name.
 - `functions/src/api/registerUserHandler.ts`
 - `functions/src/api/submitEventHandler.ts`
 - `functions/src/api/submitGodzinkiHandler.ts`
-- `functions/src/index.ts`
+- `functions/src/api/userWeightHandler.ts`
 - `functions/src/modules/basen/basen_service.ts`
 - `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
 - `functions/src/modules/equipment/kayaks/gear_kayaks_service.ts`
@@ -20402,6 +20432,7 @@ Use this file when the task is described by feature name.
 - `public/index.html`
 - `public/map.html`
 - `public/modules/basen_module.js`
+- `public/modules/kurs_module.js`
 - `tests/e2e/config.py`
 - `tests/e2e/helpers/api_helper.py`
 - `tests/e2e/helpers/firebase_auth.py`
@@ -21028,7 +21059,6 @@ Use this file when the task is described by feature name.
 - `public/core/app_shell.js`
 - `public/core/firebase_client.js`
 - `public/core/theme.js`
-- `public/map.html`
 - `public/modules/gear_module.js`
 - `public/sw.js`
 - `tests/e2e/helpers/gear_discovery.py`
@@ -22695,6 +22725,8 @@ Use this file when the task is described by feature name.
 - `functions/src/api/getGearKayaksHandler.ts`
 - `functions/src/api/getGodzinkiHandler.ts`
 - `functions/src/api/getKayakReservationsHandler.ts`
+- `functions/src/api/getKursInfoHandler.ts`
+- `functions/src/api/getKursantStatsHandler.ts`
 - `functions/src/api/godzinkiPurchaseHandler.ts`
 - `functions/src/api/kmAddLogHandler.ts`
 - `functions/src/api/kmAdminMergePlacesHandler.ts`
@@ -22707,6 +22739,7 @@ Use this file when the task is described by feature name.
 - `functions/src/api/registerUserHandler.ts`
 - `functions/src/api/submitEventHandler.ts`
 - `functions/src/api/submitGodzinkiHandler.ts`
+- `functions/src/api/userWeightHandler.ts`
 - `functions/src/index.ts`
 - `functions/src/modules/basen/basen_godziny_service.ts`
 - `functions/src/modules/basen/basen_service.ts`
@@ -22739,6 +22772,7 @@ Use this file when the task is described by feature name.
 - `functions/src/service/tasks/kmRebuildMapData.ts`
 - `functions/src/service/tasks/kmRebuildRankings.ts`
 - `functions/src/service/tasks/kmRebuildUserStats.ts`
+- `functions/src/service/tasks/kursSyncFromSheet.ts`
 - `functions/src/service/tasks/membersSyncToSheet.ts`
 - `functions/src/service/tasks/onUserRegisteredWelcome.ts`
 - `functions/src/service/tasks/usersSyncRolesFromSheet.ts`
@@ -22755,6 +22789,8 @@ Use this file when the task is described by feature name.
 - `public/modules/gear_module.js`
 - `public/modules/godzinki_module.js`
 - `public/modules/impreza_module.js`
+- `public/modules/kurs_godzinki_module.js`
+- `public/modules/kurs_module.js`
 - `public/modules/my_reservations_module.js`
 - `scripts/bump-sw-cache.js`
 - `tests/e2e/config.py`
@@ -22998,6 +23034,7 @@ Use this file when the task is described by feature name.
 - `functions/src/service/tasks/kmRebuildMapData.ts`
 - `functions/src/service/tasks/kmRebuildRankings.ts`
 - `functions/src/service/tasks/kmRebuildUserStats.ts`
+- `functions/src/service/tasks/kursSyncFromSheet.ts`
 - `functions/src/service/tasks/membersSyncToSheet.ts`
 - `functions/src/service/tasks/onUserRegisteredWelcome.ts`
 - `functions/src/service/tasks/usersSyncRolesFromSheet.ts`

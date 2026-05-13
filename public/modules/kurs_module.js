@@ -28,7 +28,7 @@ function spinnerHtml(text = "Ładowanie…") {
 
 function renderToc(innerEl, moduleId) {
   innerEl.innerHTML = `
-    <p style="font-style:italic; color:var(--text-muted,#666); background:rgba(0,0,0,.04); border-left:3px solid var(--accent,#4a90e2); padding:10px 14px; border-radius:4px; margin:0 0 16px; font-size:.93em;"><em>skrypt zebrała do kupy i przygotowała Karolia z PrzeWrotki, Karolina jest fanem 50cm kebabów i białego półwytrawnego wina (najlepiej z lodem) — wiecie jak się odwdzięczyć&nbsp;;)</em></p>
+    <p style="font-style:italic; color:var(--text-muted,#666); background:rgba(0,0,0,.04); border-left:3px solid var(--accent,#4a90e2); padding:10px 14px; border-radius:4px; margin:0 0 16px; font-size:.93em;"><em>Skrypt przygotowała Karolina z PrzeWrotki, Karolina jest fanem 50cm kebabów i białego półwytrawnego wina (najlepiej z lodem) — wiecie jak się odwdzięczyć&nbsp;;)</em></p>
     <div class="skryptToc">
       ${CHAPTERS.map((ch) => `
         <button type="button" class="skryptTocItem" data-ch-id="${esc(ch.id)}">

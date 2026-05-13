@@ -58000,6 +58000,10 @@
     "target": "functions/src/modules/hours/godzinki_vars.ts"
   },
   {
+    "source": "functions/src/api/getKursInfoHandler.ts",
+    "target": "functions/src/service/service_config.ts"
+  },
+  {
     "source": "functions/src/api/godzinkiPurchaseHandler.ts",
     "target": "functions/src/modules/hours/godzinki_service.ts"
   },
@@ -58161,19 +58165,19 @@
   },
   {
     "source": "functions/src/index.ts",
+    "target": "functions/src/api/getKursInfoHandler.ts"
+  },
+  {
+    "source": "functions/src/index.ts",
+    "target": "functions/src/api/getKursantStatsHandler.ts"
+  },
+  {
+    "source": "functions/src/index.ts",
     "target": "functions/src/api/godzinkiPurchaseHandler.ts"
   },
   {
     "source": "functions/src/index.ts",
     "target": "functions/src/api/kmAddLogHandler.ts"
-  },
-  {
-    "source": "functions/src/index.ts",
-    "target": "functions/src/api/kmAdminMergePlacesHandler.ts"
-  },
-  {
-    "source": "functions/src/index.ts",
-    "target": "functions/src/api/kmEventStatsHandler.ts"
   },
   {
     "source": "functions/src/modules/calendar/events_service.ts",
@@ -58317,6 +58321,10 @@
   },
   {
     "source": "functions/src/service/registry.ts",
+    "target": "functions/src/service/tasks/kursSyncFromSheet.ts"
+  },
+  {
+    "source": "functions/src/service/registry.ts",
     "target": "functions/src/service/tasks/membersSyncToSheet.ts"
   },
   {
@@ -58457,6 +58465,18 @@
   },
   {
     "source": "functions/src/service/tasks/kmRebuildUserStats.ts",
+    "target": "functions/src/service/types.ts"
+  },
+  {
+    "source": "functions/src/service/tasks/kursSyncFromSheet.ts",
+    "target": "functions/src/service/providers/googleSheetsProvider.ts"
+  },
+  {
+    "source": "functions/src/service/tasks/kursSyncFromSheet.ts",
+    "target": "functions/src/service/service_config.ts"
+  },
+  {
+    "source": "functions/src/service/tasks/kursSyncFromSheet.ts",
     "target": "functions/src/service/types.ts"
   },
   {

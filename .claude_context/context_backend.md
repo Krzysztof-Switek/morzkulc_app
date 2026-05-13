@@ -1,6 +1,6 @@
 # Backend Context
 
-Files indexed here: 104
+Files indexed here: 108
 
 ## `archived/functions/node_modules/@grpc/grpc-js/build/src/load-balancer-child-handler.d.ts`
 
@@ -950,6 +950,56 @@ Files indexed here: 104
   - handleGetKayakReservations
   - todayIsoUTC
 
+## `functions/src/api/getKursInfoHandler.ts`
+
+- kind: `api_handler`
+- lines: 124
+- size_bytes: 4197
+- keywords:
+  - admin
+  - setup
+  - events
+  - map
+  - firestore
+  - cors
+  - role
+  - status
+  - sync
+  - email
+- exports:
+  - handleGetKursInfo
+- symbols:
+  - email
+  - flattenEmails
+  - handleGetKursInfo
+  - norm
+- local imports:
+  - ../service/service_config
+
+## `functions/src/api/getKursantStatsHandler.ts`
+
+- kind: `api_handler`
+- lines: 128
+- size_bytes: 4598
+- keywords:
+  - admin
+  - setup
+  - km
+  - map
+  - firestore
+  - cors
+  - role
+  - status
+  - sync
+  - index
+  - email
+- exports:
+  - handleGetKursantStats
+- symbols:
+  - cenaKursu
+  - handleGetKursantStats
+  - p
+
 ## `functions/src/api/godzinkiPurchaseHandler.ts`
 
 - kind: `api_handler`
@@ -1047,9 +1097,10 @@ Files indexed here: 104
 ## `functions/src/api/kmMapDataHandler.ts`
 
 - kind: `api_handler`
-- lines: 84
-- size_bytes: 2606
+- lines: 73
+- size_bytes: 2306
 - keywords:
+  - auth
   - km
   - map
   - firestore
@@ -1057,7 +1108,6 @@ Files indexed here: 104
   - status
   - sync
   - task
-  - email
 - exports:
   - handleKmMapData
 - symbols:
@@ -1144,10 +1194,10 @@ Files indexed here: 104
 ## `functions/src/api/registerUserHandler.ts`
 
 - kind: `api_handler`
-- lines: 570
-- size_bytes: 20041
+- lines: 609
+- size_bytes: 21924
 - warnings:
-  - large file: 570 lines
+  - large file: 609 lines
 - keywords:
   - admin
   - setup
@@ -1233,15 +1283,32 @@ Files indexed here: 104
   - ../modules/hours/godzinki_service
   - ../modules/users/userStatusCheck
 
+## `functions/src/api/userWeightHandler.ts`
+
+- kind: `api_handler`
+- lines: 94
+- size_bytes: 3089
+- keywords:
+  - firestore
+  - cors
+  - role
+  - status
+  - sync
+  - email
+- exports:
+  - handleUserWeight
+- symbols:
+  - body
+  - handleUserWeight
+
 ## `functions/src/index.ts`
 
 - kind: `backend_other`
-- lines: 1148
-- size_bytes: 33446
+- lines: 1224
+- size_bytes: 36031
 - warnings:
-  - large file: 1148 lines
+  - large file: 1224 lines
 - keywords:
-  - auth
   - admin
   - gear
   - kayak
@@ -1257,7 +1324,6 @@ Files indexed here: 104
   - cors
   - member
   - role
-  - status
   - sync
   - index
 - exports:
@@ -1289,8 +1355,8 @@ Files indexed here: 104
   - getGearMyReservations
   - getGodzinki
   - getKayakReservations
-  - getSetup
-  - kmAddLog
+  - getKursInfo
+  - getKursantStats
 - symbols:
   - body
   - computeAllowedActions
@@ -1340,10 +1406,10 @@ Files indexed here: 104
   - getGearMyReservations
   - getGodzinki
   - getKayakReservations
+  - getKursInfo
+  - getKursantStats
   - getSetup
   - kmAddLog
-  - kmAdminMergePlaces
-  - kmEventStats
 - local imports:
   - ./api/adminEventsSyncCalendarHandler
   - ./api/basenAdminAddGodzinyHandler
@@ -1371,10 +1437,10 @@ Files indexed here: 104
   - ./api/getGearKayaksHandler
   - ./api/getGodzinkiHandler
   - ./api/getKayakReservationsHandler
+  - ./api/getKursInfoHandler
+  - ./api/getKursantStatsHandler
   - ./api/godzinkiPurchaseHandler
   - ./api/kmAddLogHandler
-  - ./api/kmAdminMergePlacesHandler
-  - ./api/kmEventStatsHandler
 
 ## `functions/src/modules/basen/basen_godziny_service.ts`
 
@@ -1716,8 +1782,8 @@ Files indexed here: 104
 ## `functions/src/modules/km/km_log_service.ts`
 
 - kind: `domain_module`
-- lines: 296
-- size_bytes: 10096
+- lines: 298
+- size_bytes: 10212
 - keywords:
   - admin
   - km
@@ -1733,7 +1799,7 @@ Files indexed here: 104
   - addKmLog
   - getUserKmLogs
   - getUserKmStats
-  - updateUserStatsInTransaction
+  - updateUserStatsWriteInTransaction
 - local imports:
   - ./km_scoring
   - ./km_vars
@@ -1962,8 +2028,8 @@ Files indexed here: 104
 ## `functions/src/service/registry.ts`
 
 - kind: `service_task`
-- lines: 42
-- size_bytes: 1745
+- lines: 44
+- size_bytes: 1837
 - keywords:
   - gear
   - kayak
@@ -1994,6 +2060,7 @@ Files indexed here: 104
   - ./tasks/kmRebuildMapData
   - ./tasks/kmRebuildRankings
   - ./tasks/kmRebuildUserStats
+  - ./tasks/kursSyncFromSheet
   - ./tasks/membersSyncToSheet
   - ./tasks/onUserRegisteredWelcome
   - ./tasks/usersSyncRolesFromSheet
@@ -2025,8 +2092,8 @@ Files indexed here: 104
 ## `functions/src/service/service_config.ts`
 
 - kind: `service_task`
-- lines: 229
-- size_bytes: 8291
+- lines: 242
+- size_bytes: 8573
 - keywords:
   - admin
   - gear
@@ -2095,12 +2162,13 @@ Files indexed here: 104
 ## `functions/src/service/tasks/eventsSyncFromSheet.ts`
 
 - kind: `service_task`
-- lines: 278
-- size_bytes: 9245
+- lines: 284
+- size_bytes: 9453
 - keywords:
   - admin
   - events
   - calendar
+  - ranking
   - firestore
   - sync
   - task
@@ -2195,8 +2263,8 @@ Files indexed here: 104
 ## `functions/src/service/tasks/kmRebuildMapData.ts`
 
 - kind: `service_task`
-- lines: 163
-- size_bytes: 4905
+- lines: 161
+- size_bytes: 4845
 - keywords:
   - admin
   - km
@@ -2256,6 +2324,26 @@ Files indexed here: 104
 - local imports:
   - ../../modules/km/km_scoring
   - ../../modules/km/km_vars
+  - ../types
+
+## `functions/src/service/tasks/kursSyncFromSheet.ts`
+
+- kind: `service_task`
+- lines: 112
+- size_bytes: 3420
+- keywords:
+  - firestore
+  - sync
+  - task
+- exports:
+  - kursSyncFromSheetTask
+- symbols:
+  - norm
+  - normDate
+  - parseBool
+- local imports:
+  - ../providers/googleSheetsProvider
+  - ../service_config
   - ../types
 
 ## `functions/src/service/tasks/membersSyncToSheet.ts`
