@@ -40,6 +40,39 @@ export class GoogleWorkspaceProvider {
     return (google as any).gmail({ version: "v1", auth }) as gmail_v1.Gmail;
   }
 
+  async listMembersOfGroup(groupEmail: string): Promise<Array<{email: string; role: string}>> {
+    const directory = await this.getDirectoryClient();
+
+    const g = normalizeEmail(groupEmail);
+    assertLooksLikeEmail("groupEmail", g);
+
+    const out: Array<{email: string; role: string}> = [];
+    let pageToken: string | undefined = undefined;
+
+    try {
+      do {
+        const resp: any = await directory.members.list({
+          groupKey: g,
+          maxResults: 200,
+          pageToken,
+        });
+        for (const m of (resp.data.members || []) as admin_directory_v1.Schema$Member[]) {
+          if (m.email) {
+            out.push({email: m.email.toLowerCase(), role: m.role || "MEMBER"});
+          }
+        }
+        pageToken = resp.data.nextPageToken || undefined;
+      } while (pageToken);
+    } catch (e: any) {
+      const code = e?.code || e?.response?.status;
+      if (code === 404) return [];
+      const msg = e?.message || String(e);
+      throw new Error(`Directory.members.list failed for group="${g}": ${msg}`);
+    }
+
+    return out;
+  }
+
   async isMemberOfGroup(groupEmail: string, memberEmail: string): Promise<boolean> {
     const directory = await this.getDirectoryClient();
 

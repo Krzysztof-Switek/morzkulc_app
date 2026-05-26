@@ -61,6 +61,10 @@ function syncSetupToFirestore() {
     { docPath: DOC_VARS_GEAR, data: docGearVars },
   ]);
 
+  // Po każdym sync setup wyzwól sync funkcyjnych ról (sprzętowiec, szkoleniowiec)
+  // do grup Google. Task jest idempotentny — jeśli nic się nie zmieniło, jest no-op.
+  enqueueServiceJob_("users.syncFunctionRolesFromSetup", {});
+
   const durMs = new Date().getTime() - started.getTime();
 
   SpreadsheetApp.getUi().alert(

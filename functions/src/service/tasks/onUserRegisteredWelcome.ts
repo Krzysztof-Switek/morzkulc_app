@@ -21,6 +21,12 @@ const MEMBER_LEVEL_ROLES = new Set([
   "rola_kr",
 ]);
 
+function listaRoleForUserRole(roleKey: string): "MANAGER" | "MEMBER" | null {
+  if (roleKey === "rola_kursant") return null;
+  if (roleKey === "rola_sympatyk") return "MEMBER";
+  return "MANAGER"; // kandydat, czlonek, zarzad, kr
+}
+
 export const onUserRegisteredWelcomeTask: ServiceTask<OnUserRegisteredPayload> = {
   id: "onUserRegistered.welcome",
   description: "Send welcome email, add user to lista@ group and role-based groups.",
@@ -55,45 +61,49 @@ export const onUserRegisteredWelcomeTask: ServiceTask<OnUserRegisteredPayload> =
     const addedToRoleGroupAt = service.addedToRoleGroupAt || null;
     const roleGroupsMappingsSyncedAt = service.roleGroupsMappingsSyncedAt || null;
 
-    // B) Add to lista@ group (everyone) - idempotent
+    // B) lista@ — rola w grupie zależy od roli użytkownika
+    const targetListaRole = listaRoleForUserRole(roleKey);
+
     if (!addedToListaGroupAt) {
-      logger.info("WelcomeTask: step B addMemberToGroup lista - begin", {
-        uid,
-        group: config.listaGroupEmail,
-        userEmail,
-      });
-
-      if (dryRun) {
-        logger.info("DRYRUN: would add member to lista group", { uid });
-      } else {
-        try {
-          const already = await workspace.isMemberOfGroup(config.listaGroupEmail, userEmail);
-          logger.info("WelcomeTask: step B isMemberOfGroup lista", { uid, already });
-
-          if (!already) {
-            await workspace.addMemberToGroup(config.listaGroupEmail, userEmail, "MEMBER");
-            logger.info("WelcomeTask: step B addMemberToGroup lista - done", { uid });
-          } else {
-            logger.info("WelcomeTask: step B already member of lista - skip", { uid });
-          }
-
+      if (targetListaRole === null) {
+        // Kursant — nie trafia na listę; ustaw marker idempotencji
+        if (dryRun) {
+          logger.info("DRYRUN: would mark step B as skipped for kursant", { uid });
+        } else {
           await userRef.update({ "service.addedToListaGroupAt": new Date() });
-          logger.info("WelcomeTask: step B firestore marker set", { uid });
-        } catch (e) {
-          const err = asErr(e);
-          logger.error("WelcomeTask: step B FAILED", {
-            uid,
-            code: err?.code,
-            message: err?.message,
-            errors: err?.errors,
-            status: err?.response?.status,
-            data: err?.response?.data,
-          });
-          throw e;
+        }
+        logger.info("WelcomeTask: step B skipped for kursant", { uid, roleKey });
+      } else {
+        logger.info("WelcomeTask: step B addMemberToGroup lista - begin", {
+          uid,
+          group: config.listaGroupEmail,
+          userEmail,
+          targetListaRole,
+        });
+
+        if (dryRun) {
+          logger.info("DRYRUN: would add member to lista group", { uid, targetListaRole });
+        } else {
+          try {
+            await workspace.addMemberToGroup(config.listaGroupEmail, userEmail, targetListaRole);
+            await userRef.update({ "service.addedToListaGroupAt": new Date() });
+            logger.info("WelcomeTask: step B done", { uid, targetListaRole });
+          } catch (e) {
+            const err = asErr(e);
+            logger.error("WelcomeTask: step B FAILED", {
+              uid,
+              code: err?.code,
+              message: err?.message,
+              errors: err?.errors,
+              status: err?.response?.status,
+              data: err?.response?.data,
+            });
+            throw e;
+          }
         }
       }
     } else {
-      logger.info("Skip: already added to lista group", { uid });
+      logger.info("Skip: already processed lista group", { uid });
     }
 
     // Odczyt setup/app — używany w kroku C i D
@@ -168,7 +178,11 @@ export const onUserRegisteredWelcomeTask: ServiceTask<OnUserRegisteredPayload> =
         to: userEmail,
       });
 
-      const body = config.welcomeBodyText(displayName, userEmail);
+      const listaAccess: "full" | "readonly" | "none" =
+        targetListaRole === null ? "none" :
+          targetListaRole === "MEMBER" ? "readonly" :
+            "full";
+      const body = config.welcomeBodyText(displayName, userEmail, listaAccess);
       if (dryRun) {
         logger.info("DRYRUN: would send welcome email", { uid });
       } else {

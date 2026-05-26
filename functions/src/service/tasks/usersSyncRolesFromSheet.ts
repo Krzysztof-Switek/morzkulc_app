@@ -41,6 +41,12 @@ function buildInvertedLabelMap(
   return out;
 }
 
+function listaRoleForUserRole(roleKey: string): "MANAGER" | "MEMBER" | null {
+  if (roleKey === "rola_kursant") return null;
+  if (roleKey === "rola_sympatyk") return "MEMBER";
+  return "MANAGER"; // kandydat, czlonek, zarzad, kr
+}
+
 /**
  * Synchronizes Workspace group membership for a user after their role changes.
  *
@@ -289,6 +295,41 @@ export const usersSyncRolesFromSheetTask: ServiceTask<Payload> = {
         if (roleChanged && newRoleKey && !dryRun) {
           const oldRoleLabel = roleMappings[currentRoleKey]?.label || currentRoleKey;
           const newRoleLabel = roleMappings[newRoleKey]?.label || newRoleKey;
+          const newListaRole = listaRoleForUserRole(newRoleKey);
+          const oldListaRole = listaRoleForUserRole(currentRoleKey);
+          const listaChanged = newListaRole !== oldListaRole;
+
+          const listaInstructions: string[] = !listaChanged ? [] : newListaRole === null ? [
+            "",
+            "---",
+            "",
+            `Twój dostęp do listy dyskusyjnej ${cfg.listaGroupEmail} został usunięty.`,
+          ] : newListaRole === "MEMBER" ? [
+            "",
+            "---",
+            "",
+            `Masz teraz dostęp do listy dyskusyjnej ${cfg.listaGroupEmail} (tylko odczyt).`,
+            "",
+            "Możesz czytać i otrzymywać wiadomości — możliwość wysyłania uzyskasz po zmianie roli na kandydata lub członka.",
+            "",
+            "Jak znaleźć grupę (lista nie jest publicznie wyszukiwalna):",
+            "• Zaloguj się na swoje konto Google i wejdź na: https://groups.google.com",
+            `• Poszukaj grupy: ${cfg.listaGroupEmail}`,
+            "• Ustaw \"Moje ustawienia członkostwa\" → \"Subskrypcja\" → \"Każdy e-mail\" żeby wiadomości trafiały do Gmaila.",
+          ] : [
+            "",
+            "---",
+            "",
+            `Masz teraz pełny dostęp do listy dyskusyjnej: ${cfg.listaGroupEmail}`,
+            "",
+            "Jak znaleźć grupę (lista nie jest publicznie wyszukiwalna):",
+            "• Zaloguj się na swoje konto Google i wejdź na: https://groups.google.com",
+            `• Poszukaj grupy: ${cfg.listaGroupEmail}`,
+            "• Ustaw \"Moje ustawienia członkostwa\" → \"Subskrypcja\" → \"Każdy e-mail\" żeby wiadomości trafiały do Gmaila.",
+            "",
+            `Jak wysyłać: wyślij e-mail na adres ${cfg.listaGroupEmail} — treść jak zwykły mail.`,
+          ];
+
           const isBoardRole = newRoleKey === "rola_zarzad" || newRoleKey === "rola_kr";
           const boardInstructions = isBoardRole ? [
             "",
@@ -327,12 +368,34 @@ export const usersSyncRolesFromSheetTask: ServiceTask<Payload> = {
                 "",
                 "SKK Morzkulc",
                 ...boardInstructions,
+                ...listaInstructions,
               ].join("\n")
             );
             ctx.logger.info("usersSyncRolesFromSheet: role change email sent", {email, oldRoleLabel, newRoleLabel, isBoardRole});
           } catch (emailErr: any) {
             ctx.logger.error("usersSyncRolesFromSheet: role change email failed (non-fatal)", {
               email, message: emailErr?.message,
+            });
+          }
+        }
+
+        // Aktualizuj dostęp do lista@ na podstawie nowej roli (non-fatal)
+        if (roleChanged && newRoleKey && !dryRun) {
+          const targetListaRole = listaRoleForUserRole(newRoleKey);
+          try {
+            if (targetListaRole === null) {
+              await workspace.removeMemberFromGroup(cfg.listaGroupEmail, email);
+              ctx.logger.info("syncRoles: removed from lista@", {email, newRoleKey});
+            } else {
+              await workspace.addMemberToGroup(cfg.listaGroupEmail, email, targetListaRole);
+              ctx.logger.info("syncRoles: lista@ updated", {email, newRoleKey, targetListaRole});
+            }
+          } catch (listaErr: any) {
+            ctx.logger.error("syncRoles: lista@ update failed (non-fatal)", {
+              email,
+              newRoleKey,
+              message: listaErr?.message,
+              code: listaErr?.code,
             });
           }
         }

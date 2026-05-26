@@ -11,7 +11,11 @@ export interface ServiceConfig {
   welcomeFromEmail: string;
   welcomeReplyToEmail: string;
   welcomeSubject: string;
-  welcomeBodyText: (displayName: string | null, userEmail: string) => string;
+  welcomeBodyText: (
+    displayName: string | null,
+    userEmail: string,
+    listaAccess: "full" | "readonly" | "none"
+  ) => string;
 
   adminRoleKeys: string[];
   memberRoleKeys: string[];
@@ -66,6 +70,13 @@ export interface ServiceConfig {
     spreadsheetId: string;
     tabName: string;
   };
+
+  // ✅ NEW: Dedykowane grupy adresowe dla funkcji (sprzętowiec / szkoleniowiec)
+  // Członkowie tych grup mogą wysyłać maile na lista@ z adresu grupy (Gmail "Wyślij pocztę jako").
+  functionRoles: {
+    sprzetowiec: string;
+    szkoleniowiec: string;
+  };
 }
 
 export function getServiceConfig(): ServiceConfig {
@@ -75,7 +86,8 @@ export function getServiceConfig(): ServiceConfig {
   const membersGroupEmail = process.env.SVC_MEMBERS_GROUP_EMAIL || "czlonkowie@morzkulc.pl";
 
   const privilegedPosterGroupsRaw =
-    process.env.SVC_PRIV_POSTER_GROUPS || "zarzad_skk@morzkulc.pl,kr@morzkulc.pl,czlonkowie@morzkulc.pl";
+    process.env.SVC_PRIV_POSTER_GROUPS ||
+    "zarzad_skk@morzkulc.pl,kr@morzkulc.pl,czlonkowie@morzkulc.pl,sprzetowiec@morzkulc.pl,szkoleniowiec@morzkulc.pl";
 
   const welcomeFromEmail = process.env.SVC_WELCOME_FROM_EMAIL || "admin@morzkulc.pl";
   const welcomeReplyToEmail = process.env.SVC_WELCOME_REPLY_TO_EMAIL || "zarzad@morzkulc.pl";
@@ -105,6 +117,9 @@ export function getServiceConfig(): ServiceConfig {
   const kursSpreadsheetId = process.env.SVC_KURS_SHEET_ID || "";
   const kursTabName = process.env.SVC_KURS_SHEET_TAB || "Kurs";
 
+  const sprzetowiecGroupEmail = process.env.SVC_SPRZETOWIEC_GROUP_EMAIL || "sprzetowiec@morzkulc.pl";
+  const szkoleniowiecGroupEmail = process.env.SVC_SZKOLENIOWIEC_GROUP_EMAIL || "szkoleniowiec@morzkulc.pl";
+
   const cfg: ServiceConfig = {
     envName,
     jobsCollection: "service_jobs",
@@ -116,31 +131,17 @@ export function getServiceConfig(): ServiceConfig {
     welcomeFromEmail,
     welcomeReplyToEmail,
     welcomeSubject,
-    welcomeBodyText: (displayName: string | null, _userEmail: string) => {
+    welcomeBodyText: (
+      displayName: string | null,
+      _userEmail: string,
+      listaAccess: "full" | "readonly" | "none"
+    ) => {
       const name = (displayName || "").trim();
       const hello = name ? `Cześć ${name}!` : "Cześć!";
+      const lista = cfg?.listaGroupEmail || "lista@morzkulc.pl";
+      const replyTo = cfg?.welcomeReplyToEmail || "zarzad@morzkulc.pl";
 
-      return [
-        hello,
-        "",
-        "Witamy w workspace Morzkulc.",
-        `Dodałem/am Cię do listy dyskusyjnej: ${cfg?.listaGroupEmail || "lista@morzkulc.pl"}.`,
-        "",
-        "Jak szybko zacząć korzystać z listy:",
-        "",
-        "1) Wejdź w Google Groups: https://groups.google.com",
-        `2) Otwórz grupę: ${cfg?.listaGroupEmail || "lista@morzkulc.pl"}`,
-        "3) Ustaw odbieranie wiadomości: kliknij „Moje ustawienia członkostwa” → „Subskrypcja” → wybierz „Każdy e-mail”.",
-        "",
-        "Jak opublikować wiadomość (najprościej):",
-        `• Wyślij e-mail na adres: ${cfg?.listaGroupEmail || "lista@morzkulc.pl"}`,
-        "• Temat i treść jak zwykły mail — wiadomość pojawi się też w Google Groups w wątkach grupy.",
-        "",
-        "Jeśli nie widzisz grupy w Google Groups:",
-        "• Upewnij się, że jesteś zalogowany/a na to samo konto Google, którym logujesz się do aplikacji.",
-        "• Otwórz https://groups.google.com i wyszukaj grupę.",
-        "• Sprawdź folder Spam w Gmailu.",
-        "",
+      const calendarSection = [
         "Kalendarz klubowy SKK Morzkulc:",
         "Kliknij poniższy link, żeby dodać kalendarz z imprezami i wydarzeniami klubu do swoich kalendarzy Google:",
         "https://calendar.google.com/calendar/u/0?cid=Y19iN2E4OWI2M2NiYTIwNDljZjY1YjU0N2ZlMWQ4ZWY1NDZmOWQ0YWUxNjk1OTI1MjE0YjYwOWE5N2Y3MmMwOTA4QGdyb3VwLmNhbGVuZGFyLmdvb2dsZS5jb20",
@@ -149,9 +150,64 @@ export function getServiceConfig(): ServiceConfig {
         "Android: otwórz aplikację w Chrome, kliknij menu przeglądarki i wybierz \"Dodaj do ekranu głównego\".",
         "iPhone (iOS): otwórz aplikację w Safari, kliknij Udostępnij, a potem wybierz \"Do ekranu początkowego\".",
         "",
-        `Pytania? Odpisz na tego maila — odpowiedź trafi do: ${cfg?.welcomeReplyToEmail || "zarzad@morzkulc.pl"}.`,
+        `Pytania? Odpisz na tego maila — odpowiedź trafi do: ${replyTo}.`,
         "",
         "SKK Morzkulc",
+      ];
+
+      if (listaAccess === "none") {
+        return [
+          hello,
+          "",
+          "Witamy w aplikacji SKK Morzkulc!",
+          "Twoje konto jest aktywne — możesz korzystać z aplikacji.",
+          "",
+          ...calendarSection,
+        ].join("\n");
+      }
+
+      if (listaAccess === "readonly") {
+        return [
+          hello,
+          "",
+          "Witamy w workspace Morzkulc.",
+          `Dodałem/am Cię do listy dyskusyjnej ${lista} jako obserwatora.`,
+          "Możesz czytać i otrzymywać wiadomości, ale nie wysyłać.",
+          "Kiedy Twój status się zmieni — otrzymasz pełny dostęp.",
+          "",
+          "Jak znaleźć grupę (lista nie jest publicznie wyszukiwalna):",
+          "1) Wejdź w Google Groups: https://groups.google.com",
+          "2) Zaloguj się na to samo konto Google, którym logujesz się do aplikacji",
+          `3) Otwórz grupę: ${lista}`,
+          "4) Ustaw odbieranie: „Moje ustawienia członkostwa” → „Subskrypcja” → „Każdy e-mail”",
+          "",
+          ...calendarSection,
+        ].join("\n");
+      }
+
+      // listaAccess === "full"
+      return [
+        hello,
+        "",
+        "Witamy w workspace Morzkulc.",
+        `Dodałem/am Cię do listy dyskusyjnej: ${lista}.`,
+        "",
+        "Jak szybko zacząć korzystać z listy:",
+        "",
+        "1) Wejdź w Google Groups: https://groups.google.com",
+        `2) Otwórz grupę: ${lista}`,
+        "3) Ustaw odbieranie wiadomości: kliknij „Moje ustawienia członkostwa” → „Subskrypcja” → wybierz „Każdy e-mail”.",
+        "",
+        "Jak opublikować wiadomość (najprościej):",
+        `• Wyślij e-mail na adres: ${lista}`,
+        "• Temat i treść jak zwykły mail — wiadomość pojawi się też w Google Groups w wątkach grupy.",
+        "",
+        "Jeśli nie widzisz grupy w Google Groups:",
+        "• Upewnij się, że jesteś zalogowany/a na to samo konto Google, którym logujesz się do aplikacji.",
+        "• Otwórz https://groups.google.com i wyszukaj grupę.",
+        "• Sprawdź folder Spam w Gmailu.",
+        "",
+        ...calendarSection,
       ].join("\n");
     },
 
@@ -208,6 +264,11 @@ export function getServiceConfig(): ServiceConfig {
       spreadsheetId: kursSpreadsheetId,
       tabName: kursTabName,
     },
+
+    functionRoles: {
+      sprzetowiec: sprzetowiecGroupEmail,
+      szkoleniowiec: szkoleniowiecGroupEmail,
+    },
   };
 
   if (!cfg.listaGroupEmail.includes("@")) {
@@ -235,6 +296,13 @@ export function getServiceConfig(): ServiceConfig {
   }
   if (!cfg.gear.kayaksTabName) {
     throw new functions.https.HttpsError("failed-precondition", "Invalid gear kayaks tab name");
+  }
+
+  if (!cfg.functionRoles.sprzetowiec.includes("@")) {
+    throw new functions.https.HttpsError("failed-precondition", "Invalid sprzetowiec group email");
+  }
+  if (!cfg.functionRoles.szkoleniowiec.includes("@")) {
+    throw new functions.https.HttpsError("failed-precondition", "Invalid szkoleniowiec group email");
   }
 
   return cfg;
