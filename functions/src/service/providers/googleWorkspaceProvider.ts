@@ -7,6 +7,8 @@ export const WORKSPACE_SCOPES = {
   GROUP: "https://www.googleapis.com/auth/admin.directory.group",
   GROUPS_SETTINGS: "https://www.googleapis.com/auth/apps.groups.settings",
   GMAIL_SEND: "https://www.googleapis.com/auth/gmail.send",
+  GMAIL_SETTINGS_BASIC: "https://www.googleapis.com/auth/gmail.settings.basic",
+  GMAIL_SETTINGS_SHARING: "https://www.googleapis.com/auth/gmail.settings.sharing",
 } as const;
 
 function normalizeEmail(v: string): string {
@@ -17,6 +19,21 @@ function assertLooksLikeEmail(label: string, v: string) {
   if (!v || !v.includes("@") || v.startsWith("@") || v.endsWith("@")) {
     throw new Error(`Invalid ${label}: "${v}"`);
   }
+}
+
+// RFC 2047 encoded-word dla nagłówków zawierających non-ASCII (np. polskie znaki w Subject).
+// Bez tego klient mailowy odczytuje surowe bajty UTF-8 jako Latin-1 → mojibake "Ã„Â™".
+function encodeMimeHeader(s: string): string {
+  let hasNonAscii = false;
+  for (let i = 0; i < s.length; i++) {
+    if (s.charCodeAt(i) > 127) {
+      hasNonAscii = true;
+      break;
+    }
+  }
+  if (!hasNonAscii) return s;
+  const b64 = Buffer.from(s, "utf-8").toString("base64");
+  return `=?UTF-8?B?${b64}?=`;
 }
 
 export class GoogleWorkspaceProvider {
@@ -215,7 +232,7 @@ export class GoogleWorkspaceProvider {
     const messageParts = [
       `From: ${from}`,
       `To: ${to}`,
-      `Subject: ${subject}`,
+      `Subject: ${encodeMimeHeader(subject)}`,
       "MIME-Version: 1.0",
       "Content-Type: text/plain; charset=utf-8",
       "",
@@ -256,7 +273,7 @@ export class GoogleWorkspaceProvider {
       `From: ${from}`,
       `Reply-To: ${replyTo}`,
       `To: ${to}`,
-      `Subject: ${subject}`,
+      `Subject: ${encodeMimeHeader(subject)}`,
       "MIME-Version: 1.0",
       "Content-Type: text/plain; charset=utf-8",
       "",
@@ -273,5 +290,165 @@ export class GoogleWorkspaceProvider {
       userId: "me",
       requestBody: { raw },
     });
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Gmail settings — forwarding management (impersonacja skrzynki funkcyjnej)
+  // ─────────────────────────────────────────────────────────────
+
+  private async getGmailSettingsClient(asUser: string): Promise<gmail_v1.Gmail> {
+    const auth = await getDelegatedAuth(
+      [WORKSPACE_SCOPES.GMAIL_SETTINGS_BASIC, WORKSPACE_SCOPES.GMAIL_SETTINGS_SHARING],
+      asUser
+    );
+    return (google as any).gmail({ version: "v1", auth }) as gmail_v1.Gmail;
+  }
+
+  /**
+   * Dodaje adres do listy "dozwolonych" forwardów na skrzynce mailboxEmail.
+   * W DWD admin-delegation Google zwykle akceptuje adres bez kodu weryfikacyjnego.
+   * Jeśli nie — zwraca "verificationStatus: pending" i wysyła kod na targetEmail.
+   * Idempotentne: jeśli adres już istnieje, no-op.
+   */
+  async addForwardingAddress(
+    mailboxEmail: string,
+    targetEmail: string
+  ): Promise<"added" | "already" | "pending"> {
+    const mailbox = normalizeEmail(mailboxEmail);
+    const target = normalizeEmail(targetEmail);
+    assertLooksLikeEmail("mailboxEmail", mailbox);
+    assertLooksLikeEmail("targetEmail", target);
+
+    const gmail = await this.getGmailSettingsClient(mailbox);
+
+    try {
+      const listResp = await gmail.users.settings.forwardingAddresses.list({userId: "me"});
+      const existing = (listResp.data.forwardingAddresses || []).find(
+        (a) => (a.forwardingEmail || "").toLowerCase() === target
+      );
+      if (existing) {
+        if (existing.verificationStatus === "accepted") return "already";
+        return "pending";
+      }
+    } catch (e: any) {
+      const msg = e?.message || String(e);
+      throw new Error(`gmail.forwardingAddresses.list failed for mailbox="${mailbox}": ${msg}`);
+    }
+
+    try {
+      const resp = await gmail.users.settings.forwardingAddresses.create({
+        userId: "me",
+        requestBody: {forwardingEmail: target},
+      });
+      const status = resp.data.verificationStatus || "pending";
+      return status === "accepted" ? "added" : "pending";
+    } catch (e: any) {
+      const msg = e?.message || String(e);
+      throw new Error(`gmail.forwardingAddresses.create failed for mailbox="${mailbox}" target="${target}": ${msg}`);
+    }
+  }
+
+  /**
+   * Usuwa adres z listy dozwolonych forwardów. Idempotentne (404 → no-op).
+   */
+  async removeForwardingAddress(
+    mailboxEmail: string,
+    targetEmail: string
+  ): Promise<"removed" | "not_present"> {
+    const mailbox = normalizeEmail(mailboxEmail);
+    const target = normalizeEmail(targetEmail);
+    assertLooksLikeEmail("mailboxEmail", mailbox);
+    assertLooksLikeEmail("targetEmail", target);
+
+    const gmail = await this.getGmailSettingsClient(mailbox);
+
+    try {
+      await gmail.users.settings.forwardingAddresses.delete({
+        userId: "me",
+        forwardingEmail: target,
+      });
+      return "removed";
+    } catch (e: any) {
+      const code = e?.code || e?.response?.status;
+      if (code === 404) return "not_present";
+      const msg = e?.message || String(e);
+      throw new Error(`gmail.forwardingAddresses.delete failed for mailbox="${mailbox}" target="${target}": ${msg}`);
+    }
+  }
+
+  /**
+   * Włącza auto-forwarding skrzynki mailboxEmail na targetEmail.
+   * Wymaga, by targetEmail był wcześniej dodany przez addForwardingAddress() z akceptacją.
+   * disposition: "leaveInInbox" | "archive" | "trash" | "markRead"
+   */
+  async setAutoForwardRule(
+    mailboxEmail: string,
+    targetEmail: string,
+    disposition: "leaveInInbox" | "archive" | "trash" | "markRead" = "archive"
+  ): Promise<void> {
+    const mailbox = normalizeEmail(mailboxEmail);
+    const target = normalizeEmail(targetEmail);
+    assertLooksLikeEmail("mailboxEmail", mailbox);
+    assertLooksLikeEmail("targetEmail", target);
+
+    const gmail = await this.getGmailSettingsClient(mailbox);
+
+    try {
+      await gmail.users.settings.updateAutoForwarding({
+        userId: "me",
+        requestBody: {
+          enabled: true,
+          emailAddress: target,
+          disposition,
+        },
+      });
+    } catch (e: any) {
+      const msg = e?.message || String(e);
+      throw new Error(`gmail.updateAutoForwarding(enable) failed for mailbox="${mailbox}" target="${target}": ${msg}`);
+    }
+  }
+
+  /**
+   * Wyłącza auto-forwarding na skrzynce mailboxEmail. Idempotentne.
+   */
+  async disableAutoForwardRule(mailboxEmail: string): Promise<void> {
+    const mailbox = normalizeEmail(mailboxEmail);
+    assertLooksLikeEmail("mailboxEmail", mailbox);
+
+    const gmail = await this.getGmailSettingsClient(mailbox);
+
+    try {
+      await gmail.users.settings.updateAutoForwarding({
+        userId: "me",
+        requestBody: {enabled: false},
+      });
+    } catch (e: any) {
+      const msg = e?.message || String(e);
+      throw new Error(`gmail.updateAutoForwarding(disable) failed for mailbox="${mailbox}": ${msg}`);
+    }
+  }
+
+  /**
+   * Czyta aktualne ustawienie auto-forwarding ze skrzynki (do idempotentnych decyzji w taska).
+   */
+  async getAutoForwarding(
+    mailboxEmail: string
+  ): Promise<{enabled: boolean; emailAddress?: string; disposition?: string}> {
+    const mailbox = normalizeEmail(mailboxEmail);
+    assertLooksLikeEmail("mailboxEmail", mailbox);
+
+    const gmail = await this.getGmailSettingsClient(mailbox);
+
+    try {
+      const resp = await gmail.users.settings.getAutoForwarding({userId: "me"});
+      return {
+        enabled: Boolean(resp.data.enabled),
+        emailAddress: resp.data.emailAddress || undefined,
+        disposition: resp.data.disposition || undefined,
+      };
+    } catch (e: any) {
+      const msg = e?.message || String(e);
+      throw new Error(`gmail.getAutoForwarding failed for mailbox="${mailbox}": ${msg}`);
+    }
   }
 }

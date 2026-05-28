@@ -71,12 +71,19 @@ export interface ServiceConfig {
     tabName: string;
   };
 
-  // ✅ NEW: Dedykowane grupy adresowe dla funkcji (sprzętowiec / szkoleniowiec)
-  // Członkowie tych grup mogą wysyłać maile na lista@ z adresu grupy (Gmail "Wyślij pocztę jako").
+  // ✅ Konta funkcyjne (sprzetowiec, szkoleniowiec, skarbnik, prezes).
+  // Każde konto to USER w Workspace; operator wysyła "Wyślij jako" z SMTP + app password.
+  // Forwarding 1:1 dla wszystkich 4 funkcji (na prywatny mail osoby pełniącej funkcję).
+  // Prezes używa adresu `prezes@morzkulc.pl` (NIE `zarzad@` — to grupa Drive, nie wolno zamieniać na konto user).
   functionRoles: {
-    sprzetowiec: string;
-    szkoleniowiec: string;
+    sprzetowiec: { mailbox: string; label: { genitive: string; display: string } };
+    szkoleniowiec: { mailbox: string; label: { genitive: string; display: string } };
+    skarbnik: { mailbox: string; label: { genitive: string; display: string } };
+    prezes: { mailbox: string; label: { genitive: string; display: string } };
   };
+
+  // Adres na który task wysyła powiadomienia AKCJA dla admina (utwórz/usuń app password).
+  adminActionEmail: string;
 }
 
 export function getServiceConfig(): ServiceConfig {
@@ -87,7 +94,7 @@ export function getServiceConfig(): ServiceConfig {
 
   const privilegedPosterGroupsRaw =
     process.env.SVC_PRIV_POSTER_GROUPS ||
-    "zarzad_skk@morzkulc.pl,kr@morzkulc.pl,czlonkowie@morzkulc.pl,sprzetowiec@morzkulc.pl,szkoleniowiec@morzkulc.pl";
+    "zarzad_skk@morzkulc.pl,kr@morzkulc.pl,czlonkowie@morzkulc.pl,sprzetowiec@morzkulc.pl,szkoleniowiec@morzkulc.pl,skarbnik@morzkulc.pl,prezes@morzkulc.pl";
 
   const welcomeFromEmail = process.env.SVC_WELCOME_FROM_EMAIL || "admin@morzkulc.pl";
   const welcomeReplyToEmail = process.env.SVC_WELCOME_REPLY_TO_EMAIL || "zarzad@morzkulc.pl";
@@ -117,8 +124,11 @@ export function getServiceConfig(): ServiceConfig {
   const kursSpreadsheetId = process.env.SVC_KURS_SHEET_ID || "";
   const kursTabName = process.env.SVC_KURS_SHEET_TAB || "Kurs";
 
-  const sprzetowiecGroupEmail = process.env.SVC_SPRZETOWIEC_GROUP_EMAIL || "sprzetowiec@morzkulc.pl";
-  const szkoleniowiecGroupEmail = process.env.SVC_SZKOLENIOWIEC_GROUP_EMAIL || "szkoleniowiec@morzkulc.pl";
+  const sprzetowiecMailbox = process.env.SVC_SPRZETOWIEC_MAILBOX_EMAIL || "sprzetowiec@morzkulc.pl";
+  const szkoleniowiecMailbox = process.env.SVC_SZKOLENIOWIEC_MAILBOX_EMAIL || "szkoleniowiec@morzkulc.pl";
+  const skarbnikMailbox = process.env.SVC_SKARBNIK_MAILBOX_EMAIL || "skarbnik@morzkulc.pl";
+  const prezesMailbox = process.env.SVC_PREZES_MAILBOX_EMAIL || "prezes@morzkulc.pl";
+  const adminActionEmail = process.env.SVC_ADMIN_ACTION_EMAIL || "zarzad@morzkulc.pl";
 
   const cfg: ServiceConfig = {
     envName,
@@ -266,9 +276,25 @@ export function getServiceConfig(): ServiceConfig {
     },
 
     functionRoles: {
-      sprzetowiec: sprzetowiecGroupEmail,
-      szkoleniowiec: szkoleniowiecGroupEmail,
+      sprzetowiec: {
+        mailbox: sprzetowiecMailbox,
+        label: {genitive: "sprzętowca", display: "Sprzętowiec SKK"},
+      },
+      szkoleniowiec: {
+        mailbox: szkoleniowiecMailbox,
+        label: {genitive: "szkoleniowca", display: "Szkoleniowiec SKK"},
+      },
+      skarbnik: {
+        mailbox: skarbnikMailbox,
+        label: {genitive: "skarbnika", display: "Skarbnik SKK"},
+      },
+      prezes: {
+        mailbox: prezesMailbox,
+        label: {genitive: "prezesa", display: "Zarząd SKK"},
+      },
     },
+
+    adminActionEmail,
   };
 
   if (!cfg.listaGroupEmail.includes("@")) {
@@ -298,11 +324,20 @@ export function getServiceConfig(): ServiceConfig {
     throw new functions.https.HttpsError("failed-precondition", "Invalid gear kayaks tab name");
   }
 
-  if (!cfg.functionRoles.sprzetowiec.includes("@")) {
-    throw new functions.https.HttpsError("failed-precondition", "Invalid sprzetowiec group email");
+  if (!cfg.functionRoles.sprzetowiec.mailbox.includes("@")) {
+    throw new functions.https.HttpsError("failed-precondition", "Invalid sprzetowiec mailbox email");
   }
-  if (!cfg.functionRoles.szkoleniowiec.includes("@")) {
-    throw new functions.https.HttpsError("failed-precondition", "Invalid szkoleniowiec group email");
+  if (!cfg.functionRoles.szkoleniowiec.mailbox.includes("@")) {
+    throw new functions.https.HttpsError("failed-precondition", "Invalid szkoleniowiec mailbox email");
+  }
+  if (!cfg.functionRoles.skarbnik.mailbox.includes("@")) {
+    throw new functions.https.HttpsError("failed-precondition", "Invalid skarbnik mailbox email");
+  }
+  if (!cfg.functionRoles.prezes.mailbox.includes("@")) {
+    throw new functions.https.HttpsError("failed-precondition", "Invalid prezes mailbox email");
+  }
+  if (!cfg.adminActionEmail.includes("@")) {
+    throw new functions.https.HttpsError("failed-precondition", "Invalid adminActionEmail");
   }
 
   return cfg;
