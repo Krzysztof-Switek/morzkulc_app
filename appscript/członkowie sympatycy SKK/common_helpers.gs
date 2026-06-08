@@ -17,15 +17,37 @@ function assertBoardAccess_() {
 
   if (email === ADMIN_EMAIL) return;
 
-  const isMember = isUserInGroup_(email, BOARD_GROUP_EMAIL);
-  if (!isMember) {
-    throw new Error("Brak uprawnień: tylko grupa " + BOARD_GROUP_EMAIL);
-  }
-}
+  // Sprawdzamy role_key w Firestore zamiast Directory API (Directory API wymaga uprawnień admina Workspace).
+  const url = CONFIG.FIRESTORE_BASE_URL + ":runQuery";
+  const resp = UrlFetchApp.fetch(url, {
+    method: "POST",
+    contentType: "application/json",
+    headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() },
+    payload: JSON.stringify({
+      structuredQuery: {
+        from: [{ collectionId: "users_active" }],
+        where: {
+          fieldFilter: {
+            field: { fieldPath: "email" },
+            op: "EQUAL",
+            value: { stringValue: email },
+          },
+        },
+        limit: 1,
+      },
+    }),
+    muteHttpExceptions: true,
+  });
 
-function isUserInGroup_(userEmail, groupEmail) {
-  const r = AdminDirectory.Members.hasMember(groupEmail, userEmail);
-  return Boolean(r && r.isMember);
+  const data = JSON.parse(resp.getContentText());
+  const doc = data && data[0] && data[0].document;
+  const roleKey = String(
+    (doc && doc.fields && doc.fields.role_key && doc.fields.role_key.stringValue) || ""
+  );
+
+  if (roleKey !== "rola_zarzad" && roleKey !== "rola_kr") {
+    throw new Error("Brak uprawnień: tylko zarząd i KR mogą uruchamiać synchronizację.");
+  }
 }
 
 // ====== PARSERS ======

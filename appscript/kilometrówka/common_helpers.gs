@@ -1,4 +1,3 @@
-/* global AdminDirectory */
 /**
  * File: common_helpers.gs
  * Purpose: shared helpers for access control, parsing and Firestore REST (Kilometrówka)
@@ -18,15 +17,26 @@ function assertBoardAccess_() {
 
   if (email === ADMIN_EMAIL) return;
 
-  const isMember = isUserInGroup_(email, BOARD_GROUP_EMAIL);
-  if (!isMember) {
-    throw new Error("Brak uprawnień: tylko grupa " + BOARD_GROUP_EMAIL);
-  }
-}
+  // Sprawdzamy role_key w Firestore zamiast Directory API (Directory API wymaga uprawnień admina Workspace).
+  const docs = firestoreRunQuery_({
+    from: [{ collectionId: "users_active" }],
+    where: {
+      fieldFilter: {
+        field: { fieldPath: "email" },
+        op: "EQUAL",
+        value: { stringValue: email },
+      },
+    },
+    limit: 1,
+  });
 
-function isUserInGroup_(userEmail, groupEmail) {
-  const r = AdminDirectory.Members.hasMember(groupEmail, userEmail);
-  return Boolean(r && r.isMember);
+  const roleKey = String(
+    (docs[0] && docs[0].fields && docs[0].fields.role_key && docs[0].fields.role_key.stringValue) || ""
+  );
+
+  if (roleKey !== "rola_zarzad" && roleKey !== "rola_kr") {
+    throw new Error("Brak uprawnień: tylko zarząd i KR mogą uruchamiać synchronizację.");
+  }
 }
 
 // ====== PARSERS ======

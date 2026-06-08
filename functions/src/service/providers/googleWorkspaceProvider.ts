@@ -205,8 +205,8 @@ export class GoogleWorkspaceProvider {
       try {
         await this.addMemberToGroup(lista, grp, "MANAGER");
       } catch (e: any) {
-        // best-effort: do not break onboarding
-        console.warn("enforceListaPostingPolicy: failed to add privileged group as MANAGER", {
+        // best-effort: log error but continue so other entries are still processed
+        console.error("enforceListaPostingPolicy: failed to add privileged account as MANAGER", {
           lista,
           grp,
           message: e?.message || String(e),
