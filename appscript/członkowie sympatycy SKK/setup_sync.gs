@@ -6,10 +6,14 @@
 
 // Mapowanie ról na grupy Google Workspace.
 // Zmień tu gdy zmienia się struktura grup — potem uruchom syncSetupToFirestore() lub initRoleMappings().
+// zarzad@morzkulc.pl: publiczna grupa mailowa „do zarządu". Trzymamy w niej OSOBY
+// bezpośrednio (nie zagnieżdżamy kr@/zarzad_skk@), żeby poczta od nadawców z zewnątrz
+// dochodziła do wszystkich (zagnieżdżone, zamknięte grupy odbijają zewnętrznych nadawców).
+// Dzięki temu wpisowi rekonsyliator dodaje/usuwa osobę z zarzad@ przy zmianie roli w arkuszu.
 const ROLE_MAPPINGS = {
   rola_czlonek:  { label: "Członek",  groups: ["czlonkowie@morzkulc.pl"] },
-  rola_zarzad:   { label: "Zarząd",   groups: ["zarzad_skk@morzkulc.pl", "czlonkowie@morzkulc.pl"] },
-  rola_kr:       { label: "KR",       groups: ["kr@morzkulc.pl", "czlonkowie@morzkulc.pl"] },
+  rola_zarzad:   { label: "Zarząd",   groups: ["zarzad_skk@morzkulc.pl", "zarzad@morzkulc.pl", "czlonkowie@morzkulc.pl"] },
+  rola_kr:       { label: "KR",       groups: ["kr@morzkulc.pl", "zarzad@morzkulc.pl", "czlonkowie@morzkulc.pl"] },
   rola_kandydat: { label: "Kandydat", groups: ["kandydaci@morzkulc.pl"] },
   rola_sympatyk: { label: "Sympatyk", groups: ["sympatycy@morzkulc.pl"] },
   rola_kursant:  { label: "Kursant",  groups: [] },

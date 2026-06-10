@@ -15,6 +15,7 @@ import { kmRebuildMapDataTask } from "./tasks/kmRebuildMapData";
 import { kursSyncFromSheetTask } from "./tasks/kursSyncFromSheet";
 import { listaEnforcePostingPolicyTask } from "./tasks/listaEnforcePostingPolicy";
 import { usersSyncFunctionRolesFromSetupTask } from "./tasks/usersSyncFunctionRolesFromSetup";
+import { groupsDiagnoseTask } from "./tasks/groupsDiagnose";
 
 const tasks: ServiceTask[] = [
   onUserRegisteredWelcomeTask,
@@ -35,6 +36,7 @@ const tasks: ServiceTask[] = [
   kursSyncFromSheetTask,
   listaEnforcePostingPolicyTask,
   usersSyncFunctionRolesFromSetupTask,
+  groupsDiagnoseTask,
 ];
 
 export function getTaskRegistry(): Map<string, ServiceTask> {

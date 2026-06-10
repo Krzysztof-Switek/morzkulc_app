@@ -90,6 +90,82 @@ export class GoogleWorkspaceProvider {
     return out;
   }
 
+  /**
+   * READ-ONLY: jak listMembersOfGroup, ale zwraca też `type` (USER|GROUP|CUSTOMER) i `status`.
+   * Potrzebne do diagnostyki zagnieżdżeń (czy grupa jest członkiem innej grupy).
+   */
+  async listMembersDetailed(
+    groupEmail: string
+  ): Promise<Array<{email: string; role: string; type: string; status?: string}>> {
+    const directory = await this.getDirectoryClient();
+
+    const g = normalizeEmail(groupEmail);
+    assertLooksLikeEmail("groupEmail", g);
+
+    const out: Array<{email: string; role: string; type: string; status?: string}> = [];
+    let pageToken: string | undefined = undefined;
+
+    try {
+      do {
+        const resp: any = await directory.members.list({
+          groupKey: g,
+          maxResults: 200,
+          pageToken,
+        });
+        for (const m of (resp.data.members || []) as admin_directory_v1.Schema$Member[]) {
+          out.push({
+            email: (m.email || "").toLowerCase(),
+            role: m.role || "MEMBER",
+            type: m.type || "USER",
+            status: m.status || undefined,
+          });
+        }
+        pageToken = resp.data.nextPageToken || undefined;
+      } while (pageToken);
+    } catch (e: any) {
+      const code = e?.code || e?.response?.status;
+      if (code === 404) return [];
+      const msg = e?.message || String(e);
+      throw new Error(`Directory.members.list(detailed) failed for group="${g}": ${msg}`);
+    }
+
+    return out;
+  }
+
+  /**
+   * READ-ONLY: czyta ustawienia grupy (m.in. whoCanPostMessage, moderacja, członkowie zewnętrzni).
+   * Służy do diagnostyki polityki postowania — nie modyfikuje niczego.
+   */
+  async getGroupSettings(groupEmail: string): Promise<Record<string, any>> {
+    const g = normalizeEmail(groupEmail);
+    assertLooksLikeEmail("groupEmail", g);
+
+    try {
+      const settings = await this.getGroupsSettingsClient();
+      const resp = await settings.groups.get({groupUniqueId: g});
+      const d: any = resp.data || {};
+      return {
+        email: d.email,
+        name: d.name,
+        whoCanPostMessage: d.whoCanPostMessage,
+        whoCanJoin: d.whoCanJoin,
+        whoCanViewGroup: d.whoCanViewGroup,
+        whoCanViewMembership: d.whoCanViewMembership,
+        allowExternalMembers: d.allowExternalMembers,
+        messageModerationLevel: d.messageModerationLevel,
+        spamModerationLevel: d.spamModerationLevel,
+        whoCanModerateContent: d.whoCanModerateContent,
+        membersCanPostAsTheGroup: d.membersCanPostAsTheGroup,
+        isArchived: d.isArchived,
+        archiveOnly: d.archiveOnly,
+      };
+    } catch (e: any) {
+      const code = e?.code || e?.response?.status;
+      const msg = e?.message || String(e);
+      throw new Error(`groupssettings.groups.get failed for group="${g}" (code=${code}): ${msg}`);
+    }
+  }
+
   async isMemberOfGroup(groupEmail: string, memberEmail: string): Promise<boolean> {
     const directory = await this.getDirectoryClient();
 

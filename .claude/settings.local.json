@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm *)"
+      "Bash(npm *)",
+      "Bash(node *)",
+      "PowerShell(node \"C:\\\\Users\\\\kswitek\\\\Documents\\\\morzkulc_app\\\\functions\\\\scripts\\\\readGroupsDiag.js\" | Out-String)",
+      "PowerShell(node --use-system-ca \"C:\\\\Users\\\\kswitek\\\\Documents\\\\morzkulc_app\\\\functions\\\\scripts\\\\enqueueGroupsDiagnose.js\" | Out-String)"
     ]
   }
 }
