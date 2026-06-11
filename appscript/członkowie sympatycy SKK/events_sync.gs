@@ -4,9 +4,13 @@
  * Environment: controlled by ACTIVE_ENV in env_config.gs
  */
 
+// Sync wykonuje backend (task events.syncFromSheet). Funkcja jest cienkim wrapperem;
+// poniższa logika została zachowana jako legacy (nieużywana — wykonanie kończy return).
 function syncEventsToFirestore() {
-  assertBoardAccess_();
+  runSync_("events.syncFromSheet");
+  return;
 
+  // ── legacy (nieużywane; sync przeniesiony do backendu) ──
   const started = new Date();
   const who = String(Session.getActiveUser().getEmail() || "").toLowerCase();
 

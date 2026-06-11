@@ -16,6 +16,9 @@ import { kursSyncFromSheetTask } from "./tasks/kursSyncFromSheet";
 import { listaEnforcePostingPolicyTask } from "./tasks/listaEnforcePostingPolicy";
 import { usersSyncFunctionRolesFromSetupTask } from "./tasks/usersSyncFunctionRolesFromSetup";
 import { groupsDiagnoseTask } from "./tasks/groupsDiagnose";
+import { setupSyncFromSheetTask } from "./tasks/setupSyncFromSheet";
+import { usersSyncFieldsFromSheetTask } from "./tasks/usersSyncFieldsFromSheet";
+import { gearSyncAllFromSheetTask } from "./tasks/gearSyncAllFromSheet";
 
 const tasks: ServiceTask[] = [
   onUserRegisteredWelcomeTask,
@@ -37,6 +40,9 @@ const tasks: ServiceTask[] = [
   listaEnforcePostingPolicyTask,
   usersSyncFunctionRolesFromSetupTask,
   groupsDiagnoseTask,
+  setupSyncFromSheetTask,
+  usersSyncFieldsFromSheetTask,
+  gearSyncAllFromSheetTask,
 ];
 
 export function getTaskRegistry(): Map<string, ServiceTask> {

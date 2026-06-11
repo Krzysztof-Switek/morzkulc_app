@@ -115,6 +115,9 @@ const CONFIG_DEV = {
 
   // Firestore list pagination
   FIRESTORE_LIST_PAGE_SIZE: 200,
+
+  // Endpoint backendu wyzwalający sync (przez Firebase Hosting rewrite → prywatna funkcja).
+  SYNC_ENDPOINT_URL: "https://sprzet-skk-morzkulc.web.app/api/apps-script-sync",
 };
 
 const CONFIG_PROD = {
@@ -148,6 +151,9 @@ const CONFIG_PROD = {
 
   // Firestore list pagination
   FIRESTORE_LIST_PAGE_SIZE: 200,
+
+  // Endpoint backendu wyzwalający sync (przez Firebase Hosting rewrite → prywatna funkcja).
+  SYNC_ENDPOINT_URL: "https://morzkulc-e9df7.web.app/api/apps-script-sync",
 };
 
 const CONFIG = CURRENT_ENV === "prod" ? CONFIG_PROD : CONFIG_DEV;

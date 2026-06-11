@@ -27,59 +27,11 @@ const STATUS_MAPPINGS = {
   status_pending:    { label: "Oczekujący", blocksAccess: false },
 };
 
+// Sync wykonuje backend (task setup.syncFromSheet): czyta APP_SETUP + SETUP, zapisuje
+// setup/app (modules + roleMappings + statusMappings) i vars, kolejkuje sync funkcyjnych ról.
+// ROLE_MAPPINGS/STATUS_MAPPINGS są teraz utrzymywane w backendzie (setupSyncFromSheet.ts).
 function syncSetupToFirestore() {
-  assertBoardAccess_();
-
-  const started = new Date();
-  const who = String(Session.getActiveUser().getEmail() || "").toLowerCase();
-
-  const appSetupModules = readAppSetupModules_();
-  const membersVars = readSetupVars_(CONFIG.MEMBERS_SHEET_ID, TAB_SETUP);
-  const gearVars = readSetupVars_(CONFIG.GEAR_SHEET_ID, TAB_SETUP);
-
-  const nowIso = new Date().toISOString();
-
-  const docApp = {
-    modules: appSetupModules,
-    roleMappings: ROLE_MAPPINGS,
-    statusMappings: STATUS_MAPPINGS,
-    updatedAt: nowIso,
-    updatedBy: who,
-  };
-
-  const docMembersVars = {
-    vars: membersVars,
-    updatedAt: nowIso,
-    updatedBy: who,
-  };
-
-  const docGearVars = {
-    vars: gearVars,
-    updatedAt: nowIso,
-    updatedBy: who,
-  };
-
-  firestoreCommitDocuments_([
-    { docPath: DOC_SETUP_APP, data: docApp },
-    { docPath: DOC_VARS_MEMBERS, data: docMembersVars },
-    { docPath: DOC_VARS_GEAR, data: docGearVars },
-  ]);
-
-  // Po każdym sync setup wyzwól sync funkcyjnych ról (sprzętowiec, szkoleniowiec)
-  // do grup Google. Task jest idempotentny — jeśli nic się nie zmieniło, jest no-op.
-  enqueueServiceJob_("users.syncFunctionRolesFromSetup", {});
-
-  const durMs = new Date().getTime() - started.getTime();
-
-  SpreadsheetApp.getUi().alert(
-    "SETUP SYNC OK ✅\n" +
-      "env: " + ACTIVE_ENV + "\n" +
-      "user: " + who + "\n" +
-      "modules(APP_SETUP): " + Object.keys(appSetupModules).length + "\n" +
-      "vars_members: " + Object.keys(membersVars).length + "\n" +
-      "vars_gear: " + Object.keys(gearVars).length + "\n" +
-      "time: " + durMs + " ms"
-  );
+  runSync_("setup.syncFromSheet");
 }
 
 function readAppSetupModules_() {

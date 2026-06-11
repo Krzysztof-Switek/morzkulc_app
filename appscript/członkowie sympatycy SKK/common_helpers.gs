@@ -1,31 +1,61 @@
-/* global AdminDirectory */
 /**
  * File: common_helpers.gs
- * Purpose: shared helpers for access, parsing and Firestore REST
+ * Purpose: shared helpers for access, parsing and backend sync bridge
  * Environment: controlled by ACTIVE_ENV in env_config.gs
  */
 
 // ====== ACCESS CONTROL ======
+// Autoryzacja przeniesiona do backendu: endpoint appsScriptSync weryfikuje zalogowany
+// e-mail (Google userinfo) i sprawdza rolę zarząd/KR w users_active. Klient NIE używa
+// już Admin Directory — to usuwa restricted scope (admin.directory.*) i błąd
+// „Coś poszło nie tak" dla kont @gmail spoza domeny morzkulc.pl.
 function assertBoardAccess_() {
-  const email = String(Session.getActiveUser().getEmail() || "").toLowerCase();
-
-  if (!email) {
-    throw new Error(
-      "Brak email użytkownika. Uruchom Apps Script w przeglądarce, zalogowanym kontem Workspace."
-    );
-  }
-
-  if (email === ADMIN_EMAIL) return;
-
-  const isMember = isUserInGroup_(email, BOARD_GROUP_EMAIL);
-  if (!isMember) {
-    throw new Error("Brak uprawnień: tylko grupa " + BOARD_GROUP_EMAIL);
-  }
+  // no-op: autoryzację wykonuje backend (appsScriptSync) po roli w users_active.
 }
 
-function isUserInGroup_(userEmail, groupEmail) {
-  const r = AdminDirectory.Members.hasMember(groupEmail, userEmail);
-  return Boolean(r && r.isMember);
+// ====== BACKEND SYNC BRIDGE ======
+// Wywołuje endpoint backendu tokenem uruchamiającego (UrlFetchApp + ScriptApp.getOAuthToken()).
+// Backend autoryzuje i kolejkuje job kontem serwisowym. Zwraca { ok, jobId, ... } lub rzuca błąd.
+function callBackendSync_(taskId, payload) {
+  const url = CONFIG.SYNC_ENDPOINT_URL;
+  if (!url) {
+    throw new Error("Brak CONFIG.SYNC_ENDPOINT_URL w env_config.gs — uzupełnij URL endpointu.");
+  }
+
+  const resp = UrlFetchApp.fetch(url, {
+    method: "post",
+    contentType: "application/json",
+    headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() },
+    muteHttpExceptions: true,
+    payload: JSON.stringify({ taskId: taskId, payload: payload || {} }),
+  });
+
+  const code = resp.getResponseCode();
+  const text = resp.getContentText();
+
+  var parsed = null;
+  try { parsed = JSON.parse(text); } catch (e) { parsed = null; }
+
+  if (code < 200 || code >= 300) {
+    if (code === 401 || code === 403) {
+      throw new Error("Brak uprawnień — synchronizację mogą uruchamiać tylko osoby z zarządu lub KR.");
+    }
+    var reason = parsed && parsed.error ? parsed.error : ("kod " + code);
+    throw new Error(reason);
+  }
+
+  return parsed || {};
+}
+
+// Uruchamia sync przez backend i pokazuje przyjazny komunikat (sukces z podsumowaniem lub błąd).
+function runSync_(taskId) {
+  var ui = SpreadsheetApp.getUi();
+  try {
+    var r = callBackendSync_(taskId, {});
+    ui.alert("✅ Gotowe!\n\n" + (r && r.summary ? r.summary : "Synchronizacja zakończona."));
+  } catch (e) {
+    ui.alert("❌ Nie udało się zsynchronizować.\n\n" + (e && e.message ? e.message : String(e)));
+  }
 }
 
 // ====== PARSERS ======

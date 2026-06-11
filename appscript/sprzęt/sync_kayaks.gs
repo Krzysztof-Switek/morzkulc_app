@@ -1,11 +1,13 @@
 /** sync_kayaks.gs */
 
+// Sync wykonuje backend (task gear.syncAllFromSheet). Poniżej (syncAllGearCore_ itd.) zostaje
+// jako legacy — nieużywane, bo zapisy Firestore idą teraz przez kontu serwisowe backendu.
 function syncAllGearDryRun() {
-  syncAllGearCore_({ dryRun: true, limit: CONFIG.DEFAULT_LIMIT });
+  runSync_("gear.syncAllFromSheet", { dry: true });
 }
 
 function syncAllGearToFirestore() {
-  syncAllGearCore_({ dryRun: false, limit: CONFIG.DEFAULT_LIMIT });
+  runSync_("gear.syncAllFromSheet");
 }
 
 function syncAllGearCore_(opts) {

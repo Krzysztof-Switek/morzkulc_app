@@ -29,6 +29,10 @@ const STATUS_MAPPINGS = {
  *   - setup/app, setup/vars_members, setup/vars_gear
  */
 function syncSetupToFirestore() {
+  runSync_("setup.syncFromSheet");
+  return;
+
+  // ── legacy (nieużywane; sync przeniesiony do backendu, task setup.syncFromSheet) ──
   const started = new Date();
   const who = String(Session.getActiveUser().getEmail() || "").toLowerCase();
 

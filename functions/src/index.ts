@@ -646,6 +646,151 @@ async function enqueueGodzinkiSheetWrite(recordId: string, uid: string): Promise
   });
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Apps Script sync bridge
+//
+// Endpoint wołany z Apps Script (UrlFetchApp) tokenem uruchamiającego użytkownika.
+// Pozwala zarządowi/KR (konta @gmail) wyzwalać sync z arkusza BEZ AdminDirectory
+// i BEZ bezpośrednich zapisów Firestore (te wymagają IAM, którego @gmail nie mają).
+// invoker:"public" — funkcja sama autoryzuje (token Google + rola w users_active).
+// ─────────────────────────────────────────────────────────────────────────────
+
+const APPS_SCRIPT_SYNC_ALLOWED_TASKS = new Set<string>([
+  "setup.syncFromSheet",
+  "users.syncFieldsFromSheet",
+  "users.syncRolesFromSheet",
+  "events.syncFromSheet",
+  "godzinki.syncFromSheet",
+  "gear.syncAllFromSheet",
+]);
+
+// Buduje krótkie, przyjazne podsumowanie PL na podstawie wyniku taska (bez nazw funkcji/ID).
+function buildAppsScriptSyncSummary(taskId: string, details: any): string {
+  const d = details || {};
+  const n = (v: any) => (v === null || v === undefined ? "0" : String(v));
+  switch (taskId) {
+  case "setup.syncFromSheet":
+    return `Ustawienia zsynchronizowane.\nModuły: ${n(d.modules)} · zmienne (członkowie): ${n(d.varsMembers)} · zmienne (sprzęt): ${n(d.varsGear)}.`;
+  case "users.syncFieldsFromSheet":
+    return `Dane członków zsynchronizowane.\nSprawdzono: ${n(d.found)} · zaktualizowano: ${n(d.patched)} · bez zmian: ${n(d.unchanged)}.` +
+      (Number(d.roleStatusChanged) > 0 ? `\nZmiany ról/statusów: ${n(d.roleStatusChanged)} — przetwarzane w tle.` : "") +
+      (Number(d.notFound) > 0 ? `\nNie znaleziono w bazie: ${n(d.notFound)}.` : "");
+  case "users.syncRolesFromSheet":
+    return `Role i statusy zsynchronizowane.\nZaktualizowano: ${n(d.updated)} · bez zmian: ${n(d.unchanged)}.`;
+  case "events.syncFromSheet":
+    return `Imprezy zsynchronizowane.\nDodane/zmienione: ${n(d.upserted)} · pominięte: ${n(d.skipped)}.`;
+  case "godzinki.syncFromSheet":
+    return "Godzinki zsynchronizowane.";
+  case "gear.syncAllFromSheet":
+    if (d.validationError) {
+      return "Synchronizacja wstrzymana — sprawdź dane.";
+    }
+    return `Sprzęt ${d.dryRun ? "(podgląd — nic nie zapisano)" : "zsynchronizowany"}.\n` +
+      `Dodane/zmienione: ${n(d.upserted)} · zezłomowane (brak w arkuszu): ${n(d.scrapped)}.`;
+  default:
+    return "Synchronizacja zakończona.";
+  }
+}
+
+async function verifyGoogleAccessToken(token: string): Promise<{email: string; verified: boolean} | null> {
+  try {
+    const resp = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+      headers: {Authorization: `Bearer ${token}`},
+    });
+    if (!resp.ok) return null;
+    const data = (await resp.json()) as any;
+    const email = String(data?.email || "").trim().toLowerCase();
+    const verified = data?.email_verified === true || data?.email_verified === "true";
+    if (!email) return null;
+    return {email, verified};
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * POST /api/apps-script-sync  (przez Firebase Hosting rewrite → invoker: "private")
+ * Body: { taskId: string, payload?: object }
+ * Header: Authorization: Bearer <ScriptApp.getOAuthToken()>
+ *
+ * Wołane z Apps Script pod URL Hostingu (Hosting ma uprawnienie do wywołania prywatnej
+ * funkcji). Org policy blokuje allUsers, więc NIE używamy public invoker.
+ */
+export const appsScriptSync = onRequest({invoker: "private"}, async (req, res) => {
+  try {
+    if (req.method === "OPTIONS") {
+      res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      res.status(204).send("");
+      return;
+    }
+    if (req.method !== "POST") {
+      res.status(405).json({ok: false, error: "Method not allowed"});
+      return;
+    }
+
+    const authHeader = String(req.headers.authorization || "");
+    const m = authHeader.match(/^Bearer\s+(.+)$/i);
+    if (!m) {
+      res.status(401).json({ok: false, error: "Missing bearer token"});
+      return;
+    }
+
+    const who = await verifyGoogleAccessToken(m[1].trim());
+    if (!who || !who.email) {
+      res.status(401).json({ok: false, error: "Invalid token"});
+      return;
+    }
+    if (!who.verified) {
+      res.status(403).json({ok: false, error: "Email not verified"});
+      return;
+    }
+
+    // Autoryzacja: admin@ albo rola zarząd/KR w users_active
+    let authorized = requireAdminEmail(who.email);
+    if (!authorized) {
+      const snap = await db.collection("users_active").where("email", "==", who.email).limit(1).get();
+      if (!snap.empty) {
+        const roleKey = String((snap.docs[0].data() as any)?.role_key || "");
+        authorized = adminRoleKeys.includes(roleKey);
+      }
+    }
+    if (!authorized) {
+      res.status(403).json({ok: false, error: "Brak uprawnień (tylko zarząd/KR)"});
+      return;
+    }
+
+    const body = (req.body || {}) as any;
+    const taskId = String(body?.taskId || "").trim();
+    if (!APPS_SCRIPT_SYNC_ALLOWED_TASKS.has(taskId)) {
+      res.status(400).json({ok: false, error: `taskId niedozwolony: ${taskId}`});
+      return;
+    }
+
+    const inPayload = body?.payload && typeof body.payload === "object" ? body.payload : {};
+    const payload = {...inPayload, requestedBy: who.email};
+
+    // Synchronicznie — żeby zwrócić użytkownikowi realne podsumowanie wyniku.
+    const result = await runTaskById(taskId, payload, {dryRun: false});
+
+    if (!result.ok) {
+      logger.warn("appsScriptSync: task failed", {taskId, who: who.email, message: result.message});
+      res.status(422).json({ok: false, error: result.message || "Synchronizacja nie powiodła się"});
+      return;
+    }
+
+    logger.info("appsScriptSync: done", {taskId, who: who.email});
+    // Walidacja zakończona ok:true, ale z komunikatem dla użytkownika (np. prywatne kajaki bez maila).
+    const summary = (result.details as any)?.validationError ?
+      (result.message || "Synchronizacja wstrzymana — sprawdź dane.") :
+      buildAppsScriptSyncSummary(taskId, result.details);
+    res.status(200).json({ok: true, summary});
+  } catch (err: any) {
+    logger.error("appsScriptSync failed", {message: err?.message, stack: err?.stack});
+    res.status(500).json({ok: false, error: "Server error", message: err?.message || String(err)});
+  }
+});
+
 /**
  * GET /api/godzinki (authenticated)
  */

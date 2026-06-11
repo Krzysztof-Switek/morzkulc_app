@@ -11,101 +11,10 @@
  * - All other Firestore fields remain untouched
  */
 
+// Sync wykonuje backend (task users.syncFieldsFromSheet): znajduje users_active po memberId,
+// patchuje pola profile.*/admin.*/email, a przy zmianie roli/statusu kolejkuje users.syncRolesFromSheet.
 function syncUsersToFirestore() {
-  assertBoardAccess_();
-
-  const started = new Date();
-  const who = String(Session.getActiveUser().getEmail() || "").toLowerCase();
-
-  const sheetUsers = readUsersForSync_();
-
-  let foundCount = 0;
-  let changedCount = 0;
-  let unchangedCount = 0;
-  let patchedCount = 0;
-  let roleStatusChangedCount = 0;
-
-  const missingUsers = [];
-  const changedSummaries = [];
-
-  for (let i = 0; i < sheetUsers.length; i++) {
-    const sheetUser = sheetUsers[i];
-
-    const firestoreRecord = findUserDocumentByMemberId_(sheetUser.memberId);
-    if (!firestoreRecord || !firestoreRecord.docId) {
-      missingUsers.push(String(sheetUser.memberId));
-      continue;
-    }
-
-    foundCount++;
-
-    // Sprawdź zmiany roli/statusu osobno — będą obsłużone przez Cloud Function
-    const currentRoleKey = String(firestoreRecord.data.role_key || "");
-    const currentStatusKey = String(firestoreRecord.data.status_key || "");
-    const roleChanged = sheetUser.role_key && sheetUser.role_key !== currentRoleKey;
-    const statusChanged = sheetUser.status_key && sheetUser.status_key !== currentStatusKey;
-    if (roleChanged || statusChanged) roleStatusChangedCount++;
-
-    // Patch tylko pól innych niż role_key/status_key — te obsługuje Cloud Function
-    const diff = buildUserDiff_(sheetUser, firestoreRecord.data);
-    const changedPaths = Object.keys(diff);
-
-    if (!changedPaths.length && !roleChanged && !statusChanged) {
-      unchangedCount++;
-      continue;
-    }
-
-    if (changedPaths.length) {
-      patchFirestoreUserFields_(firestoreRecord.docId, diff, who);
-      patchedCount++;
-    }
-
-    changedCount++;
-
-    const allChanges = [...changedPaths];
-    if (roleChanged) allChanges.push("role_key (" + currentRoleKey + " → " + sheetUser.role_key + ")");
-    if (statusChanged) allChanges.push("status_key (" + currentStatusKey + " → " + sheetUser.status_key + ")");
-
-    changedSummaries.push(
-      "memberId=" + sheetUser.memberId + " → " + allChanges.join(", ")
-    );
-  }
-
-  // Jeśli wykryto zmiany roli/statusu — wyzwól Cloud Function przez service_jobs
-  if (roleStatusChangedCount > 0) {
-    enqueueServiceJob_("users.syncRolesFromSheet", {});
-  }
-
-  const durMs = new Date().getTime() - started.getTime();
-
-  let msg =
-    "USERS SYNC OK ✅\n" +
-    "env: " + ACTIVE_ENV + "\n" +
-    "user: " + who + "\n" +
-    "rows read: " + sheetUsers.length + "\n" +
-    "users found in Firestore: " + foundCount + "\n" +
-    "changed rows: " + changedCount + "\n" +
-    "unchanged rows: " + unchangedCount + "\n" +
-    "rows patched: " + patchedCount + "\n" +
-    (roleStatusChangedCount > 0 ? "role/status changes → job enqueued (" + roleStatusChangedCount + " users)\n" : "") +
-    "time: " + durMs + " ms";
-
-  if (missingUsers.length) {
-    msg +=
-      "\n\nNie znaleziono dokumentu users_active dla memberId:\n" +
-      missingUsers.join(", ");
-  }
-
-  if (changedSummaries.length) {
-    msg +=
-      "\n\nZmienione pola:\n" +
-      changedSummaries.slice(0, 20).join("\n");
-    if (changedSummaries.length > 20) {
-      msg += "\n... +" + (changedSummaries.length - 20) + " kolejnych";
-    }
-  }
-
-  SpreadsheetApp.getUi().alert(msg);
+  runSync_("users.syncFieldsFromSheet");
 }
 
 function readUsersForSync_() {

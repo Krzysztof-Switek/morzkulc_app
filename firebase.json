@@ -88,6 +88,13 @@
     ],
     "rewrites": [
       {
+        "source": "/api/apps-script-sync",
+        "function": {
+          "functionId": "appsScriptSync",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "/api/setup",
         "function": {
           "functionId": "getSetup",

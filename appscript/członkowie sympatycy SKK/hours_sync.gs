@@ -4,9 +4,13 @@
  * Environment: controlled by ACTIVE_ENV in env_config.gs
  */
 
+// Sync wykonuje backend (task godzinki.syncFromSheet). Funkcja jest cienkim wrapperem;
+// poniższa logika została zachowana jako legacy (nieużywana — wykonanie kończy return).
 function syncHoursToFirestore() {
-  assertBoardAccess_();
+  runSync_("godzinki.syncFromSheet");
+  return;
 
+  // ── legacy (nieużywane; sync przeniesiony do backendu) ──
   const started = new Date();
   const who = String(Session.getActiveUser().getEmail() || "").toLowerCase();
 
