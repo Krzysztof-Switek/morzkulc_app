@@ -25,6 +25,13 @@ functions/.runtimeconfig.json
 .env.morzkulc-e9df7
 .env.sprzet-skk-morzkulc
 
+# Apps Script env config — sekretne klucze (API_KEY itp.), NIGDY nie commitować
+**/env_config.gs
+
+# Python
+__pycache__/
+*.pyc
+
 # ===============================
 # Node
 # ===============================
