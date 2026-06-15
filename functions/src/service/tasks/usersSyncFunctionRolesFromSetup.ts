@@ -57,7 +57,7 @@ function buildAdminAlertBody(reasons: string[]): string {
 }
 
 function buildAdminOnboardingBody(
-  roleGenitive: string,
+  roleNominative: string,
   mailbox: string,
   operatorEmail: string,
   operatorHandleStr: string,
@@ -66,18 +66,20 @@ function buildAdminOnboardingBody(
   return [
     "Cześć,",
     "",
-    `W arkuszu setup dopisany został nowy ${roleGenitive}:`,
+    `W arkuszu setup dopisany został nowy ${roleNominative}:`,
     `   ${operatorEmail}`,
     "",
     "Twoja akcja (2-3 minuty):",
     "",
-    `1. Zaloguj się na konto ${mailbox} (Gmail).`,
-    "   • hasło konta + 2FA z Authenticatora",
-    "2. Awatar → Zarządzaj kontem Google → Bezpieczeństwo",
-    "3. \"Weryfikacja dwuetapowa\" → \"Hasła do aplikacji\"",
-    `4. "Utwórz" → nazwa: ${operatorHandleStr}-smtp → "Utwórz"`,
-    "5. Skopiuj 16-znakowe hasło (bez spacji)",
-    "6. Wyślij operatorowi mail z szablonu poniżej — podmień <HASLO_TUTAJ> na hasło z punktu 5.",
+    `1. Zaloguj się na ${mailbox}.`,
+    "2. Kliknij awatar → Zarządzaj kontem Google.",
+    "3. Wejdź w Zabezpieczenia i logowanie.",
+    "4. Kliknij Weryfikacja dwuetapowa.",
+    "5. Na dole kliknij Hasła do aplikacji.",
+    `6. W polu Nazwa aplikacji wpisz: ${operatorHandleStr}-smtp`,
+    "7. Kliknij Utwórz.",
+    "8. Skopiuj wygenerowane 16-znakowe hasło.",
+    "9. Wyślij operatorowi mail z szablonu poniżej — podmień <HASLO_TUTAJ> na hasło z punktu 8.",
     "",
     "—— SZABLON DO WYSŁANIA (kopiuj od tu) ——",
     "",
@@ -136,7 +138,7 @@ function buildOperatorWelcomeTemplate(
     "Odpowiedzi na wiadomości wysłane z tego adresu trafiają automatycznie",
     "na Twoją prywatną skrzynkę.",
     "",
-    "W razie problemów: napisz na admin@morzkulc.pl.",
+    "W razie problemów: napisz na zarzad@morzkulc.pl.",
     "",
     "SKK Morzkulc",
   ].join("\n");
@@ -151,7 +153,7 @@ function buildOperatorWaitBody(roleGenitive: string, mailbox: string): string {
     `do skrzynki funkcyjnej ${mailbox} i wyśle Ci osobnego maila z`,
     "instrukcją konfiguracji w Gmailu.",
     "",
-    "W międzyczasie nic nie musisz robić — czekaj na maila od admin@morzkulc.pl.",
+    "W międzyczasie nic nie musisz robić — czekaj na maila od zarzad@morzkulc.pl.",
     "",
     "SKK Morzkulc",
   ].join("\n");
@@ -327,9 +329,19 @@ export const usersSyncFunctionRolesFromSetupTask: ServiceTask<Payload> = {
           break;
 
         case "onboard": {
+          let forwardingActivated = dryRun;
           if (!dryRun) {
-            await workspace.addForwardingAddress(mailbox, target);
-            await workspace.setAutoForwardRule(mailbox, target, "archive");
+            const fwdStatus = await workspace.addForwardingAddress(mailbox, target);
+            if (fwdStatus === "added" || fwdStatus === "already") {
+              await workspace.setAutoForwardRule(mailbox, target, "archive");
+              forwardingActivated = true;
+            } else {
+              // "pending" — Google wysłał email weryfikacyjny do operatora; auto-forward zostanie
+              // aktywowany przy następnym uruchomieniu taska (po kliknięciu linku).
+              logger.info("syncFunctionRoles: forwarding address pending verification — retry after operator clicks link", {
+                role, mailbox, target,
+              });
+            }
           }
 
           const handleStr = operatorHandle(target);
@@ -344,8 +356,8 @@ export const usersSyncFunctionRolesFromSetupTask: ServiceTask<Payload> = {
             try {
               await workspace.sendGenericEmail(
                 config.adminActionEmail,
-                `[Morzkulc][AKCJA] Nowy ${label.genitive} — utwórz app password`,
-                buildAdminOnboardingBody(label.genitive, mailbox, target, handleStr, opTemplate)
+                `[Morzkulc][AKCJA] Nowy ${label.nominative} — utwórz app password`,
+                buildAdminOnboardingBody(label.nominative, mailbox, target, handleStr, opTemplate)
               );
             } catch (e: any) {
               logger.error("syncFunctionRoles: admin onboard email failed (non-fatal)", {
@@ -365,7 +377,7 @@ export const usersSyncFunctionRolesFromSetupTask: ServiceTask<Payload> = {
             }
           }
 
-          details[role] = {case: "onboard", added: target};
+          details[role] = {case: "onboard", added: target, forwardingActivated};
           break;
         }
 
@@ -411,9 +423,17 @@ export const usersSyncFunctionRolesFromSetupTask: ServiceTask<Payload> = {
           const oldHandle = operatorHandle(prev);
           const newHandle = operatorHandle(target);
 
+          let forwardingActivated = dryRun;
           if (!dryRun) {
-            await workspace.addForwardingAddress(mailbox, target);
-            await workspace.setAutoForwardRule(mailbox, target, "archive");
+            const fwdStatus = await workspace.addForwardingAddress(mailbox, target);
+            if (fwdStatus === "added" || fwdStatus === "already") {
+              await workspace.setAutoForwardRule(mailbox, target, "archive");
+              forwardingActivated = true;
+            } else {
+              logger.info("syncFunctionRoles: switch — forwarding address pending verification", {
+                role, mailbox, target,
+              });
+            }
             await workspace.removeForwardingAddress(mailbox, prev);
           }
 
@@ -454,8 +474,8 @@ export const usersSyncFunctionRolesFromSetupTask: ServiceTask<Payload> = {
             try {
               await workspace.sendGenericEmail(
                 config.adminActionEmail,
-                `[Morzkulc][AKCJA] Nowy ${label.genitive} — utwórz app password`,
-                buildAdminOnboardingBody(label.genitive, mailbox, target, newHandle, opTemplate)
+                `[Morzkulc][AKCJA] Nowy ${label.nominative} — utwórz app password`,
+                buildAdminOnboardingBody(label.nominative, mailbox, target, newHandle, opTemplate)
               );
             } catch (e: any) {
               logger.error("syncFunctionRoles: admin onboard email failed (non-fatal)", {
@@ -475,7 +495,7 @@ export const usersSyncFunctionRolesFromSetupTask: ServiceTask<Payload> = {
             }
           }
 
-          details[role] = {case: "switch", from: prev, to: target};
+          details[role] = {case: "switch", from: prev, to: target, forwardingActivated};
           break;
         }
         }

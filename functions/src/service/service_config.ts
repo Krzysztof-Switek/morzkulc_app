@@ -76,10 +76,10 @@ export interface ServiceConfig {
   // Forwarding 1:1 dla wszystkich 4 funkcji (na prywatny mail osoby pełniącej funkcję).
   // Prezes używa adresu `prezes@morzkulc.pl` (NIE `zarzad@` — to grupa Drive, nie wolno zamieniać na konto user).
   functionRoles: {
-    sprzetowiec: { mailbox: string; label: { genitive: string; display: string } };
-    szkoleniowiec: { mailbox: string; label: { genitive: string; display: string } };
-    skarbnik: { mailbox: string; label: { genitive: string; display: string } };
-    prezes: { mailbox: string; label: { genitive: string; display: string } };
+    sprzetowiec: { mailbox: string; label: { nominative: string; genitive: string; display: string } };
+    szkoleniowiec: { mailbox: string; label: { nominative: string; genitive: string; display: string } };
+    skarbnik: { mailbox: string; label: { nominative: string; genitive: string; display: string } };
+    prezes: { mailbox: string; label: { nominative: string; genitive: string; display: string } };
   };
 
   // Adres na który task wysyła powiadomienia AKCJA dla admina (utwórz/usuń app password).
@@ -100,7 +100,7 @@ export function getServiceConfig(): ServiceConfig {
 
   const privilegedPosterGroupsRaw =
     process.env.SVC_PRIV_POSTER_GROUPS ||
-    "zarzad_skk@morzkulc.pl,kr@morzkulc.pl,czlonkowie@morzkulc.pl,sprzetowiec@morzkulc.pl,szkoleniowiec@morzkulc.pl,skarbnik@morzkulc.pl,prezes@morzkulc.pl";
+    "sprzetowiec@morzkulc.pl,szkoleniowiec@morzkulc.pl,skarbnik@morzkulc.pl,prezes@morzkulc.pl";
 
   const welcomeFromEmail = process.env.SVC_WELCOME_FROM_EMAIL || "admin@morzkulc.pl";
   const welcomeReplyToEmail = process.env.SVC_WELCOME_REPLY_TO_EMAIL || "zarzad@morzkulc.pl";
@@ -290,19 +290,19 @@ export function getServiceConfig(): ServiceConfig {
     functionRoles: {
       sprzetowiec: {
         mailbox: sprzetowiecMailbox,
-        label: {genitive: "sprzętowca", display: "Sprzętowiec SKK"},
+        label: {nominative: "sprzętowiec", genitive: "sprzętowca", display: "Sprzętowiec SKK"},
       },
       szkoleniowiec: {
         mailbox: szkoleniowiecMailbox,
-        label: {genitive: "szkoleniowca", display: "Szkoleniowiec SKK"},
+        label: {nominative: "szkoleniowiec", genitive: "szkoleniowca", display: "Szkoleniowiec SKK"},
       },
       skarbnik: {
         mailbox: skarbnikMailbox,
-        label: {genitive: "skarbnika", display: "Skarbnik SKK"},
+        label: {nominative: "skarbnik", genitive: "skarbnika", display: "Skarbnik SKK"},
       },
       prezes: {
         mailbox: prezesMailbox,
-        label: {genitive: "prezesa", display: "Zarząd SKK"},
+        label: {nominative: "prezes", genitive: "prezesa", display: "Zarząd SKK"},
       },
     },
 
