@@ -61,6 +61,24 @@ type FailedStorageCharge = {
   createdAt: string | null;
 };
 
+type GearSyncReport = {
+  hasWarnings: boolean;
+  ranAt: string | null;
+  totals: Record<string, number>;
+  perCategory: Array<{
+    key: string;
+    label: string;
+    sheetRows: number;
+    upserted: number;
+    duplicateId: number;
+    duplicates: Array<{id: string; number: string; model: string; rowNumber: string}>;
+    skippedNoId: number;
+    skippedNotReal: number;
+    scrapped: number;
+  }>;
+  error: string | null;
+};
+
 export async function handleGetAdminPending(req: Request, res: Response, deps: GetAdminPendingDeps) {
   const {sendPreflight, requireAllowedHost, setCorsHeaders, corsHandler, requireIdToken, db, adminRoleKeys} = deps;
 
@@ -331,6 +349,46 @@ export async function handleGetAdminPending(req: Request, res: Response, deps: G
         message: i.approvalRejectedMessage,
       }));
 
+      // Raport synchronizacji sprzętu (service_reports/gearSync) — zapisywany przez
+      // gear.syncAllFromSheet. Duplikat ID nie jest wykrywalny po fakcie w Firestore
+      // (kolaps do jednego dokumentu), więc panel czyta utrwalony raport z momentu syncu.
+      const emptyGearSync: GearSyncReport = {
+        hasWarnings: false, ranAt: null, totals: {}, perCategory: [], error: null,
+      };
+      let gearSync: GearSyncReport = emptyGearSync;
+      try {
+        const reportSnap = await db.collection("service_reports").doc("gearSync").get();
+        if (reportSnap.exists) {
+          const d = reportSnap.data() as any;
+          gearSync = {
+            hasWarnings: d?.hasWarnings === true,
+            ranAt: tsToIso(d?.ranAt),
+            totals: (d?.totals as Record<string, number>) || {},
+            perCategory: Array.isArray(d?.perCategory) ?
+              d.perCategory
+                .filter((c: any) => Number(c?.duplicateId) > 0 || Number(c?.skippedNoId) > 0 || Number(c?.skippedNotReal) > 0)
+                .map((c: any) => ({
+                  key: norm(c?.key),
+                  label: norm(c?.label),
+                  sheetRows: Number(c?.sheetRows ?? 0),
+                  upserted: Number(c?.upserted ?? 0),
+                  duplicateId: Number(c?.duplicateId ?? 0),
+                  duplicates: Array.isArray(c?.duplicates) ? c.duplicates.map((x: any) => ({
+                    id: norm(x?.id), number: norm(x?.number), model: norm(x?.model), rowNumber: norm(x?.rowNumber),
+                  })) : [],
+                  skippedNoId: Number(c?.skippedNoId ?? 0),
+                  skippedNotReal: Number(c?.skippedNotReal ?? 0),
+                  scrapped: Number(c?.scrapped ?? 0),
+                })) :
+              [],
+            error: null,
+          };
+        }
+      } catch (e: any) {
+        logger.error("getAdminPending: gearSync report read failed", {message: e?.message});
+        gearSync = {...emptyGearSync, error: "Sekcja chwilowo niedostępna"};
+      }
+
       res.status(200).json({
         ok: true,
         meta: {godzinkiSheetUrl},
@@ -341,6 +399,7 @@ export async function handleGetAdminPending(req: Request, res: Response, deps: G
         privateKayakUnpaidContributions: {count: privateKayakUnpaidContributions.length, items: privateKayakUnpaidContributions},
         deadJobs: {count: deadJobs.length, items: deadJobs, error: deadJobsSnap.error},
         failedStorageCharges: {count: failedStorageCharges.length, items: failedStorageCharges, error: failedChargesSnap.error},
+        gearSync,
       });
     } catch (err: any) {
       logger.error("getAdminPending failed", {message: err?.message, stack: err?.stack});

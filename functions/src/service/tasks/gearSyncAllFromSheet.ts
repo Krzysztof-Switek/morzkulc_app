@@ -260,10 +260,59 @@ function buildDoc(key: string, id: string, r: Row, now: any, sheetTab: string): 
   }
 }
 
+type DuplicateIdEntry = {id: string; number: string; model: string; rowNumber: string};
+
 type CatSummary = {
   key: string; label: string; processed: number; upserted: number;
   skippedNoId: number; skippedNotReal: number; scrapped: number;
+  sheetRows: number; duplicateId: number; duplicates: DuplicateIdEntry[];
 };
+
+// Etykieta "numeru" sztuki różni się między kategoriami (Numer Kajaka / Numer / Nazwa).
+function rowNumberLabel(r: Row): string {
+  return norm(r["Numer Kajaka"]) || norm(r["Numer"]) || norm(r["Nazwa"]) || "";
+}
+
+export type GearRowClassification = {
+  toUpsert: {id: string; row: Row}[];
+  duplicates: DuplicateIdEntry[];
+  skippedNoId: number;
+  skippedNotReal: number;
+};
+
+/**
+ * Klasyfikuje wiersze zakładki sprzętu wg bramek syncu: pusty ID, niekompletny
+ * wiersz (isRealRow) oraz DUPLIKAT ID. Duplikat = drugie+ wystąpienie tego samego
+ * ID — pomijane (pierwsze zostaje), bo ID jest kluczem dokumentu (col.doc(id)) i
+ * drugi wiersz po cichu nadpisałby pierwszy. Czysta funkcja (testowalna).
+ */
+export function classifyGearRows(key: string, idHeader: string, rows: Row[]): GearRowClassification {
+  const seen = new Set<string>();
+  const toUpsert: {id: string; row: Row}[] = [];
+  const duplicates: DuplicateIdEntry[] = [];
+  let skippedNoId = 0;
+  let skippedNotReal = 0;
+
+  for (const r of rows) {
+    const id = norm(r[idHeader]);
+    if (!id) {
+      skippedNoId++;
+      continue;
+    }
+    if (!isRealRow(key, r)) {
+      skippedNotReal++;
+      continue;
+    }
+    if (seen.has(id)) {
+      duplicates.push({id, number: rowNumberLabel(r), model: norm(r["Model"]), rowNumber: norm(r["_rowNumber"])});
+      continue;
+    }
+    seen.add(id);
+    toUpsert.push({id, row: r});
+  }
+
+  return {toUpsert, duplicates, skippedNoId, skippedNotReal};
+}
 
 async function syncCategory(
   firestore: FirebaseFirestore.Firestore,
@@ -293,11 +342,13 @@ async function syncCategory(
   const existingSnap = await col.select().get();
   const existingIds = new Set<string>(existingSnap.docs.map((d) => d.id));
 
+  // Bramki wierszy (pusty ID / niekompletny / duplikat ID) — czysta, testowalna logika.
+  const {toUpsert, duplicates, skippedNoId, skippedNotReal} = classifyGearRows(cat.key, cat.idHeader, rows);
+  const duplicateId = duplicates.length;
+  const sheetIds = new Set<string>(toUpsert.map((x) => x.id));
+
   let processed = 0;
   let upserted = 0;
-  let skippedNoId = 0;
-  let skippedNotReal = 0;
-  const sheetIds = new Set<string>();
 
   // Zapisy wsadowe (limit Firestore: 500 op/batch → flush co 400).
   let batch = firestore.batch();
@@ -310,19 +361,8 @@ async function syncCategory(
     }
   };
 
-  for (const r of rows) {
-    const id = norm(r[cat.idHeader]);
-    if (!id) {
-      skippedNoId++;
-      continue;
-    }
-    if (!isRealRow(cat.key, r)) {
-      skippedNotReal++;
-      continue;
-    }
-    sheetIds.add(id);
-
-    const doc = buildDoc(cat.key, id, r, now, cat.sheetTab);
+  for (const {id, row} of toUpsert) {
+    const doc = buildDoc(cat.key, id, row, now, cat.sheetTab);
     processed++;
     upserted++;
 
@@ -363,8 +403,8 @@ async function syncCategory(
   }
   if (!dryRun) await sflush();
 
-  logger.info("gearSyncAll: category done", {key: cat.key, processed, upserted, scrapped, skippedNoId, skippedNotReal, dryRun});
-  return {key: cat.key, label: cat.label, processed, upserted, skippedNoId, skippedNotReal, scrapped};
+  logger.info("gearSyncAll: category done", {key: cat.key, processed, upserted, scrapped, skippedNoId, skippedNotReal, duplicateId, dryRun});
+  return {key: cat.key, label: cat.label, processed, upserted, skippedNoId, skippedNotReal, scrapped, sheetRows: rows.length, duplicateId, duplicates};
 }
 
 export const gearSyncAllFromSheetTask: ServiceTask<Payload> = {
@@ -418,15 +458,52 @@ export const gearSyncAllFromSheetTask: ServiceTask<Payload> = {
         skippedNoId: acc.skippedNoId + s.skippedNoId,
         skippedNotReal: acc.skippedNotReal + s.skippedNotReal,
         scrapped: acc.scrapped + s.scrapped,
+        sheetRows: acc.sheetRows + s.sheetRows,
+        duplicateId: acc.duplicateId + s.duplicateId,
       }),
-      {processed: 0, upserted: 0, skippedNoId: 0, skippedNotReal: 0, scrapped: 0}
+      {processed: 0, upserted: 0, skippedNoId: 0, skippedNotReal: 0, scrapped: 0, sheetRows: 0, duplicateId: 0}
     );
 
     ctx.logger.info("gearSyncAll: done", {...total, dryRun});
 
+    // Trwały raport dla panelu zarządu — duplikat ID nie jest wykrywalny po fakcie
+    // w Firestore (kolaps do jednego dokumentu), więc utrwalamy go tu, w momencie odczytu arkusza.
+    // Tylko realny przebieg (nie dry-run) odświeża raport.
+    if (!dryRun) {
+      const hasWarnings = summaries.some((s) => s.duplicateId > 0 || s.skippedNoId > 0 || s.skippedNotReal > 0);
+      try {
+        await firestore.collection("service_reports").doc("gearSync").set({
+          ranAt: now,
+          ranBy: norm(payload?.requestedBy) || "system",
+          hasWarnings,
+          totals: {
+            sheetRows: total.sheetRows,
+            upserted: total.upserted,
+            duplicateId: total.duplicateId,
+            skippedNoId: total.skippedNoId,
+            skippedNotReal: total.skippedNotReal,
+            scrapped: total.scrapped,
+          },
+          perCategory: summaries.map((s) => ({
+            key: s.key,
+            label: s.label,
+            sheetRows: s.sheetRows,
+            upserted: s.upserted,
+            duplicateId: s.duplicateId,
+            duplicates: s.duplicates,
+            skippedNoId: s.skippedNoId,
+            skippedNotReal: s.skippedNotReal,
+            scrapped: s.scrapped,
+          })),
+        });
+      } catch (e: any) {
+        ctx.logger.warn("gearSyncAll: nie udało się zapisać raportu service_reports/gearSync", {message: e?.message || String(e)});
+      }
+    }
+
     return {
       ok: true,
-      message: `Gear sync done: upserted=${total.upserted}, scrapped=${total.scrapped}, dryRun=${dryRun}`,
+      message: `Gear sync done: upserted=${total.upserted}, scrapped=${total.scrapped}, duplicateId=${total.duplicateId}, dryRun=${dryRun}`,
       details: {...total, dryRun, perCategory: summaries},
     };
   },

@@ -693,7 +693,8 @@ function buildAppsScriptSyncSummary(taskId: string, details: any): string {
       return "Synchronizacja wstrzymana — sprawdź dane.";
     }
     return `Sprzęt ${d.dryRun ? "(podgląd — nic nie zapisano)" : "zsynchronizowany"}.\n` +
-      `Dodane/zmienione: ${n(d.upserted)} · zezłomowane (brak w arkuszu): ${n(d.scrapped)}.`;
+      `Dodane/zmienione: ${n(d.upserted)} · zezłomowane (brak w arkuszu): ${n(d.scrapped)}.` +
+      (Number(d.duplicateId) > 0 ? `\nUWAGA: zduplikowane ID w arkuszu: ${n(d.duplicateId)} — sztuki pominięte (pierwsza została), popraw ID i zsynchronizuj ponownie.` : "");
   default:
     return "Synchronizacja zakończona.";
   }

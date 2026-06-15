@@ -89,9 +89,40 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
         const unpaidContributions = data?.privateKayakUnpaidContributions || { count: 0, items: [] };
         const deadJobs = data?.deadJobs || { count: 0, items: [] };
         const failedCharges = data?.failedStorageCharges || { count: 0, items: [] };
+        const gearSync = data?.gearSync || { hasWarnings: false, perCategory: [], totals: {}, ranAt: null, error: null };
         const godzinkiSheetUrl = data?.meta?.godzinkiSheetUrl || null;
 
         let html = "";
+
+        // Sekcja: ostrzeżenia synchronizacji sprzętu (duplikaty ID / pominięte wiersze).
+        // Widoczna tylko gdy raport sygnalizuje problem — inaczej nie zaśmieca panelu.
+        if (gearSync.hasWarnings) {
+          const t = gearSync.totals || {};
+          const ranStr = gearSync.ranAt ? formatDatePL(gearSync.ranAt.slice(0, 10)) : "—";
+          html += `<div style="border:1px solid var(--border);border-left:4px solid #c0392b;border-radius:8px;padding:12px;margin-bottom:20px;background:rgba(192,57,43,0.05);">`;
+          html += `<h3 style="margin:0 0 6px;">🛠️ Sprzęt — ostrzeżenia synchronizacji</h3>`;
+          html += `<p class="hint" style="margin:0 0 10px;">Ostatni sync sprzętu: ${escapeHtml(ranStr)} · w arkuszu: ${escapeHtml(String(t.sheetRows ?? "—"))} · dodane/zmienione: ${escapeHtml(String(t.upserted ?? "—"))} · zduplikowane ID: ${escapeHtml(String(t.duplicateId ?? 0))}.</p>`;
+          for (const cat of (gearSync.perCategory || [])) {
+            html += `<div style="margin-bottom:10px;"><strong>${escapeHtml(cat.label || cat.key)}</strong> (${escapeHtml(String(cat.sheetRows))} w arkuszu, ${escapeHtml(String(cat.upserted))} w aplikacji)`;
+            if (cat.duplicates?.length) {
+              html += `<div class="hint" style="margin:4px 0;">Zduplikowane ID — pominięte (pierwsza sztuka została; nadaj unikalne ID i zsynchronizuj ponownie):</div>`;
+              html += `<ul style="margin:0;padding-left:18px;">`;
+              for (const d of cat.duplicates) {
+                const numModel = [d.number, d.model].filter(Boolean).join(" ");
+                html += `<li style="font-size:13px;">ID <strong>${escapeHtml(d.id)}</strong>${numModel ? ` — ${escapeHtml(numModel)}` : ""}${d.rowNumber ? ` (wiersz ${escapeHtml(d.rowNumber)})` : ""}</li>`;
+              }
+              html += `</ul>`;
+            }
+            const skips = [];
+            if (cat.skippedNoId) skips.push(`bez ID: ${cat.skippedNoId}`);
+            if (cat.skippedNotReal) skips.push(`niekompletne (brak numeru/producenta/modelu): ${cat.skippedNotReal}`);
+            if (skips.length) html += `<div class="hint" style="margin:4px 0;">Pominięte wiersze — ${escapeHtml(skips.join(" · "))}.</div>`;
+            html += `</div>`;
+          }
+          html += `</div>`;
+        } else if (gearSync.error) {
+          html += `<p class="err" style="margin-bottom:16px;">Sprzęt — ostrzeżenia synchronizacji: ${escapeHtml(gearSync.error)}</p>`;
+        }
 
         // Sekcja godzinki
         html += `<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px;">`;
