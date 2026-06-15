@@ -204,7 +204,7 @@ export function createMyReservationsModule({ id, type, label, defaultRoute, orde
                     <div class="gearTitleWrap">
                       <div class="gearTitle">${escapeHtml(kayakTitles.join(", ") || "Rezerwacja")}</div>
                       <div class="gearSubtitle">
-                        ${escapeHtml(formatDayMonth(String(rsv?.blockStartIso || rsv?.startDate || "")))} – ${escapeHtml(formatDayMonth(String(rsv?.blockEndIso || rsv?.endDate || "")))} (${escapeHtml(pluralizeDays(countReservationDays(String(rsv?.startDate || ""), String(rsv?.endDate || ""))))})
+                        ${escapeHtml(formatShortDate(String(rsv?.blockStartIso || rsv?.startDate || "")))} – ${escapeHtml(formatShortDate(String(rsv?.blockEndIso || rsv?.endDate || "")))} (${escapeHtml(pluralizeDays(countReservationDays(String(rsv?.startDate || ""), String(rsv?.endDate || ""))))})
                         · <strong>${escapeHtml(String(rsv?.costHours ?? "—"))} godz.</strong>
                       </div>
                     </div>
@@ -560,11 +560,11 @@ function buildKayakTitle(k) {
   return number ? `${core} (nr ${number})` : core;
 }
 
-function formatDayMonth(iso) {
-  const months = ["stycznia","lutego","marca","kwietnia","maja","czerwca","lipca","sierpnia","września","października","listopada","grudnia"];
+// Zwarty zakres dat rezerwacji: DD.MM.RR (2-cyfrowy rok) — mieści się w jednym wierszu.
+function formatShortDate(iso) {
   const m = String(iso || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!m) return iso || "—";
-  return `${parseInt(m[3], 10)} ${months[parseInt(m[2], 10) - 1] || m[2]}`;
+  return `${m[3]}.${m[2]}.${m[1].slice(2)}`;
 }
 
 function countReservationDays(startDate, endDate) {

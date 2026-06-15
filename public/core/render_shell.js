@@ -332,7 +332,7 @@ async function renderHomeDashboard({ viewEl, ctx }) {
     addHoursBtn.addEventListener("click", () => {
       const godzinkiTarget = getModuleRouteByType(ctx, "godzinki");
       if (godzinkiTarget.moduleId !== "home") {
-        setHash(godzinkiTarget.moduleId, dash.canSubmitGodzinki ? "submit" : "balance");
+        setHash(godzinkiTarget.moduleId, "history");
       }
     });
   }
@@ -782,7 +782,7 @@ async function buildHomeReservationsSection(ctx) {
         const startDate = String(rsv?.startDate || "");
         const endDate = String(rsv?.endDate || "");
         const days = countReservationDays(startDate, endDate);
-        const dateLabel = `${formatDayMonth(blockStart || startDate)} – ${formatDayMonth(blockEnd || endDate)} (${pluralizeDays(days)})`;
+        const dateLabel = `${formatShortDate(blockStart || startDate)} – ${formatShortDate(blockEnd || endDate)} (${pluralizeDays(days)})`;
 
         return `
           <div class="startListItem">
@@ -1168,11 +1168,11 @@ function fieldErrorToPl(field, code) {
   return `${label}: błąd (${code})`;
 }
 
-function formatDayMonth(iso) {
-  const months = ["stycznia","lutego","marca","kwietnia","maja","czerwca","lipca","sierpnia","września","października","listopada","grudnia"];
+// Zwarty zakres dat rezerwacji: DD.MM.RR (2-cyfrowy rok) — mieści się w jednym wierszu.
+function formatShortDate(iso) {
   const m = String(iso || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!m) return iso || "—";
-  return `${parseInt(m[3], 10)} ${months[parseInt(m[2], 10) - 1] || m[2]}`;
+  return `${m[3]}.${m[2]}.${m[1].slice(2)}`;
 }
 
 function countReservationDays(startDate, endDate) {

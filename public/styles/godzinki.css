@@ -53,9 +53,29 @@
   color: var(--text-muted);
 }
 
+/* Nagłówek historii: tytuł + przycisk „Zgłoś godzinki" w jednym rzędzie */
+.godzinkiHistoryHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.godzinkiHistoryHead h3 { margin: 0; }
+
 /* Kolumna Za co */
 .godzinkiReason {
   display: block;
+}
+
+/* Znacznik pozycji oczekującej na zatwierdzenie (earn niezatwierdzony) */
+.godzinkiPending {
+  display: inline-block;
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--warning, #d8920f);
 }
 
 .godzinkiMeta {

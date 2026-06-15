@@ -7,11 +7,6 @@ const PURCHASE_URL = "/api/godzinki/purchase";
 const NAV_BACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`;
 const NAV_HOME_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
 
-const TABS = [
-  { id: "submit",  label: "Zgłoś godzinki" },
-  { id: "history", label: "Historia" },
-];
-
 const PAGE_SIZE = 30;
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -42,15 +37,6 @@ function todayIso() {
 function formatBalanceSign(balance) {
   if (balance > 0) return `+${balance}`;
   return String(balance);
-}
-
-function recordTypeLabel(type, approved) {
-  if (type === "earn") {
-    return approved ? "Przyznane" : "Oczekuje zatwierdzenia";
-  }
-  if (type === "spend") return "Wydane";
-  if (type === "purchase") return "Wykupione";
-  return type;
 }
 
 function recordTypeClass(type, approved) {
@@ -93,14 +79,17 @@ function renderRecordTable(records) {
           const isSpend = r.type === "spend";
           const amountClass = isSpend ? "godzinkiAmountNeg" : "godzinkiAmountPos";
           const amountSign = isSpend ? "-" : "+";
-          const meta = buildMeta(r);
+          // Kolor kwoty rozróżnia przyznane/wydane — bez szarej linii meta.
+          // Wyjątek: pozycje oczekujące (earn niezatwierdzone) dostają znacznik,
+          // bo wizualnie są jak przyznane (zielony +).
+          const isPending = r.type === "earn" && !r.approved;
           return `
             <tr class="${esc(recordTypeClass(r.type, r.approved))}">
               <td class="godzinkiDateCell">${esc(formatDate(r.createdAt))}</td>
               <td class="godzinkiAmountCell ${amountClass}">${amountSign}${esc(String(r.amount))} h</td>
               <td>
                 <span class="godzinkiReason">${esc(shortenReason(r.reason))}</span>
-                ${meta ? `<span class="godzinkiMeta">${esc(meta)}</span>` : ""}
+                ${isPending ? `<span class="godzinkiPending">oczekuje</span>` : ""}
               </td>
             </tr>
           `;
@@ -108,15 +97,6 @@ function renderRecordTable(records) {
       </tbody>
     </table>
   `;
-}
-
-function buildMeta(r) {
-  const parts = [recordTypeLabel(r.type, r.approved)];
-  if (r.grantedAt) parts.push(`data pracy: ${formatDate(r.grantedAt)}`);
-  if (r.type === "earn" && r.expiresAt) parts.push(`wygasa: ${r.expiresAt}`);
-  if (r.type === "spend" && r.reservationId) parts.push(`rez. #${r.reservationId.slice(0, 8)}`);
-  if (r.type === "earn" && r.approved) parts.push(`pozostało: ${r.remaining ?? 0} h`);
-  return parts.join(" · ");
 }
 
 function infoBarHtml(balance, nextExpiry) {
@@ -130,17 +110,6 @@ function infoBarHtml(balance, nextExpiry) {
 }
 
 // ─── widoki ───────────────────────────────────────────────────────────────────
-
-function renderTabsHtml(activeTab) {
-  return `<div class="godzinkiTabs">
-    ${TABS.map(t => `
-      <button type="button"
-        class="godzinkiTab${t.id === activeTab ? " active" : ""}"
-        data-godzinki-tab="${esc(t.id)}"
-      >${esc(t.label)}</button>
-    `).join("")}
-  </div>`;
-}
 
 function purchaseSectionHtml(balance) {
   const debt = Math.floor(Math.abs(balance));
@@ -219,36 +188,7 @@ function wirePurchaseForm(inner, ctx, balance) {
   });
 }
 
-async function renderHomeView(viewEl, ctx) {
-  const inner = viewEl.querySelector("#godzinkiInner");
-  if (!inner) return;
-  inner.innerHTML = spinnerHtml("Pobieranie salda…");
-
-  let data;
-  try {
-    data = await apiGetJson({ url: GODZINKI_URL + "?view=home", idToken: ctx.idToken });
-  } catch (e) {
-    inner.innerHTML = `<div class="card center"><p class="errorMsg">Błąd pobierania danych: ${esc(e?.message || String(e))}</p></div>`;
-    return;
-  }
-
-  const balance = Number(data?.balance ?? 0);
-  const nextExpiry = data?.nextExpiryMonthYear || null;
-  const recentEarnings = Array.isArray(data?.recentEarnings) ? data.recentEarnings : [];
-
-  inner.innerHTML = `
-    ${infoBarHtml(balance, nextExpiry)}
-    ${balance < 0 ? purchaseSectionHtml(balance) : ""}
-    <div class="godzinkiRecentSection">
-      <h3>Ostatnie wpisy</h3>
-      ${renderRecordTable(recentEarnings)}
-    </div>
-  `;
-
-  if (balance < 0) wirePurchaseForm(inner, ctx, balance);
-}
-
-async function renderHistoryView(viewEl, ctx) {
+async function renderHistoryView(viewEl, ctx, moduleId) {
   const inner = viewEl.querySelector("#godzinkiInner");
   if (!inner) return;
   inner.innerHTML = spinnerHtml("Pobieranie historii…");
@@ -291,12 +231,22 @@ async function renderHistoryView(viewEl, ctx) {
 
   inner.innerHTML = `
     ${infoBarHtml(balance, nextExpiry)}
+    ${balance < 0 ? purchaseSectionHtml(balance) : ""}
     <div class="godzinkiHistorySection">
-      <h3>Historia (${allRecords.length})</h3>
+      <div class="godzinkiHistoryHead">
+        <h3>Historia (${allRecords.length})</h3>
+        <button type="button" class="primary" data-godzinki-submit>Zgłoś godzinki</button>
+      </div>
       <div id="godzinkiHistoryTable">${renderRecordTable(pageRecords)}</div>
       ${totalPages > 1 ? `<div id="godzinkiPager" class="godzinkiPager"></div>` : ""}
     </div>
   `;
+
+  if (balance < 0) wirePurchaseForm(inner, ctx, balance);
+
+  inner.querySelector("[data-godzinki-submit]")?.addEventListener("click", () => {
+    import("/core/router.js").then(({ setHash }) => setHash(moduleId, "submit"));
+  });
 
   if (totalPages > 1) renderPage();
 }
@@ -404,13 +354,12 @@ function renderSubmitView(viewEl, ctx) {
 // ─── główny render ────────────────────────────────────────────────────────────
 
 async function renderGodzinkiView(viewEl, routeId, ctx, moduleId) {
-  const isTab = TABS.some(t => t.id === routeId);
-  const activeTab = isTab ? routeId : null;
-
   if (!ctx?.idToken) {
     viewEl.innerHTML = `<div class="card center"><p>Brak tokenu sesji. Odśwież stronę.</p></div>`;
     return;
   }
+
+  const isSubmit = routeId === "submit";
 
   viewEl.innerHTML = `
     <div class="card wide godzinkiModule">
@@ -421,7 +370,6 @@ async function renderGodzinkiView(viewEl, routeId, ctx, moduleId) {
           <button type="button" class="moduleNavBtn" data-mod-home title="Strona główna">${NAV_HOME_SVG}</button>
         </div>
       </div>
-      ${renderTabsHtml(activeTab)}
       <div id="godzinkiInner">
         ${spinnerHtml()}
       </div>
@@ -433,29 +381,19 @@ async function renderGodzinkiView(viewEl, routeId, ctx, moduleId) {
   });
   viewEl.querySelector("[data-mod-back]")?.addEventListener("click", () => {
     import("/core/router.js").then(({ setHash }) => {
-      if (activeTab !== null) {
-        setHash(moduleId, "home");
+      // Z formularza zgłoszenia wracamy do historii; z historii — na stronę główną.
+      if (isSubmit) {
+        setHash(moduleId, "history");
       } else {
         setHash("home", "home");
       }
     });
   });
 
-  viewEl.querySelectorAll("[data-godzinki-tab]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const tab = btn.dataset.godzinkiTab;
-      import("/core/router.js").then(({ setHash }) => {
-        setHash(moduleId, tab);
-      });
-    });
-  });
-
-  if (routeId === "submit") {
+  if (isSubmit) {
     renderSubmitView(viewEl, ctx);
-  } else if (routeId === "history") {
-    await renderHistoryView(viewEl, ctx);
   } else {
-    await renderHomeView(viewEl, ctx);
+    await renderHistoryView(viewEl, ctx, moduleId);
   }
 }
 
@@ -466,13 +404,13 @@ export function createGodzinkiModule({ id, type, label, defaultRoute, order, ena
     id,
     type,
     label,
-    defaultRoute: "home",
+    defaultRoute: "history",
     order,
     enabled,
     access,
 
     async render({ viewEl, routeId, ctx }) {
-      await renderGodzinkiView(viewEl, routeId || "home", ctx, id);
+      await renderGodzinkiView(viewEl, routeId || "history", ctx, id);
     },
   };
 }
