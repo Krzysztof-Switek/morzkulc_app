@@ -113,9 +113,6 @@ async function renderHomeDashboard({ viewEl, ctx }) {
   const dash = getDashboardConfig(ctx);
   const helloName = getHelloName(ctx);
   const hoursValue = getHoursValue(ctx);
-  const membershipPaidUntil = getMembershipPaidUntil(ctx);
-  const today = new Date().toISOString().slice(0, 10);
-  const isSkladkiOverdue = membershipPaidUntil ? membershipPaidUntil < today : false;
 
   // Basen tile: zawsze widoczny, disabled gdy moduł nieaktywny w setup
   const basenEnabledTile = (ctx.modules || []).find((m) =>
@@ -211,12 +208,6 @@ async function renderHomeDashboard({ viewEl, ctx }) {
             </button>
             ` : ""}
 
-            ${!dash.isKursant ? `
-            <button type="button" class="startTile2${isSkladkiOverdue ? " danger" : ""}" data-home-action="skladki">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-              <span class="startTile2Title">Składki</span>
-            </button>
-            ` : ""}
 
             ${dash.isKursant && hasKursModule ? `
             <button type="button" class="startTile2 primary" data-home-action="kurs">
@@ -361,8 +352,6 @@ async function renderHomeDashboard({ viewEl, ctx }) {
     });
   });
 
-  const skladkiBtn = viewEl.querySelector("[data-home-action='skladki']");
-  if (skladkiBtn) skladkiBtn.addEventListener("click", () => setHash("home", "profile"));
 
   // Ładuj statystyki asynchronicznie
   if (ctx?.idToken) {
@@ -1072,22 +1061,6 @@ function getHoursValue(ctx) {
     if (value !== undefined && value !== null && String(value).trim() !== "") {
       return `${String(value).trim()} h`;
     }
-  }
-
-  return "";
-}
-
-function getMembershipPaidUntil(ctx) {
-  const candidates = [
-    ctx?.session?.membership_paid_until,
-    ctx?.session?.membershipPaidUntil,
-    ctx?.session?.skladka_paid_until,
-    ctx?.session?.skladkaPaidUntil
-  ];
-
-  for (const value of candidates) {
-    const s = String(value || "").trim();
-    if (s) return s;
   }
 
   return "";
