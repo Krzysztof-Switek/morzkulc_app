@@ -26,10 +26,6 @@ const GEAR_TABS_PRIMARY = [
 ];
 const GEAR_TABS_SECONDARY = [
   { id: "throwbags", label: "Rzutki" },
-  { id: "wetsuits", label: "Pianki" },
-  { id: "jackets", label: "Kurtki" },
-  { id: "drybags", label: "Komory" },
-  { id: "other", label: "Inne" },
 ];
 const GEAR_TABS = [...GEAR_TABS_PRIMARY, ...GEAR_TABS_SECONDARY];
 
