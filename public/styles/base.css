@@ -244,6 +244,14 @@ button[disabled] {
   padding: 10px 14px;
 }
 
+/* Przycisk „Start" = ikona domku + etykieta (etykieta ukrywana na mobile) */
+.navHomeBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.navHomeBtn svg { display: block; flex-shrink: 0; }
+
 /* Mobile: bottom nav bar */
 @media (max-width: 720px) {
   #nav {
@@ -280,11 +288,20 @@ button[disabled] {
     white-space: nowrap;
   }
 
-  #view { padding-bottom: 80px; }
+  /* Mobile: „Start" jako sama ikona domku (oszczędność miejsca) */
+  .navHomeBtn .navLabel { display: none; }
+  .navHomeBtn { padding: 8px 12px; }
 }
 
 /* --- View --- */
 #view { padding: var(--space-4) 0; }
+
+/* Dolny pasek nav (fixed) zasłania treść — rezerwujemy miejsce na mobile.
+   WAŻNE: ta reguła MUSI być PO bazowym `#view { padding: ... }` powyżej,
+   inaczej shorthand `padding` nadpisuje `padding-bottom` (kolejność źródła). */
+@media (max-width: 720px) {
+  #view { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+}
 
 /* --- Card / form --- */
 .card {

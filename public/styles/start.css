@@ -204,3 +204,23 @@
 .startTile2 svg { flex-shrink: 0; display: block; }
 .startTile2Title { font-size: 11px; font-weight: 800; color: var(--text); line-height: 1.1; letter-spacing: 0.01em; }
 @media (min-width: 480px) { .startTile2Title { font-size: 12px; } }
+
+/* ── Nagłówek sekcji z kilkoma przyciskami ── */
+.dashCardHeadActions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+
+/* Przycisk „Zobacz wszystkie" na końcu listy sekcji (pełna szerokość) */
+.startSectionFooterBtn { width: 100%; margin-top: 10px; }
+
+/* ── Rozwijane wydarzenia na stronie głównej (najbliższe wydarzenia) ── */
+.startEventItem { border: 1px solid var(--border); border-radius: 14px; background: rgba(255, 255, 255, 0.03); overflow: hidden; }
+:root[data-theme="light"] .startEventItem { background: rgba(12, 18, 32, 0.02); }
+/* summary współdzieli .startListItem (grid 1fr auto), ale bez własnego obramowania/tła */
+.startEventItem .startEventSummary { border: 0; border-radius: 0; background: transparent; cursor: pointer; align-items: center; list-style: none; }
+.startEventItem .startEventSummary::-webkit-details-marker { display: none; }
+.startEventChevron { color: var(--text-muted); flex-shrink: 0; align-self: center; transition: transform 0.18s ease; }
+.startEventItem[open] .startEventChevron { transform: rotate(180deg); }
+.startEventDetail { padding: 0 12px 12px; display: grid; gap: 6px; }
+.startEventDetailRow { font-size: 13px; color: var(--text); line-height: 1.4; }
+.startEventDetailRow strong { color: var(--text-muted); font-weight: 700; }
+.startEventDetailRow a { color: var(--accent, #5b9dff); font-weight: 700; text-decoration: none; }
+.startEventDetailRow a:hover { text-decoration: underline; }

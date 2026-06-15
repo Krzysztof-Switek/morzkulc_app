@@ -82,7 +82,9 @@ export function buildModulesFromSetup(setup, allowedActions) {
     if (moduleType === "imprezy") {
       return createImprezaModule({
         ...base,
-        defaultRoute: base.defaultRoute === "home" ? "list" : base.defaultRoute
+        // Menu „Imprezy" zawsze ląduje na liście (formularz dodawania jest zakładką
+        // wewnątrz modułu) — niezależnie od defaultRoute w setup.
+        defaultRoute: "list"
       });
     }
 

@@ -21,7 +21,11 @@ export function renderNav({ navEl, ctx }) {
   navEl.innerHTML = "";
 
   const homeBtn = document.createElement("button");
-  homeBtn.textContent = "Start";
+  homeBtn.className = "navHomeBtn";
+  homeBtn.setAttribute("aria-label", "Start");
+  homeBtn.title = "Start";
+  // Ikona domku + etykieta; na mobile etykieta jest ukrywana w CSS (oszczędność miejsca).
+  homeBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="navLabel">Start</span>`;
   homeBtn.addEventListener("click", () => setHash("home", "home"));
   navEl.appendChild(homeBtn);
 
@@ -182,7 +186,7 @@ async function renderHomeDashboard({ viewEl, ctx }) {
             ` : ""}
 
             ${!dash.isKursant ? `
-            <button type="button" class="startTile2" data-home-action="add-event">
+            <button type="button" class="startTile2" data-home-action="events-list">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg>
               <span class="startTile2Title">Imprezy</span>
             </button>
@@ -255,19 +259,6 @@ async function renderHomeDashboard({ viewEl, ctx }) {
       </section>
       ` : ""}
 
-      ${dash.canReserveGear ? `
-      <section class="dashCard startSection">
-        <div class="dashCardHead">
-          <h3>Moje rezerwacje</h3>
-          <button type="button" class="ghost" data-home-action="all-reservations">Zobacz wszystkie</button>
-        </div>
-
-        <div class="startList" id="homeReservationsList">
-          ${spinnerHtml("Ładowanie rezerwacji...")}
-        </div>
-      </section>
-      ` : ""}
-
       ${!dash.isKursant ? `
       <section class="dashCard startSection">
         <div class="dashCardHead">
@@ -278,6 +269,7 @@ async function renderHomeDashboard({ viewEl, ctx }) {
         <div class="startList" id="homeEventsList">
           ${spinnerHtml("Ładowanie wydarzeń...")}
         </div>
+        <button type="button" class="ghost startSectionFooterBtn" data-home-action="all-events">Zobacz wszystkie wydarzenia</button>
       </section>
       ` : ""}
 
@@ -295,8 +287,12 @@ async function renderHomeDashboard({ viewEl, ctx }) {
     </div>
   `;
 
-  viewEl.querySelectorAll("[data-home-action='all-reservations']").forEach((btn) => {
-    btn.addEventListener("click", () => setHash("my_reservations", "list"));
+  // Kafelek „Imprezy" oraz „Zobacz wszystkie" w sekcji wydarzeń → lista imprez.
+  viewEl.querySelectorAll("[data-home-action='events-list'], [data-home-action='all-events']").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const eventsTarget = getModuleRouteByType(ctx, "imprezy");
+      if (eventsTarget.moduleId !== "home") setHash(eventsTarget.moduleId, "list");
+    });
   });
 
   const adminPendingBtn = viewEl.querySelector("[data-home-action='admin-pending']");
@@ -368,44 +364,6 @@ async function renderHomeDashboard({ viewEl, ctx }) {
   const skladkiBtn = viewEl.querySelector("[data-home-action='skladki']");
   if (skladkiBtn) skladkiBtn.addEventListener("click", () => setHash("home", "profile"));
 
-  // Ładuj rezerwacje asynchronicznie — tylko dla ról z gear.reserve
-  if (dash.canReserveGear) {
-    buildHomeReservationsSection(ctx).then((html) => {
-      const listEl = viewEl.querySelector("#homeReservationsList");
-      if (!listEl) return;
-      listEl.innerHTML = html;
-      listEl.addEventListener("click", async (ev) => {
-        const editBtn = ev.target.closest("[data-home-rsv-edit]");
-        if (editBtn) {
-          const rsvId = String(editBtn.getAttribute("data-home-rsv-edit") || "");
-          if (rsvId) setHash("my_reservations", rsvId);
-          return;
-        }
-        const cancelBtn = ev.target.closest("[data-home-rsv-cancel]");
-        if (cancelBtn && !cancelBtn.disabled) {
-          const rsvId = String(cancelBtn.getAttribute("data-home-rsv-cancel") || "");
-          if (!rsvId) return;
-          if (!window.confirm("Na pewno anulować tę rezerwację?")) return;
-          cancelBtn.disabled = true;
-          try {
-            await apiPostJson({
-              url: CANCEL_RESERVATION_URL,
-              idToken: ctx.idToken,
-              body: { reservationId: rsvId }
-            });
-            setHash("home", "home");
-          } catch (e) {
-            cancelBtn.disabled = false;
-            window.alert("Nie udało się anulować: " + (e?.message || "Spróbuj ponownie."));
-          }
-        }
-      });
-    }).catch(() => {
-      const listEl = viewEl.querySelector("#homeReservationsList");
-      if (listEl) listEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać rezerwacji.</div></div></div>`;
-    });
-  }
-
   // Ładuj statystyki asynchronicznie
   if (ctx?.idToken) {
     if (dash.isKursant) {
@@ -474,6 +432,7 @@ function renderHomeProfile({ viewEl, ctx }) {
   const statusLabel = statusKeyToLabel(String(ctx?.session?.status_key || ""), ctx?.setup?.statusMappings);
   const hoursValue = getHoursValue(ctx);
   const isKursant = roleKey === "rola_kursant";
+  const dash = getDashboardConfig(ctx);
 
   viewEl.innerHTML = `
     <div class="card center">
@@ -542,10 +501,30 @@ function renderHomeProfile({ viewEl, ctx }) {
         <button type="button" class="ghost" id="profileBackBtn">← Wróć</button>
       </div>
     </div>
+
+    ${dash.canReserveGear ? `
+    <section class="dashCard startSection" style="margin-top:16px;">
+      <div class="dashCardHead">
+        <h3>Moje rezerwacje</h3>
+        <button type="button" class="ghost" data-profile-action="all-reservations">Zobacz wszystkie</button>
+      </div>
+      <div class="startList" id="homeReservationsList">
+        ${spinnerHtml("Ładowanie rezerwacji...")}
+      </div>
+    </section>
+    ` : ""}
   `;
 
   const backBtn = viewEl.querySelector("#profileBackBtn");
   if (backBtn) backBtn.addEventListener("click", () => setHash("home", "home"));
+
+  viewEl.querySelectorAll("[data-profile-action='all-reservations']").forEach((btn) => {
+    btn.addEventListener("click", () => setHash("my_reservations", "list"));
+  });
+
+  if (dash.canReserveGear) {
+    wireHomeReservations(viewEl, ctx);
+  }
 
   if (isKursant && ctx?.idToken) {
     apiGetJson({ url: "/api/km/kursant-stats", idToken: ctx.idToken })
@@ -635,17 +614,35 @@ async function buildHomeEventsSection(ctx) {
       `;
     }
 
+    const chevron = `<svg class="startEventChevron" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`;
+
     return upcoming.map((ev) => {
       const start = formatDatePL(String(ev?.startDate || ""));
       const end = formatDatePL(String(ev?.endDate || ""));
       const dateRange = ev.startDate === ev.endDate ? start : `${start} – ${end}`;
+      const loc = String(ev?.location || "");
+      const desc = String(ev?.description || "");
+      const contact = String(ev?.contact || "");
+      const link = String(ev?.link || "");
+
+      const detailRows = [
+        loc ? `<div class="startEventDetailRow"><strong>Miejsce:</strong> ${escapeHtml(loc)}</div>` : "",
+        desc ? `<div class="startEventDetailRow">${escapeHtml(desc)}</div>` : "",
+        contact ? `<div class="startEventDetailRow"><strong>Kontakt:</strong> ${escapeHtml(contact)}</div>` : "",
+        link ? `<div class="startEventDetailRow"><a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Strona / zgłoszenia →</a></div>` : "",
+      ].filter(Boolean).join("");
+
       return `
-        <div class="startListItem">
-          <div class="startListMain">
-            <div class="startListTitle">${escapeHtml(String(ev?.name || "Impreza"))}</div>
-            <div class="startListMeta">${escapeHtml(String(ev?.location || ""))}${ev?.location ? " · " : ""}${escapeHtml(dateRange)}</div>
-          </div>
-        </div>
+        <details class="startEventItem">
+          <summary class="startListItem startEventSummary">
+            <div class="startListMain">
+              <div class="startListTitle">${escapeHtml(String(ev?.name || "Impreza"))}</div>
+              <div class="startListMeta">${escapeHtml(loc)}${loc ? " · " : ""}${escapeHtml(dateRange)}</div>
+            </div>
+            ${chevron}
+          </summary>
+          <div class="startEventDetail">${detailRows || `<div class="startEventDetailRow">Brak dodatkowych informacji.</div>`}</div>
+        </details>
       `;
     }).join("");
   } catch {
@@ -816,6 +813,45 @@ async function buildHomeReservationsSection(ctx) {
       </div>
     `;
   }
+}
+
+// Wstrzykuje listę aktywnych rezerwacji do #homeReservationsList i podpina
+// edycję/anulowanie. Używane w sekcji „Moje rezerwacje" w profilu użytkownika.
+function wireHomeReservations(viewEl, ctx) {
+  buildHomeReservationsSection(ctx).then((html) => {
+    const listEl = viewEl.querySelector("#homeReservationsList");
+    if (!listEl) return;
+    listEl.innerHTML = html;
+    listEl.addEventListener("click", async (ev) => {
+      const editBtn = ev.target.closest("[data-home-rsv-edit]");
+      if (editBtn) {
+        const rsvId = String(editBtn.getAttribute("data-home-rsv-edit") || "");
+        if (rsvId) setHash("my_reservations", rsvId);
+        return;
+      }
+      const cancelBtn = ev.target.closest("[data-home-rsv-cancel]");
+      if (cancelBtn && !cancelBtn.disabled) {
+        const rsvId = String(cancelBtn.getAttribute("data-home-rsv-cancel") || "");
+        if (!rsvId) return;
+        if (!window.confirm("Na pewno anulować tę rezerwację?")) return;
+        cancelBtn.disabled = true;
+        try {
+          await apiPostJson({
+            url: CANCEL_RESERVATION_URL,
+            idToken: ctx.idToken,
+            body: { reservationId: rsvId }
+          });
+          setHash("home", "profile");
+        } catch (e) {
+          cancelBtn.disabled = false;
+          window.alert("Nie udało się anulować: " + (e?.message || "Spróbuj ponownie."));
+        }
+      }
+    });
+  }).catch(() => {
+    const listEl = viewEl.querySelector("#homeReservationsList");
+    if (listEl) listEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać rezerwacji.</div></div></div>`;
+  });
 }
 
 function getReservationKayakTitles(rsv, kayakMap) {
