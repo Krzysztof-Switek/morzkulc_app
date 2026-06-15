@@ -1,7 +1,7 @@
 import {computeBlockIso, overlapsIso, maxEndIsoByWeeks, todayIsoUTC} from "../../calendar/calendar_utils";
 import {getGearVars, roleMaxItems, roleMaxWeeks} from "../../setup/setup_gear_vars";
 import {quoteKayaksCostHours} from "../../hours/hours_quote";
-import {deductHours, creditReservationAdjustment} from "../../hours/godzinki_service";
+import {deductHoursInTx, reverseDeductHoursInTx} from "../../hours/godzinki_service";
 import {getGodzinkiVars} from "../../hours/godzinki_vars";
 import {isUserStatusBlocked} from "../../users/userStatusCheck";
 import {updateReservationDates} from "../kayaks/gear_kayaks_service";
@@ -284,13 +284,14 @@ export async function findBundleConflicts(
   compositeIds: string[],
   blockStartIso: string,
   blockEndIso: string,
-  excludeReservationId?: string
+  excludeReservationId?: string,
+  tx?: FirebaseFirestore.Transaction
 ): Promise<string[]> {
-  const snap = await db
+  const query = db
     .collection("gear_reservations")
     .where("status", "==", "active")
-    .where("blockStartIso", "<=", blockEndIso)
-    .get();
+    .where("blockStartIso", "<=", blockEndIso);
+  const snap = tx ? await tx.get(query) : await query.get();
 
   const conflicts = new Set<string>();
 
@@ -340,14 +341,15 @@ export async function countMyOverlappingBundleItems(
   uid: string,
   blockStartIso: string,
   blockEndIso: string,
-  excludeReservationId?: string
+  excludeReservationId?: string,
+  tx?: FirebaseFirestore.Transaction
 ): Promise<number> {
-  const snap = await db
+  const query = db
     .collection("gear_reservations")
     .where("userUid", "==", uid)
     .where("status", "==", "active")
-    .where("blockStartIso", "<=", blockEndIso)
-    .get();
+    .where("blockStartIso", "<=", blockEndIso);
+  const snap = tx ? await tx.get(query) : await query.get();
 
   let count = 0;
 
@@ -485,31 +487,10 @@ export async function createBundleReservation(
   // Composite IDs for conflict detection
   const compositeIds = items.map((i) => compositeId(i.category, i.itemId));
 
-  // Check user's total overlapping item count
-  const already = await countMyOverlappingBundleItems(db, args.uid, blockStartIso, blockEndIso);
-  if (already + items.length > maxItems) {
-    return {
-      ok: false,
-      code: "max_items_exceeded",
-      message: "Max items exceeded",
-      details: {already, requested: items.length, maxItems},
-    } as const;
-  }
-
-  // Find conflicts with existing reservations
-  const conflicts = await findBundleConflicts(db, compositeIds, blockStartIso, blockEndIso);
-  if (conflicts.length) {
-    return {
-      ok: false,
-      code: "conflict",
-      message: "Wybrane przedmioty nie są dostępne w tym terminie",
-      details: {conflictItemIds: conflicts},
-    } as const;
-  }
-
   // Cost: only kayaks are priced
   const kayakIds = items.filter((i) => i.category === "kayaks").map((i) => i.itemId);
   const costHours = quoteKayaksCostHours(vars, roleKey, args.startDate, args.endDate, kayakIds.length);
+  const godzinkiVars = costHours > 0 ? await getGodzinkiVars(db) : null;
 
   const ref = db.collection("gear_reservations").doc();
   const now = new Date();
@@ -552,32 +533,60 @@ export async function createBundleReservation(
     updatedAt: now,
   };
 
-  await ref.set(doc);
-
-  // Deduct hours atomically — rollback if insufficient
-  if (costHours > 0) {
-    const godzinkiVars = await getGodzinkiVars(db);
-    const deductResult = await deductHours(
-      db,
-      args.uid,
-      {
-        amount: costHours,
-        reason: buildCostReason(itemDetails, args.startDate, args.endDate),
-        reservationId: ref.id,
-      },
-      godzinkiVars,
-      now
-    );
-
-    if (!deductResult.ok) {
-      await ref.delete();
+  // Jedna transakcja: kontrola limitów + konfliktów + dedukcja godzinek + zapis
+  // rezerwacji (eliminuje double-booking i okno awarii między set a deduct).
+  const txResult = await db.runTransaction(async (tx) => {
+    // Check user's total overlapping item count
+    const already = await countMyOverlappingBundleItems(db, args.uid, blockStartIso, blockEndIso, undefined, tx);
+    if (already + items.length > maxItems) {
       return {
         ok: false,
-        code: deductResult.code || "hours_deduction_failed",
-        message: deductResult.message || "Insufficient hours",
+        code: "max_items_exceeded",
+        message: "Max items exceeded",
+        details: {already, requested: items.length, maxItems},
       } as const;
     }
-  }
+
+    // Find conflicts with existing reservations
+    const conflicts = await findBundleConflicts(db, compositeIds, blockStartIso, blockEndIso, undefined, tx);
+    if (conflicts.length) {
+      return {
+        ok: false,
+        code: "conflict",
+        message: "Wybrane przedmioty nie są dostępne w tym terminie",
+        details: {conflictItemIds: conflicts},
+      } as const;
+    }
+
+    // Deduct hours in the same transaction
+    if (costHours > 0 && godzinkiVars) {
+      const deductResult = await deductHoursInTx(
+        tx,
+        db,
+        args.uid,
+        {
+          amount: costHours,
+          reason: buildCostReason(itemDetails, args.startDate, args.endDate),
+          reservationId: ref.id,
+        },
+        godzinkiVars,
+        now
+      );
+
+      if (!deductResult.ok) {
+        return {
+          ok: false,
+          code: deductResult.code || "hours_deduction_failed",
+          message: deductResult.message || "Insufficient hours",
+        } as const;
+      }
+    }
+
+    tx.set(ref, doc);
+    return {ok: true} as const;
+  });
+
+  if (!txResult.ok) return txResult;
 
   return {
     ok: true,
@@ -616,7 +625,7 @@ export async function updateGearReservationDates(
                    Array.isArray(r?.items);
 
   if (isBundle) {
-    return updateBundleReservationDates(db, args, r);
+    return updateBundleReservationDates(db, args);
   }
 
   // Legacy kayak-only reservation — delegate unchanged
@@ -625,17 +634,9 @@ export async function updateGearReservationDates(
 
 async function updateBundleReservationDates(
   db: FirebaseFirestore.Firestore,
-  args: {uid: string; reservationId: string; startDate: string; endDate: string},
-  r: any
+  args: {uid: string; reservationId: string; startDate: string; endDate: string}
 ) {
   const rid = norm(args.reservationId);
-
-  if (norm(r?.userUid) !== args.uid) {
-    return {ok: false, code: "forbidden", message: "Not yours"} as const;
-  }
-  if (norm(r?.status) !== "active") {
-    return {ok: false, code: "invalid_state", message: "Not active"} as const;
-  }
 
   const user = await getUserRole(db, args.uid);
   if (!user) return {ok: false, code: "forbidden", message: "User not registered"} as const;
@@ -645,113 +646,139 @@ async function updateBundleReservationDates(
   }
 
   const vars = await getGearVars(db);
+  const godzinkiVars = await getGodzinkiVars(db);
   const roleKey = user.roleKey;
+  const ref = db.collection("gear_reservations").doc(rid);
 
-  const oldStart = norm(r?.startDate);
-  const oldBlockStart = norm(r?.blockStartIso);
-  const todayIso = todayIsoUTC();
+  // Jedna transakcja: świeży odczyt rezerwacji + kontrole + korekta godzinek
+  // (dodeduktowanie lub cofnięcie FIFO) + zapis nowych dat.
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) return {ok: false, code: "not_found", message: "Not found"} as const;
+    const r = snap.data() as any;
 
-  // After block start: only allow shortening to 1 day (same rule as kayaks)
-  if (!(todayIso < oldBlockStart)) {
-    if (!(args.startDate === oldStart && args.endDate === oldStart)) {
+    if (norm(r?.userUid) !== args.uid) {
+      return {ok: false, code: "forbidden", message: "Not yours"} as const;
+    }
+    if (norm(r?.status) !== "active") {
+      return {ok: false, code: "invalid_state", message: "Not active"} as const;
+    }
+
+    const oldStart = norm(r?.startDate);
+    const oldBlockStart = norm(r?.blockStartIso);
+    const todayIso = todayIsoUTC();
+
+    // After block start: only allow shortening to 1 day (same rule as kayaks)
+    if (!(todayIso < oldBlockStart)) {
+      if (!(args.startDate === oldStart && args.endDate === oldStart)) {
+        return {
+          ok: false,
+          code: "update_blocked",
+          message: "After offset start you can only shorten to 1 day (start=end=original start)",
+          details: {requiredStart: oldStart, requiredEnd: oldStart},
+        } as const;
+      }
+    }
+
+    const maxWeeks = roleMaxWeeks(vars, roleKey);
+    const maxItems = roleMaxItems(vars, roleKey);
+    const maxEndIso = maxEndIsoByWeeks(maxWeeks);
+
+    if (args.endDate > maxEndIso) {
+      return {ok: false, code: "max_time_exceeded", message: "Too far in future", details: {maxWeeks}} as const;
+    }
+
+    const {blockStartIso, blockEndIso} = computeBlockIso(args.startDate, args.endDate, vars.offsetDays);
+
+    // Stored items
+    const storedItemDetails: BundleItemStored[] = Array.isArray(r?.items) ? r.items : [];
+    const compositeIds: string[] = Array.isArray(r?.itemIds) ? r.itemIds.map(String) : [];
+
+    // Item count check (exclude self)
+    const already = await countMyOverlappingBundleItems(db, args.uid, blockStartIso, blockEndIso, rid, tx);
+    if (already + storedItemDetails.length > maxItems) {
       return {
         ok: false,
-        code: "update_blocked",
-        message: "After offset start you can only shorten to 1 day (start=end=original start)",
-        details: {requiredStart: oldStart, requiredEnd: oldStart},
+        code: "max_items_exceeded",
+        message: "Max items exceeded",
+        details: {already, requested: storedItemDetails.length, maxItems},
       } as const;
     }
-  }
 
-  const maxWeeks = roleMaxWeeks(vars, roleKey);
-  const maxItems = roleMaxItems(vars, roleKey);
-  const maxEndIso = maxEndIsoByWeeks(maxWeeks);
+    // Conflict check (exclude self)
+    const conflicts = await findBundleConflicts(db, compositeIds, blockStartIso, blockEndIso, rid, tx);
+    if (conflicts.length) {
+      return {
+        ok: false,
+        code: "conflict",
+        message: "Wybrane przedmioty nie są dostępne w tym terminie",
+        details: {conflictItemIds: conflicts},
+      } as const;
+    }
 
-  if (args.endDate > maxEndIso) {
-    return {ok: false, code: "max_time_exceeded", message: "Too far in future", details: {maxWeeks}} as const;
-  }
+    const kayakCount = Number(r?.kayakCount ?? 0);
+    const newCostHours = quoteKayaksCostHours(vars, roleKey, args.startDate, args.endDate, kayakCount);
+    const oldCostHours = Number(r?.costHours ?? 0);
+    const delta = newCostHours - oldCostHours;
+    const now = new Date();
 
-  const {blockStartIso, blockEndIso} = computeBlockIso(args.startDate, args.endDate, vars.offsetDays);
+    if (delta > 0) {
+      const deductResult = await deductHoursInTx(
+        tx,
+        db,
+        args.uid,
+        {
+          amount: delta,
+          reason: `Korekta rezerwacji ${rid} (${oldCostHours}h → ${newCostHours}h)`,
+          reservationId: rid,
+        },
+        godzinkiVars,
+        now
+      );
+      if (!deductResult.ok) {
+        return {
+          ok: false,
+          code: deductResult.code || "hours_deduction_failed",
+          message: deductResult.message || "Insufficient hours for updated reservation",
+        } as const;
+      }
+    } else if (delta < 0) {
+      // Cofnij dedukcję do oryginalnych pul FIFO (zachowuje oryginalną ważność)
+      const reverseResult = await reverseDeductHoursInTx(
+        tx,
+        db,
+        args.uid,
+        rid,
+        Math.abs(delta),
+        godzinkiVars.expiryYears,
+        now
+      );
+      if (!reverseResult.ok) {
+        return {
+          ok: false,
+          code: reverseResult.code || "hours_reverse_failed",
+          message: reverseResult.message || "Cannot reverse hours for updated reservation",
+        } as const;
+      }
+    }
 
-  // Stored items
-  const storedItemDetails: BundleItemStored[] = Array.isArray(r?.items) ? r.items : [];
-  const compositeIds: string[] = Array.isArray(r?.itemIds) ? r.itemIds.map(String) : [];
-
-  // Item count check (exclude self)
-  const already = await countMyOverlappingBundleItems(db, args.uid, blockStartIso, blockEndIso, rid);
-  if (already + storedItemDetails.length > maxItems) {
-    return {
-      ok: false,
-      code: "max_items_exceeded",
-      message: "Max items exceeded",
-      details: {already, requested: storedItemDetails.length, maxItems},
-    } as const;
-  }
-
-  // Conflict check (exclude self)
-  const conflicts = await findBundleConflicts(db, compositeIds, blockStartIso, blockEndIso, rid);
-  if (conflicts.length) {
-    return {
-      ok: false,
-      code: "conflict",
-      message: "Wybrane przedmioty nie są dostępne w tym terminie",
-      details: {conflictItemIds: conflicts},
-    } as const;
-  }
-
-  const kayakCount = Number(r?.kayakCount ?? 0);
-  const newCostHours = quoteKayaksCostHours(vars, roleKey, args.startDate, args.endDate, kayakCount);
-  const oldCostHours = Number(r?.costHours ?? 0);
-  const delta = newCostHours - oldCostHours;
-  const now = new Date();
-
-  if (delta > 0) {
-    const godzinkiVars = await getGodzinkiVars(db);
-    const deductResult = await deductHours(
-      db,
-      args.uid,
+    const oldEnd = norm(r?.endDate);
+    tx.set(
+      ref,
       {
-        amount: delta,
-        reason: `Korekta rezerwacji ${rid} (${oldCostHours}h → ${newCostHours}h)`,
-        reservationId: rid,
+        startDate: args.startDate,
+        endDate: args.endDate,
+        blockStartIso,
+        blockEndIso,
+        costHours: newCostHours,
+        updatedAt: now,
+        modifiedFrom: {startDate: oldStart, endDate: oldEnd},
       },
-      godzinkiVars,
-      now
+      {merge: true}
     );
-    if (!deductResult.ok) {
-      return {
-        ok: false,
-        code: deductResult.code || "hours_deduction_failed",
-        message: deductResult.message || "Insufficient hours for updated reservation",
-      } as const;
-    }
-  } else if (delta < 0) {
-    const godzinkiVars = await getGodzinkiVars(db);
-    await creditReservationAdjustment(
-      db,
-      args.uid,
-      Math.abs(delta),
-      rid,
-      godzinkiVars.expiryYears,
-      now
-    );
-  }
 
-  const oldEnd = norm(r?.endDate);
-  await db.collection("gear_reservations").doc(rid).set(
-    {
-      startDate: args.startDate,
-      endDate: args.endDate,
-      blockStartIso,
-      blockEndIso,
-      costHours: newCostHours,
-      updatedAt: now,
-      modifiedFrom: {startDate: oldStart, endDate: oldEnd},
-    },
-    {merge: true}
-  );
-
-  return {ok: true, costHours: newCostHours, blockStartIso, blockEndIso} as const;
+    return {ok: true, costHours: newCostHours, blockStartIso, blockEndIso} as const;
+  });
 }
 
 // ──────────────────────────────────────────────────────────────────────────────

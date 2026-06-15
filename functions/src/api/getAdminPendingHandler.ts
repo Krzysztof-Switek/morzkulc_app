@@ -99,7 +99,10 @@ export async function handleGetAdminPending(req: Request, res: Response, deps: G
       const LIMIT = 50;
       const currentYear = String(new Date().getFullYear());
 
-      const [earnSnap, purchaseSnap, eventsSnap, privateKayaksSnap, deadJobsSnap, failedChargesSnap] = await Promise.all([
+      // Promise.allSettled (Z12 z planu panelu): awaria pojedynczego zapytania
+      // (np. brakujący indeks) nie może wyłączać CAŁEGO panelu — sekcja z błędem
+      // dostaje pustą listę + flagę error, pozostałe działają normalnie.
+      const settled = await Promise.allSettled([
         db.collection("godzinki_ledger")
           .where("approved", "==", false)
           .where("type", "==", "earn")
@@ -130,7 +133,28 @@ export async function handleGetAdminPending(req: Request, res: Response, deps: G
           .get(),
       ]);
 
+      const snapOf = (i: number): FirebaseFirestore.QuerySnapshot | null =>
+        settled[i].status === "fulfilled" ? (settled[i] as PromiseFulfilledResult<FirebaseFirestore.QuerySnapshot>).value : null;
+      const errorOf = (i: number): string | null => {
+        if (settled[i].status !== "rejected") return null;
+        const reason = (settled[i] as PromiseRejectedResult).reason;
+        logger.error("getAdminPending: section query failed", {section: i, message: reason?.message});
+        return "Sekcja chwilowo niedostępna";
+      };
+      const docsOf = (i: number) => snapOf(i)?.docs ?? [];
+
+      const [earnSnap, purchaseSnap, eventsSnap, privateKayaksSnap, deadJobsSnap, failedChargesSnap] = [
+        {docs: docsOf(0), error: errorOf(0)},
+        {docs: docsOf(1), error: errorOf(1)},
+        {docs: docsOf(2), error: errorOf(2)},
+        {docs: docsOf(3), error: errorOf(3)},
+        {docs: docsOf(4), error: errorOf(4)},
+        {docs: docsOf(5), error: errorOf(5)},
+      ];
+
       const godzinkiItems = [...earnSnap.docs, ...purchaseSnap.docs]
+        // Pozycje odrzucone w aplikacji (rejected==true) znikają z panelu (Z9).
+        .filter((d) => (d.data() as any)?.rejected !== true)
         .sort((a, b) => {
           const aTs = a.data().createdAt?.toMillis?.() ?? 0;
           const bTs = b.data().createdAt?.toMillis?.() ?? 0;
@@ -146,8 +170,15 @@ export async function handleGetAdminPending(req: Request, res: Response, deps: G
             reason: norm(data.reason),
             submittedBy: norm(data.submittedBy),
             createdAt: tsToIso(data.createdAt),
+            approvalRejectedCode: norm(data.approvalRejectedCode) || null,
+            approvalRejectedMessage: norm(data.approvalRejectedMessage) || null,
           };
         });
+
+      // Odmowy zatwierdzenia (Z10): rekordy, których sync NIE zatwierdził mimo
+      // TAK w arkuszu (przeterminowana data pracy, nieaktualny wykup) — bez tej
+      // sekcji admin widział wiecznie "oczekujący" wpis bez wyjaśnienia.
+      const godzinkiRejectedItems = godzinkiItems.filter((i) => i.approvalRejectedCode);
 
       // Resolve display names (nickname → firstName → email → uid) for godzinki submitters
       const godzinkiUids = [...new Set(godzinkiItems.map((i) => i.uid).filter(Boolean))];
@@ -179,17 +210,20 @@ export async function handleGetAdminPending(req: Request, res: Response, deps: G
         a.displayName.localeCompare(b.displayName, "pl")
       );
 
-      const eventsItems = eventsSnap.docs.map((d) => {
-        const data = d.data() as any;
-        return {
-          id: d.id,
-          name: norm(data.name),
-          startDate: norm(data.startDate),
-          endDate: norm(data.endDate),
-          userEmail: norm(data.userEmail),
-          createdAt: tsToIso(data.createdAt),
-        };
-      });
+      const eventsItems = eventsSnap.docs
+        // Imprezy odrzucone w aplikacji (rejected==true) znikają z panelu (Z9).
+        .filter((d) => (d.data() as any)?.rejected !== true)
+        .map((d) => {
+          const data = d.data() as any;
+          return {
+            id: d.id,
+            name: norm(data.name),
+            startDate: norm(data.startDate),
+            endDate: norm(data.endDate),
+            userEmail: norm(data.userEmail),
+            createdAt: tsToIso(data.createdAt),
+          };
+        });
 
       // Private kayaks stored in club — check email resolvability and contributions
       const privateKayakEmailIssues: PrivateKayakEmailIssue[] = [];
@@ -277,15 +311,36 @@ export async function handleGetAdminPending(req: Request, res: Response, deps: G
         })
         .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
 
+      // Pozycje per-rekord z ID — panel pokazuje przycisk Zatwierdź/Odrzuć przy każdej.
+      // (Sekcja "items" pozostaje zagregowana per osoba dla szybkiego przeglądu.)
+      const godzinkiPending = godzinkiItems.map((i) => ({
+        id: i.id,
+        displayName: uidToName.get(i.uid) || i.uid,
+        type: i.type,
+        amount: i.amount,
+        reason: i.reason,
+        createdAt: i.createdAt,
+      }));
+
+      const godzinkiRejected = godzinkiRejectedItems.map((i) => ({
+        id: i.id,
+        displayName: uidToName.get(i.uid) || i.uid,
+        type: i.type,
+        amount: i.amount,
+        code: i.approvalRejectedCode,
+        message: i.approvalRejectedMessage,
+      }));
+
       res.status(200).json({
         ok: true,
         meta: {godzinkiSheetUrl},
-        godzinki: {count: godzinkiItems.length, items: godzinkiGrouped},
-        events: {count: eventsItems.length, items: eventsItems},
-        privateKayakEmailIssues: {count: privateKayakEmailIssues.length, items: privateKayakEmailIssues},
+        godzinki: {count: godzinkiItems.length, items: godzinkiGrouped, pending: godzinkiPending, error: earnSnap.error || purchaseSnap.error},
+        godzinkiRejected: {count: godzinkiRejected.length, items: godzinkiRejected},
+        events: {count: eventsItems.length, items: eventsItems, error: eventsSnap.error},
+        privateKayakEmailIssues: {count: privateKayakEmailIssues.length, items: privateKayakEmailIssues, error: privateKayaksSnap.error},
         privateKayakUnpaidContributions: {count: privateKayakUnpaidContributions.length, items: privateKayakUnpaidContributions},
-        deadJobs: {count: deadJobs.length, items: deadJobs},
-        failedStorageCharges: {count: failedStorageCharges.length, items: failedStorageCharges},
+        deadJobs: {count: deadJobs.length, items: deadJobs, error: deadJobsSnap.error},
+        failedStorageCharges: {count: failedStorageCharges.length, items: failedStorageCharges, error: failedChargesSnap.error},
       });
     } catch (err: any) {
       logger.error("getAdminPending failed", {message: err?.message, stack: err?.stack});

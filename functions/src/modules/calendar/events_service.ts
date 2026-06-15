@@ -16,12 +16,13 @@ export type EventRecord = {
   contact: string;
   link: string;
   approved: boolean;
+  rejected?: boolean;
   source: "app" | "sheet";
   userUid?: string;
   userEmail?: string;
   createdAt: any;
   updatedAt: any;
-  sheetRowNumber?: number;
+  sheetRowNumber?: number | null;
   sheetSyncedAt?: any;
   calendarEventId?: string;
 };
@@ -38,6 +39,7 @@ export async function listUpcomingEvents(db: FirebaseFirestore.Firestore): Promi
 
   return snap.docs
     .map((d) => d.data() as EventRecord)
+    .filter((e) => e.rejected !== true)
     .sort((a, b) => String(a.startDate).localeCompare(String(b.startDate)));
 }
 
@@ -58,7 +60,7 @@ export async function listRecentEvents(db: FirebaseFirestore.Firestore): Promise
 
   return snap.docs
     .map((d) => d.data() as EventRecord)
-    .filter((e) => String(e.startDate) <= todayIso)
+    .filter((e) => e.rejected !== true && String(e.startDate) <= todayIso)
     .sort((a, b) => String(b.startDate).localeCompare(String(a.startDate)))
     .slice(0, 5);
 }
@@ -75,6 +77,7 @@ export async function listAllEvents(db: FirebaseFirestore.Firestore): Promise<Ev
 
   return snap.docs
     .map((d) => d.data() as EventRecord)
+    .filter((e) => e.rejected !== true)
     .sort((a, b) => String(b.startDate).localeCompare(String(a.startDate)));
 }
 
@@ -123,6 +126,11 @@ export async function createEvent(
     userEmail: args.email,
     createdAt: now,
     updatedAt: now,
+    // Jawny null (nie brak pola!) — umożliwia zapytanie where("sheetSyncedAt","==",null)
+    // w backfillu syncu: imprezy, które nigdy nie trafiły do arkusza (np. po martwym
+    // jobie events.writeToSheet), są dopisywane przy każdym syncu.
+    sheetSyncedAt: null,
+    sheetRowNumber: null,
   };
 
   await ref.set(doc);

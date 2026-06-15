@@ -53,6 +53,108 @@ export type SheetTableReadResult = {
   rows: Record<string, string>[]; // each row includes _rowNumber (1-based sheet row)
 };
 
+/**
+ * Kanoniczna postać nagłówka kolumny — do TOLERANCYJNEGO dopasowania.
+ * Arkusze edytują ludzie: wielkość liter, spacje, znaki interpunkcyjne dryfują
+ * (na prod zastane: "Ranking?" vs "ranking?", "link do strony zgłoszeń" vs
+ * "link do strony / zgłoszeń", "kontakt " z trailing spacją). Kanonizacja:
+ * małe litery + tylko litery/cyfry. Eksport dla testów.
+ */
+export function canonicalHeader(h: any): string {
+  return String(h || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9ąćęłńóśźż]/g, "");
+}
+
+/**
+ * Buduje funkcję odczytu wartości z wiersza (readTableAsObjects) po nazwie
+ * OCZEKIWANEJ przez kod, tolerancyjnie względem faktycznych nagłówków arkusza.
+ * Eksport dla tasków synców i testów.
+ */
+export function buildLooseRowGetter(headers: string[]): (row: Record<string, string>, expectedName: string) => string {
+  const byCanonical = new Map<string, string>();
+  for (const h of headers) {
+    const c = canonicalHeader(h);
+    if (c && !byCanonical.has(c)) byCanonical.set(c, h);
+  }
+  return (row, expectedName) => {
+    const direct = row[expectedName];
+    if (direct !== undefined) return direct;
+    const actual = byCanonical.get(canonicalHeader(expectedName));
+    return actual !== undefined ? (row[actual] ?? "") : "";
+  };
+}
+
+/**
+ * Wartości traktowane jako "puste" przy szukaniu wolnego wiersza do dopisania.
+ * Komórka-checkbox w Sheets ZAWSZE ma wartość (TRUE/FALSE, locale PL: PRAWDA/FAŁSZ)
+ * w KAŻDYM wierszu kolumny — także w wierszach bez danych, gdy kolumnę checkboxów
+ * przeciągnięto w dół „dla formatowania". Dlatego ignorujemy OBA stany boxa
+ * (zaznaczony i nie): prawdziwy wpis i tak ma zawsze treść nie-boolean (ID, nazwa),
+ * więc nigdy nie zostanie uznany za pusty. Bez tego nowe wiersze lądowały dziesiątki
+ * wierszy poniżej widocznej tabeli (kolumna z TRUE wyglądała na zajętą).
+ */
+const EMPTY_SLOT_TOKENS = new Set(["", "false", "fałsz", "true", "prawda"]);
+
+/**
+ * Zwraca 0-based indeks pierwszego wolnego wiersza w bodyRows (wiersze od 2.
+ * wiersza arkusza). Wiersz jest wolny, gdy nie zawiera żadnej wartości poza
+ * artefaktami checkboxów (TRUE/FALSE/PRAWDA/FAŁSZ). Gdy brak wolnego —
+ * zwraca bodyRows.length (dopisanie za ostatnim wierszem).
+ *
+ * Eksportowane jako funkcja czysta dla testów jednostkowych (vitest).
+ */
+export function findFirstEmptySlotIndex(bodyRows: any[][]): number {
+  for (let i = 0; i < bodyRows.length; i++) {
+    const row = bodyRows[i] || [];
+    const hasContent = row.some(
+      (cell: any) => !EMPTY_SLOT_TOKENS.has(normalizeStr(cell).toLowerCase())
+    );
+    if (!hasContent) return i;
+  }
+  return bodyRows.length;
+}
+
+/**
+ * Buduje pełny wiersz wartości dla upsertu na podstawie nagłówków arkusza.
+ *
+ * - existingRow === null → tworzenie nowego wiersza (wszystkie kolumny patcha),
+ * - existingRow podany → aktualizacja: kolumny spoza patcha zachowane,
+ *   a kolumny z createOnlyColumns NIE są nadpisywane (zachowują wartość
+ *   z arkusza — np. "Zatwierdzona" ustawiona przez admina nie może zostać
+ *   cofnięta przez retry joba zapisu).
+ * - klucze patcha nieobecne w nagłówkach są pomijane po cichu.
+ *
+ * Eksportowane jako funkcja czysta dla testów jednostkowych (vitest).
+ */
+export function buildRowValuesForUpsert(args: {
+  headers: string[];
+  existingRow: string[] | null;
+  rowPatch: Record<string, any>;
+  createOnlyColumns?: string[];
+}): string[] {
+  const {headers, existingRow, rowPatch, createOnlyColumns} = args;
+
+  const headerIndex = new Map<string, number>();
+  headers.forEach((h, i) => headerIndex.set(h, i));
+
+  const isUpdate = existingRow !== null;
+  const skipOnUpdate = new Set(isUpdate ? (createOnlyColumns || []) : []);
+
+  const out = new Array(headers.length).fill("");
+  if (existingRow) {
+    for (let i = 0; i < Math.min(existingRow.length, out.length); i++) out[i] = normalizeStr(existingRow[i]);
+  }
+
+  for (const [k, v] of Object.entries(rowPatch)) {
+    if (!headerIndex.has(k)) continue;
+    if (skipOnUpdate.has(k)) continue;
+    const idx = headerIndex.get(k) as number;
+    out[idx] = normalizeStr(v);
+  }
+  return out;
+}
+
 export class GoogleSheetsProvider {
   constructor(private delegatedUserEmail: string) {}
 
@@ -155,10 +257,24 @@ export class GoogleSheetsProvider {
    * If ID not found:
    *   - optional fallback: if e-mail matches an existing row, update that row and set ID (migration)
    *   - else append new row
+   *
+   * opts.createOnlyColumns: kolumny ustawiane WYŁĄCZNIE przy tworzeniu nowego
+   * wiersza; przy aktualizacji istniejącego wartość w arkuszu jest zachowywana.
+   * Chroni decyzje admina (np. "Zatwierdzona"=TAK) przed nadpisaniem przez
+   * ponowienie joba zapisu (retry po częściowej awarii).
    */
   async upsertMemberRowById(
     cfg: MembersSheetConfig,
-    rowPatch: Record<string, any>
+    rowPatch: Record<string, any>,
+    opts?: {
+      createOnlyColumns?: string[];
+      /**
+       * Tolerancyjne dopasowanie kluczy patcha do nagłówków arkusza
+       * (canonicalHeader: case/spacje/interpunkcja). Bez tej opcji rozjazd
+       * nagłówka oznacza cicho pominiętą kolumnę.
+       */
+      looseHeaders?: boolean;
+    }
   ): Promise<UpsertResult> {
     const spreadsheetId = normalizeStr(cfg.spreadsheetId);
     const tabName = normalizeStr(cfg.tabName);
@@ -183,31 +299,46 @@ export class GoogleSheetsProvider {
     const headerIndex = new Map<string, number>();
     headers.forEach((h, i) => headerIndex.set(h, i));
 
-    const idHeader = "ID";
+    // Tolerancyjne dopasowanie: zmapuj klucze patcha i createOnlyColumns na
+    // FAKTYCZNE nagłówki arkusza (po kanonizacji), zanim trafią do budowy wiersza.
+    let effectivePatch = rowPatch;
+    let effectiveCreateOnly = opts?.createOnlyColumns;
+    if (opts?.looseHeaders) {
+      const byCanonical = new Map<string, string>();
+      for (const h of headers) {
+        const c = canonicalHeader(h);
+        if (c && !byCanonical.has(c)) byCanonical.set(c, h);
+      }
+      effectivePatch = {};
+      for (const [k, v] of Object.entries(rowPatch)) {
+        effectivePatch[byCanonical.get(canonicalHeader(k)) ?? k] = v;
+      }
+      effectiveCreateOnly = (opts?.createOnlyColumns || []).map(
+        (k) => byCanonical.get(canonicalHeader(k)) ?? k
+      );
+    }
+
+    const idHeader = opts?.looseHeaders ?
+      (headers.find((h) => canonicalHeader(h) === "id") ?? "ID") :
+      "ID";
     if (!headerIndex.has(idHeader)) {
-      throw new Error(`Header "${idHeader}" not found in sheet "${tabName}"`);
+      throw new Error(`Header "ID" not found in sheet "${tabName}"`);
     }
 
     const idColIdx = headerIndex.get(idHeader) as number;
     const idColA1 = columnToA1(idColIdx);
 
-    const targetId = normalizeStr(rowPatch[idHeader]);
+    const targetId = normalizeStr(effectivePatch[idHeader]);
     if (!targetId) throw new Error("Missing \"ID\" in rowPatch");
 
     // helper to build full row values based on headers
-    const buildRowValues = (existingRow: string[] | null): string[] => {
-      const out = new Array(headers.length).fill("");
-      if (existingRow) {
-        for (let i = 0; i < Math.min(existingRow.length, out.length); i++) out[i] = normalizeStr(existingRow[i]);
-      }
-
-      for (const [k, v] of Object.entries(rowPatch)) {
-        if (!headerIndex.has(k)) continue;
-        const idx = headerIndex.get(k) as number;
-        out[idx] = normalizeStr(v);
-      }
-      return out;
-    };
+    const buildRowValues = (existingRow: string[] | null): string[] =>
+      buildRowValuesForUpsert({
+        headers,
+        existingRow,
+        rowPatch: effectivePatch,
+        createOnlyColumns: effectiveCreateOnly,
+      });
 
     // 2) find row by ID
     const idColResp = await sheets.spreadsheets.values.get({
@@ -249,7 +380,7 @@ export class GoogleSheetsProvider {
 
     // 3B) fallback: try find by e-mail (migration path)
     const emailHeader = "e-mail";
-    const targetEmail = normalizeStr(rowPatch[emailHeader]).toLowerCase();
+    const targetEmail = normalizeStr(effectivePatch[emailHeader]).toLowerCase();
 
     if (targetEmail && headerIndex.has(emailHeader)) {
       const emailColIdx = headerIndex.get(emailHeader) as number;
@@ -304,17 +435,11 @@ export class GoogleSheetsProvider {
     });
 
     const bodyRows = bodyResp.data.values || [];
-    // Szukamy PIERWSZEGO pustego wiersza (bez żadnej niepustej komórki).
-    // API zwraca wiersze od wiersza 2 do ostatniego niepustego — puste wiersze
-    // pomiędzy danymi są zwrócone jako []. Wiersz za zakresem = bodyRows.length.
-    let firstEmptyIdx = bodyRows.length; // domyślnie: za ostatnim wierszem z danymi
-    for (let i = 0; i < bodyRows.length; i++) {
-      const row = bodyRows[i] || [];
-      if (!row.some((cell: any) => normalizeStr(cell) !== "")) {
-        firstEmptyIdx = i;
-        break;
-      }
-    }
+    // Szukamy PIERWSZEGO wolnego wiersza. API zwraca wiersze od wiersza 2 do
+    // ostatniego niepustego — puste wiersze pomiędzy danymi są zwrócone jako [].
+    // Artefakty niezaznaczonych checkboxów (FALSE/FAŁSZ) traktujemy jak puste
+    // komórki — patrz findFirstEmptySlotIndex.
+    const firstEmptyIdx = findFirstEmptySlotIndex(bodyRows as any[][]);
     // bodyRows[0] odpowiada wierszowi 2 arkusza
     const newRowNumber = 2 + firstEmptyIdx;
     const newRow = buildRowValues(null);

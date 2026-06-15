@@ -1,6 +1,6 @@
 # Project Context Map
 
-Generated at: `2026-06-10T11:09:56`
+Generated at: `2026-06-12T08:30:56`
 Project root: `C:\Users\kswitek\Documents\morzkulc_app`
 
 Purpose: this file is a compact project map for Claude Code. It shows which files exist, what functions/classes they contain, and which internal files depend on which other files.
@@ -57,12 +57,12 @@ Excluded sensitive files:
 
 ## Summary
 
-- Total scanned files: `349`
+- Total scanned files: `367`
 - Python files: `37`
-- Script files JS/TS/GS/etc.: `224`
-- Config files: `19`
-- Markdown files: `42`
-- Internal dependency edges: `347`
+- Script files JS/TS/GS/etc.: `239`
+- Config files: `21`
+- Markdown files: `43`
+- Internal dependency edges: `371`
 
 ## Project tree
 
@@ -80,6 +80,7 @@ Excluded sensitive files:
   - context_routes.md
   - context_tests.md
 - Audyty/
+  - 10.06_session_summary.md
   - AUDIT_MAP.md
   - AUDIT_PLAN.md
   - GRUPY_UZYTKOWNICY_PLAN_AND_TO_DO.MD
@@ -112,6 +113,7 @@ Excluded sensitive files:
 - appscript/
   - członkowie sympatycy SKK/
     - api_router
+    - appsscript.json
     - common_helpers.gs
     - env_config.gs
     - events_sync.gs
@@ -136,6 +138,8 @@ Excluded sensitive files:
     - uczestnicy_sync.gs
     - ui_menu.gs
   - sprzęt/
+    - appsscript.json
+    - backend_sync.gs
     - config.gs
     - firestore_rest.gs
     - menu.gs
@@ -228,8 +232,10 @@ Excluded sensitive files:
         - eventsSyncCalendar.js
         - eventsSyncFromSheet.js
         - gearPrivateStorage.js
+        - gearSyncAllFromSheet.js
         - gearSyncKayaksFromSheet.js
         - godzinkiSyncFromSheet.js
+        - groupsDiagnose.js
         - kmMergeHistoricalUser.js
         - kmRebuildMapData.js
         - kmRebuildRankings.js
@@ -238,6 +244,8 @@ Excluded sensitive files:
         - listaEnforcePostingPolicy.js
         - membersSyncToSheet.js
         - onUserRegisteredWelcome.js
+        - setupSyncFromSheet.js
+        - usersSyncFieldsFromSheet.js
         - usersSyncFunctionRolesFromSetup.js
         - usersSyncRolesFromSheet.js
       - triggers/
@@ -252,7 +260,13 @@ Excluded sensitive files:
       - types.js
     - index.js
   - scripts/
+    - deleteStuckJob.js
+    - enqueueGroupsDiagnose.js
     - enqueueListaPolicy.js
+    - readGearCollections.js
+    - readGroupsDiag.js
+    - readServiceJobs.js
+    - readUsersActive.js
   - src/
     - api/
       - adminEventsSyncCalendarHandler.ts
@@ -337,8 +351,10 @@ Excluded sensitive files:
         - eventsSyncCalendar.ts
         - eventsSyncFromSheet.ts
         - gearPrivateStorage.ts
+        - gearSyncAllFromSheet.ts
         - gearSyncKayaksFromSheet.ts
         - godzinkiSyncFromSheet.ts
+        - groupsDiagnose.ts
         - kmMergeHistoricalUser.ts
         - kmRebuildMapData.ts
         - kmRebuildRankings.ts
@@ -347,6 +363,8 @@ Excluded sensitive files:
         - listaEnforcePostingPolicy.ts
         - membersSyncToSheet.ts
         - onUserRegisteredWelcome.ts
+        - setupSyncFromSheet.ts
+        - usersSyncFieldsFromSheet.ts
         - usersSyncFunctionRolesFromSetup.ts
         - usersSyncRolesFromSheet.ts
       - triggers/
@@ -599,8 +617,10 @@ Excluded sensitive files:
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/eventsSyncCalendar.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/eventsSyncFromSheet.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/gearPrivateStorage.js`
+- `functions/lib/service/registry.js` -> `functions/lib/service/tasks/gearSyncAllFromSheet.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/gearSyncKayaksFromSheet.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/godzinkiSyncFromSheet.js`
+- `functions/lib/service/registry.js` -> `functions/lib/service/tasks/groupsDiagnose.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/kmMergeHistoricalUser.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/kmRebuildMapData.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/kmRebuildRankings.js`
@@ -609,6 +629,8 @@ Excluded sensitive files:
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/listaEnforcePostingPolicy.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/membersSyncToSheet.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/onUserRegisteredWelcome.js`
+- `functions/lib/service/registry.js` -> `functions/lib/service/tasks/setupSyncFromSheet.js`
+- `functions/lib/service/registry.js` -> `functions/lib/service/tasks/usersSyncFieldsFromSheet.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/usersSyncFunctionRolesFromSetup.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/usersSyncRolesFromSheet.js`
 - `functions/lib/service/runner.js` -> `functions/lib/service/providers/googleWorkspaceProvider.js`
@@ -623,6 +645,8 @@ Excluded sensitive files:
 - `functions/lib/service/tasks/gearPrivateStorage.js` -> `functions/lib/modules/hours/godzinki_service.js`
 - `functions/lib/service/tasks/gearPrivateStorage.js` -> `functions/lib/modules/hours/godzinki_vars.js`
 - `functions/lib/service/tasks/gearPrivateStorage.js` -> `functions/lib/modules/setup/setup_gear_vars.js`
+- `functions/lib/service/tasks/gearSyncAllFromSheet.js` -> `functions/lib/service/providers/googleSheetsProvider.js`
+- `functions/lib/service/tasks/gearSyncAllFromSheet.js` -> `functions/lib/service/service_config.js`
 - `functions/lib/service/tasks/gearSyncKayaksFromSheet.js` -> `functions/lib/service/providers/googleSheetsProvider.js`
 - `functions/lib/service/tasks/gearSyncKayaksFromSheet.js` -> `functions/lib/service/service_config.js`
 - `functions/lib/service/tasks/godzinkiSyncFromSheet.js` -> `functions/lib/modules/hours/godzinki_service.js`
@@ -636,6 +660,10 @@ Excluded sensitive files:
 - `functions/lib/service/tasks/kursSyncFromSheet.js` -> `functions/lib/service/service_config.js`
 - `functions/lib/service/tasks/membersSyncToSheet.js` -> `functions/lib/service/providers/googleSheetsProvider.js`
 - `functions/lib/service/tasks/membersSyncToSheet.js` -> `functions/lib/service/service_config.js`
+- `functions/lib/service/tasks/setupSyncFromSheet.js` -> `functions/lib/service/providers/googleSheetsProvider.js`
+- `functions/lib/service/tasks/setupSyncFromSheet.js` -> `functions/lib/service/service_config.js`
+- `functions/lib/service/tasks/usersSyncFieldsFromSheet.js` -> `functions/lib/service/providers/googleSheetsProvider.js`
+- `functions/lib/service/tasks/usersSyncFieldsFromSheet.js` -> `functions/lib/service/service_config.js`
 - `functions/lib/service/tasks/usersSyncRolesFromSheet.js` -> `functions/lib/service/providers/googleSheetsProvider.js`
 - `functions/lib/service/tasks/usersSyncRolesFromSheet.js` -> `functions/lib/service/providers/googleWorkspaceProvider.js`
 - `functions/lib/service/tasks/usersSyncRolesFromSheet.js` -> `functions/lib/service/service_config.js`
@@ -765,8 +793,10 @@ Excluded sensitive files:
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/eventsSyncCalendar.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/eventsSyncFromSheet.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/gearPrivateStorage.ts`
+- `functions/src/service/registry.ts` -> `functions/src/service/tasks/gearSyncAllFromSheet.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/gearSyncKayaksFromSheet.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/godzinkiSyncFromSheet.ts`
+- `functions/src/service/registry.ts` -> `functions/src/service/tasks/groupsDiagnose.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/kmMergeHistoricalUser.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/kmRebuildMapData.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/kmRebuildRankings.ts`
@@ -775,6 +805,8 @@ Excluded sensitive files:
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/listaEnforcePostingPolicy.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/membersSyncToSheet.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/onUserRegisteredWelcome.ts`
+- `functions/src/service/registry.ts` -> `functions/src/service/tasks/setupSyncFromSheet.ts`
+- `functions/src/service/registry.ts` -> `functions/src/service/tasks/usersSyncFieldsFromSheet.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/usersSyncFunctionRolesFromSetup.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/usersSyncRolesFromSheet.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/types.ts`
@@ -795,6 +827,9 @@ Excluded sensitive files:
 - `functions/src/service/tasks/gearPrivateStorage.ts` -> `functions/src/modules/hours/godzinki_vars.ts`
 - `functions/src/service/tasks/gearPrivateStorage.ts` -> `functions/src/modules/setup/setup_gear_vars.ts`
 - `functions/src/service/tasks/gearPrivateStorage.ts` -> `functions/src/service/types.ts`
+- `functions/src/service/tasks/gearSyncAllFromSheet.ts` -> `functions/src/service/providers/googleSheetsProvider.ts`
+- `functions/src/service/tasks/gearSyncAllFromSheet.ts` -> `functions/src/service/service_config.ts`
+- `functions/src/service/tasks/gearSyncAllFromSheet.ts` -> `functions/src/service/types.ts`
 - `functions/src/service/tasks/gearSyncKayaksFromSheet.ts` -> `functions/src/service/providers/googleSheetsProvider.ts`
 - `functions/src/service/tasks/gearSyncKayaksFromSheet.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/service/tasks/gearSyncKayaksFromSheet.ts` -> `functions/src/service/types.ts`
@@ -803,6 +838,7 @@ Excluded sensitive files:
 - `functions/src/service/tasks/godzinkiSyncFromSheet.ts` -> `functions/src/service/providers/googleSheetsProvider.ts`
 - `functions/src/service/tasks/godzinkiSyncFromSheet.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/service/tasks/godzinkiSyncFromSheet.ts` -> `functions/src/service/types.ts`
+- `functions/src/service/tasks/groupsDiagnose.ts` -> `functions/src/service/types.ts`
 - `functions/src/service/tasks/kmMergeHistoricalUser.ts` -> `functions/src/service/types.ts`
 - `functions/src/service/tasks/kmRebuildMapData.ts` -> `functions/src/service/types.ts`
 - `functions/src/service/tasks/kmRebuildRankings.ts` -> `functions/src/service/tasks/kmRebuildUserStats.ts`
@@ -818,6 +854,12 @@ Excluded sensitive files:
 - `functions/src/service/tasks/membersSyncToSheet.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/service/tasks/membersSyncToSheet.ts` -> `functions/src/service/types.ts`
 - `functions/src/service/tasks/onUserRegisteredWelcome.ts` -> `functions/src/service/types.ts`
+- `functions/src/service/tasks/setupSyncFromSheet.ts` -> `functions/src/service/providers/googleSheetsProvider.ts`
+- `functions/src/service/tasks/setupSyncFromSheet.ts` -> `functions/src/service/service_config.ts`
+- `functions/src/service/tasks/setupSyncFromSheet.ts` -> `functions/src/service/types.ts`
+- `functions/src/service/tasks/usersSyncFieldsFromSheet.ts` -> `functions/src/service/providers/googleSheetsProvider.ts`
+- `functions/src/service/tasks/usersSyncFieldsFromSheet.ts` -> `functions/src/service/service_config.ts`
+- `functions/src/service/tasks/usersSyncFieldsFromSheet.ts` -> `functions/src/service/types.ts`
 - `functions/src/service/tasks/usersSyncFunctionRolesFromSetup.ts` -> `functions/src/service/types.ts`
 - `functions/src/service/tasks/usersSyncRolesFromSheet.ts` -> `functions/src/service/providers/googleSheetsProvider.ts`
 - `functions/src/service/tasks/usersSyncRolesFromSheet.ts` -> `functions/src/service/providers/googleWorkspaceProvider.ts`
@@ -2433,10 +2475,11 @@ Excluded sensitive files:
 
 ### `appscript/członkowie sympatycy SKK/common_helpers.gs`
 
-- Lines: `289`
-- Size: `7378` bytes
+- Lines: `319`
+- Size: `8861` bytes
 - Functions:
   - `assertBoardAccess_`
+  - `callBackendSync_`
   - `enqueueServiceJob_`
   - `firestoreCommitDocuments_`
   - `firestoreGetDocument_`
@@ -2444,10 +2487,10 @@ Excluded sensitive files:
   - `formatTimeHHMM_`
   - `isDateObject_`
   - `isIsoTimestamp_`
-  - `isUserInGroup_`
   - `normalizeHeader_`
   - `parseSetupValue_`
   - `rolesAllowedFromFlags_`
+  - `runSync_`
   - `splitList_`
   - `toBool_`
   - `toFirestoreFields_`
@@ -2457,13 +2500,13 @@ Excluded sensitive files:
 
 ### `appscript/członkowie sympatycy SKK/env_config.gs`
 
-- Lines: `61`
-- Size: `2177` bytes
+- Lines: `67`
+- Size: `2542` bytes
 
 ### `appscript/członkowie sympatycy SKK/events_sync.gs`
 
-- Lines: `343`
-- Size: `10791` bytes
+- Lines: `347`
+- Size: `11069` bytes
 - Functions:
   - `addChangedPathIfNeededForEvents_`
   - `buildEventDiff_`
@@ -2479,8 +2522,8 @@ Excluded sensitive files:
 
 ### `appscript/członkowie sympatycy SKK/hours_sync.gs`
 
-- Lines: `270`
-- Size: `7391` bytes
+- Lines: `274`
+- Size: `7673` bytes
 - Functions:
   - `addChangedPathIfNeededForHours_`
   - `buildHoursDiff_`
@@ -2494,8 +2537,8 @@ Excluded sensitive files:
 
 ### `appscript/członkowie sympatycy SKK/setup_sync.gs`
 
-- Lines: `262`
-- Size: `8284` bytes
+- Lines: `218`
+- Size: `7384` bytes
 - Functions:
   - `idx`
   - `initRoleMappings`
@@ -2512,8 +2555,8 @@ Excluded sensitive files:
 
 ### `appscript/członkowie sympatycy SKK/users_sync.gs`
 
-- Lines: `528`
-- Size: `16151` bytes
+- Lines: `437`
+- Size: `13142` bytes
 - Functions:
   - `addChangedPathIfNeeded_`
   - `buildUserDiff_`
@@ -2658,10 +2701,18 @@ Excluded sensitive files:
 - Functions:
   - `onOpen`
 
+### `appscript/sprzęt/backend_sync.gs`
+
+- Lines: `47`
+- Size: `1619` bytes
+- Functions:
+  - `callBackendSync_`
+  - `runSync_`
+
 ### `appscript/sprzęt/config.gs`
 
-- Lines: `161`
-- Size: `4197` bytes
+- Lines: `167`
+- Size: `4548` bytes
 - Functions:
   - `buildGearCategoriesConfig_`
 
@@ -2688,8 +2739,8 @@ Excluded sensitive files:
 
 ### `appscript/sprzęt/setup_sync.gs`
 
-- Lines: `323`
-- Size: `9906` bytes
+- Lines: `327`
+- Size: `10049` bytes
 - Functions:
   - `formatTimeHHMM_`
   - `isDateObject_`
@@ -2706,8 +2757,8 @@ Excluded sensitive files:
 
 ### `appscript/sprzęt/sync_kayaks.gs`
 
-- Lines: `777`
-- Size: `20072` bytes
+- Lines: `779`
+- Size: `20219` bytes
 - Functions:
   - `buildDocLogLabel_`
   - `buildFirestorePayload_`
@@ -2747,8 +2798,8 @@ Excluded sensitive files:
 
 ### `functions/.eslintrc.js`
 
-- Lines: `61`
-- Size: `1450` bytes
+- Lines: `62`
+- Size: `1541` bytes
 
 ### `functions/lib/api/adminEventsSyncCalendarHandler.js`
 
@@ -3307,8 +3358,8 @@ Excluded sensitive files:
 
 ### `functions/lib/index.js`
 
-- Lines: `1098`
-- Size: `42999` bytes
+- Lines: `1235`
+- Size: `50607` bytes
 - Internal dependencies:
   - `functions/lib/api/adminEventsSyncCalendarHandler.js`
   - `functions/lib/api/basenAdminAddGodzinyHandler.js`
@@ -3411,6 +3462,7 @@ Excluded sensitive files:
   - `import/require firebase-functions/v2/https`
   - `import/require firebase-functions/v2/scheduler`
 - Functions:
+  - `buildAppsScriptSyncSummary`
   - `computeAllowedActions`
   - `defaultScreenForRoleKey`
   - `deny`
@@ -3424,6 +3476,7 @@ Excluded sensitive files:
   - `getRequestOrigin`
   - `getSetupApp`
   - `isAllowedHost`
+  - `n`
   - `normalizeHost`
   - `normalizeOrigin`
   - `requireAdminEmail`
@@ -3431,6 +3484,7 @@ Excluded sensitive files:
   - `requireIdToken`
   - `sendPreflight`
   - `setCorsHeaders`
+  - `verifyGoogleAccessToken`
 
 ### `functions/lib/modules/basen/basen_godziny_service.js`
 
@@ -3749,8 +3803,8 @@ Excluded sensitive files:
 
 ### `functions/lib/service/providers/googleWorkspaceProvider.js`
 
-- Lines: `387`
-- Size: `17333` bytes
+- Lines: `459`
+- Size: `20636` bytes
 - Internal dependencies:
   - `functions/lib/service/providers/googleAuth.js`
 - Imports:
@@ -3765,15 +3819,17 @@ Excluded sensitive files:
 
 ### `functions/lib/service/registry.js`
 
-- Lines: `49`
-- Size: `2560` bytes
+- Lines: `57`
+- Size: `3044` bytes
 - Internal dependencies:
   - `functions/lib/service/tasks/basenNotifySessionCancelled.js`
   - `functions/lib/service/tasks/eventsSyncCalendar.js`
   - `functions/lib/service/tasks/eventsSyncFromSheet.js`
   - `functions/lib/service/tasks/gearPrivateStorage.js`
+  - `functions/lib/service/tasks/gearSyncAllFromSheet.js`
   - `functions/lib/service/tasks/gearSyncKayaksFromSheet.js`
   - `functions/lib/service/tasks/godzinkiSyncFromSheet.js`
+  - `functions/lib/service/tasks/groupsDiagnose.js`
   - `functions/lib/service/tasks/kmMergeHistoricalUser.js`
   - `functions/lib/service/tasks/kmRebuildMapData.js`
   - `functions/lib/service/tasks/kmRebuildRankings.js`
@@ -3782,6 +3838,8 @@ Excluded sensitive files:
   - `functions/lib/service/tasks/listaEnforcePostingPolicy.js`
   - `functions/lib/service/tasks/membersSyncToSheet.js`
   - `functions/lib/service/tasks/onUserRegisteredWelcome.js`
+  - `functions/lib/service/tasks/setupSyncFromSheet.js`
+  - `functions/lib/service/tasks/usersSyncFieldsFromSheet.js`
   - `functions/lib/service/tasks/usersSyncFunctionRolesFromSetup.js`
   - `functions/lib/service/tasks/usersSyncRolesFromSheet.js`
 - Imports:
@@ -3789,8 +3847,10 @@ Excluded sensitive files:
   - `import/require ./tasks/eventsSyncCalendar`
   - `import/require ./tasks/eventsSyncFromSheet`
   - `import/require ./tasks/gearPrivateStorage`
+  - `import/require ./tasks/gearSyncAllFromSheet`
   - `import/require ./tasks/gearSyncKayaksFromSheet`
   - `import/require ./tasks/godzinkiSyncFromSheet`
+  - `import/require ./tasks/groupsDiagnose`
   - `import/require ./tasks/kmMergeHistoricalUser`
   - `import/require ./tasks/kmRebuildMapData`
   - `import/require ./tasks/kmRebuildRankings`
@@ -3799,6 +3859,8 @@ Excluded sensitive files:
   - `import/require ./tasks/listaEnforcePostingPolicy`
   - `import/require ./tasks/membersSyncToSheet`
   - `import/require ./tasks/onUserRegisteredWelcome`
+  - `import/require ./tasks/setupSyncFromSheet`
+  - `import/require ./tasks/usersSyncFieldsFromSheet`
   - `import/require ./tasks/usersSyncFunctionRolesFromSetup`
   - `import/require ./tasks/usersSyncRolesFromSheet`
 - Functions:
@@ -3892,6 +3954,28 @@ Excluded sensitive files:
   - `norm`
   - `toYearMonth`
 
+### `functions/lib/service/tasks/gearSyncAllFromSheet.js`
+
+- Lines: `285`
+- Size: `15169` bytes
+- Internal dependencies:
+  - `functions/lib/service/providers/googleSheetsProvider.js`
+  - `functions/lib/service/service_config.js`
+- Imports:
+  - `import/require ../providers/googleSheetsProvider`
+  - `import/require ../service_config`
+  - `import/require firebase-admin`
+- Functions:
+  - `buildDoc`
+  - `flush`
+  - `isRealRow`
+  - `norm`
+  - `parseBool`
+  - `parseNumber`
+  - `parseSheetDate`
+  - `sflush`
+  - `syncCategory`
+
 ### `functions/lib/service/tasks/gearSyncKayaksFromSheet.js`
 
 - Lines: `171`
@@ -3926,6 +4010,11 @@ Excluded sensitive files:
 - Functions:
   - `isApproved`
   - `norm`
+
+### `functions/lib/service/tasks/groupsDiagnose.js`
+
+- Lines: `100`
+- Size: `4908` bytes
 
 ### `functions/lib/service/tasks/kmMergeHistoricalUser.js`
 
@@ -4016,6 +4105,53 @@ Excluded sensitive files:
   - `asErr`
   - `assertString`
   - `listaRoleForUserRole`
+
+### `functions/lib/service/tasks/setupSyncFromSheet.js`
+
+- Lines: `287`
+- Size: `12546` bytes
+- Internal dependencies:
+  - `functions/lib/service/providers/googleSheetsProvider.js`
+  - `functions/lib/service/service_config.js`
+- Imports:
+  - `import/require ../providers/googleSheetsProvider`
+  - `import/require ../service_config`
+  - `import/require firebase-admin`
+- Functions:
+  - `g`
+  - `headerMap`
+  - `norm`
+  - `normalizeHeader`
+  - `parseSetupValue`
+  - `readAppSetupModules`
+  - `readSetupVars`
+  - `rolesAllowedFromFlags`
+  - `splitList`
+  - `toBool`
+  - `toNumberOrNull`
+
+### `functions/lib/service/tasks/usersSyncFieldsFromSheet.js`
+
+- Lines: `269`
+- Size: `11650` bytes
+- Internal dependencies:
+  - `functions/lib/service/providers/googleSheetsProvider.js`
+  - `functions/lib/service/service_config.js`
+- Imports:
+  - `import/require ../providers/googleSheetsProvider`
+  - `import/require ../service_config`
+  - `import/require firebase-admin`
+- Functions:
+  - `g`
+  - `getPath`
+  - `headerMap`
+  - `mapRoleDisplayToKey`
+  - `mapStatusDisplayToKey`
+  - `norm`
+  - `normalizeBoolish`
+  - `normalizeDateString`
+  - `normalizeHeader`
+  - `valuesEqual`
 
 ### `functions/lib/service/tasks/usersSyncFunctionRolesFromSetup.js`
 
@@ -4110,12 +4246,62 @@ Excluded sensitive files:
   - `import/require ./jobProcessor`
   - `import/require firebase-functions/v2/firestore`
 
+### `functions/scripts/deleteStuckJob.js`
+
+- Lines: `26`
+- Size: `799` bytes
+- Imports:
+  - `import/require firebase-admin`
+
+### `functions/scripts/enqueueGroupsDiagnose.js`
+
+- Lines: `58`
+- Size: `1992` bytes
+- Imports:
+  - `import/require firebase-admin`
+
 ### `functions/scripts/enqueueListaPolicy.js`
 
 - Lines: `37`
 - Size: `1213` bytes
 - Imports:
   - `import/require firebase-admin`
+
+### `functions/scripts/readGearCollections.js`
+
+- Lines: `51`
+- Size: `1369` bytes
+- Imports:
+  - `import/require firebase-admin`
+- Functions:
+  - `tsToIso`
+
+### `functions/scripts/readGroupsDiag.js`
+
+- Lines: `39`
+- Size: `1256` bytes
+- Imports:
+  - `import/require firebase-admin`
+
+### `functions/scripts/readServiceJobs.js`
+
+- Lines: `41`
+- Size: `1128` bytes
+- Imports:
+  - `import/require firebase-admin`
+- Functions:
+  - `tsToIso`
+
+### `functions/scripts/readUsersActive.js`
+
+- Lines: `76`
+- Size: `2448` bytes
+- Imports:
+  - `import/require firebase-admin`
+- Functions:
+  - `isProfileComplete`
+  - `norm`
+  - `tsToIso`
 
 ### `functions/src/api/adminEventsSyncCalendarHandler.ts`
 
@@ -4674,8 +4860,8 @@ Excluded sensitive files:
 
 ### `functions/src/index.ts`
 
-- Lines: `1224`
-- Size: `36031` bytes
+- Lines: `1369`
+- Size: `42629` bytes
 - Internal dependencies:
   - `functions/src/api/adminEventsSyncCalendarHandler.ts`
   - `functions/src/api/basenAdminAddGodzinyHandler.ts`
@@ -4779,6 +4965,7 @@ Excluded sensitive files:
   - `import/require firebase-functions/v2/https`
   - `import/require firebase-functions/v2/scheduler`
 - Functions:
+  - `buildAppsScriptSyncSummary`
   - `computeAllowedActions`
   - `defaultScreenForRoleKey`
   - `deny`
@@ -4792,6 +4979,7 @@ Excluded sensitive files:
   - `getRequestOrigin`
   - `getSetupApp`
   - `isAllowedHost`
+  - `n`
   - `normalizeHost`
   - `normalizeOrigin`
   - `requireAdminEmail`
@@ -4799,6 +4987,7 @@ Excluded sensitive files:
   - `requireIdToken`
   - `sendPreflight`
   - `setCorsHeaders`
+  - `verifyGoogleAccessToken`
 
 ### `functions/src/modules/basen/basen_godziny_service.ts`
 
@@ -5126,8 +5315,8 @@ Excluded sensitive files:
 
 ### `functions/src/service/providers/googleWorkspaceProvider.ts`
 
-- Lines: `455`
-- Size: `15356` bytes
+- Lines: `531`
+- Size: `18147` bytes
 - Internal dependencies:
   - `functions/src/service/providers/googleAuth.ts`
 - Imports:
@@ -5142,15 +5331,17 @@ Excluded sensitive files:
 
 ### `functions/src/service/registry.ts`
 
-- Lines: `48`
-- Size: `2087` bytes
+- Lines: `56`
+- Size: `2479` bytes
 - Internal dependencies:
   - `functions/src/service/tasks/basenNotifySessionCancelled.ts`
   - `functions/src/service/tasks/eventsSyncCalendar.ts`
   - `functions/src/service/tasks/eventsSyncFromSheet.ts`
   - `functions/src/service/tasks/gearPrivateStorage.ts`
+  - `functions/src/service/tasks/gearSyncAllFromSheet.ts`
   - `functions/src/service/tasks/gearSyncKayaksFromSheet.ts`
   - `functions/src/service/tasks/godzinkiSyncFromSheet.ts`
+  - `functions/src/service/tasks/groupsDiagnose.ts`
   - `functions/src/service/tasks/kmMergeHistoricalUser.ts`
   - `functions/src/service/tasks/kmRebuildMapData.ts`
   - `functions/src/service/tasks/kmRebuildRankings.ts`
@@ -5159,6 +5350,8 @@ Excluded sensitive files:
   - `functions/src/service/tasks/listaEnforcePostingPolicy.ts`
   - `functions/src/service/tasks/membersSyncToSheet.ts`
   - `functions/src/service/tasks/onUserRegisteredWelcome.ts`
+  - `functions/src/service/tasks/setupSyncFromSheet.ts`
+  - `functions/src/service/tasks/usersSyncFieldsFromSheet.ts`
   - `functions/src/service/tasks/usersSyncFunctionRolesFromSetup.ts`
   - `functions/src/service/tasks/usersSyncRolesFromSheet.ts`
   - `functions/src/service/types.ts`
@@ -5167,8 +5360,10 @@ Excluded sensitive files:
   - `import/require ./tasks/eventsSyncCalendar`
   - `import/require ./tasks/eventsSyncFromSheet`
   - `import/require ./tasks/gearPrivateStorage`
+  - `import/require ./tasks/gearSyncAllFromSheet`
   - `import/require ./tasks/gearSyncKayaksFromSheet`
   - `import/require ./tasks/godzinkiSyncFromSheet`
+  - `import/require ./tasks/groupsDiagnose`
   - `import/require ./tasks/kmMergeHistoricalUser`
   - `import/require ./tasks/kmRebuildMapData`
   - `import/require ./tasks/kmRebuildRankings`
@@ -5177,6 +5372,8 @@ Excluded sensitive files:
   - `import/require ./tasks/listaEnforcePostingPolicy`
   - `import/require ./tasks/membersSyncToSheet`
   - `import/require ./tasks/onUserRegisteredWelcome`
+  - `import/require ./tasks/setupSyncFromSheet`
+  - `import/require ./tasks/usersSyncFieldsFromSheet`
   - `import/require ./tasks/usersSyncFunctionRolesFromSetup`
   - `import/require ./tasks/usersSyncRolesFromSheet`
   - `import/require ./types`
@@ -5281,6 +5478,30 @@ Excluded sensitive files:
   - `norm`
   - `toYearMonth`
 
+### `functions/src/service/tasks/gearSyncAllFromSheet.ts`
+
+- Lines: `434`
+- Size: `14204` bytes
+- Internal dependencies:
+  - `functions/src/service/providers/googleSheetsProvider.ts`
+  - `functions/src/service/service_config.ts`
+  - `functions/src/service/types.ts`
+- Imports:
+  - `import/require ../providers/googleSheetsProvider`
+  - `import/require ../service_config`
+  - `import/require ../types`
+  - `import/require firebase-admin`
+- Functions:
+  - `buildDoc`
+  - `flush`
+  - `isRealRow`
+  - `norm`
+  - `parseBool`
+  - `parseNumber`
+  - `parseSheetDate`
+  - `sflush`
+  - `syncCategory`
+
 ### `functions/src/service/tasks/gearSyncKayaksFromSheet.ts`
 
 - Lines: `162`
@@ -5319,6 +5540,15 @@ Excluded sensitive files:
 - Functions:
   - `isApproved`
   - `norm`
+
+### `functions/src/service/tasks/groupsDiagnose.ts`
+
+- Lines: `116`
+- Size: `4305` bytes
+- Internal dependencies:
+  - `functions/src/service/types.ts`
+- Imports:
+  - `import/require ../types`
 
 ### `functions/src/service/tasks/kmMergeHistoricalUser.ts`
 
@@ -5431,6 +5661,55 @@ Excluded sensitive files:
   - `asErr`
   - `assertString`
   - `listaRoleForUserRole`
+
+### `functions/src/service/tasks/setupSyncFromSheet.ts`
+
+- Lines: `287`
+- Size: `10691` bytes
+- Internal dependencies:
+  - `functions/src/service/providers/googleSheetsProvider.ts`
+  - `functions/src/service/service_config.ts`
+  - `functions/src/service/types.ts`
+- Imports:
+  - `import/require ../providers/googleSheetsProvider`
+  - `import/require ../service_config`
+  - `import/require ../types`
+  - `import/require firebase-admin`
+- Functions:
+  - `headerMap`
+  - `norm`
+  - `normalizeHeader`
+  - `parseSetupValue`
+  - `readAppSetupModules`
+  - `readSetupVars`
+  - `rolesAllowedFromFlags`
+  - `splitList`
+  - `toBool`
+  - `toNumberOrNull`
+
+### `functions/src/service/tasks/usersSyncFieldsFromSheet.ts`
+
+- Lines: `260`
+- Size: `9445` bytes
+- Internal dependencies:
+  - `functions/src/service/providers/googleSheetsProvider.ts`
+  - `functions/src/service/service_config.ts`
+  - `functions/src/service/types.ts`
+- Imports:
+  - `import/require ../providers/googleSheetsProvider`
+  - `import/require ../service_config`
+  - `import/require ../types`
+  - `import/require firebase-admin`
+- Functions:
+  - `getPath`
+  - `headerMap`
+  - `mapRoleDisplayToKey`
+  - `mapStatusDisplayToKey`
+  - `norm`
+  - `normalizeBoolish`
+  - `normalizeDateString`
+  - `normalizeHeader`
+  - `valuesEqual`
 
 ### `functions/src/service/tasks/usersSyncFunctionRolesFromSetup.ts`
 
@@ -5960,8 +6239,8 @@ Excluded sensitive files:
 
 ### `.claude/settings.local.json`
 
-- Lines: `8`
-- Size: `68` bytes
+- Lines: `12`
+- Size: `550` bytes
 - Detected top-level keys / sections:
   - `permissions`
 
@@ -6023,6 +6302,17 @@ Excluded sensitive files:
   - `stop_conditions`
   - `top_files_by_line_count`
 
+### `appscript/członkowie sympatycy SKK/appsscript.json`
+
+- Lines: `13`
+- Size: `370` bytes
+- Detected top-level keys / sections:
+  - `dependencies`
+  - `exceptionLogging`
+  - `oauthScopes`
+  - `runtimeVersion`
+  - `timeZone`
+
 ### `appscript/kilometrówka/.clasp.json`
 
 - Lines: `5`
@@ -6053,10 +6343,21 @@ Excluded sensitive files:
   - `runtimeVersion`
   - `timeZone`
 
+### `appscript/sprzęt/appsscript.json`
+
+- Lines: `13`
+- Size: `370` bytes
+- Detected top-level keys / sections:
+  - `dependencies`
+  - `exceptionLogging`
+  - `oauthScopes`
+  - `runtimeVersion`
+  - `timeZone`
+
 ### `firebase.json`
 
-- Lines: `394`
-- Size: `9792` bytes
+- Lines: `401`
+- Size: `9960` bytes
 - Detected top-level keys / sections:
   - `firestore`
   - `functions`
@@ -6538,6 +6839,24 @@ Excluded sensitive files:
   - `## Recommended route`
   - `## Project summary`
   - `## Large files warning`
+
+### `Audyty/10.06_session_summary.md`
+
+- Lines: `142`
+- Size: `9348` bytes
+- Headings:
+  - `# Podsumowanie sesji — 10.06.2026`
+  - `## 1. Problem zgłoszony`
+  - `## 2. Diagnoza — przyczyna (potwierdzona danymi)`
+  - `## 3. Jak działa rekonsyliator członkostwa grup (ważne dla decyzji)`
+  - `## 4. Plan docelowy (automatyczny — sterowany rolą z arkusza)`
+  - `## 5. Wykonane kroki`
+  - `### Krok A (ZROBIONE ręcznie w Admin Console) ✅`
+  - `### Krok B (ZROBIONE) ✅`
+  - `## 6. Zmiany w kodzie (NIEzacommitowane)`
+  - `## 7. Uruchamianie skryptów diagnostycznych (Windows — gotchas)`
+  - `## 8. Drugie zagadnienie: niezgodność `users_active` (23) vs arkusz (19)`
+  - `## 9. Otwarte / następne kroki`
 
 ### `Audyty/AUDIT_MAP.md`
 

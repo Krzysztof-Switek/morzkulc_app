@@ -80,6 +80,25 @@ export async function handleSubmitEvent(req: Request, res: Response, deps: Submi
 
       const body = (req.body || {}) as any;
 
+      // Dedup (Z14): identyczne zgłoszenie imprezy z ostatnich 60 s odrzucane
+      // (ten sam mechanizm co przy godzinkach — double-click tworzył duplikaty).
+      const dupName = norm(body.name);
+      const dupStart = norm(body.startDate);
+      if (dupName && dupStart) {
+        const mineSnap = await db.collection("events").where("userUid", "==", uid).get();
+        const nowMs = Date.now();
+        const duplicate = mineSnap.docs.find((d) => {
+          const e = d.data() as any;
+          if (norm(e.name) !== dupName || norm(e.startDate) !== dupStart) return false;
+          const createdMs = e.createdAt?.toMillis?.() ?? (e.createdAt instanceof Date ? e.createdAt.getTime() : 0);
+          return nowMs - createdMs < 60_000;
+        });
+        if (duplicate) {
+          res.status(409).json({ok: false, code: "duplicate_submission", message: "Identyczne zgłoszenie zostało już zapisane przed chwilą.", eventId: duplicate.id});
+          return;
+        }
+      }
+
       const out = await createEvent(db, {
         uid,
         email,

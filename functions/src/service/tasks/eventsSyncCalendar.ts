@@ -1,3 +1,4 @@
+import * as admin from "firebase-admin";
 import {ServiceTask} from "../types";
 import {GoogleCalendarProvider, CalendarEventData} from "../providers/googleCalendarProvider";
 import {getServiceConfig} from "../service_config";
@@ -114,13 +115,54 @@ export const eventsSyncCalendarTask: ServiceTask<Payload> = {
       }
     }
 
-    const message = `created=${created}, updated=${updated}, skipped=${skipped}, errors=${errors}`;
-    ctx.logger.info("eventsSyncCalendar: done", {created, updated, skipped, errors, dryRun});
+    // ── USUWANIE z kalendarza: imprezy odrzucone (rejected==true), które wciąż
+    // mają calendarEventId (Z15/I6). Domyka ścieżkę: zatwierdzona impreza trafiła
+    // do kalendarza, potem została odrzucona w aplikacji → wpis musi zniknąć.
+    // Wywoływane zarówno z crona, jak i z akcji odrzucenia (reject enqueue tego taska).
+    let deleted = 0;
+    try {
+      const rejectedSnap = await ctx.firestore
+        .collection("events")
+        .where("rejected", "==", true)
+        .get();
+
+      for (const doc of rejectedSnap.docs) {
+        const data = doc.data() as any;
+        const calId = norm(data?.calendarEventId);
+        if (!calId) continue;
+
+        if (dryRun) {
+          ctx.logger.info("eventsSyncCalendar: [DRY RUN] would delete rejected event", {sheetId: doc.id, calId});
+          deleted++;
+          continue;
+        }
+
+        try {
+          await calendar.deleteEvent(calendarId, calId);
+          await doc.ref.update({
+            calendarEventId: admin.firestore.FieldValue.delete(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+          deleted++;
+          ctx.logger.info("eventsSyncCalendar: deleted rejected event from calendar", {sheetId: doc.id, calId});
+        } catch (e: any) {
+          ctx.logger.error("eventsSyncCalendar: error deleting rejected event", {
+            sheetId: doc.id, message: e?.message,
+          });
+          errors++;
+        }
+      }
+    } catch (e: any) {
+      ctx.logger.warn("eventsSyncCalendar: rejected-delete query failed", {message: e?.message});
+    }
+
+    const message = `created=${created}, updated=${updated}, deleted=${deleted}, skipped=${skipped}, errors=${errors}`;
+    ctx.logger.info("eventsSyncCalendar: done", {created, updated, deleted, skipped, errors, dryRun});
 
     return {
       ok: errors === 0,
       message,
-      details: {created, updated, skipped, errors, dryRun},
+      details: {created, updated, deleted, skipped, errors, dryRun},
     };
   },
 };

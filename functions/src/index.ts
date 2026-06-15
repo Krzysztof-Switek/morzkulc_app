@@ -25,6 +25,7 @@ import {handleGetKayakReservations} from "./api/getKayakReservationsHandler";
 import {handleGetEvents} from "./api/getEventsHandler";
 import {handleGetAdminPending} from "./api/getAdminPendingHandler";
 import {handleAdminEventsSyncCalendar} from "./api/adminEventsSyncCalendarHandler";
+import {handleAdminApprove, handleAdminReject} from "./api/adminApprovalHandler";
 import {handleSubmitEvent} from "./api/submitEventHandler";
 import {handleGetBasenSessions} from "./api/getBasenSessionsHandler";
 import {handleBasenEnroll} from "./api/basenEnrollHandler";
@@ -678,9 +679,15 @@ function buildAppsScriptSyncSummary(taskId: string, details: any): string {
   case "users.syncRolesFromSheet":
     return `Role i statusy zsynchronizowane.\nZaktualizowano: ${n(d.updated)} · bez zmian: ${n(d.unchanged)}.`;
   case "events.syncFromSheet":
-    return `Imprezy zsynchronizowane.\nDodane/zmienione: ${n(d.upserted)} · pominięte: ${n(d.skipped)}.`;
+    return `Imprezy zsynchronizowane.\nDodane/zmienione: ${n(d.upserted)} · pominięte: ${n(d.skipped)}.` +
+      (Number(d.removed) > 0 ? `\nUsunięte (skasowane z arkusza): ${n(d.removed)}.` : "") +
+      (Number(d.backfilled) > 0 ? `\nUzupełnione w arkuszu (zaległe zgłoszenia z aplikacji): ${n(d.backfilled)}.` : "") +
+      (Number(d.confirmedInSheet) > 0 ? `\nPotwierdzone w kolumnie zsynchronizowano: ${n(d.confirmedInSheet)}.` : "");
   case "godzinki.syncFromSheet":
-    return "Godzinki zsynchronizowane.";
+    return `Godzinki zsynchronizowane.\nZatwierdzone: ${n(d.approved)} · skorygowane: ${n(d.corrected)} · uzupełnione w arkuszu: ${n(d.backfilled)}.` +
+      (Number(d.approvalRejected) > 0 ? `\nOdrzucone zatwierdzenia (przeterminowane/nieaktualny wykup): ${n(d.approvalRejected)} — wiersze bez daty w "Zsynchronizowano".` : "") +
+      (Number(d.unapproveIgnored) > 0 ? `\nUwaga: cofnięcia TAK→NIE są ignorowane (${n(d.unapproveIgnored)}).` : "") +
+      (Number(d.duplicateId) > 0 ? `\nZduplikowane ID w arkuszu: ${n(d.duplicateId)} — pominięte.` : "");
   case "gear.syncAllFromSheet":
     if (d.validationError) {
       return "Synchronizacja wstrzymana — sprawdź dane.";
@@ -933,6 +940,38 @@ export const getAdminPending = onRequest({invoker: "private"}, async (req, res) 
  */
 export const adminEventsSyncCalendar = onRequest({invoker: "private"}, async (req, res) => {
   return handleAdminEventsSyncCalendar(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    adminRoleKeys,
+  });
+});
+
+/**
+ * POST /api/admin/approve (authenticated, role: zarzad/kr)
+ * Zatwierdza godzinkę lub imprezę z aplikacji + write-back do arkusza.
+ */
+export const adminApprove = onRequest({invoker: "private"}, async (req, res) => {
+  return handleAdminApprove(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    adminRoleKeys,
+  });
+});
+
+/**
+ * POST /api/admin/reject (authenticated, role: zarzad/kr)
+ * Odrzuca godzinkę lub imprezę z aplikacji (ODRZUCONA w arkuszu, usunięcie z kalendarza).
+ */
+export const adminReject = onRequest({invoker: "private"}, async (req, res) => {
+  return handleAdminReject(req, res, {
     db,
     sendPreflight,
     requireAllowedHost,
@@ -1342,6 +1381,25 @@ export const usersSyncRolesDaily = onSchedule(
 );
 
 /**
+ * SCHEDULER: Dzienny sync imprez z Google Sheets do Firestore.
+ * Uruchamiany codziennie o 04:45 czasu warszawskiego (przed syncem kalendarza
+ * o 05:00, żeby świeżo zatwierdzone imprezy trafiły do kalendarza tego samego ranka).
+ *
+ * Pobiera zatwierdzenia i korekty z arkusza oraz dopisuje do arkusza imprezy
+ * zgłoszone w aplikacji, które nigdy do niego nie trafiły (backfill).
+ * Bez tego crona zatwierdzenie w arkuszu docierało do aplikacji wyłącznie po
+ * ręcznym uruchomieniu menu w arkuszu (audyt imprez, ryzyko I1).
+ */
+export const eventsSyncSheetDaily = onSchedule(
+  {schedule: "45 4 * * *", timeZone: "Europe/Warsaw"},
+  async () => {
+    logger.info("eventsSyncSheetDaily: start");
+    const result = await runTaskById("events.syncFromSheet", {});
+    logger.info("eventsSyncSheetDaily: done", result as unknown as Record<string, unknown>);
+  }
+);
+
+/**
  * SCHEDULER: Dzienny sync zatwierdzonych imprez z Firestore do Google Calendar.
  * Uruchamiany codziennie o 05:00 czasu warszawskiego.
  */
@@ -1364,5 +1422,35 @@ export const kmRebuildMapMonthly = onSchedule(
     logger.info("kmRebuildMapMonthly: start");
     const result = await runTaskById("km.rebuildMapData", {});
     logger.info("kmRebuildMapMonthly: done", result as unknown as Record<string, unknown>);
+  }
+);
+
+/**
+ * SCHEDULER: Dzienny sync godzinek z Google Sheets (zatwierdzenia, korekty pending,
+ * backfill brakujących wierszy). Uruchamiany codziennie o 05:15 czasu warszawskiego.
+ * Admin nadal może uruchomić sync ręcznie z menu arkusza — cron gwarantuje,
+ * że zatwierdzenia docierają do użytkowników najpóźniej następnego ranka.
+ */
+export const godzinkiSyncDaily = onSchedule(
+  {schedule: "15 5 * * *", timeZone: "Europe/Warsaw"},
+  async () => {
+    logger.info("godzinkiSyncDaily: start");
+    const result = await runTaskById("godzinki.syncFromSheet", {});
+    logger.info("godzinkiSyncDaily: done", result as unknown as Record<string, unknown>);
+  }
+);
+
+/**
+ * SCHEDULER: Dzienny digest zaległych zatwierdzeń na adres zarządu.
+ * Uruchamiany o 06:00 czasu warszawskiego — PO wszystkich porannych syncach
+ * (imprezy 04:45, kalendarz 05:00, godzinki 05:15), więc mail dotyczy tylko
+ * pozycji, których syncy nie rozwiązały. Brak zaległości → brak maila.
+ */
+export const adminPendingNotifyDaily = onSchedule(
+  {schedule: "0 6 * * *", timeZone: "Europe/Warsaw"},
+  async () => {
+    logger.info("adminPendingNotifyDaily: start");
+    const result = await runTaskById("admin.notifyPendingApprovals", {});
+    logger.info("adminPendingNotifyDaily: done", result as unknown as Record<string, unknown>);
   }
 );

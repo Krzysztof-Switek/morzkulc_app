@@ -84,6 +84,12 @@ export interface ServiceConfig {
 
   // Adres na który task wysyła powiadomienia AKCJA dla admina (utwórz/usuń app password).
   adminActionEmail: string;
+
+  // Digest zaległych zatwierdzeń panelu zarządu (task admin.notifyPendingApprovals).
+  adminNotify: {
+    email: string; // adresat digestu (domyślnie zarzad@morzkulc.pl)
+    ageDays: number; // próg wieku zgłoszenia w dniach (domyślnie 3)
+  };
 }
 
 export function getServiceConfig(): ServiceConfig {
@@ -129,6 +135,12 @@ export function getServiceConfig(): ServiceConfig {
   const skarbnikMailbox = process.env.SVC_SKARBNIK_MAILBOX_EMAIL || "skarbnik@morzkulc.pl";
   const prezesMailbox = process.env.SVC_PREZES_MAILBOX_EMAIL || "prezes@morzkulc.pl";
   const adminActionEmail = process.env.SVC_ADMIN_ACTION_EMAIL || "zarzad@morzkulc.pl";
+
+  const adminNotifyEmail = process.env.SVC_ADMIN_NOTIFY_EMAIL || "zarzad@morzkulc.pl";
+  const adminNotifyAgeDays = (() => {
+    const n = Number(process.env.SVC_ADMIN_NOTIFY_AGE_DAYS);
+    return Number.isFinite(n) && n >= 0 ? n : 3;
+  })();
 
   const cfg: ServiceConfig = {
     envName,
@@ -295,6 +307,11 @@ export function getServiceConfig(): ServiceConfig {
     },
 
     adminActionEmail,
+
+    adminNotify: {
+      email: adminNotifyEmail,
+      ageDays: adminNotifyAgeDays,
+    },
   };
 
   if (!cfg.listaGroupEmail.includes("@")) {
@@ -338,6 +355,9 @@ export function getServiceConfig(): ServiceConfig {
   }
   if (!cfg.adminActionEmail.includes("@")) {
     throw new functions.https.HttpsError("failed-precondition", "Invalid adminActionEmail");
+  }
+  if (!cfg.adminNotify.email.includes("@")) {
+    throw new functions.https.HttpsError("failed-precondition", "Invalid adminNotify email");
   }
 
   return cfg;

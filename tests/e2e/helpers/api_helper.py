@@ -196,6 +196,63 @@ class ApiHelper:
         return self._soft(resp, "POST /api/godzinki/submit (soft)")
 
     # ------------------------------------------------------------------
+    # Events (imprezy)
+    # ------------------------------------------------------------------
+
+    def get_events(self, token: str, mode: str = "") -> dict:
+        """GET /api/events[?mode=recent|all] — zatwierdzone imprezy."""
+        params = {"mode": mode} if mode else {}
+        resp = self._session.get(
+            f"{self.base_url}/api/events",
+            headers=self._headers(token),
+            params=params,
+            timeout=15,
+        )
+        return self._check(resp, "GET /api/events")
+
+    def submit_event(self, token: str, body: dict) -> dict:
+        """POST /api/events/submit — body: {name, startDate, endDate, location, ...}."""
+        resp = self._session.post(
+            f"{self.base_url}/api/events/submit",
+            headers=self._headers(token),
+            json=body,
+            timeout=30,
+        )
+        return self._check(resp, "POST /api/events/submit")
+
+    def submit_event_soft(self, token: str, body: dict) -> dict:
+        resp = self._session.post(
+            f"{self.base_url}/api/events/submit",
+            headers=self._headers(token),
+            json=body,
+            timeout=30,
+        )
+        return self._soft(resp, "POST /api/events/submit (soft)")
+
+    def get_admin_pending(self, token: str) -> dict:
+        """GET /api/admin/pending — wymaga roli zarzad/kr."""
+        resp = self._session.get(
+            f"{self.base_url}/api/admin/pending",
+            headers=self._headers(token),
+            timeout=30,
+        )
+        return self._check(resp, "GET /api/admin/pending")
+
+    def purchase_godzinki_soft(self, token: str, amount: float) -> dict:
+        """
+        POST /api/godzinki/purchase (soft — does NOT raise on HTTP error)
+        Body: {amount}
+        Returns: {ok, recordId} or {ok: False, code, ...}
+        """
+        resp = self._session.post(
+            f"{self.base_url}/api/godzinki/purchase",
+            headers=self._headers(token),
+            json={"amount": amount},
+            timeout=20,
+        )
+        return self._soft(resp, "POST /api/godzinki/purchase (soft)")
+
+    # ------------------------------------------------------------------
     # Bundle reservations
     # ------------------------------------------------------------------
 

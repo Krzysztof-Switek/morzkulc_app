@@ -6,3 +6,5 @@ oauth_client.json
 reports/
 __pycache__/
 *.pyc
+# Local-only TLS/CA artifacts
+secrets/

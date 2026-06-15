@@ -1,6 +1,6 @@
 import type {Request, Response} from "express";
 import {getGodzinkiVars} from "../modules/hours/godzinki_vars";
-import {getAllRecords, getHistory, getRecentEarnings, computeBalance, computeNextExpiry, GodzinkiRecord} from "../modules/hours/godzinki_service";
+import {getAllRecords, getHistory, computeBalance, computeNextExpiry, GodzinkiRecord} from "../modules/hours/godzinki_service";
 
 type TokenCheck =
   | {error: string}
@@ -116,15 +116,25 @@ export async function handleGetGodzinki(req: Request, res: Response, deps: GetGo
       // Bilans i wygasanie liczymy ze WSZYSTKICH rekordów (bez limitu) — inaczej przy >200 wpisach
       // stare pule earn wypadałyby z okna i bilans byłby zaniżony.
       // Historia do wyświetlenia jest ograniczona do 200 najnowszych rekordów.
-      const [vars, allRecords, history, recentEarnings] = await Promise.all([
+      const [vars, allRecords, history] = await Promise.all([
         getGodzinkiVars(db),
         getAllRecords(db, uid),
         getHistory(db, uid, 200),
-        getRecentEarnings(db, uid, 5),
       ]);
 
       const balance = computeBalance(allRecords, now);
       const nextExpiry = computeNextExpiry(allRecords, now);
+
+      // recentEarnings budujemy in-memory z allRecords — tak samo jak widok home
+      // (D4: wcześniej osobne zapytanie getRecentEarnings dublowało tę logikę).
+      const recentEarnings = allRecords
+        .filter((r) => r.type === "earn")
+        .sort((a, b) => {
+          const aTs = (a.createdAt as any)?.toMillis?.() ?? 0;
+          const bTs = (b.createdAt as any)?.toMillis?.() ?? 0;
+          return bTs - aTs;
+        })
+        .slice(0, 5);
 
       const nextExpiryMonthYear = nextExpiry ?
         String(nextExpiry.getMonth() + 1).padStart(2, "0") + "-" + nextExpiry.getFullYear() :

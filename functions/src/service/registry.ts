@@ -19,6 +19,8 @@ import { groupsDiagnoseTask } from "./tasks/groupsDiagnose";
 import { setupSyncFromSheetTask } from "./tasks/setupSyncFromSheet";
 import { usersSyncFieldsFromSheetTask } from "./tasks/usersSyncFieldsFromSheet";
 import { gearSyncAllFromSheetTask } from "./tasks/gearSyncAllFromSheet";
+import { adminNotifyPendingApprovalsTask } from "./tasks/adminNotifyPendingApprovals";
+import { adminApprovalWriteBackTask } from "./tasks/adminApprovalWriteBack";
 
 const tasks: ServiceTask[] = [
   onUserRegisteredWelcomeTask,
@@ -43,6 +45,8 @@ const tasks: ServiceTask[] = [
   setupSyncFromSheetTask,
   usersSyncFieldsFromSheetTask,
   gearSyncAllFromSheetTask,
+  adminNotifyPendingApprovalsTask,
+  adminApprovalWriteBackTask,
 ];
 
 export function getTaskRegistry(): Map<string, ServiceTask> {

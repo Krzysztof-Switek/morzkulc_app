@@ -7,6 +7,8 @@ const NAV_HOME_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height=
 
 const ADMIN_PENDING_URL = "/api/admin/pending";
 const ADMIN_SYNC_CALENDAR_URL = "/api/admin/events/sync-calendar";
+const ADMIN_APPROVE_URL = "/api/admin/approve";
+const ADMIN_REJECT_URL = "/api/admin/reject";
 
 export function createAdminPendingModule({ id, type, label, defaultRoute, order, enabled, access }) {
   return {
@@ -41,8 +43,8 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
 
           <div class="actions" style="margin-top:12px;display:flex;align-items:center;gap:8px;">
             <button id="adminPendingReloadBtn" type="button" class="moduleNavBtn" title="Odśwież dane"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.79"/></svg></button>
-            <button id="adminSyncCalendarBtn" type="button">Synchronizuj kalendarz</button>
-            <span style="color:var(--text-muted);cursor:help;display:flex;align-items:center;" title="Zatwierdzanie odbywa się w arkuszu Google — poniżej lista oczekujących pozycji. Sync z Google Calendar uruchamiany automatycznie codziennie o 05:00."><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+            <button id="adminSyncCalendarBtn" type="button">Synchronizuj zatwierdzenia (arkusze + kalendarz)</button>
+            <span style="color:var(--text-muted);cursor:help;display:flex;align-items:center;" title="Zatwierdzanie odbywa się w arkuszu Google — poniżej lista oczekujących pozycji. Zatwierdzenia i korekty z arkuszy są pobierane automatycznie codziennie rano (imprezy ok. 04:45, godzinki ok. 05:15, kalendarz 05:00). Przycisk wymusza natychmiastowy sync godzinek, imprez i kalendarza."><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
           </div>
           <div id="adminCalendarMsg" class="hint hidden" style="margin-top:8px;"></div>
 
@@ -71,7 +73,7 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
         calendarMsgEl.classList.remove("hidden");
         try {
           await apiPostJson({url: ADMIN_SYNC_CALENDAR_URL, idToken: ctx.idToken, body: {}});
-          calendarMsgEl.textContent = "Synchronizacja z Google Calendar zakolejkowana. Efekt widoczny po chwili.";
+          calendarMsgEl.textContent = "Synchronizacja zakolejkowana (godzinki + imprezy + kalendarz). Odśwież listę za chwilę.";
         } catch (e) {
           calendarMsgEl.textContent = "Błąd: " + mapUserFacingApiError(e, "Nie udało się zakolejkować synchronizacji.");
         } finally {
@@ -81,6 +83,7 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
 
       const renderContent = (data) => {
         const godzinki = data?.godzinki || { count: 0, items: [] };
+        const godzinkiRejected = data?.godzinkiRejected || { count: 0, items: [] };
         const events = data?.events || { count: 0, items: [] };
         const emailIssues = data?.privateKayakEmailIssues || { count: 0, items: [] };
         const unpaidContributions = data?.privateKayakUnpaidContributions || { count: 0, items: [] };
@@ -97,19 +100,53 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
           html += `<a href="${escapeHtml(godzinkiSheetUrl)}" target="_blank" rel="noopener" style="font-size:13px;font-weight:600;">→ Otwórz arkusz</a>`;
         }
         html += `</div>`;
-        if (!godzinki.items?.length) {
+        const godzinkiPending = godzinki.pending || [];
+        if (godzinki.error) {
+          html += `<p class="err" style="margin-bottom:20px;">${escapeHtml(godzinki.error)}</p>`;
+        } else if (!godzinkiPending.length) {
           html += `<p class="hint" style="margin-bottom:20px;">Brak oczekujących.</p>`;
         } else {
+          html += `<div style="margin:0 0 20px;">`;
+          for (const item of godzinkiPending) {
+            const label = item.type === "purchase" ? "wykup salda ujemnego" : "godzinki";
+            const reason = item.reason ? ` — „${escapeHtml(item.reason)}”` : "";
+            html += `
+              <div class="gearCard" style="margin-bottom:8px;">
+                <div class="gearCardInner">
+                  <div class="gearHead" style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                    <div class="gearTitleWrap">
+                      <div class="gearTitle">${escapeHtml(item.displayName)} — ${escapeHtml(String(item.amount))} h</div>
+                      <div class="gearSubtitle">${escapeHtml(label)}${reason}</div>
+                    </div>
+                    <div style="display:flex;gap:6px;flex-shrink:0;">
+                      <button type="button" class="approveBtn" data-approve="godzinki" data-id="${escapeHtml(item.id)}">Zatwierdź</button>
+                      <button type="button" class="rejectBtn" data-reject="godzinki" data-id="${escapeHtml(item.id)}">Odrzuć</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+          html += `</div>`;
+        }
+
+        // Sekcja: odmowy zatwierdzenia godzinek (sync odmówił mimo TAK w arkuszu)
+        if (godzinkiRejected.items?.length) {
+          html += `<h3 style="margin:0 0 8px;">Godzinki — odmowy zatwierdzenia (${escapeHtml(String(godzinkiRejected.count))})</h3>`;
+          html += `<p class="hint" style="margin:0 0 8px;">Sync nie mógł zatwierdzić poniższych pozycji — popraw dane w arkuszu (np. datę pracy) albo odrzuć zgłoszenie.</p>`;
           html += `<ul style="margin:0 0 20px;padding:0;list-style:none;display:grid;gap:2px;">`;
-          for (const item of godzinki.items) {
-            html += `<li style="font-size:14px;padding:6px 0;border-bottom:1px solid var(--border);"><strong>${escapeHtml(item.displayName)}</strong> — ${escapeHtml(String(item.totalAmount))} godz. do zatwierdzenia</li>`;
+          for (const item of godzinkiRejected.items) {
+            const label = item.type === "purchase" ? "wykup" : "godzinki";
+            html += `<li style="font-size:14px;padding:6px 0;border-bottom:1px solid var(--border);"><strong>${escapeHtml(item.displayName)}</strong> — ${escapeHtml(String(item.amount))} h (${escapeHtml(label)}): ${escapeHtml(item.message || item.code || "odmowa")}</li>`;
           }
           html += `</ul>`;
         }
 
         // Sekcja imprezy
         html += `<h3 style="margin:0 0 8px;">Imprezy do zatwierdzenia (${escapeHtml(String(events.count))})</h3>`;
-        if (!events.items?.length) {
+        if (events.error) {
+          html += `<p class="err" style="margin-bottom:20px;">${escapeHtml(events.error)}</p>`;
+        } else if (!events.items?.length) {
           html += `<p class="hint" style="margin-bottom:20px;">Brak oczekujących.</p>`;
         } else {
           html += `<div style="margin-bottom:20px;">`;
@@ -120,7 +157,7 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
             html += `
               <div class="gearCard" style="margin-bottom:8px;">
                 <div class="gearCardInner">
-                  <div class="gearHead">
+                  <div class="gearHead" style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
                     <div class="gearTitleWrap">
                       <div class="gearTitle">${escapeHtml(item.name || "—")}</div>
                       <div class="gearSubtitle">
@@ -128,6 +165,10 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
                         · zgłosił: ${escapeHtml(item.userEmail || "—")}
                         · ${escapeHtml(dateStr)}
                       </div>
+                    </div>
+                    <div style="display:flex;gap:6px;flex-shrink:0;">
+                      <button type="button" class="approveBtn" data-approve="event" data-id="${escapeHtml(item.id)}">Zatwierdź</button>
+                      <button type="button" class="rejectBtn" data-reject="event" data-id="${escapeHtml(item.id)}">Odrzuć</button>
                     </div>
                   </div>
                 </div>
@@ -259,6 +300,43 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
           contentEl.innerHTML = "";
         }
       };
+
+      // Delegowana obsługa przycisków Zatwierdź/Odrzuć (contentEl trwa między
+      // przeładowaniami — podmieniane jest tylko innerHTML).
+      const KIND_LABEL = { godzinki: "godzinkę", event: "imprezę" };
+      contentEl.addEventListener("click", async (ev) => {
+        const approveBtn = ev.target.closest?.("[data-approve]");
+        const rejectBtn = ev.target.closest?.("[data-reject]");
+        const btn = approveBtn || rejectBtn;
+        if (!btn) return;
+
+        const isApprove = Boolean(approveBtn);
+        const kind = btn.getAttribute(isApprove ? "data-approve" : "data-reject");
+        const id = btn.getAttribute("data-id");
+        if (!kind || !id) return;
+
+        if (!isApprove) {
+          if (!window.confirm(`Odrzucić ${KIND_LABEL[kind] || "pozycję"}? Zostanie oznaczona jako ODRZUCONA w arkuszu.`)) return;
+        }
+
+        setErr("");
+        // Zablokuj wszystkie przyciski tej karty na czas żądania
+        const card = btn.closest(".gearCard");
+        card?.querySelectorAll("button").forEach((b) => { b.disabled = true; });
+
+        try {
+          await apiPostJson({
+            url: isApprove ? ADMIN_APPROVE_URL : ADMIN_REJECT_URL,
+            idToken: ctx.idToken,
+            body: { kind, id },
+          });
+          await load();
+        } catch (e) {
+          // Odmowy merytoryczne zatwierdzenia (422) niosą czytelny komunikat PL.
+          setErr(mapUserFacingApiError(e, isApprove ? "Nie udało się zatwierdzić." : "Nie udało się odrzucić."));
+          card?.querySelectorAll("button").forEach((b) => { b.disabled = false; });
+        }
+      });
 
       reloadBtn.addEventListener("click", load);
       await load();

@@ -594,6 +594,253 @@ class TestGodzinkiBoardDoesNotPay(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
+# G14 Anulowanie rezerwacji z overdraftem (regresja poprawki L1)
+# ---------------------------------------------------------------------------
+
+class TestGodzinkiCancelWithOverdraft(unittest.TestCase):
+    """
+    G14 — Anulowanie rezerwacji pokrytej (częściowo) z salda ujemnego musi
+    przywrócić saldo DOKŁADNIE do stanu sprzed rezerwacji.
+
+    Regresja błędu L1 (podwójny zwrot overdraftu): stary kod przy anulowaniu
+    oznaczał spend jako refunded (overdraft przestawał obciążać saldo) ORAZ
+    tworzył nową pulę earn o wartości overdraftu → saldo rosło o overdraft
+    ponad stan wyjściowy (godzinki z niczego).
+
+    Strategia: tymczasowy syntetyczny spend (overdraft) zeruje saldo konta
+    testowego, rezerwacja 1-dniowa idzie w całości na kredyt, anulowanie musi
+    wrócić do wyzerowanego stanu. Syntetyczny spend usuwany w tearDown.
+    """
+
+    _reservation_id: str | None = None
+    _synthetic_spend_id: str | None = None
+
+    def setUp(self):
+        skip = _skip_if_missing("member_user_email", "member_user_password")
+        if skip:
+            self.skipTest(skip)
+        self._token = _auth.sign_in(cfg.member_user_email, cfg.member_user_password)
+        GearDiscovery.load(self._token, cfg)
+        self._fs = FirestoreHelper(cfg)
+        uid_result = self._fs.get_user_by_email(cfg.member_user_email)
+        if not uid_result:
+            self.skipTest(f"Użytkownik {cfg.member_user_email} nie istnieje w users_active")
+        self._uid, _ = uid_result
+
+    def tearDown(self):
+        if self._reservation_id:
+            try:
+                _api.cancel_reservation(self._token, self._reservation_id)
+            except Exception:
+                pass
+        if self._synthetic_spend_id:
+            try:
+                self._fs.db.collection("godzinki_ledger").document(self._synthetic_spend_id).delete()
+            except Exception:
+                pass
+
+    def _zero_balance_with_synthetic_spend(self) -> float:
+        """Jeśli saldo > 0, dodaje syntetyczny spend (overdraft=saldo) → saldo ≈ 0. Zwraca saldo po."""
+        balance = self._fs.get_godzinki_balance(self._uid)
+        if balance > 0:
+            ref = self._fs.db.collection("godzinki_ledger").document()
+            ref.set({
+                "id": ref.id,
+                "uid": self._uid,
+                "type": "spend",
+                "amount": balance,
+                "fromEarn": 0,
+                "overdraft": balance,
+                "earnDeductions": [],
+                "reservationId": None,
+                "refunded": False,
+                "reason": "e2e G14 synthetic spend (usuwany w tearDown)",
+                "submittedBy": "e2e-test",
+                "createdAt": datetime.now(timezone.utc),
+                "updatedAt": datetime.now(timezone.utc),
+            })
+            self._synthetic_spend_id = ref.id
+        return self._fs.get_godzinki_balance(self._uid)
+
+    def test_G14_cancel_overdraft_reservation_restores_exact_balance(self):
+        """
+        1. Wyzeruj saldo syntetycznym spendem (overdraft)
+        2. Rezerwacja 1 dzień × 1 kajak — w całości na kredyt (saldo → -koszt)
+        3. Anuluj
+        4. Saldo MUSI wrócić do stanu z kroku 1 (błąd L1: saldo rosło o koszt)
+        """
+        gear_vars_snap = self._fs.get_setup_vars_gear()
+        vars_data = gear_vars_snap.get("vars", {})
+        rate = float(vars_data.get("godzinki_za_kajak", {}).get("value", 10))
+
+        godzinki_vars = self._fs.get_setup_vars_godzinki()
+        gv_map = godzinki_vars.get("vars") or {}
+        neg_limit = float((gv_map.get("limit_ujemnego_salda") or {}).get("value", 20))
+
+        if rate <= 0:
+            self.skipTest("godzinki_za_kajak <= 0 — rezerwacja darmowa, test nie ma sensu")
+
+        balance_start = self._zero_balance_with_synthetic_spend()
+        if balance_start - rate < -neg_limit:
+            self.skipTest(
+                f"Saldo {balance_start}h - koszt {rate}h przekroczyłoby limit -{neg_limit}h — nie można utworzyć rezerwacji na kredyt"
+            )
+
+        kid = GearDiscovery.require_kayak()
+        day = (datetime.now(timezone.utc) + timedelta(days=220)).strftime("%Y-%m-%d")
+
+        res_resp = _api.reserve_kayaks(self._token, [kid], day, day)
+        self.assertTrue(res_resp.get("ok"), res_resp)
+        self._reservation_id = res_resp["reservationId"]
+        cost = float(res_resp["costHours"])
+        self.assertGreater(cost, 0, "Rezerwacja musi mieć koszt > 0")
+
+        balance_after_reserve = self._fs.get_godzinki_balance(self._uid)
+        self.assertAlmostEqual(
+            balance_after_reserve, balance_start - cost, places=2,
+            msg="Po rezerwacji saldo musi spaść o koszt (rezerwacja na kredyt)",
+        )
+
+        cancel_resp = _api.cancel_reservation(self._token, self._reservation_id)
+        self.assertTrue(cancel_resp.get("ok"), cancel_resp)
+        self._reservation_id = None
+
+        balance_after_cancel = self._fs.get_godzinki_balance(self._uid)
+        self.assertAlmostEqual(
+            balance_after_cancel, balance_start, places=2,
+            msg=(
+                f"REGRESJA L1: po anulowaniu saldo={balance_after_cancel}h, oczekiwano {balance_start}h. "
+                f"Wynik {balance_start + cost}h oznacza podwójny zwrot overdraftu."
+            ),
+        )
+
+
+# ---------------------------------------------------------------------------
+# G15 Wykup salda ujemnego — pending nie może przekroczyć długu (poprawka L2)
+# ---------------------------------------------------------------------------
+
+class TestGodzinkiPurchasePendingGuard(unittest.TestCase):
+    """
+    G15 — Suma oczekujących (pending) wykupów nie może przekroczyć długu.
+
+    Regresja błędu L2: stary kod walidował każdy wykup osobno względem salda
+    (pending nie zmienia salda) → dwa wykupy po 5h przy długu -5h oba przechodziły,
+    a po zatwierdzeniu saldo wychodziło na +5h.
+
+    Rewalidacja przy ZATWIERDZANIU (processApproval) jest pokryta testami
+    jednostkowymi (TestWykupRewalidacjaL2 w tests/test_godzinki.py) — e2e wymagałoby
+    arkusza testowego.
+    """
+
+    _synthetic_spend_id: str | None = None
+    _purchase_ids: list
+
+    def setUp(self):
+        skip = _skip_if_missing("member_user_email", "member_user_password")
+        if skip:
+            self.skipTest(skip)
+        self._token = _auth.sign_in(cfg.member_user_email, cfg.member_user_password)
+        self._fs = FirestoreHelper(cfg)
+        uid_result = self._fs.get_user_by_email(cfg.member_user_email)
+        if not uid_result:
+            self.skipTest(f"Użytkownik {cfg.member_user_email} nie istnieje w users_active")
+        self._uid, _ = uid_result
+        self._purchase_ids = []
+
+    def tearDown(self):
+        for pid in self._purchase_ids:
+            try:
+                self._fs.db.collection("godzinki_ledger").document(pid).delete()
+            except Exception:
+                pass
+        if self._synthetic_spend_id:
+            try:
+                self._fs.db.collection("godzinki_ledger").document(self._synthetic_spend_id).delete()
+            except Exception:
+                pass
+
+    def _force_debt(self, debt: float) -> float:
+        """Syntetyczny spend doprowadza saldo do ok. -debt. Zwraca saldo po."""
+        balance = self._fs.get_godzinki_balance(self._uid)
+        overdraft_needed = balance + debt
+        if overdraft_needed <= 0:
+            return balance  # saldo już wystarczająco ujemne
+        ref = self._fs.db.collection("godzinki_ledger").document()
+        ref.set({
+            "id": ref.id,
+            "uid": self._uid,
+            "type": "spend",
+            "amount": overdraft_needed,
+            "fromEarn": 0,
+            "overdraft": overdraft_needed,
+            "earnDeductions": [],
+            "reservationId": None,
+            "refunded": False,
+            "reason": "e2e G15 synthetic debt (usuwany w tearDown)",
+            "submittedBy": "e2e-test",
+            "createdAt": datetime.now(timezone.utc),
+            "updatedAt": datetime.now(timezone.utc),
+        })
+        self._synthetic_spend_id = ref.id
+        return self._fs.get_godzinki_balance(self._uid)
+
+    def test_G15_second_pending_purchase_above_debt_rejected(self):
+        """
+        1. Doprowadź saldo do ok. -3h
+        2. Wykup |saldo| h → ok (pending)
+        3. Drugi wykup 1h → MUSI być odrzucony (purchase_exceeds_debt)
+        """
+        balance = self._force_debt(3)
+        if balance >= 0:
+            self.skipTest(f"Nie udało się uzyskać ujemnego salda (saldo={balance}h)")
+
+        debt = int(abs(balance))
+        if debt < 1:
+            self.skipTest(f"Dług {abs(balance)}h za mały na test (wykupy całkowite)")
+
+        resp1 = _api.purchase_godzinki_soft(self._token, debt)
+        self.assertTrue(resp1.get("ok"), f"Pierwszy wykup {debt}h w granicach długu musi przejść: {resp1}")
+        if resp1.get("recordId"):
+            self._purchase_ids.append(resp1["recordId"])
+
+        resp2 = _api.purchase_godzinki_soft(self._token, 1)
+        self.assertFalse(resp2.get("ok"), f"REGRESJA L2: drugi wykup ponad dług przeszedł: {resp2}")
+        self.assertEqual(resp2.get("code"), "purchase_exceeds_debt", resp2)
+
+        # Saldo bez zmian — pending wykupy nie wchodzą do bilansu
+        balance_after = self._fs.get_godzinki_balance(self._uid)
+        self.assertAlmostEqual(balance_after, balance, places=2)
+
+
+# ---------------------------------------------------------------------------
+# G16 Kwoty muszą być całkowite (poprawka L6)
+# ---------------------------------------------------------------------------
+
+class TestGodzinkiIntegerAmounts(unittest.TestCase):
+    """G16 — Ułamkowe kwoty godzinek odrzucane (ochrona przed dryfem float w FIFO)."""
+
+    def setUp(self):
+        skip = _skip_if_missing("member_user_email", "member_user_password")
+        if skip:
+            self.skipTest(skip)
+        self._token = _auth.sign_in(cfg.member_user_email, cfg.member_user_password)
+
+    def test_G16_fractional_submit_rejected(self):
+        """POST /api/godzinki/submit z amount=2.5 → 400 validation_failed (must_be_integer)"""
+        resp = _api.submit_godzinki_soft(self._token, 2.5, _PAST_DATE, "e2e G16 fractional")
+        self.assertFalse(resp.get("ok"), f"Ułamkowa kwota przeszła walidację: {resp}")
+        self.assertEqual(resp.get("code"), "validation_failed", resp)
+        self.assertEqual((resp.get("fields") or {}).get("amount"), "must_be_integer", resp)
+
+    def test_G16b_fractional_purchase_rejected(self):
+        """POST /api/godzinki/purchase z amount=0.5 → 400 validation_failed (must_be_integer)"""
+        resp = _api.purchase_godzinki_soft(self._token, 0.5)
+        self.assertFalse(resp.get("ok"), f"Ułamkowy wykup przeszedł walidację: {resp}")
+        self.assertEqual(resp.get("code"), "validation_failed", resp)
+        self.assertEqual((resp.get("fields") or {}).get("amount"), "must_be_integer", resp)
+
+
+# ---------------------------------------------------------------------------
 # Manual approval flow — dokumentacja
 # ---------------------------------------------------------------------------
 

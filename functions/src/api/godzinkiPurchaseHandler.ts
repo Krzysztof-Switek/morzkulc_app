@@ -66,6 +66,10 @@ export async function handleGodzinkiPurchase(req: Request, res: Response, deps: 
         res.status(400).json({ok: false, code: "validation_failed", fields: {amount: "must_be_positive"}});
         return;
       }
+      if (!Number.isInteger(amount)) {
+        res.status(400).json({ok: false, code: "validation_failed", fields: {amount: "must_be_integer"}});
+        return;
+      }
 
       const result = await submitPurchaseRequest(db, uid, {
         amount,

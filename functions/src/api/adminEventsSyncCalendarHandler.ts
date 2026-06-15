@@ -50,19 +50,30 @@ export async function handleAdminEventsSyncCalendar(
         return;
       }
 
-      const jobRef = db.collection("service_jobs").doc();
-      await jobRef.set({
-        id: jobRef.id,
-        taskId: "events.syncCalendar",
-        payload: {},
-        status: "queued",
-        attempts: 0,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
+      // Pełny sync zatwierdzeń: GODZINKI (arkusz→Firestore) + IMPREZY
+      // (arkusz→Firestore, w tym backfill) + KALENDARZ (Firestore→Calendar).
+      // Wcześniej przycisk kolejkował WYŁĄCZNIE sync kalendarza — zatwierdzenia
+      // z arkusza nie docierały do aplikacji (audyt imprez I1/I9; panel Z11).
+      const enqueue = async (taskId: string) => {
+        const jobRef = db.collection("service_jobs").doc();
+        await jobRef.set({
+          id: jobRef.id,
+          taskId,
+          payload: {},
+          status: "queued",
+          attempts: 0,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        return jobRef.id;
+      };
 
-      logger.info("adminEventsSyncCalendar: job enqueued", {jobId: jobRef.id, uid});
-      res.status(200).json({ok: true, jobId: jobRef.id});
+      const godzinkiJobId = await enqueue("godzinki.syncFromSheet");
+      const sheetJobId = await enqueue("events.syncFromSheet");
+      const calendarJobId = await enqueue("events.syncCalendar");
+
+      logger.info("adminEventsSyncCalendar: jobs enqueued", {godzinkiJobId, sheetJobId, calendarJobId, uid});
+      res.status(200).json({ok: true, jobId: calendarJobId, godzinkiJobId, sheetJobId, calendarJobId});
     } catch (err: any) {
       logger.error("adminEventsSyncCalendar failed", {message: err?.message});
       res.status(500).json({error: "Server error", message: err?.message || String(err)});

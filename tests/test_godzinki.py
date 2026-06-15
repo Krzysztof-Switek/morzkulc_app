@@ -245,10 +245,16 @@ def compute_next_expiry(records, now=None):
     return result
 
 
-def deduct_hours(records, amount, vars_config, now=None):
+def deduct_hours(records, amount, vars_config, now=None, force=False, reservation_id=None):
     """
     Odlicza godzinki metodą FIFO. Modyfikuje earn.remaining w rekordach.
-    Zwraca: (ok, code, message, spend_record)
+    Zwraca: (ok, code, message, records, spend_record)
+
+    Mirror deductHoursInTx z godzinki_service.ts:
+      - force=True → pomija limit ujemnego salda (opłaty przymusowe, np. magazynowe),
+      - spend_record dostaje ślad FIFO earn_deductions: [{"earn_index", "amount"}]
+        (w TS: earnDeductions z earnId; w mirrorze indeks rekordu w liście),
+      - reservation_id → zapisywany w spend (powiązanie z rezerwacją).
 
     Nie modyfikuje oryginalnej listy (deepcopy na początku).
     """
@@ -260,6 +266,7 @@ def deduct_hours(records, amount, vars_config, now=None):
     _debug_dump("WEJŚCIE.amount", amount)
     _debug_dump("WEJŚCIE.vars_config", vars_config)
     _debug_dump("WEJŚCIE.now", now)
+    _debug_dump("WEJŚCIE.force", force)
 
     records = deepcopy(records)
 
@@ -273,9 +280,10 @@ def deduct_hours(records, amount, vars_config, now=None):
         "amount_to_deduct": amount,
         "new_balance": new_balance,
         "negative_limit": negative_limit,
+        "force": force,
     })
 
-    if new_balance < -negative_limit:
+    if not force and new_balance < -negative_limit:
         result = (
             False,
             "negative_limit_exceeded",
@@ -292,22 +300,23 @@ def deduct_hours(records, amount, vars_config, now=None):
         })
         return result
 
-    earn_records = sorted(
-        [r for r in records
+    earn_entries = sorted(
+        [(i, r) for i, r in enumerate(records)
          if r["type"] == "earn"
          and r.get("approved") is True
          and r.get("expires_at") is not None
          and r["expires_at"] > now
          and r.get("remaining", 0) > 0],
-        key=lambda r: r["granted_at"],
+        key=lambda e: e[1]["granted_at"],
     )
 
-    _debug_dump("ETAP: pule FIFO po sortowaniu", earn_records)
+    _debug_dump("ETAP: pule FIFO po sortowaniu", [e[1] for e in earn_entries])
 
     remaining_to_deduct = amount
     from_earn = 0
+    earn_deductions = []
 
-    for earn in earn_records:
+    for earn_index, earn in earn_entries:
         if remaining_to_deduct <= 0:
             break
         available = earn["remaining"]
@@ -323,6 +332,7 @@ def deduct_hours(records, amount, vars_config, now=None):
         earn["remaining"] -= take
         from_earn += take
         remaining_to_deduct -= take
+        earn_deductions.append({"earn_index": earn_index, "amount": take})
 
         _debug_dump("ETAP: pula po zużyciu", {
             "pool_after": earn,
@@ -332,6 +342,8 @@ def deduct_hours(records, amount, vars_config, now=None):
 
     overdraft = remaining_to_deduct
     spend_record = make_spend(amount, from_earn=from_earn, overdraft=overdraft)
+    spend_record["earn_deductions"] = earn_deductions
+    spend_record["reservation_id"] = reservation_id
     records.append(spend_record)
 
     result = (True, None, None, records, spend_record)
@@ -343,6 +355,165 @@ def deduct_hours(records, amount, vars_config, now=None):
         "spend_record": result[4],
     })
     return result
+
+
+def refund_hours_for_reservation(records, earn_restores, now=None):
+    """
+    Mirror refundHoursForReservationInTx z godzinki_service.ts (PO poprawce L1):
+      - przywraca earn.remaining wg śladu dedukcji (earn_restores: lista (indeks, ilość)),
+      - pula wygasła → (False, "pool_expired", oryginalne records),
+      - zeruje pule earn z source_type="adjustment" (korekty tej rezerwacji),
+      - oznacza wszystkie niezrefundowane spend jako refunded=True — to przywraca
+        również część overdraft (refunded spend nie obciąża bilansu),
+      - NIE tworzy puli earn za overdraft (stary kod tworzył → podwójny zwrot, L1).
+
+    Zwraca: (ok, code, records)
+    """
+    if now is None:
+        now = datetime.now(timezone.utc)
+
+    _debug_line("SPRAWDZAM: refund_hours_for_reservation")
+    _debug_dump("WEJŚCIE.records", records)
+    _debug_dump("WEJŚCIE.earn_restores", earn_restores)
+
+    updated = deepcopy(records)
+
+    # Walidacja: pule muszą istnieć i nie być wygasłe
+    for idx, restore_amount in earn_restores:
+        pool = updated[idx]
+        if pool.get("expires_at") is None or pool["expires_at"] <= now:
+            _debug_dump("WYJŚCIE", {"ok": False, "code": "pool_expired"})
+            return (False, "pool_expired", deepcopy(records))
+
+    for idx, restore_amount in earn_restores:
+        updated[idx]["remaining"] += restore_amount
+
+    for r in updated:
+        if r.get("type") == "earn" and r.get("source_type") == "adjustment":
+            r["remaining"] = 0
+
+    for r in updated:
+        if r["type"] == "spend" and not r.get("refunded"):
+            r["refunded"] = True
+
+    _debug_dump("WYJŚCIE", {"ok": True, "records": updated})
+    return (True, None, updated)
+
+
+def reverse_deduct_hours(records, reservation_id, amount, expiry_years=EXPIRY_YEARS, now=None):
+    """
+    Mirror reverseDeductHoursInTx z godzinki_service.ts (poprawka L3 — skrócenie rezerwacji):
+      - cofa dedukcję od najnowszego spend rezerwacji: najpierw overdraft,
+        potem ślad FIFO od końca (odwrotność kolejności zużycia),
+      - przywraca godzinki do ORYGINALNYCH pul (oryginalna ważność — bez odświeżania),
+      - pomniejsza spend (amount/from_earn/overdraft/earn_deductions),
+      - pula źródłowa wygasła → (False, "pool_expired", oryginalne records),
+      - reszta bez śladu FIFO (stare rekordy) → nowa pula z source_type="adjustment"
+        (zerowana przy anulowaniu).
+
+    Zwraca: (ok, code, records)
+    """
+    if now is None:
+        now = datetime.now(timezone.utc)
+
+    _debug_line("SPRAWDZAM: reverse_deduct_hours")
+    _debug_dump("WEJŚCIE.records", records)
+    _debug_dump("WEJŚCIE.reservation_id", reservation_id)
+    _debug_dump("WEJŚCIE.amount", amount)
+
+    updated = deepcopy(records)
+
+    spends = [r for r in updated
+              if r["type"] == "spend"
+              and r.get("reservation_id") == reservation_id
+              and not r.get("refunded")]
+    if not spends:
+        return (False, "spend_not_found", deepcopy(records))
+
+    remaining = amount
+    pool_restores = {}
+
+    # Od najnowszego spend (kolejność listy = kolejność powstania)
+    for s in reversed(spends):
+        if remaining <= 0:
+            break
+
+        take_overdraft = min(remaining, s.get("overdraft", 0))
+        if take_overdraft > 0:
+            s["overdraft"] -= take_overdraft
+            s["amount"] -= take_overdraft
+            remaining -= take_overdraft
+
+        deds = s.get("earn_deductions") or []
+        for d in reversed(deds):
+            if remaining <= 0:
+                break
+            take = min(remaining, d["amount"])
+            if take <= 0:
+                continue
+            d["amount"] -= take
+            s["from_earn"] -= take
+            s["amount"] -= take
+            remaining -= take
+            pool_restores[d["earn_index"]] = pool_restores.get(d["earn_index"], 0) + take
+        s["earn_deductions"] = [d for d in deds if d["amount"] > 0]
+
+    untraced = remaining
+
+    # Walidacja pul przed przywróceniem
+    for idx in pool_restores:
+        pool = updated[idx]
+        if pool.get("expires_at") is None or pool["expires_at"] <= now:
+            _debug_dump("WYJŚCIE", {"ok": False, "code": "pool_expired"})
+            return (False, "pool_expired", deepcopy(records))
+
+    for idx, restore_amount in pool_restores.items():
+        updated[idx]["remaining"] += restore_amount
+
+    if untraced > 0:
+        fallback = make_earn(untraced, now, approved=True)
+        fallback["source_type"] = "adjustment"
+        fallback["reservation_id"] = reservation_id
+        updated.append(fallback)
+
+    _debug_dump("WYJŚCIE", {"ok": True, "records": updated})
+    return (True, None, updated)
+
+
+def approve_purchase(records, idx, now=None):
+    """
+    Mirror processApproval (gałąź purchase) z godzinki_service.ts (PO poprawce L2):
+    rewalidacja w momencie zatwierdzenia — saldo musi być nadal ujemne, a kwota
+    wykupu nie może przekroczyć bieżącego długu.
+
+    Zwraca: (ok, code, records)
+    """
+    if now is None:
+        now = datetime.now(timezone.utc)
+
+    _debug_line("SPRAWDZAM: approve_purchase")
+    _debug_dump("WEJŚCIE.records", records)
+    _debug_dump("WEJŚCIE.idx", idx)
+
+    updated = deepcopy(records)
+    rec = updated[idx]
+
+    if rec.get("approved") is True:
+        return (True, None, updated)  # idempotentnie
+
+    balance = compute_balance(updated, now)
+    amount = rec.get("amount", 0)
+
+    if balance >= 0:
+        _debug_dump("WYJŚCIE", {"ok": False, "code": "purchase_no_longer_valid", "balance": balance})
+        return (False, "purchase_no_longer_valid", deepcopy(records))
+    if amount > abs(balance):
+        _debug_dump("WYJŚCIE", {"ok": False, "code": "purchase_no_longer_valid", "balance": balance})
+        return (False, "purchase_no_longer_valid", deepcopy(records))
+
+    rec["approved"] = True
+    _debug_dump("WYJŚCIE", {"ok": True, "records": updated})
+    return (True, None, updated)
 
 
 def purchase_negative_balance(records, amount, now=None):
@@ -375,12 +546,17 @@ def purchase_negative_balance(records, amount, now=None):
         })
         return result
 
-    max_purchase = abs(current_balance)
+    # Pending wykupy (approved=False) nie wchodzą do bilansu, ale rezerwują dług —
+    # bez tego dwa pending wykupy mogłyby po zatwierdzeniu wynieść saldo na plus (L2).
+    pending = sum(r.get("amount", 0) for r in records
+                  if r["type"] == "purchase" and r.get("approved") is False)
+
+    max_purchase = abs(current_balance) - pending
     if amount > max_purchase:
         result = (
             False,
             "purchase_exceeds_debt",
-            f"Wykup przeniósłby saldo na plus. Maksymalna dozwolona kwota: {max_purchase:.1f}",
+            f"Wykup przeniósłby saldo na plus. Maksymalna dozwolona kwota: {max(0, max_purchase):.1f}",
             records,
         )
         _debug_dump("WYJŚCIE", {
@@ -391,7 +567,9 @@ def purchase_negative_balance(records, amount, now=None):
         })
         return result
 
-    records.append(make_purchase(amount))
+    # Wiernie wobec TS (submitPurchaseRequest): wykup powstaje jako PENDING
+    # (approved=False) i nie zmienia bilansu do zatwierdzenia (approve_purchase).
+    records.append(make_purchase(amount, approved=False))
     result = (True, None, None, records)
 
     _debug_dump("WYJŚCIE", {
@@ -730,24 +908,31 @@ class TestWykup(VerboseBusinessTestCase):
 
     def test_wykup_przy_ujemnym_saldzie(self):
         """
-        OCZEKIWANE: Przy saldzie -10h, wykup 5h podnosi saldo do -5h.
+        OCZEKIWANE: Przy saldzie -10h, wykup 5h jest pending (saldo bez zmian),
+        po zatwierdzeniu podnosi saldo do -5h.
         """
         records = [make_spend(10, from_earn=0, overdraft=10)]
         self.assertEqual(compute_balance(records, NOW), -10)
 
         ok, code, _, updated = purchase_negative_balance(records, 5, NOW)
         self.assertTrue(ok, f"Wykup powinien się udać, code={code}")
-        self.assertEqual(compute_balance(updated, NOW), -5)
+        self.assertEqual(compute_balance(updated, NOW), -10, "Pending wykup nie zmienia salda")
+
+        ok2, _, approved = approve_purchase(updated, len(updated) - 1, NOW)
+        self.assertTrue(ok2)
+        self.assertEqual(compute_balance(approved, NOW), -5)
 
     def test_wykup_do_zera(self):
         """
-        OCZEKIWANE: Wykup dokładnie równy saldzie ujemnemu daje bilans = 0.
+        OCZEKIWANE: Wykup dokładnie równy saldzie ujemnemu po zatwierdzeniu daje bilans = 0.
         """
         records = [make_spend(15, from_earn=0, overdraft=15)]
         ok, _, _, updated = purchase_negative_balance(records, 15, NOW)
-
         self.assertTrue(ok)
-        self.assertEqual(compute_balance(updated, NOW), 0)
+
+        ok2, _, approved = approve_purchase(updated, len(updated) - 1, NOW)
+        self.assertTrue(ok2)
+        self.assertEqual(compute_balance(approved, NOW), 0)
 
     def test_wykup_gdy_saldo_dodatnie_jest_zabroniony(self):
         """
@@ -812,7 +997,10 @@ class TestWykup(VerboseBusinessTestCase):
 
         ok, _, _, updated = purchase_negative_balance(records2, 3, NOW)
         self.assertTrue(ok)
-        self.assertEqual(compute_balance(updated, NOW), -2)
+
+        ok2, _, approved = approve_purchase(updated, len(updated) - 1, NOW)
+        self.assertTrue(ok2)
+        self.assertEqual(compute_balance(approved, NOW), -2)
 
 
 class TestWarunkiBrzegowe(VerboseBusinessTestCase):
@@ -1075,30 +1263,15 @@ class TestKorekcjaRezerwacji(VerboseBusinessTestCase):
 
     def _simulate_refund_with_adjustment_revocation(self, records, reservation_earn_deductions, overdraft=0):
         """
-        Symuluje refundHoursForReservation z poprawką BUG #1:
-        - Przywraca earn.remaining dla FIFO pul
-        - Zeruje earn records z source_type='adjustment' (korekty tej rezerwacji)
-        - Tworzy nowy earn dla overdraft (jeśli był)
+        Deleguje do refund_hours_for_reservation (mirror refundHoursForReservationInTx
+        PO poprawce L1): przywraca pule, zeruje adjustment, oznacza spend refunded=True.
+        Parametr overdraft zachowany dla zgodności wstecznej wywołań — overdraft wraca
+        wyłącznie przez refunded=True (bez nowej puli earn).
         """
-        _debug_line("SYMULACJA REFUND Z REVOKE ADJUSTMENT")
-        _debug_dump("WEJŚCIE.records", records)
-        _debug_dump("WEJŚCIE.reservation_earn_deductions", reservation_earn_deductions)
-        _debug_dump("WEJŚCIE.overdraft", overdraft)
-
-        records = deepcopy(records)
-
-        for earn_idx, restore_amount in reservation_earn_deductions:
-            records[earn_idx]["remaining"] += restore_amount
-
-        for r in records:
-            if r.get("type") == "earn" and r.get("source_type") == "adjustment":
-                r["remaining"] = 0
-
-        if overdraft > 0:
-            records.append(make_earn(overdraft, NOW, approved=True))
-
-        _debug_dump("WYJŚCIE.records", records)
-        return records
+        ok, code, updated = refund_hours_for_reservation(records, reservation_earn_deductions, now=NOW)
+        if not ok:
+            raise AssertionError(f"refund nie powiódł się: {code}")
+        return updated
 
     def test_skrocenie_i_anulowanie_bilans_prawidlowy(self):
         """
@@ -1373,19 +1546,332 @@ class TestStorageMiesieczna(VerboseBusinessTestCase):
         self.assertEqual(spend.get("overdraft", 0), 3, "Overdraft = 5 - 2 = 3h")
         self.assertEqual(compute_balance(records, NOW), -3, "Bilans ujemny = -3h po naliczeniu ponad saldo")
 
-    def test_oplata_storage_blokada_przy_przekroczeniu_limitu(self):
+    def test_zwykla_dedukcja_blokowana_przy_przekroczeniu_limitu(self):
         """
-        SPRAWDZAM: Gdy limit overdraft przekroczony (overdraft >= max_overdraft), dedukcja nie przechodzi.
-        WEJŚCIE: bilans=-100h (overdraft=100), koszt=5h, VARS.max_overdraft=50
-        OCZEKIWANE: deduct_hours zwraca ok=False
+        SPRAWDZAM: Zwykła dedukcja (wypożyczenie, force=False) przy przekroczonym
+        limicie ujemnego salda jest blokowana.
+        WEJŚCIE: bilans=-19h (overdraft=19), koszt=5h, limit=-20
+        OCZEKIWANE: deduct_hours zwraca ok=False, negative_limit_exceeded
         """
-        vars_low_limit = dict(VARS)
-        vars_low_limit["max_overdraft"] = 50
-        records = [make_spend(100, from_earn=0, overdraft=100)]
+        records = [make_spend(19, from_earn=0, overdraft=19)]
         cost = 5
-        ok, code, _, _, _ = deduct_hours(records, cost, vars_low_limit, NOW)
-        self.assertFalse(ok, "Przekroczenie limitu overdraft musi blokować naliczenie")
+        ok, code, _, _, _ = deduct_hours(records, cost, VARS, NOW)
+        self.assertFalse(ok, "Przekroczenie limitu musi blokować zwykłą dedukcję")
         self.assertEqual(code, "negative_limit_exceeded", "Kod błędu musi być negative_limit_exceeded przy przekroczeniu limitu")
+
+    def test_oplata_storage_force_pomija_limit_ujemnego_salda(self):
+        """
+        SPRAWDZAM (poprawka L7): Opłata magazynowa (force=True) NIE podlega limitowi
+        ujemnego salda — opłata przymusowa nie może być blokowana długiem
+        (wcześniej dłużnicy przy limicie przestawali płacić).
+        WEJŚCIE: bilans=-19h, koszt=5h, limit=-20
+        OCZEKIWANE: dedukcja przechodzi, bilans = -24h
+        """
+        records = [make_spend(19, from_earn=0, overdraft=19)]
+        cost = 5
+        ok, _, _, records, spend = deduct_hours(records, cost, VARS, NOW, force=True)
+        self.assertTrue(ok, "Opłata przymusowa (force) musi przejść mimo limitu")
+        self.assertEqual(spend["overdraft"], 5, "Cała opłata w overdraft (brak pul earn)")
+        self.assertEqual(compute_balance(records, NOW), -24, "Bilans = -19 - 5 = -24h (poniżej limitu -20)")
+
+
+class TestRefundOverdraftuL1(VerboseBusinessTestCase):
+    """
+    Testy regresyjne poprawki L1: anulowanie rezerwacji z overdraftem zwracało
+    część overdraft PODWÓJNIE (refunded=True wyłączał dług z bilansu ORAZ
+    powstawała nowa pula earn o wartości overdraft). Po poprawce overdraft wraca
+    wyłącznie przez refunded=True — saldo wraca dokładnie do stanu sprzed rezerwacji.
+    """
+
+    def test_anulowanie_z_czesciowym_overdraftem_wraca_do_stanu_wyjsciowego(self):
+        """
+        SCENARIUSZ (przykład z audytu):
+          earn 3h → rezerwacja 8h (fromEarn=3, overdraft=5) → saldo -5h
+          → anulowanie → saldo MUSI wrócić do +3h (błąd L1 dawał +8h)
+        """
+        records = [make_earn(3, _dt(2024, 1, 1), approved=True)]
+        self.assertEqual(compute_balance(records, NOW), 3)
+
+        ok, _, _, records, spend = deduct_hours(records, 8, VARS, NOW, reservation_id="r1")
+        self.assertTrue(ok)
+        self.assertEqual(spend["from_earn"], 3)
+        self.assertEqual(spend["overdraft"], 5)
+        self.assertEqual(compute_balance(records, NOW), -5, "Po rezerwacji: 3 - 8 = -5h")
+
+        ok2, code, records = refund_hours_for_reservation(records, [(0, 3)], now=NOW)
+        self.assertTrue(ok2, f"Refund musi się udać, kod: {code}")
+
+        final = compute_balance(records, NOW)
+        self.assertEqual(final, 3, f"Po anulowaniu saldo musi wrócić do +3h (jest {final}h — przy błędzie L1 byłoby +8h)")
+
+    def test_anulowanie_rezerwacji_w_calosci_na_kredyt_nie_tworzy_godzinek(self):
+        """
+        EXPLOIT z audytu: saldo 0 → rezerwacja w całości na kredyt (5h) → anulowanie.
+        Przy błędzie L1: saldo +5h z niczego (powtarzalne). Po poprawce: saldo 0.
+        """
+        records = []
+        ok, _, _, records, spend = deduct_hours(records, 5, VARS, NOW, reservation_id="r1")
+        self.assertTrue(ok)
+        self.assertEqual(spend["overdraft"], 5, "Cała rezerwacja na kredyt")
+        self.assertEqual(compute_balance(records, NOW), -5)
+
+        ok2, _, records = refund_hours_for_reservation(records, [], now=NOW)
+        self.assertTrue(ok2)
+
+        final = compute_balance(records, NOW)
+        self.assertEqual(final, 0, f"Po anulowaniu saldo musi wrócić do 0 (jest {final}h — exploit L1 dawał +5h)")
+
+    def test_brak_nowej_puli_earn_po_refundzie_z_overdraftem(self):
+        """Po refundzie nie może powstać żadna nowa pula earn (stary kod tworzył pulę za overdraft)."""
+        records = [make_earn(3, _dt(2024, 1, 1), approved=True)]
+        ok, _, _, records, _ = deduct_hours(records, 8, VARS, NOW, reservation_id="r1")
+        self.assertTrue(ok)
+        earn_count_before = sum(1 for r in records if r["type"] == "earn")
+
+        ok2, _, records = refund_hours_for_reservation(records, [(0, 3)], now=NOW)
+        self.assertTrue(ok2)
+
+        earn_count_after = sum(1 for r in records if r["type"] == "earn")
+        self.assertEqual(earn_count_after, earn_count_before, "Refund nie może tworzyć nowych pul earn")
+
+    def test_refund_oznacza_spend_jako_refunded(self):
+        """Spend rezerwacji po refundzie musi mieć refunded=True (przestaje obciążać bilans)."""
+        records = [make_earn(10, _dt(2024, 1, 1), approved=True)]
+        ok, _, _, records, _ = deduct_hours(records, 4, VARS, NOW, reservation_id="r1")
+        self.assertTrue(ok)
+
+        ok2, _, records = refund_hours_for_reservation(records, [(0, 4)], now=NOW)
+        self.assertTrue(ok2)
+
+        spends = [r for r in records if r["type"] == "spend"]
+        self.assertTrue(all(s.get("refunded") is True for s in spends))
+        self.assertEqual(compute_balance(records, NOW), 10)
+
+    def test_refund_z_wygasla_pula_blokuje(self):
+        """Pula wygasła między rezerwacją a anulowaniem → pool_expired (anulowanie zablokowane)."""
+        granted = _dt(2022, 4, 1)  # wygasa 2026-04-01
+        records = [make_earn(10, granted, approved=True)]
+        ok, _, _, records, _ = deduct_hours(records, 4, VARS, NOW, reservation_id="r1")
+        self.assertTrue(ok)
+
+        after_expiry = _dt(2026, 5, 1)  # po wygaśnięciu puli
+        ok2, code, _ = refund_hours_for_reservation(records, [(0, 4)], now=after_expiry)
+        self.assertFalse(ok2)
+        self.assertEqual(code, "pool_expired")
+
+
+class TestWykupRewalidacjaL2(VerboseBusinessTestCase):
+    """
+    Testy regresyjne poprawki L2: wykup salda ujemnego.
+    (a) Suma pending wykupów nie może przekroczyć długu (wcześniej brak kontroli).
+    (b) Zatwierdzenie rewaliduje saldo (wcześniej zatwierdzało bez sprawdzeń).
+    """
+
+    def test_drugi_pending_wykup_ponad_dlug_odrzucony(self):
+        """
+        SCENARIUSZ z audytu: dług -5h → wykup 5h (pending) → drugi wykup 5h
+        musi zostać odrzucony (wcześniej oba przechodziły → po zatwierdzeniu +5h).
+        """
+        records = [make_spend(5, from_earn=0, overdraft=5)]
+        self.assertEqual(compute_balance(records, NOW), -5)
+
+        ok1, _, _, records = purchase_negative_balance(records, 5, NOW)
+        self.assertTrue(ok1, "Pierwszy wykup w granicach długu — OK")
+
+        ok2, code, _, _ = purchase_negative_balance(records, 5, NOW)
+        self.assertFalse(ok2, "Drugi wykup ponad dług musi być odrzucony")
+        self.assertEqual(code, "purchase_exceeds_debt")
+
+    def test_pending_rezerwuje_czesc_dlugu(self):
+        """Dług -5h, pending 3h → kolejny wykup max 2h (3h odrzucone, 2h przechodzi)."""
+        records = [make_spend(5, from_earn=0, overdraft=5)]
+        ok1, _, _, records = purchase_negative_balance(records, 3, NOW)
+        self.assertTrue(ok1)
+
+        ok2, code, _, _ = purchase_negative_balance(records, 3, NOW)
+        self.assertFalse(ok2, "5 - 3 pending = max 2h — wykup 3h musi być odrzucony")
+        self.assertEqual(code, "purchase_exceeds_debt")
+
+        ok3, _, _, _ = purchase_negative_balance(records, 2, NOW)
+        self.assertTrue(ok3, "Wykup 2h mieści się w pozostałym długu")
+
+    def test_zatwierdzenie_po_splacie_dlugu_odrzucone(self):
+        """
+        SCENARIUSZ z audytu: dług -5h → pending wykup 5h → saldo wraca do 0
+        (np. zwrot z anulowanej rezerwacji) → zatwierdzenie musi być odrzucone
+        (wcześniej przechodziło → saldo +5h).
+        """
+        records = [make_spend(5, from_earn=0, overdraft=5)]
+        ok1, _, _, records = purchase_negative_balance(records, 5, NOW)
+        self.assertTrue(ok1)
+        purchase_idx = len(records) - 1
+
+        # Saldo wraca do 0 — dług zniknął zanim admin zatwierdził
+        records[0]["refunded"] = True
+        self.assertEqual(compute_balance(records, NOW), 0)
+
+        ok2, code, records = approve_purchase(records, purchase_idx, NOW)
+        self.assertFalse(ok2, "Zatwierdzenie wykupu przy saldzie >= 0 musi być odrzucone")
+        self.assertEqual(code, "purchase_no_longer_valid")
+        self.assertEqual(compute_balance(records, NOW), 0, "Saldo bez zmian")
+
+    def test_zatwierdzenie_gdy_dlug_zmalal_odrzucone(self):
+        """Dług zmalał z -5h do -3h → zatwierdzenie wykupu 5h odrzucone (wyniosłoby saldo na +2h)."""
+        records = [make_spend(5, from_earn=0, overdraft=5)]
+        ok1, _, _, records = purchase_negative_balance(records, 5, NOW)
+        self.assertTrue(ok1)
+        purchase_idx = len(records) - 1
+
+        # Dług częściowo spłacony inną drogą (np. zatwierdzony wcześniejszy wykup 2h)
+        records.append(make_purchase(2, approved=True))
+        self.assertEqual(compute_balance(records, NOW), -3)
+
+        ok2, code, _ = approve_purchase(records, purchase_idx, NOW)
+        self.assertFalse(ok2)
+        self.assertEqual(code, "purchase_no_longer_valid")
+
+    def test_zatwierdzenie_przy_aktualnym_dlugu_przechodzi(self):
+        """Ścieżka pozytywna: dług -5h, pending 5h, nic się nie zmieniło → zatwierdzenie OK, saldo 0."""
+        records = [make_spend(5, from_earn=0, overdraft=5)]
+        ok1, _, _, records = purchase_negative_balance(records, 5, NOW)
+        self.assertTrue(ok1)
+        purchase_idx = len(records) - 1
+
+        ok2, code, records = approve_purchase(records, purchase_idx, NOW)
+        self.assertTrue(ok2, f"Zatwierdzenie aktualnego wykupu musi przejść, kod: {code}")
+        self.assertEqual(compute_balance(records, NOW), 0, "Po zatwierdzeniu saldo = -5 + 5 = 0")
+
+    def test_zatwierdzenie_idempotentne(self):
+        """Ponowne zatwierdzenie już zatwierdzonego wykupu → ok, bez zmian salda."""
+        records = [make_spend(5, from_earn=0, overdraft=5), make_purchase(5, approved=True)]
+        ok, _, records = approve_purchase(records, 1, NOW)
+        self.assertTrue(ok)
+        self.assertEqual(compute_balance(records, NOW), 0)
+
+
+class TestReverseDeductL3(VerboseBusinessTestCase):
+    """
+    Testy regresyjne poprawki L3: skrócenie rezerwacji cofa dedukcję do
+    ORYGINALNYCH pul FIFO (z ich oryginalną ważnością). Stary przepływ tworzył
+    nową pulę earn ze świeżą ważnością — pozwalał "odświeżać" wygasające godzinki
+    przez rezerwację + skrócenie.
+    """
+
+    def test_skrocenie_przywraca_oryginalna_pule_bez_odswiezania_waznosci(self):
+        """
+        SCENARIUSZ "prania" z audytu: pula wygasa za ~2 miesiące → rezerwacja 10h
+        → skrócenie o 4h. Zwrot MUSI wrócić do starej puli (stara ważność),
+        a NIE jako nowa pula ważna 4 lata.
+        """
+        granted = _dt(2022, 6, 1)  # wygasa 2026-06-01, NOW = 2026-03-28
+        records = [make_earn(20, granted, approved=True)]
+
+        ok, _, _, records, _ = deduct_hours(records, 10, VARS, NOW, reservation_id="r1")
+        self.assertTrue(ok)
+        self.assertEqual(records[0]["remaining"], 10)
+
+        ok2, code, records = reverse_deduct_hours(records, "r1", 4, now=NOW)
+        self.assertTrue(ok2, f"Reverse musi się udać, kod: {code}")
+
+        self.assertEqual(records[0]["remaining"], 14, "Zwrot 4h wraca do oryginalnej puli")
+        self.assertEqual(compute_balance(records, NOW), 14)
+
+        # Kluczowe: brak nowej puli earn (odświeżonej ważności)
+        earns = [r for r in records if r["type"] == "earn"]
+        self.assertEqual(len(earns), 1, "Nie może powstać nowa pula earn")
+        self.assertEqual(compute_next_expiry(records, NOW), records[0]["expires_at"],
+                         "Najbliższe wygaśnięcie = stara data puli (bez odświeżenia)")
+
+    def test_skrocenie_pomniejsza_spend_i_refund_zwraca_reszte(self):
+        """Spójność skrócenie+anulowanie: spend pomniejszony, pełny refund zwraca dokładnie resztę."""
+        records = [make_earn(20, _dt(2024, 1, 1), approved=True)]
+        ok, _, _, records, spend = deduct_hours(records, 10, VARS, NOW, reservation_id="r1")
+        self.assertTrue(ok)
+        self.assertEqual(compute_balance(records, NOW), 10)
+
+        ok2, _, records = reverse_deduct_hours(records, "r1", 4, now=NOW)
+        self.assertTrue(ok2)
+        self.assertEqual(compute_balance(records, NOW), 14, "Po skróceniu: 10 + 4 = 14h")
+
+        spend_after = next(r for r in records if r["type"] == "spend")
+        self.assertEqual(spend_after["amount"], 6, "Spend pomniejszony do 6h")
+        self.assertEqual(spend_after["from_earn"], 6)
+
+        # Anulowanie reszty — refund wg pomniejszonego śladu
+        restores = [(d["earn_index"], d["amount"]) for d in spend_after["earn_deductions"]]
+        ok3, _, records = refund_hours_for_reservation(records, restores, now=NOW)
+        self.assertTrue(ok3)
+        self.assertEqual(compute_balance(records, NOW), 20, "Po anulowaniu saldo wraca do 20h (bez podwójnego zwrotu)")
+
+    def test_skrocenie_cofa_najpierw_overdraft(self):
+        """Rezerwacja częściowo na kredyt: skrócenie najpierw redukuje overdraft."""
+        records = [make_earn(3, _dt(2024, 1, 1), approved=True)]
+        ok, _, _, records, _ = deduct_hours(records, 8, VARS, NOW, reservation_id="r1")
+        self.assertTrue(ok)
+        self.assertEqual(compute_balance(records, NOW), -5)
+
+        ok2, _, records = reverse_deduct_hours(records, "r1", 5, now=NOW)
+        self.assertTrue(ok2)
+
+        spend_after = next(r for r in records if r["type"] == "spend")
+        self.assertEqual(spend_after["overdraft"], 0, "Overdraft cofnięty w pierwszej kolejności")
+        self.assertEqual(spend_after["from_earn"], 3, "Część z puli nietknięta")
+        self.assertEqual(compute_balance(records, NOW), 0, "Saldo: -5 + 5 = 0")
+
+    def test_skrocenie_cofa_od_najnowszego_spend(self):
+        """Rezerwacja z dwoma spend (wydłużenie): reverse cofa najpierw nowszy spend."""
+        records = [make_earn(20, _dt(2024, 1, 1), approved=True)]
+        ok, _, _, records, _ = deduct_hours(records, 10, VARS, NOW, reservation_id="r1")
+        self.assertTrue(ok)
+        ok, _, _, records, _ = deduct_hours(records, 5, VARS, NOW, reservation_id="r1")
+        self.assertTrue(ok)
+        self.assertEqual(compute_balance(records, NOW), 5)
+
+        ok2, _, records = reverse_deduct_hours(records, "r1", 3, now=NOW)
+        self.assertTrue(ok2)
+
+        spends = [r for r in records if r["type"] == "spend"]
+        self.assertEqual(spends[1]["amount"], 2, "Nowszy spend (5h) pomniejszony do 2h")
+        self.assertEqual(spends[0]["amount"], 10, "Starszy spend nietknięty")
+        self.assertEqual(compute_balance(records, NOW), 8)
+
+    def test_skrocenie_z_wygasla_pula_zrodlowa_blokuje(self):
+        """Pula źródłowa wygasła po rezerwacji → reverse zwraca pool_expired (korekta zablokowana)."""
+        granted = _dt(2022, 4, 1)  # wygasa 2026-04-01
+        records = [make_earn(10, granted, approved=True)]
+        ok, _, _, records, _ = deduct_hours(records, 6, VARS, NOW, reservation_id="r1")
+        self.assertTrue(ok)
+
+        after_expiry = _dt(2026, 5, 1)
+        ok2, code, _ = reverse_deduct_hours(records, "r1", 4, now=after_expiry)
+        self.assertFalse(ok2)
+        self.assertEqual(code, "pool_expired")
+
+    def test_legacy_spend_bez_sladu_fallback_adjustment(self):
+        """
+        Stary spend bez śladu earn_deductions (sprzed refund-flow): nieodtwarzalna
+        część wraca jako pula adjustment (zerowana przy anulowaniu) — jak w starym przepływie.
+        """
+        legacy_spend = make_spend(10, from_earn=10, overdraft=0)
+        legacy_spend["reservation_id"] = "r1"
+        # celowo BEZ earn_deductions
+        records = [make_earn(20, _dt(2024, 1, 1), approved=True, remaining=10), legacy_spend]
+        self.assertEqual(compute_balance(records, NOW), 10)
+
+        ok, _, records = reverse_deduct_hours(records, "r1", 4, now=NOW)
+        self.assertTrue(ok)
+
+        adjustments = [r for r in records if r.get("source_type") == "adjustment"]
+        self.assertEqual(len(adjustments), 1, "Fallback: nowa pula adjustment dla części bez śladu")
+        self.assertEqual(adjustments[0]["remaining"], 4)
+        self.assertEqual(compute_balance(records, NOW), 14)
+
+    def test_brak_spend_dla_rezerwacji_blokuje(self):
+        """Brak zapisu godzinkowego rezerwacji → spend_not_found (integralność danych)."""
+        records = [make_earn(10, _dt(2024, 1, 1), approved=True)]
+        ok, code, _ = reverse_deduct_hours(records, "nieistniejaca", 2, now=NOW)
+        self.assertFalse(ok)
+        self.assertEqual(code, "spend_not_found")
 
 
 if __name__ == "__main__":

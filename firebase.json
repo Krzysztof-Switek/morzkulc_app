@@ -123,6 +123,20 @@
         }
       },
       {
+        "source": "/api/admin/approve",
+        "function": {
+          "functionId": "adminApprove",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/admin/reject",
+        "function": {
+          "functionId": "adminReject",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "/api/register",
         "function": {
           "functionId": "registerUser",

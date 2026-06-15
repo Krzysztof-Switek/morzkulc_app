@@ -1,7 +1,8 @@
 import type {Request, Response} from "express";
-import {submitEarning} from "../modules/hours/godzinki_service";
+import {submitEarning, getAllRecords} from "../modules/hours/godzinki_service";
 import {isIsoDateYYYYMMDD} from "../modules/calendar/calendar_utils";
 import {isUserStatusBlocked} from "../modules/users/userStatusCheck";
+import {norm} from "../modules/shared/text_utils";
 
 type TokenCheck =
   | {error: string}
@@ -18,10 +19,6 @@ export type SubmitGodzinkiDeps = {
   /** Opcjonalne: kolejkowanie zadania syncu do Google Sheets (fire-and-forget) */
   enqueueGodzinkiSheetWrite?: (recordId: string, uid: string) => Promise<void>;
 };
-
-function norm(v: any): string {
-  return String(v || "").trim();
-}
 
 /**
  * POST /api/godzinki/submit
@@ -78,11 +75,14 @@ export async function handleSubmitGodzinki(req: Request, res: Response, deps: Su
       const fields: Record<string, string> = {};
 
       if (!amount || amount <= 0 || !Number.isFinite(amount)) fields.amount = "must_be_positive";
-      if (amount > 9999) fields.amount = "too_large";
+      else if (!Number.isInteger(amount)) fields.amount = "must_be_integer";
+      else if (amount > 9999) fields.amount = "too_large";
       if (!grantedAt) fields.grantedAt = "required";
       if (grantedAt && !isIsoDateYYYYMMDD(grantedAt)) fields.grantedAt = "invalid_format";
       if (grantedAt && isIsoDateYYYYMMDD(grantedAt)) {
-        const today = new Date().toISOString().slice(0, 10);
+        // "Dziś" w strefie klubu (Europe/Warsaw), nie UTC — tuż po północy
+        // czasu PL data lokalna była w UTC "przyszła" i zgłoszenie odpadało.
+        const today = new Intl.DateTimeFormat("sv-SE", {timeZone: "Europe/Warsaw"}).format(new Date());
         if (grantedAt > today) fields.grantedAt = "cannot_be_future";
       }
       if (!reason) fields.reason = "required";
@@ -90,6 +90,25 @@ export async function handleSubmitGodzinki(req: Request, res: Response, deps: Su
 
       if (Object.keys(fields).length > 0) {
         res.status(400).json({ok: false, code: "validation_failed", fields});
+        return;
+      }
+
+      // Dedup (Z14 z planu panelu): identyczne zgłoszenie z ostatnich 60 s jest
+      // odrzucane — double-click / ponowienie żądania tworzyło duplikaty
+      // (zaobserwowane na prod: 2 identyczne rekordy w odstępie 2 s).
+      const recent = await getAllRecords(db, uid);
+      const nowMs = Date.now();
+      const duplicate = recent.find((r) => {
+        if (r.type !== "earn") return false;
+        if (Number(r.amount) !== amount) return false;
+        if (String(r.reason || "").trim() !== reason) return false;
+        const grantedIso = (r.grantedAt as any)?.toDate?.()?.toISOString?.()?.slice(0, 10);
+        if (grantedIso !== grantedAt) return false;
+        const createdMs = (r.createdAt as any)?.toMillis?.() ?? 0;
+        return nowMs - createdMs < 60_000;
+      });
+      if (duplicate) {
+        res.status(409).json({ok: false, code: "duplicate_submission", error: "Identyczne zgłoszenie zostało już zapisane przed chwilą.", recordId: duplicate.id});
         return;
       }
 

@@ -182,24 +182,6 @@ export async function getHistory(
   return snap.docs.map((d) => ({id: d.id, ...d.data()} as GodzinkiRecord));
 }
 
-/**
- * Pobiera ostatnie przyznane godzinki (tylko typ "earn") — do wyświetlenia na stronie głównej.
- */
-export async function getRecentEarnings(
-  db: FirebaseFirestore.Firestore,
-  uid: string,
-  limit = 5
-): Promise<GodzinkiRecord[]> {
-  const snap = await db
-    .collection(COLLECTION)
-    .where("uid", "==", uid)
-    .where("type", "==", "earn")
-    .orderBy("createdAt", "desc")
-    .limit(limit)
-    .get();
-  return snap.docs.map((d) => ({id: d.id, ...d.data()} as GodzinkiRecord));
-}
-
 export type SubmitEarningInput = {
   amount: number;
   grantedAt: string; // ISO date YYYY-MM-DD
@@ -218,6 +200,7 @@ export async function submitEarning(
 ): Promise<{id: string; record: Partial<GodzinkiRecord>}> {
   const amount = Number(input.amount);
   if (!amount || amount <= 0) throw new Error("amount must be positive");
+  if (!Number.isInteger(amount)) throw new Error("amount must be an integer");
 
   const grantedDate = new Date(input.grantedAt + "T00:00:00Z");
   if (Number.isNaN(grantedDate.getTime())) throw new Error("invalid grantedAt");
@@ -242,6 +225,10 @@ export async function submitEarning(
     submittedBy: String(input.submittedBy || uid),
     createdAt: now,
     updatedAt: now,
+    // Jawny null (nie brak pola!) — umożliwia zapytanie where("sheetSyncedAt","==",null)
+    // w backfillu syncu (rekordy, które nigdy nie trafiły do arkusza, np. po martwym jobie).
+    sheetSyncedAt: null,
+    sheetRowNumber: null,
   };
 
   await ref.set(record);
@@ -275,11 +262,33 @@ export async function processApproval(
   // Obsługa wykupu salda ujemnego
   if (data.type === "purchase") {
     if (data.approved === true) return {ok: true}; // idempotentnie: już zatwierdzone
+
+    // Rewalidacja w momencie zatwierdzenia: saldo mogło się zmienić od zgłoszenia
+    // (np. anulowana rezerwacja zwróciła godzinki, inny wykup już zatwierdzono).
+    // Bez tej kontroli zatwierdzenie mogłoby wynieść saldo powyżej zera.
+    const records = await getAllRecords(db, data.uid);
+    const currentBalance = computeBalance(records);
+    const amount = Number(data.amount ?? 0);
+
+    if (currentBalance >= 0) {
+      const message = `Saldo użytkownika nie jest już ujemne (${currentBalance}) — wykup nieaktualny`;
+      await markApprovalRejected(ref, "purchase_no_longer_valid", message);
+      return {ok: false, code: "purchase_no_longer_valid", message};
+    }
+    if (amount > Math.abs(currentBalance)) {
+      const message = `Wykup ${amount} przekracza bieżące saldo ujemne (${currentBalance}) — wykup nieaktualny`;
+      await markApprovalRejected(ref, "purchase_no_longer_valid", message);
+      return {ok: false, code: "purchase_no_longer_valid", message};
+    }
+
     await ref.update({
       approved: true,
       approvedAt: admin.firestore.FieldValue.serverTimestamp(),
       approvedBy: String(approvedBy),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      approvalRejectedCode: admin.firestore.FieldValue.delete(),
+      approvalRejectedMessage: admin.firestore.FieldValue.delete(),
+      approvalRejectedAt: admin.firestore.FieldValue.delete(),
     });
     return {ok: true};
   }
@@ -293,6 +302,15 @@ export async function processApproval(
   const expiresAt = new Date(grantedAt.getTime());
   expiresAt.setFullYear(expiresAt.getFullYear() + expiryYears);
 
+  // Data pracy starsza niż okres ważności → pula byłaby martwa od urodzenia
+  // (remaining ustawione, ale expiresAt w przeszłości — bilans bez zmian).
+  // Odmawiamy: admin może poprawić "Data pracy" w arkuszu (sync koryguje pending).
+  if (expiresAt.getTime() <= Date.now()) {
+    const message = `Data pracy ${grantedAt.toISOString().slice(0, 10)} jest starsza niż okres ważności (${expiryYears} lat) — godzinki byłyby wygasłe w momencie zatwierdzenia`;
+    await markApprovalRejected(ref, "already_expired", message);
+    return {ok: false, code: "already_expired", message};
+  }
+
   await ref.update({
     approved: true,
     approvedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -300,28 +318,65 @@ export async function processApproval(
     remaining: Number(data.amount),
     expiresAt: admin.firestore.Timestamp.fromDate(expiresAt),
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    approvalRejectedCode: admin.firestore.FieldValue.delete(),
+    approvalRejectedMessage: admin.firestore.FieldValue.delete(),
+    approvalRejectedAt: admin.firestore.FieldValue.delete(),
   });
 
   return {ok: true};
+}
+
+/**
+ * Zapisuje na rekordzie ślad odmowy zatwierdzenia (Z10 z planu panelu zarządu):
+ * bez tego odmowa była widoczna wyłącznie w logach, a admin patrzył na wiecznie
+ * "oczekujący" rekord bez wyjaśnienia. Panel pokazuje kod/komunikat; udane
+ * zatwierdzenie czyści ślad.
+ */
+async function markApprovalRejected(
+  ref: FirebaseFirestore.DocumentReference,
+  code: string,
+  message: string
+): Promise<void> {
+  try {
+    await ref.update({
+      approvalRejectedCode: code,
+      approvalRejectedMessage: message,
+      approvalRejectedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  } catch {
+    // ślad jest pomocniczy — błąd zapisu nie może blokować przebiegu syncu
+  }
 }
 
 export type DeductHoursInput = {
   amount: number;
   reason: string;
   reservationId?: string;
+  /**
+   * Wymuszone naliczenie (np. miesięczna opłata magazynowa) — pomija limit
+   * ujemnego salda. Naliczenia przymusowe nie mogą być blokowane długiem.
+   */
+  force?: boolean;
 };
 
 /**
- * Odlicza godzinki metodą FIFO w ramach transakcji Firestore.
+ * Odlicza godzinki metodą FIFO wewnątrz ISTNIEJĄCEJ transakcji Firestore.
  *
  * Algorytm:
  * 1. Pobiera wszystkie zatwierdzone, niewygasłe rekordy "earn" posortowane po grantedAt ASC.
  * 2. Zużywa z najstarszych pul (FIFO), zmniejszając earn.remaining.
  * 3. Jeśli brakuje godzinek — tworzy "overdraft" (saldo ujemne).
- * 4. Sprawdza limit ujemnego salda z GodzinkiVars.
+ * 4. Sprawdza limit ujemnego salda z GodzinkiVars (chyba że input.force=true).
  * 5. Tworzy rekord "spend" z podziałem na fromEarn, overdraft i earnDeductions (ślad FIFO).
+ *
+ * UWAGA (kolejność w transakcji): wszystkie odczyty tej funkcji muszą nastąpić
+ * przed jakimkolwiek zapisem w transakcji wywołującego. Walidacje (w tym limit)
+ * wykonują się przed pierwszym zapisem — wynik {ok:false} nie zostawia
+ * częściowych zapisów.
  */
-export async function deductHours(
+export async function deductHoursInTx(
+  tx: FirebaseFirestore.Transaction,
   db: FirebaseFirestore.Firestore,
   uid: string,
   input: DeductHoursInput,
@@ -331,134 +386,151 @@ export async function deductHours(
   const amount = Number(input.amount);
   if (!amount || amount <= 0) return {ok: false, code: "bad_request", message: "amount must be positive"};
 
-  return db.runTransaction(async (tx) => {
-    // Pobierz wszystkie rekordy earn dla użytkownika
-    const earnSnap = await tx.get(
-      db
-        .collection(COLLECTION)
-        .where("uid", "==", uid)
-        .where("type", "==", "earn")
-        .where("approved", "==", true)
-    );
+  // Pobierz wszystkie rekordy earn dla użytkownika
+  const earnSnap = await tx.get(
+    db
+      .collection(COLLECTION)
+      .where("uid", "==", uid)
+      .where("type", "==", "earn")
+      .where("approved", "==", true)
+  );
 
-    // Pobierz rekordy spend i purchase do obliczenia bieżącego overdraftu
-    const spendSnap = await tx.get(
-      db.collection(COLLECTION).where("uid", "==", uid).where("type", "==", "spend")
-    );
-    const purchaseSnap = await tx.get(
-      db.collection(COLLECTION).where("uid", "==", uid).where("type", "==", "purchase")
-    );
+  // Pobierz rekordy spend i purchase do obliczenia bieżącego overdraftu
+  const spendSnap = await tx.get(
+    db.collection(COLLECTION).where("uid", "==", uid).where("type", "==", "spend")
+  );
+  const purchaseSnap = await tx.get(
+    db.collection(COLLECTION).where("uid", "==", uid).where("type", "==", "purchase")
+  );
 
-    // Filtruj zatwierdzone, niewygasłe rekordy earn, posortuj FIFO
-    const earnRecords = earnSnap.docs
-      .map((d) => ({ref: d.ref, data: d.data() as GodzinkiRecord}))
-      .filter((r) => {
-        const expiresAt = toDate(r.data.expiresAt);
-        return expiresAt !== null && expiresAt > now && Number(r.data.remaining ?? 0) > 0;
-      })
-      .sort((a, b) => {
-        const aDate = toDate(a.data.grantedAt);
-        const bDate = toDate(b.data.grantedAt);
-        if (!aDate || !bDate) return 0;
-        return aDate.getTime() - bDate.getTime();
-      });
+  // Filtruj zatwierdzone, niewygasłe rekordy earn, posortuj FIFO
+  const earnRecords = earnSnap.docs
+    .map((d) => ({ref: d.ref, data: d.data() as GodzinkiRecord}))
+    .filter((r) => {
+      const expiresAt = toDate(r.data.expiresAt);
+      return expiresAt !== null && expiresAt > now && Number(r.data.remaining ?? 0) > 0;
+    })
+    .sort((a, b) => {
+      const aDate = toDate(a.data.grantedAt);
+      const bDate = toDate(b.data.grantedAt);
+      if (!aDate || !bDate) return 0;
+      return aDate.getTime() - bDate.getTime();
+    });
 
-    // Oblicz bieżące saldo
-    const positiveBalance = earnRecords.reduce((sum, r) => sum + Number(r.data.remaining ?? 0), 0);
-    const currentOverdraft = spendSnap.docs.reduce((sum, d) => {
-      const s = d.data() as any;
-      return s.refunded === true ? sum : sum + Number(s.overdraft ?? 0);
-    }, 0);
-    const currentPurchases = purchaseSnap.docs.reduce((sum, d) => {
-      const p = d.data() as any;
-      return p.approved === false ? sum : sum + Number(p.amount ?? 0);
-    }, 0);
-    const currentBalance = positiveBalance - currentOverdraft + currentPurchases;
+  // Oblicz bieżące saldo — JEDNĄ formułą (computeBalance), nie kopią.
+  // Zapytanie earn ma filtr approved==true, więc niezatwierdzone pule i tak
+  // nie weszłyby do bilansu — zbiór rekordów jest równoważny pełnemu.
+  const allRecords = [...earnSnap.docs, ...spendSnap.docs, ...purchaseSnap.docs]
+    .map((d) => ({id: d.id, ...d.data()} as GodzinkiRecord));
+  const currentBalance = computeBalance(allRecords, now);
 
-    // Sprawdź limit ujemnego salda
-    const newBalance = currentBalance - amount;
-    if (newBalance < -vars.negativeBalanceLimit) {
-      return {
-        ok: false,
-        code: "negative_limit_exceeded",
-        message: `Balance would exceed negative limit of -${vars.negativeBalanceLimit}`,
-      };
-    }
-
-    // FIFO: zużyj z najstarszych pul, rejestruj ślad dedukcji
-    let remaining = amount;
-    let fromEarn = 0;
-    const earnDeductions: {earnId: string; amount: number}[] = [];
-
-    for (const r of earnRecords) {
-      if (remaining <= 0) break;
-      const available = Number(r.data.remaining ?? 0);
-      const take = Math.min(available, remaining);
-
-      tx.update(r.ref, {
-        remaining: available - take,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-
-      earnDeductions.push({earnId: r.ref.id, amount: take});
-      fromEarn += take;
-      remaining -= take;
-    }
-
-    const overdraft = remaining; // co zostało po wyczerpaniu earn records
-
-    // Utwórz rekord "spend"
-    const spendRef = db.collection(COLLECTION).doc();
-    const spendRecord: Record<string, any> = {
-      id: spendRef.id,
-      uid,
-      type: "spend",
-      amount,
-      fromEarn,
-      overdraft,
-      earnDeductions,
-      reservationId: input.reservationId ? String(input.reservationId) : null,
-      refunded: false,
-      reason: String(input.reason || "").trim(),
-      submittedBy: uid,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  // Sprawdź limit ujemnego salda (pomijany dla naliczeń wymuszonych)
+  const newBalance = currentBalance - amount;
+  if (!input.force && newBalance < -vars.negativeBalanceLimit) {
+    return {
+      ok: false,
+      code: "negative_limit_exceeded",
+      message: `Balance would exceed negative limit of -${vars.negativeBalanceLimit}`,
     };
+  }
 
-    tx.set(spendRef, spendRecord);
+  // FIFO: zużyj z najstarszych pul, rejestruj ślad dedukcji
+  let remaining = amount;
+  let fromEarn = 0;
+  const earnDeductions: {earnId: string; amount: number}[] = [];
 
-    return {ok: true, fromEarn, overdraft};
-  });
+  for (const r of earnRecords) {
+    if (remaining <= 0) break;
+    const available = Number(r.data.remaining ?? 0);
+    const take = Math.min(available, remaining);
+
+    tx.update(r.ref, {
+      remaining: available - take,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    earnDeductions.push({earnId: r.ref.id, amount: take});
+    fromEarn += take;
+    remaining -= take;
+  }
+
+  const overdraft = remaining; // co zostało po wyczerpaniu earn records
+
+  // Utwórz rekord "spend"
+  const spendRef = db.collection(COLLECTION).doc();
+  const spendRecord: Record<string, any> = {
+    id: spendRef.id,
+    uid,
+    type: "spend",
+    amount,
+    fromEarn,
+    overdraft,
+    earnDeductions,
+    reservationId: input.reservationId ? String(input.reservationId) : null,
+    refunded: false,
+    reason: String(input.reason || "").trim(),
+    submittedBy: uid,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  };
+
+  tx.set(spendRef, spendRecord);
+
+  return {ok: true, fromEarn, overdraft};
 }
 
 /**
- * Zwraca godzinki za anulowaną rezerwację.
+ * Odlicza godzinki metodą FIFO we własnej transakcji Firestore.
+ * Wrapper na deductHoursInTx dla wywołań samodzielnych (np. opłata magazynowa).
+ */
+export async function deductHours(
+  db: FirebaseFirestore.Firestore,
+  uid: string,
+  input: DeductHoursInput,
+  vars: GodzinkiVars,
+  now: Date = new Date()
+): Promise<{ok: boolean; code?: string; message?: string; fromEarn?: number; overdraft?: number}> {
+  return db.runTransaction(async (tx) => deductHoursInTx(tx, db, uid, input, vars, now));
+}
+
+/**
+ * Zwraca godzinki za anulowaną rezerwację — wewnątrz ISTNIEJĄCEJ transakcji.
  *
  * Mechanizm:
- * - Szuka rekordu "spend" powiązanego z rezerwacją (reservationId).
+ * - Szuka rekordów "spend" powiązanych z rezerwacją (reservationId).
  * - Jeśli rekord nie istnieje a costHours > 0 → błąd integralności danych (blokuje anulowanie).
  * - Przywraca earn.remaining dla pul FIFO które nie wygasły.
  * - Pule które wygasły po dacie rezerwacji → blokuje anulowanie z komunikatem dla użytkownika.
- * - Overdraft (godzinki z salda ujemnego) → zwracany jako nowy rekord earn.
+ * - Część pokryta z salda ujemnego (overdraft) wraca WYŁĄCZNIE przez oznaczenie
+ *   spend jako refunded=true — refunded spend przestaje obciążać bilans w
+ *   computeBalance(). NIE tworzymy dodatkowej puli earn za overdraft: robiły to
+ *   starsze wersje i skutkowało to podwójnym zwrotem (saldo rosło o overdraft
+ *   ponad stan sprzed rezerwacji).
  * - Oznacza spend jako refunded=true.
+ *
+ * Wszystkie odczyty wykonują się przed zapisami; wynik {ok:false} nie zostawia
+ * częściowych zapisów.
  */
-export async function refundHoursForReservation(
+export async function refundHoursForReservationInTx(
+  tx: FirebaseFirestore.Transaction,
   db: FirebaseFirestore.Firestore,
   uid: string,
   reservationId: string,
   costHours: number,
-  vars: GodzinkiVars,
   now: Date = new Date()
 ): Promise<{ok: boolean; code?: string; message?: string}> {
   if (costHours <= 0) return {ok: true};
 
-  // Znajdź rekord spend dla tej rezerwacji (nie zrefundowany)
-  const spendSnap = await db
-    .collection(COLLECTION)
-    .where("uid", "==", uid)
-    .where("type", "==", "spend")
-    .where("reservationId", "==", reservationId)
-    .get();
+  // ── ODCZYTY ────────────────────────────────────────────────────────────────
+
+  // Znajdź rekordy spend dla tej rezerwacji (nie zrefundowane)
+  const spendSnap = await tx.get(
+    db
+      .collection(COLLECTION)
+      .where("uid", "==", uid)
+      .where("type", "==", "spend")
+      .where("reservationId", "==", reservationId)
+  );
 
   const activeSpendsArr = spendSnap.docs.filter((d) => (d.data() as any).refunded !== true);
 
@@ -471,35 +543,37 @@ export async function refundHoursForReservation(
   }
 
   // Zbierz wszystkie earn deductions ze wszystkich spend records tej rezerwacji
-  type EarnRestore = {id: string; amount: number};
-  const allEarnRestores: EarnRestore[] = [];
-  let totalOverdraft = 0;
+  // (agregacja per pula — jedna pula mogła być źródłem wielu dedukcji)
+  const restoreByEarnId = new Map<string, number>();
 
   for (const spendDoc of activeSpendsArr) {
     const spendData = spendDoc.data() as any;
     const earnDeductions: {earnId: string; amount: number}[] = Array.isArray(spendData.earnDeductions) ? spendData.earnDeductions : [];
-    totalOverdraft += Number(spendData.overdraft ?? 0);
     for (const ded of earnDeductions) {
-      allEarnRestores.push({id: ded.earnId, amount: ded.amount});
+      const id = String(ded.earnId);
+      restoreByEarnId.set(id, (restoreByEarnId.get(id) ?? 0) + Number(ded.amount ?? 0));
     }
   }
 
-  // Sprawdź czy wszystkie pule earn można przywrócić (nie wygasły)
+  // Odczytaj pule earn i sprawdź czy można je przywrócić (nie wygasły)
+  type EarnRestore = {ref: FirebaseFirestore.DocumentReference; current: number; amount: number};
   let lostHours = 0;
   const validRestores: EarnRestore[] = [];
 
-  for (const restore of allEarnRestores) {
-    const earnSnap = await db.collection(COLLECTION).doc(restore.id).get();
+  for (const [earnId, amount] of restoreByEarnId.entries()) {
+    if (amount <= 0) continue;
+    const earnRef = db.collection(COLLECTION).doc(earnId);
+    const earnSnap = await tx.get(earnRef);
     if (!earnSnap.exists) {
-      lostHours += restore.amount;
+      lostHours += amount;
       continue;
     }
     const earnData = earnSnap.data() as any;
     const expiresAt = toDate(earnData.expiresAt);
     if (!expiresAt || expiresAt <= now) {
-      lostHours += restore.amount;
+      lostHours += amount;
     } else {
-      validRestores.push(restore);
+      validRestores.push({ref: earnRef, current: Number(earnData.remaining ?? 0), amount});
     }
   }
 
@@ -512,13 +586,12 @@ export async function refundHoursForReservation(
   }
 
   // Znajdź rekordy earn będące korektami tej rezerwacji (sourceType="adjustment").
-  // Powstają przy skróceniu rezerwacji (creditReservationAdjustment) i muszą być
-  // wyzerowane przy anulowaniu — inaczej użytkownik dostałby podwójny zwrot.
-  const adjustmentEarnSnap = await db
-    .collection(COLLECTION)
-    .where("uid", "==", uid)
-    .where("type", "==", "earn")
-    .get();
+  // Powstają przy skróceniu rezerwacji w starym przepływie (creditReservationAdjustment)
+  // oraz jako fallback dla rekordów bez śladu FIFO — muszą być wyzerowane przy
+  // anulowaniu, inaczej użytkownik dostałby podwójny zwrot.
+  const adjustmentEarnSnap = await tx.get(
+    db.collection(COLLECTION).where("uid", "==", uid).where("type", "==", "earn")
+  );
 
   const adjustmentEarnDocs = adjustmentEarnSnap.docs.filter((d) => {
     const data = d.data() as any;
@@ -529,71 +602,256 @@ export async function refundHoursForReservation(
     );
   });
 
-  // Wszystko OK — wykonaj refund w transakcji
-  await db.runTransaction(async (tx) => {
-    // Przywróć earn.remaining dla wszystkich pul FIFO
-    for (const restore of validRestores) {
-      const earnRef = db.collection(COLLECTION).doc(restore.id);
-      const earnSnap = await tx.get(earnRef);
-      if (!earnSnap.exists) continue;
-      const current = Number(earnSnap.data()?.remaining ?? 0);
-      tx.update(earnRef, {
-        remaining: current + restore.amount,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-    }
+  // ── ZAPISY ─────────────────────────────────────────────────────────────────
 
-    // Overdraft — utwórz nowy rekord earn (godzinki z ujemnego salda wracają jako nowa pula)
-    if (totalOverdraft > 0) {
-      const newEarnRef = db.collection(COLLECTION).doc();
-      const expiresAtDate = new Date(now);
-      expiresAtDate.setFullYear(expiresAtDate.getFullYear() + vars.expiryYears);
-      tx.set(newEarnRef, {
-        id: newEarnRef.id,
-        uid,
-        type: "earn",
-        amount: totalOverdraft,
-        remaining: totalOverdraft,
-        grantedAt: admin.firestore.Timestamp.fromDate(now),
-        expiresAt: admin.firestore.Timestamp.fromDate(expiresAtDate),
-        approved: true,
-        approvedAt: admin.firestore.FieldValue.serverTimestamp(),
-        approvedBy: "refund",
-        reason: "Zwrot godzinek z anulowanej rezerwacji",
-        submittedBy: "system",
-        reservationId,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-    }
+  // Przywróć earn.remaining dla wszystkich pul FIFO
+  for (const restore of validRestores) {
+    tx.update(restore.ref, {
+      remaining: restore.current + restore.amount,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  }
 
-    // Wyzeruj earn korekty tej rezerwacji (zapobiega podwójnemu zwrotowi przy update+cancel)
-    for (const adjDoc of adjustmentEarnDocs) {
-      const adjRef = db.collection(COLLECTION).doc(adjDoc.id);
-      const adjSnap = await tx.get(adjRef);
-      if (!adjSnap.exists) continue;
-      tx.update(adjRef, {
-        remaining: 0,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-    }
+  // Wyzeruj earn korekty tej rezerwacji (zapobiega podwójnemu zwrotowi przy update+cancel)
+  for (const adjDoc of adjustmentEarnDocs) {
+    tx.update(adjDoc.ref, {
+      remaining: 0,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  }
 
-    // Oznacz wszystkie spend records jako zrefundowane
-    for (const spendDoc of activeSpendsArr) {
-      tx.update(spendDoc.ref, {
-        refunded: true,
-        refundedAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-    }
-  });
+  // Oznacz wszystkie spend records jako zrefundowane
+  // (to przywraca również część overdraft — refunded spend nie obciąża bilansu)
+  for (const spendDoc of activeSpendsArr) {
+    tx.update(spendDoc.ref, {
+      refunded: true,
+      refundedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  }
 
   return {ok: true};
 }
 
 /**
+ * Zwraca godzinki za anulowaną rezerwację we własnej transakcji.
+ * Wrapper na refundHoursForReservationInTx.
+ */
+export async function refundHoursForReservation(
+  db: FirebaseFirestore.Firestore,
+  uid: string,
+  reservationId: string,
+  costHours: number,
+  now: Date = new Date()
+): Promise<{ok: boolean; code?: string; message?: string}> {
+  return db.runTransaction(async (tx) =>
+    refundHoursForReservationInTx(tx, db, uid, reservationId, costHours, now)
+  );
+}
+
+/**
+ * Cofa część dedukcji godzinek przy SKRÓCENIU rezerwacji (delta < 0).
+ *
+ * Zamiast tworzyć nową pulę earn ze świeżą ważnością (stary przepływ
+ * creditReservationAdjustment — pozwalał "odświeżać" wygasające godzinki),
+ * przywraca godzinki do ORYGINALNYCH pul FIFO, z których zostały pobrane,
+ * cofając od najnowszych zapisów:
+ *   1. najpierw część overdraft (saldo ujemne) najnowszego spend,
+ *   2. potem dedukcje z pul w odwrotnej kolejności FIFO (ślad earnDeductions),
+ *   3. spend records tej rezerwacji są pomniejszane (amount/fromEarn/overdraft/
+ *      earnDeductions) tak, by późniejszy pełny refund przy anulowaniu zwracał
+ *      dokładnie pozostały koszt.
+ *
+ * Pula źródłowa wygasła → {ok:false, code:"pool_expired"} (spójnie z anulowaniem).
+ * Stare rekordy spend bez śladu earnDeductions: nieodtwarzalna część wraca jako
+ * pula earn z sourceType="adjustment" (zerowana przy anulowaniu) — zachowanie
+ * jak w starym przepływie, tylko dla danych sprzed wprowadzenia śladu FIFO.
+ *
+ * Wszystkie odczyty przed zapisami; wynik {ok:false} nie zostawia zapisów.
+ */
+export async function reverseDeductHoursInTx(
+  tx: FirebaseFirestore.Transaction,
+  db: FirebaseFirestore.Firestore,
+  uid: string,
+  reservationId: string,
+  amount: number,
+  expiryYears: number,
+  now: Date = new Date()
+): Promise<{ok: boolean; code?: string; message?: string}> {
+  const toReverse = Number(amount);
+  if (!toReverse || toReverse <= 0) return {ok: true};
+
+  // ── ODCZYTY ────────────────────────────────────────────────────────────────
+
+  const spendSnap = await tx.get(
+    db
+      .collection(COLLECTION)
+      .where("uid", "==", uid)
+      .where("type", "==", "spend")
+      .where("reservationId", "==", reservationId)
+  );
+
+  // Aktywne spend records tej rezerwacji, od najnowszego
+  const activeSpends = spendSnap.docs
+    .filter((d) => (d.data() as any).refunded !== true)
+    .sort((a, b) => {
+      const aTs = (a.data() as any)?.createdAt?.toMillis?.() ?? 0;
+      const bTs = (b.data() as any)?.createdAt?.toMillis?.() ?? 0;
+      return bTs - aTs;
+    });
+
+  if (activeSpends.length === 0) {
+    return {
+      ok: false,
+      code: "spend_not_found",
+      message: "Nie można skorygować rezerwacji — brak zapisu godzinkowego. Skontaktuj się z administratorem.",
+    };
+  }
+
+  // Zaplanuj cofnięcie: overdraft najnowszego spend najpierw, potem ślad FIFO od końca
+  type SpendPatch = {
+    ref: FirebaseFirestore.DocumentReference;
+    amount: number;
+    fromEarn: number;
+    overdraft: number;
+    earnDeductions: {earnId: string; amount: number}[];
+  };
+
+  let remaining = toReverse;
+  const spendPatches: SpendPatch[] = [];
+  const restoreByEarnId = new Map<string, number>();
+
+  for (const spendDoc of activeSpends) {
+    if (remaining <= 0) break;
+    const s = spendDoc.data() as any;
+
+    let sAmount = Number(s.amount ?? 0);
+    let sFromEarn = Number(s.fromEarn ?? 0);
+    let sOverdraft = Number(s.overdraft ?? 0);
+    const deds: {earnId: string; amount: number}[] = Array.isArray(s.earnDeductions) ?
+      s.earnDeductions.map((d: any) => ({earnId: String(d.earnId), amount: Number(d.amount ?? 0)})) :
+      [];
+
+    let changed = false;
+
+    // Najpierw cofnij część overdraft (była "ostatnia" w kolejności zużycia)
+    const takeOverdraft = Math.min(remaining, sOverdraft);
+    if (takeOverdraft > 0) {
+      sOverdraft -= takeOverdraft;
+      sAmount -= takeOverdraft;
+      remaining -= takeOverdraft;
+      changed = true;
+    }
+
+    // Potem cofaj dedukcje z pul od końca śladu (odwrotność FIFO)
+    for (let i = deds.length - 1; i >= 0 && remaining > 0; i--) {
+      const take = Math.min(remaining, deds[i].amount);
+      if (take <= 0) continue;
+      deds[i].amount -= take;
+      sFromEarn -= take;
+      sAmount -= take;
+      remaining -= take;
+      restoreByEarnId.set(deds[i].earnId, (restoreByEarnId.get(deds[i].earnId) ?? 0) + take);
+      changed = true;
+    }
+
+    if (changed) {
+      spendPatches.push({
+        ref: spendDoc.ref,
+        amount: sAmount,
+        fromEarn: sFromEarn,
+        overdraft: sOverdraft,
+        earnDeductions: deds.filter((d) => d.amount > 0),
+      });
+    }
+  }
+
+  // Nieodtwarzalna reszta — stare spend records bez śladu earnDeductions
+  const untraced = remaining;
+
+  // Odczytaj i zweryfikuj pule do przywrócenia (nie mogą być wygasłe)
+  type PoolRestore = {ref: FirebaseFirestore.DocumentReference; current: number; amount: number};
+  const poolRestores: PoolRestore[] = [];
+
+  for (const [earnId, restoreAmount] of restoreByEarnId.entries()) {
+    if (restoreAmount <= 0) continue;
+    const earnRef = db.collection(COLLECTION).doc(earnId);
+    const earnSnap = await tx.get(earnRef);
+    if (!earnSnap.exists) {
+      return {
+        ok: false,
+        code: "pool_missing",
+        message: "Nie można skorygować rezerwacji — brak puli źródłowej godzinek. Skontaktuj się z administratorem.",
+      };
+    }
+    const earnData = earnSnap.data() as any;
+    const expiresAt = toDate(earnData.expiresAt);
+    if (!expiresAt || expiresAt <= now) {
+      return {
+        ok: false,
+        code: "pool_expired",
+        message: "Nie można skorygować rezerwacji — godzinki użyte do tej rezerwacji wygasły i nie mogą zostać zwrócone. Skontaktuj się z administratorem.",
+      };
+    }
+    poolRestores.push({ref: earnRef, current: Number(earnData.remaining ?? 0), amount: restoreAmount});
+  }
+
+  // ── ZAPISY ─────────────────────────────────────────────────────────────────
+
+  for (const patch of spendPatches) {
+    tx.update(patch.ref, {
+      amount: patch.amount,
+      fromEarn: patch.fromEarn,
+      overdraft: patch.overdraft,
+      earnDeductions: patch.earnDeductions,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  }
+
+  for (const restore of poolRestores) {
+    tx.update(restore.ref, {
+      remaining: restore.current + restore.amount,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  }
+
+  // Fallback dla rekordów sprzed śladu FIFO: nowa pula adjustment (jak dawniej).
+  // Zerowana przy anulowaniu rezerwacji (refundHoursForReservationInTx).
+  if (untraced > 0) {
+    const newEarnRef = db.collection(COLLECTION).doc();
+    const expiresAtDate = new Date(now);
+    expiresAtDate.setFullYear(expiresAtDate.getFullYear() + expiryYears);
+    tx.set(newEarnRef, {
+      id: newEarnRef.id,
+      uid,
+      type: "earn",
+      amount: untraced,
+      remaining: untraced,
+      grantedAt: admin.firestore.Timestamp.fromDate(now),
+      expiresAt: admin.firestore.Timestamp.fromDate(expiresAtDate),
+      approved: true,
+      approvedAt: admin.firestore.FieldValue.serverTimestamp(),
+      approvedBy: "refund",
+      sourceType: "adjustment",
+      reason: "Zwrot godzinek z korekty rezerwacji",
+      submittedBy: "system",
+      reservationId,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  }
+
+  return {ok: true};
+}
+
+/**
+ * LEGACY — nieużywany w bieżącym przepływie korekt rezerwacji.
+ * Skrócenie rezerwacji obsługuje reverseDeductHoursInTx (przywraca oryginalne
+ * pule FIFO zamiast tworzyć nową pulę ze świeżą ważnością). Funkcja pozostaje
+ * dla zgodności z istniejącymi danymi (rekordy sourceType="adjustment" są nadal
+ * zerowane przy anulowaniu) oraz dla ewentualnych skryptów naprawczych.
+ *
  * Tworzy rekord earn jako zwrot różnicy godzinek przy korekcie rezerwacji (skrócenie).
- * Używany gdy nowe costHours < stare costHours (delta ujemny).
  * Rekord jest od razu zatwierdzony (approved=true) — to zwrot, nie nowe zgłoszenie.
  */
 export async function creditReservationAdjustment(
@@ -683,6 +941,8 @@ export type PurchaseInput = {
  * Walidacja:
  *   - Bieżące saldo musi być ujemne (można wykupić tylko to co się jest winnym).
  *   - Kwota wykupu nie może przekroczyć salda ujemnego (nie można wyjść na plus).
+ *   - Suma oczekujących (pending) wykupów + nowy wykup nie może przekroczyć długu —
+ *     inaczej zatwierdzenie wielu pending wyniosłoby saldo powyżej zera.
  */
 export async function submitPurchaseRequest(
   db: FirebaseFirestore.Firestore,
@@ -692,6 +952,7 @@ export async function submitPurchaseRequest(
 ): Promise<{ok: boolean; code?: string; message?: string; id?: string}> {
   const amount = Number(input.amount);
   if (!amount || amount <= 0) return {ok: false, code: "bad_request", message: "amount must be positive"};
+  if (!Number.isInteger(amount)) return {ok: false, code: "bad_request", message: "amount must be an integer"};
 
   const records = await getAllRecords(db, uid);
   const currentBalance = computeBalance(records, now);
@@ -700,12 +961,18 @@ export async function submitPurchaseRequest(
     return {ok: false, code: "balance_not_negative", message: "Balance is not negative, cannot purchase"};
   }
 
-  const maxPurchase = Math.abs(currentBalance);
+  // Pending wykupy (approved=false) nie wchodzą do bilansu, ale rezerwują dług
+  const pendingPurchases = records
+    .filter((r) => r.type === "purchase" && r.approved === false)
+    .reduce((sum, r) => sum + Number(r.amount ?? 0), 0);
+
+  const maxPurchase = Math.abs(currentBalance) - pendingPurchases;
   if (amount > maxPurchase) {
     return {
       ok: false,
       code: "purchase_exceeds_debt",
-      message: `Purchase would bring balance above zero. Max allowed: ${maxPurchase}`,
+      message: `Purchase would bring balance above zero. Max allowed: ${Math.max(0, maxPurchase)}` +
+        (pendingPurchases > 0 ? ` (pending purchases: ${pendingPurchases})` : ""),
     };
   }
 
@@ -723,6 +990,9 @@ export async function submitPurchaseRequest(
     submittedBy: uid,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    // Jawny null — patrz komentarz w submitEarning (backfill syncu do arkusza).
+    sheetSyncedAt: null,
+    sheetRowNumber: null,
   });
 
   return {ok: true, id: ref.id};

@@ -2,6 +2,7 @@ import { apiGetJson, apiPostJson } from "/core/api_client.js";
 
 const GODZINKI_URL = "/api/godzinki";
 const SUBMIT_URL = "/api/godzinki/submit";
+const PURCHASE_URL = "/api/godzinki/purchase";
 
 const NAV_BACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`;
 const NAV_HOME_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
@@ -29,7 +30,13 @@ function spinnerHtml(text = "Ładowanie…") {
 }
 
 function todayIso() {
-  return new Date().toISOString().slice(0, 10);
+  // Lokalna data użytkownika (nie UTC) — toISOString() tuż po północy czasu PL
+  // zwracał wczorajszą datę i blokował zgłoszenie godzinek z dzisiejszą datą.
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 function formatBalanceSign(balance) {
@@ -135,6 +142,83 @@ function renderTabsHtml(activeTab) {
   </div>`;
 }
 
+function purchaseSectionHtml(balance) {
+  const debt = Math.floor(Math.abs(balance));
+  if (debt < 1) return "";
+  return `
+    <div class="godzinkiPurchaseSection">
+      <h3>Wykup salda ujemnego</h3>
+      <p class="godzinkiInfo">
+        Masz ujemne saldo godzinek. Możesz zgłosić wykup (maks. ${esc(String(debt))} h) —
+        po zatwierdzeniu przez zarząd saldo zostanie podniesione. Szczegóły rozliczenia
+        wykupu ustalisz z zarządem.
+      </p>
+      <form id="godzinkiPurchaseForm" class="godzinkiForm" novalidate>
+        <div class="formRow">
+          <label for="godzinkiPurchaseAmount">Liczba godzinek do wykupu <span class="required">*</span></label>
+          <input type="number" id="godzinkiPurchaseAmount" name="amount" min="1" max="${esc(String(debt))}" step="1"
+            placeholder="np. ${esc(String(debt))}" required />
+        </div>
+        <div id="godzinkiPurchaseError" class="errorMsg" hidden></div>
+        <div id="godzinkiPurchaseSuccess" class="successMsg" hidden></div>
+        <div class="formActions">
+          <button type="submit" id="godzinkiPurchaseBtn" class="primary">Zgłoś wykup</button>
+        </div>
+      </form>
+    </div>
+  `;
+}
+
+function wirePurchaseForm(inner, ctx, balance) {
+  const form = inner.querySelector("#godzinkiPurchaseForm");
+  if (!form) return;
+  const errEl = inner.querySelector("#godzinkiPurchaseError");
+  const okEl = inner.querySelector("#godzinkiPurchaseSuccess");
+  const btn = inner.querySelector("#godzinkiPurchaseBtn");
+  const debt = Math.floor(Math.abs(balance));
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    errEl.hidden = true;
+    okEl.hidden = true;
+
+    const amount = Number(form.amount.value);
+    if (!amount || amount <= 0) { errEl.textContent = "Podaj prawidłową liczbę godzinek (> 0)."; errEl.hidden = false; return; }
+    if (!Number.isInteger(amount)) { errEl.textContent = "Liczba godzinek musi być liczbą całkowitą."; errEl.hidden = false; return; }
+    if (amount > debt) { errEl.textContent = `Wykup nie może przekroczyć salda ujemnego (maks. ${debt} h).`; errEl.hidden = false; return; }
+
+    btn.disabled = true;
+    btn.textContent = "Wysyłanie…";
+
+    try {
+      const resp = await apiPostJson({
+        url: PURCHASE_URL,
+        idToken: ctx.idToken,
+        body: { amount },
+      });
+
+      if (resp?.ok) {
+        okEl.textContent = "Wykup zgłoszony! Oczekuje zatwierdzenia przez zarząd.";
+        okEl.hidden = false;
+        form.reset();
+      } else {
+        const code = resp?.code || "";
+        let msg = resp?.message || "Nieznany błąd";
+        if (code === "purchase_exceeds_debt") msg = "Kwota (razem z wcześniejszymi zgłoszeniami) przekracza saldo ujemne.";
+        if (code === "balance_not_negative") msg = "Saldo nie jest już ujemne — wykup nie jest potrzebny.";
+        errEl.textContent = "Błąd: " + msg;
+        errEl.hidden = false;
+      }
+    } catch (err) {
+      errEl.textContent = "Błąd wysyłania: " + (err?.message || String(err));
+      errEl.hidden = false;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Zgłoś wykup";
+    }
+  });
+}
+
 async function renderHomeView(viewEl, ctx) {
   const inner = viewEl.querySelector("#godzinkiInner");
   if (!inner) return;
@@ -154,11 +238,14 @@ async function renderHomeView(viewEl, ctx) {
 
   inner.innerHTML = `
     ${infoBarHtml(balance, nextExpiry)}
+    ${balance < 0 ? purchaseSectionHtml(balance) : ""}
     <div class="godzinkiRecentSection">
       <h3>Ostatnie wpisy</h3>
       ${renderRecordTable(recentEarnings)}
     </div>
   `;
+
+  if (balance < 0) wirePurchaseForm(inner, ctx, balance);
 }
 
 async function renderHistoryView(viewEl, ctx) {
@@ -283,6 +370,7 @@ function renderSubmitView(viewEl, ctx) {
     const reason = String(form.reason.value || "").trim();
 
     if (!amount || amount <= 0) { setErr("Podaj prawidłową liczbę godzinek (> 0)."); return; }
+    if (!Number.isInteger(amount)) { setErr("Liczba godzinek musi być liczbą całkowitą."); return; }
     if (!grantedAt) { setErr("Podaj datę pracy."); return; }
     if (grantedAt > today) { setErr("Data pracy nie może być w przyszłości."); return; }
     if (!reason) { setErr("Podaj opis pracy."); return; }

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-10T11:09:56",
+  "generated_at": "2026-06-12T08:30:56",
   "project_root": "C:\\Users\\kswitek\\Documents\\morzkulc_app",
   "settings": {
     "excluded_dirs": [
@@ -45,9 +45,9 @@
     {
       "path": ".claude/settings.local.json",
       "extension": ".json",
-      "size_bytes": 68,
-      "line_count": 8,
-      "sha1_short": "4b8a114fbf",
+      "size_bytes": 550,
+      "line_count": 12,
+      "sha1_short": "3718855706",
       "kind": "config",
       "module_aliases": [],
       "imports": [],
@@ -673,11 +673,34 @@
       "notes": []
     },
     {
+      "path": "appscript/członkowie sympatycy SKK/appsscript.json",
+      "extension": ".json",
+      "size_bytes": 370,
+      "line_count": 13,
+      "sha1_short": "568e4153ed",
+      "kind": "config",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [
+        "dependencies",
+        "exceptionLogging",
+        "oauthScopes",
+        "runtimeVersion",
+        "timeZone"
+      ],
+      "notes": []
+    },
+    {
       "path": "appscript/członkowie sympatycy SKK/common_helpers.gs",
       "extension": ".gs",
-      "size_bytes": 7378,
-      "line_count": 289,
-      "sha1_short": "fc487d22b9",
+      "size_bytes": 8861,
+      "line_count": 319,
+      "sha1_short": "f152ae9d59",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -686,6 +709,16 @@
       "functions": [
         {
           "name": "assertBoardAccess_",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "callBackendSync_",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -765,16 +798,6 @@
           "doc": null
         },
         {
-          "name": "isUserInGroup_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
           "name": "normalizeHeader_",
           "type": "function",
           "line_start": null,
@@ -796,6 +819,16 @@
         },
         {
           "name": "rolesAllowedFromFlags_",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "runSync_",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -873,9 +906,9 @@
     {
       "path": "appscript/członkowie sympatycy SKK/env_config.gs",
       "extension": ".gs",
-      "size_bytes": 2177,
-      "line_count": 61,
-      "sha1_short": "b86b68860a",
+      "size_bytes": 2542,
+      "line_count": 67,
+      "sha1_short": "a3061003bd",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -890,9 +923,9 @@
     {
       "path": "appscript/członkowie sympatycy SKK/events_sync.gs",
       "extension": ".gs",
-      "size_bytes": 10791,
-      "line_count": 343,
-      "sha1_short": "b9249da045",
+      "size_bytes": 11069,
+      "line_count": 347,
+      "sha1_short": "d292ee79dc",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -1018,9 +1051,9 @@
     {
       "path": "appscript/członkowie sympatycy SKK/hours_sync.gs",
       "extension": ".gs",
-      "size_bytes": 7391,
-      "line_count": 270,
-      "sha1_short": "46c88daf80",
+      "size_bytes": 7673,
+      "line_count": 274,
+      "sha1_short": "2e36d38337",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -1126,9 +1159,9 @@
     {
       "path": "appscript/członkowie sympatycy SKK/setup_sync.gs",
       "extension": ".gs",
-      "size_bytes": 8284,
-      "line_count": 262,
-      "sha1_short": "c50549bc64",
+      "size_bytes": 7384,
+      "line_count": 218,
+      "sha1_short": "f2f6e2628b",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -1222,9 +1255,9 @@
     {
       "path": "appscript/członkowie sympatycy SKK/users_sync.gs",
       "extension": ".gs",
-      "size_bytes": 16151,
-      "line_count": 528,
-      "sha1_short": "56b360d6a8",
+      "size_bytes": 13142,
+      "line_count": 437,
+      "sha1_short": "05f855605a",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -2280,11 +2313,72 @@
       "notes": []
     },
     {
+      "path": "appscript/sprzęt/appsscript.json",
+      "extension": ".json",
+      "size_bytes": 370,
+      "line_count": 13,
+      "sha1_short": "568e4153ed",
+      "kind": "config",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [
+        "dependencies",
+        "exceptionLogging",
+        "oauthScopes",
+        "runtimeVersion",
+        "timeZone"
+      ],
+      "notes": []
+    },
+    {
+      "path": "appscript/sprzęt/backend_sync.gs",
+      "extension": ".gs",
+      "size_bytes": 1619,
+      "line_count": 47,
+      "sha1_short": "a4d5a6b3bd",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "callBackendSync_",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "runSync_",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "appscript/sprzęt/config.gs",
       "extension": ".gs",
-      "size_bytes": 4197,
-      "line_count": 161,
-      "sha1_short": "87fe1e807d",
+      "size_bytes": 4548,
+      "line_count": 167,
+      "sha1_short": "4645c8c1ad",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -2436,9 +2530,9 @@
     {
       "path": "appscript/sprzęt/setup_sync.gs",
       "extension": ".gs",
-      "size_bytes": 9906,
-      "line_count": 323,
-      "sha1_short": "fd0e0c95a2",
+      "size_bytes": 10049,
+      "line_count": 327,
+      "sha1_short": "9f4ccf0ccc",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -2574,9 +2668,9 @@
     {
       "path": "appscript/sprzęt/sync_kayaks.gs",
       "extension": ".gs",
-      "size_bytes": 20072,
-      "line_count": 777,
-      "sha1_short": "5c681c2b68",
+      "size_bytes": 20219,
+      "line_count": 779,
+      "sha1_short": "b5e626595a",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -2936,6 +3030,36 @@
       ],
       "top_level_symbols": [],
       "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "Audyty/10.06_session_summary.md",
+      "extension": ".md",
+      "size_bytes": 9348,
+      "line_count": 142,
+      "sha1_short": "37caf0c16b",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# Podsumowanie sesji — 10.06.2026",
+        "## 1. Problem zgłoszony",
+        "## 2. Diagnoza — przyczyna (potwierdzona danymi)",
+        "## 3. Jak działa rekonsyliator członkostwa grup (ważne dla decyzji)",
+        "## 4. Plan docelowy (automatyczny — sterowany rolą z arkusza)",
+        "## 5. Wykonane kroki",
+        "### Krok A (ZROBIONE ręcznie w Admin Console) ✅",
+        "### Krok B (ZROBIONE) ✅",
+        "## 6. Zmiany w kodzie (NIEzacommitowane)",
+        "## 7. Uruchamianie skryptów diagnostycznych (Windows — gotchas)",
+        "## 8. Drugie zagadnienie: niezgodność `users_active` (23) vs arkusz (19)",
+        "## 9. Otwarte / następne kroki"
+      ],
       "config_keys": [],
       "notes": []
     },
@@ -4275,9 +4399,9 @@
     {
       "path": "firebase.json",
       "extension": ".json",
-      "size_bytes": 9792,
-      "line_count": 394,
-      "sha1_short": "e07b17b66b",
+      "size_bytes": 9960,
+      "line_count": 401,
+      "sha1_short": "7f34473c0e",
       "kind": "config",
       "module_aliases": [],
       "imports": [],
@@ -4316,9 +4440,9 @@
     {
       "path": "functions/.eslintrc.js",
       "extension": ".js",
-      "size_bytes": 1450,
-      "line_count": 61,
-      "sha1_short": "21ee96da67",
+      "size_bytes": 1541,
+      "line_count": 62,
+      "sha1_short": "8cb8072e9c",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -6816,9 +6940,9 @@
     {
       "path": "functions/lib/index.js",
       "extension": ".js",
-      "size_bytes": 42999,
-      "line_count": 1098,
-      "sha1_short": "83929db471",
+      "size_bytes": 50607,
+      "line_count": 1235,
+      "sha1_short": "1d39056ab8",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -7239,6 +7363,16 @@
       "classes": [],
       "functions": [
         {
+          "name": "buildAppsScriptSyncSummary",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "computeAllowedActions",
           "type": "function",
           "line_start": null,
@@ -7369,6 +7503,16 @@
           "doc": null
         },
         {
+          "name": "n",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "normalizeHost",
           "type": "function",
           "line_start": null,
@@ -7430,6 +7574,16 @@
         },
         {
           "name": "setCorsHeaders",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "verifyGoogleAccessToken",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -9266,9 +9420,9 @@
     {
       "path": "functions/lib/service/providers/googleWorkspaceProvider.js",
       "extension": ".js",
-      "size_bytes": 17333,
-      "line_count": 387,
-      "sha1_short": "5523fae11a",
+      "size_bytes": 20636,
+      "line_count": 459,
+      "sha1_short": "81f01cb491",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -9341,9 +9495,9 @@
     {
       "path": "functions/lib/service/registry.js",
       "extension": ".js",
-      "size_bytes": 2560,
-      "line_count": 49,
-      "sha1_short": "e8aee1e4a2",
+      "size_bytes": 3044,
+      "line_count": 57,
+      "sha1_short": "ca7e556e91",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -9376,6 +9530,13 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ./tasks/gearSyncAllFromSheet",
+          "module": "./tasks/gearSyncAllFromSheet",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ./tasks/gearSyncKayaksFromSheet",
           "module": "./tasks/gearSyncKayaksFromSheet",
           "names": [],
@@ -9385,6 +9546,13 @@
         {
           "raw": "import/require ./tasks/godzinkiSyncFromSheet",
           "module": "./tasks/godzinkiSyncFromSheet",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./tasks/groupsDiagnose",
+          "module": "./tasks/groupsDiagnose",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -9446,6 +9614,20 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ./tasks/setupSyncFromSheet",
+          "module": "./tasks/setupSyncFromSheet",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./tasks/usersSyncFieldsFromSheet",
+          "module": "./tasks/usersSyncFieldsFromSheet",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ./tasks/usersSyncFunctionRolesFromSetup",
           "module": "./tasks/usersSyncFunctionRolesFromSetup",
           "names": [],
@@ -9465,8 +9647,10 @@
         "functions/lib/service/tasks/eventsSyncCalendar.js",
         "functions/lib/service/tasks/eventsSyncFromSheet.js",
         "functions/lib/service/tasks/gearPrivateStorage.js",
+        "functions/lib/service/tasks/gearSyncAllFromSheet.js",
         "functions/lib/service/tasks/gearSyncKayaksFromSheet.js",
         "functions/lib/service/tasks/godzinkiSyncFromSheet.js",
+        "functions/lib/service/tasks/groupsDiagnose.js",
         "functions/lib/service/tasks/kmMergeHistoricalUser.js",
         "functions/lib/service/tasks/kmRebuildMapData.js",
         "functions/lib/service/tasks/kmRebuildRankings.js",
@@ -9475,6 +9659,8 @@
         "functions/lib/service/tasks/listaEnforcePostingPolicy.js",
         "functions/lib/service/tasks/membersSyncToSheet.js",
         "functions/lib/service/tasks/onUserRegisteredWelcome.js",
+        "functions/lib/service/tasks/setupSyncFromSheet.js",
+        "functions/lib/service/tasks/usersSyncFieldsFromSheet.js",
         "functions/lib/service/tasks/usersSyncFunctionRolesFromSetup.js",
         "functions/lib/service/tasks/usersSyncRolesFromSheet.js"
       ],
@@ -9870,6 +10056,139 @@
       "notes": []
     },
     {
+      "path": "functions/lib/service/tasks/gearSyncAllFromSheet.js",
+      "extension": ".js",
+      "size_bytes": 15169,
+      "line_count": 285,
+      "sha1_short": "fb1b9274c8",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../providers/googleSheetsProvider",
+          "module": "../providers/googleSheetsProvider",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../service_config",
+          "module": "../service_config",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/service/providers/googleSheetsProvider.js",
+        "functions/lib/service/service_config.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "buildDoc",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "flush",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isRealRow",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "parseBool",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "parseNumber",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "parseSheetDate",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "sflush",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "syncCategory",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/lib/service/tasks/gearSyncKayaksFromSheet.js",
       "extension": ".js",
       "size_bytes": 7685,
@@ -10016,6 +10335,23 @@
           "doc": null
         }
       ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/service/tasks/groupsDiagnose.js",
+      "extension": ".js",
+      "size_bytes": 4908,
+      "line_count": 100,
+      "sha1_short": "94525c95c0",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
       "top_level_symbols": [],
       "headings": [],
       "config_keys": [],
@@ -10403,6 +10739,302 @@
         },
         {
           "name": "listaRoleForUserRole",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/service/tasks/setupSyncFromSheet.js",
+      "extension": ".js",
+      "size_bytes": 12546,
+      "line_count": 287,
+      "sha1_short": "6814b2e56d",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../providers/googleSheetsProvider",
+          "module": "../providers/googleSheetsProvider",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../service_config",
+          "module": "../service_config",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/service/providers/googleSheetsProvider.js",
+        "functions/lib/service/service_config.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "g",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "headerMap",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "normalizeHeader",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "parseSetupValue",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "readAppSetupModules",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "readSetupVars",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "rolesAllowedFromFlags",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "splitList",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "toBool",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "toNumberOrNull",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/service/tasks/usersSyncFieldsFromSheet.js",
+      "extension": ".js",
+      "size_bytes": 11650,
+      "line_count": 269,
+      "sha1_short": "871c780a70",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../providers/googleSheetsProvider",
+          "module": "../providers/googleSheetsProvider",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../service_config",
+          "module": "../service_config",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/service/providers/googleSheetsProvider.js",
+        "functions/lib/service/service_config.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "g",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getPath",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "headerMap",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "mapRoleDisplayToKey",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "mapStatusDisplayToKey",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "normalizeBoolish",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "normalizeDateString",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "normalizeHeader",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "valuesEqual",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -10897,6 +11529,56 @@
       "notes": []
     },
     {
+      "path": "functions/scripts/deleteStuckJob.js",
+      "extension": ".js",
+      "size_bytes": 799,
+      "line_count": 26,
+      "sha1_short": "9926a7f124",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/scripts/enqueueGroupsDiagnose.js",
+      "extension": ".js",
+      "size_bytes": 1992,
+      "line_count": 58,
+      "sha1_short": "0765a31128",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/scripts/enqueueListaPolicy.js",
       "extension": ".js",
       "size_bytes": 1213,
@@ -10916,6 +11598,159 @@
       "internal_dependencies": [],
       "classes": [],
       "functions": [],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/scripts/readGearCollections.js",
+      "extension": ".js",
+      "size_bytes": 1369,
+      "line_count": 51,
+      "sha1_short": "b5d966f03a",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "tsToIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/scripts/readGroupsDiag.js",
+      "extension": ".js",
+      "size_bytes": 1256,
+      "line_count": 39,
+      "sha1_short": "0104003084",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/scripts/readServiceJobs.js",
+      "extension": ".js",
+      "size_bytes": 1128,
+      "line_count": 41,
+      "sha1_short": "a340d0ed19",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "tsToIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/scripts/readUsersActive.js",
+      "extension": ".js",
+      "size_bytes": 2448,
+      "line_count": 76,
+      "sha1_short": "fbd757d2a1",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "isProfileComplete",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "tsToIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
       "top_level_symbols": [],
       "headings": [],
       "config_keys": [],
@@ -13360,9 +14195,9 @@
     {
       "path": "functions/src/index.ts",
       "extension": ".ts",
-      "size_bytes": 36031,
-      "line_count": 1224,
-      "sha1_short": "35b2c1c37c",
+      "size_bytes": 42629,
+      "line_count": 1369,
+      "sha1_short": "1ae431db25",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -13790,6 +14625,16 @@
       "classes": [],
       "functions": [
         {
+          "name": "buildAppsScriptSyncSummary",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "computeAllowedActions",
           "type": "function",
           "line_start": null,
@@ -13920,6 +14765,16 @@
           "doc": null
         },
         {
+          "name": "n",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "normalizeHost",
           "type": "function",
           "line_start": null,
@@ -13981,6 +14836,16 @@
         },
         {
           "name": "setCorsHeaders",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "verifyGoogleAccessToken",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -15832,9 +16697,9 @@
     {
       "path": "functions/src/service/providers/googleWorkspaceProvider.ts",
       "extension": ".ts",
-      "size_bytes": 15356,
-      "line_count": 455,
-      "sha1_short": "197ed0dbc9",
+      "size_bytes": 18147,
+      "line_count": 531,
+      "sha1_short": "852e7560fe",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -15907,9 +16772,9 @@
     {
       "path": "functions/src/service/registry.ts",
       "extension": ".ts",
-      "size_bytes": 2087,
-      "line_count": 48,
-      "sha1_short": "6961c39061",
+      "size_bytes": 2479,
+      "line_count": 56,
+      "sha1_short": "f3b08f3abd",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -15942,6 +16807,13 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ./tasks/gearSyncAllFromSheet",
+          "module": "./tasks/gearSyncAllFromSheet",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ./tasks/gearSyncKayaksFromSheet",
           "module": "./tasks/gearSyncKayaksFromSheet",
           "names": [],
@@ -15951,6 +16823,13 @@
         {
           "raw": "import/require ./tasks/godzinkiSyncFromSheet",
           "module": "./tasks/godzinkiSyncFromSheet",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./tasks/groupsDiagnose",
+          "module": "./tasks/groupsDiagnose",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -16012,6 +16891,20 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ./tasks/setupSyncFromSheet",
+          "module": "./tasks/setupSyncFromSheet",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./tasks/usersSyncFieldsFromSheet",
+          "module": "./tasks/usersSyncFieldsFromSheet",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ./tasks/usersSyncFunctionRolesFromSetup",
           "module": "./tasks/usersSyncFunctionRolesFromSetup",
           "names": [],
@@ -16038,8 +16931,10 @@
         "functions/src/service/tasks/eventsSyncCalendar.ts",
         "functions/src/service/tasks/eventsSyncFromSheet.ts",
         "functions/src/service/tasks/gearPrivateStorage.ts",
+        "functions/src/service/tasks/gearSyncAllFromSheet.ts",
         "functions/src/service/tasks/gearSyncKayaksFromSheet.ts",
         "functions/src/service/tasks/godzinkiSyncFromSheet.ts",
+        "functions/src/service/tasks/groupsDiagnose.ts",
         "functions/src/service/tasks/kmMergeHistoricalUser.ts",
         "functions/src/service/tasks/kmRebuildMapData.ts",
         "functions/src/service/tasks/kmRebuildRankings.ts",
@@ -16048,6 +16943,8 @@
         "functions/src/service/tasks/listaEnforcePostingPolicy.ts",
         "functions/src/service/tasks/membersSyncToSheet.ts",
         "functions/src/service/tasks/onUserRegisteredWelcome.ts",
+        "functions/src/service/tasks/setupSyncFromSheet.ts",
+        "functions/src/service/tasks/usersSyncFieldsFromSheet.ts",
         "functions/src/service/tasks/usersSyncFunctionRolesFromSetup.ts",
         "functions/src/service/tasks/usersSyncRolesFromSheet.ts",
         "functions/src/service/types.ts"
@@ -16484,6 +17381,147 @@
       "notes": []
     },
     {
+      "path": "functions/src/service/tasks/gearSyncAllFromSheet.ts",
+      "extension": ".ts",
+      "size_bytes": 14204,
+      "line_count": 434,
+      "sha1_short": "de1897f6df",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../providers/googleSheetsProvider",
+          "module": "../providers/googleSheetsProvider",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../service_config",
+          "module": "../service_config",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../types",
+          "module": "../types",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/src/service/providers/googleSheetsProvider.ts",
+        "functions/src/service/service_config.ts",
+        "functions/src/service/types.ts"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "buildDoc",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "flush",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isRealRow",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "parseBool",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "parseNumber",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "parseSheetDate",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "sflush",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "syncCategory",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/src/service/tasks/gearSyncKayaksFromSheet.ts",
       "extension": ".ts",
       "size_bytes": 5363,
@@ -16646,6 +17684,33 @@
           "doc": null
         }
       ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/src/service/tasks/groupsDiagnose.ts",
+      "extension": ".ts",
+      "size_bytes": 4305,
+      "line_count": 116,
+      "sha1_short": "f262ce684a",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../types",
+          "module": "../types",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/src/service/types.ts"
+      ],
+      "classes": [],
+      "functions": [],
       "top_level_symbols": [],
       "headings": [],
       "config_keys": [],
@@ -17103,6 +18168,298 @@
         },
         {
           "name": "listaRoleForUserRole",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/src/service/tasks/setupSyncFromSheet.ts",
+      "extension": ".ts",
+      "size_bytes": 10691,
+      "line_count": 287,
+      "sha1_short": "33df8917a7",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../providers/googleSheetsProvider",
+          "module": "../providers/googleSheetsProvider",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../service_config",
+          "module": "../service_config",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../types",
+          "module": "../types",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/src/service/providers/googleSheetsProvider.ts",
+        "functions/src/service/service_config.ts",
+        "functions/src/service/types.ts"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "headerMap",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "normalizeHeader",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "parseSetupValue",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "readAppSetupModules",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "readSetupVars",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "rolesAllowedFromFlags",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "splitList",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "toBool",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "toNumberOrNull",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/src/service/tasks/usersSyncFieldsFromSheet.ts",
+      "extension": ".ts",
+      "size_bytes": 9445,
+      "line_count": 260,
+      "sha1_short": "39a08fa5d1",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../providers/googleSheetsProvider",
+          "module": "../providers/googleSheetsProvider",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../service_config",
+          "module": "../service_config",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../types",
+          "module": "../types",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/src/service/providers/googleSheetsProvider.ts",
+        "functions/src/service/service_config.ts",
+        "functions/src/service/types.ts"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "getPath",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "headerMap",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "mapRoleDisplayToKey",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "mapStatusDisplayToKey",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "normalizeBoolish",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "normalizeDateString",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "normalizeHeader",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "valuesEqual",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -21656,7 +23013,7 @@
       "extension": ".js",
       "size_bytes": 4997,
       "line_count": 147,
-      "sha1_short": "75c4528f38",
+      "sha1_short": "37f3ab0dc4",
       "kind": "script",
       "module_aliases": [],
       "imports": [],

@@ -1,7 +1,7 @@
 import type {Request, Response} from "express";
 import {logger} from "firebase-functions/v2";
 import {isIsoDateYYYYMMDD} from "../modules/calendar/calendar_utils";
-import {createReservation} from "../modules/equipment/kayaks/gear_kayaks_service";
+import {createBundleReservation} from "../modules/equipment/bundle/gear_bundle_service";
 import {isUserStatusBlocked} from "../modules/users/userStatusCheck";
 
 type TokenCheck =
@@ -77,11 +77,17 @@ export async function handleGearReservationCreate(req: Request, res: Response, d
         return;
       }
 
-      const out = await createReservation(db, {
+      // Ujednolicony przepływ rezerwacji (D2): kajakowe rezerwacje przechodzą
+      // przez ścieżkę bundle — jedna implementacja walidacji, konfliktów,
+      // wyceny i transakcyjnej dedukcji godzinek. Dodatkowo bundle waliduje
+      // isActive/isOperational/isPrivate kajaka (legacy ścieżka tego nie robiła).
+      const out = await createBundleReservation(db, {
         uid,
         startDate,
         endDate,
-        kayakIds,
+        items: kayakIds.map((id) => ({itemId: id, category: "kayaks"})),
+        starterCategory: "kayaks",
+        starterItemId: kayakIds[0] || "",
       });
 
       if (!out.ok) {

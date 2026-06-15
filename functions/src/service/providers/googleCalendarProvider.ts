@@ -62,4 +62,20 @@ export class GoogleCalendarProvider {
       requestBody: buildEventBody(data),
     });
   }
+
+  /**
+   * Usuwa zdarzenie z kalendarza. Idempotentnie: jeśli zdarzenie już nie istnieje
+   * (404/410 — usunięte ręcznie w kalendarzu), traktujemy jako sukces, żeby
+   * odrzucenie imprezy / cofnięcie zatwierdzenia nie zawisło na martwym ID.
+   */
+  async deleteEvent(calendarId: string, gcalEventId: string): Promise<void> {
+    const calendar = await this.getCalendarClient();
+    try {
+      await calendar.events.delete({calendarId, eventId: gcalEventId});
+    } catch (e: any) {
+      const status = e?.response?.status ?? e?.code;
+      if (status === 404 || status === 410) return; // już usunięte — ok
+      throw e;
+    }
+  }
 }

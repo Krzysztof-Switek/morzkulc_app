@@ -4,9 +4,12 @@ Testy integracyjne — naliczanie opłat za prywatne kajaki (gear.chargePrivateS
 
 Weryfikuje:
   PS01 — kajak bez ownerContact (pusty lub brak "@") → gear_storage_charges status="failed"
+  PS01c — rekord "failed" jest PONAWIANY przy kolejnym runie (poprawka L7);
+          przy nieusuniętej przyczynie pozostaje "failed"
+  PS01d — po naprawieniu przyczyny (uzupełniony email) retry kończy się "charged"
   PS02 — kajak zarządu/kr z boardDoesNotPay=true → status="exempt", zero-spend w godzinki_ledger
   PS03 — kajak normalnego członka → status="charged", spend w godzinki_ledger, bilans maleje
-  PS04 — idempotencja: drugi run w tym samym miesiącu → skipped, rekord nie jest nadpisywany
+        (idempotencja: status "charged"/"exempt" NIE jest ponawiany — tylko "failed")
 
 Strategia:
   - Testy tworzą tymczasowe kajaki w gear_kayaks (z flagą _testFixture=True).
@@ -290,8 +293,12 @@ class TestGearPrivateStorage(unittest.TestCase):
         self.assertIsNotNone(charge, "Brak rekordu dla emaila bez @")
         self.assertEqual(charge.get("status"), "failed", charge)
 
-    def test_PS01c_second_run_same_month_does_not_overwrite_failed(self):
-        """Idempotencja dla 'failed': drugi run w tym samym miesiącu → rekord nie jest nadpisywany"""
+    def test_PS01c_second_run_retries_failed_and_keeps_failed_status(self):
+        """
+        Poprawka L7: rekord 'failed' jest PONAWIANY przy kolejnym runie
+        (wcześniej failed blokował naliczenie na zawsze i opłata przepadała).
+        Przy nieusuniętej przyczynie (brak emaila) status pozostaje 'failed'.
+        """
         kayak_id = self._create_kayak("IDEM_FAIL", owner_contact="")
         self._charge_doc_ids.append(f"{kayak_id}_{TEST_MONTH}")
         self._block_real_kayaks(TEST_MONTH)
@@ -299,16 +306,64 @@ class TestGearPrivateStorage(unittest.TestCase):
         self._run_task()
         charge_first = self._get_charge(kayak_id)
         self.assertIsNotNone(charge_first, "Brak rekordu po pierwszym runie")
+        self.assertEqual(charge_first.get("status"), "failed", charge_first)
 
-        # Drugi run — powinien pominąć kajak (idempotencja)
+        # Drugi run — kajak jest ponawiany; przyczyna nieusunięta → nadal failed
         self._run_task()
         charge_second = self._get_charge(kayak_id)
 
         self.assertEqual(charge_second.get("status"), "failed", charge_second)
-        # createdAt nie zmienił się
-        self.assertEqual(
-            charge_first.get("createdAt"), charge_second.get("createdAt"),
-            "createdAt zmienił się — idempotencja nie działa",
+        self.assertIn("ownercontact", (charge_second.get("message") or "").lower(), charge_second)
+
+    def test_PS01d_failed_then_fixed_email_retries_to_charged(self):
+        """
+        Poprawka L7: po naprawieniu przyczyny (uzupełniony ownerContact)
+        kolejny run NALICZA zaległą opłatę (failed → charged).
+        """
+        skip = _skip_if_missing("member_user_email", "member_user_password")
+        if skip:
+            self.skipTest(skip)
+
+        member_result = self._fs.get_user_by_email(cfg.member_user_email)
+        if not member_result:
+            self.skipTest(f"Brak {cfg.member_user_email} w users_active")
+        uid, member_data = member_result
+
+        role = member_data.get("role_key", "")
+        if role in ("rola_zarzad", "rola_kr") and self._board_does_not_pay:
+            self.skipTest(f"member_user_email ma rolę {role!r} + boardDoesNotPay=true — użyj innego konta")
+
+        kayak_id = self._create_kayak("RETRY_FIX", owner_contact="")
+        self._charge_doc_ids.append(f"{kayak_id}_{TEST_MONTH}")
+        self._block_real_kayaks(TEST_MONTH)
+
+        # Run 1: brak emaila → failed
+        self._run_task()
+        charge_failed = self._get_charge(kayak_id)
+        self.assertIsNotNone(charge_failed, "Brak rekordu po pierwszym runie")
+        self.assertEqual(charge_failed.get("status"), "failed", charge_failed)
+
+        # Naprawa przyczyny: uzupełnij email właściciela
+        self._fs.db.collection("gear_kayaks").document(kayak_id).update({
+            "ownerContact": cfg.member_user_email,
+        })
+        self._ensure_enough_balance(uid)
+        balance_before = self._fs.get_godzinki_balance(uid)
+
+        # Run 2: retry → charged
+        self._run_task()
+        charge_retried = self._get_charge(kayak_id)
+        self.assertEqual(charge_retried.get("status"), "charged", charge_retried)
+        self.assertEqual(charge_retried.get("uid"), uid, charge_retried)
+
+        spend_result = self._find_spend_for_kayak(uid, "TEST-RETRY_FIX")
+        self.assertIsNotNone(spend_result, "Brak spend rekordu po udanym retry")
+        self._spend_doc_ids.append(spend_result[0])
+
+        balance_after = self._fs.get_godzinki_balance(uid)
+        self.assertAlmostEqual(
+            balance_after, balance_before - self._cost_hours, places=2,
+            msg=f"Bilans po retry: oczekiwano {balance_before - self._cost_hours:.2f}, otrzymano {balance_after:.2f}",
         )
 
     # -----------------------------------------------------------------------
