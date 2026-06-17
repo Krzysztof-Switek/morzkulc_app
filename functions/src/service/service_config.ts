@@ -50,6 +50,12 @@ export interface ServiceConfig {
     tabName: string;
   };
 
+  // ✅ NEW: Godzinki — arkusz przejściowy (import tegorocznych godzinek + korekty 2026)
+  godzinkiTransition: {
+    spreadsheetId: string; // empty = wymagany w payloadzie taska
+    tabName: string;
+  };
+
   // ✅ NEW: Events (imprezy) sheets config
   events: {
     spreadsheetId: string;
@@ -267,6 +273,11 @@ export function getServiceConfig(): ServiceConfig {
     godzinki: {
       spreadsheetId: godzinkiSpreadsheetId,
       tabName: godzinkiTabName,
+    },
+
+    godzinkiTransition: {
+      spreadsheetId: process.env.SVC_GODZINKI_TRANSITION_SHEET_ID || "",
+      tabName: process.env.SVC_GODZINKI_TRANSITION_TAB || "Godzinki 2026 i korekty",
     },
 
     events: {

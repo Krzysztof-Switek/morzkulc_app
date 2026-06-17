@@ -4,6 +4,7 @@
 import type {Request, Response} from "express";
 import type * as admin from "firebase-admin";
 import {creditOpeningBalance} from "../modules/hours/godzinki_service";
+import {getObHours, buildOpeningBalanceAdminPatch, obValueExact} from "../modules/hours/opening_balance_fields";
 
 type TokenCheck =
   | {error: string}
@@ -198,18 +199,6 @@ function validateIncomingProfile(incoming: ProfileInput): ValidationResult {
   return {ok: Object.keys(fields).length === 0, fields};
 }
 
-/**
- * Odczytuje ilość godzinek z dokumentu bilansu otwarcia.
- * Nazwa pola zawiera datę (np. "Godzinki Bilans otwarcia01.04.2026"),
- * dlatego szukamy po prefiksie "Godzinki" (case-insensitive).
- */
-function getObHours(obData: any): number {
-  if (!obData) return 0;
-  const key = Object.keys(obData).find((k) => k.toLowerCase().startsWith("godzinki"));
-  if (!key) return 0;
-  return Number(obData[key] ?? 0) || 0;
-}
-
 function computeRoleKeyFromOpeningBalance(
   obData: any,
   memberField: string,
@@ -237,9 +226,9 @@ async function findOpeningBalance(
   for (const doc of snap.docs) {
     const data = doc.data() as any;
 
-    // 1. Dopasowanie po e-mailu (priorytet)
+    // 1. Dopasowanie po e-mailu (priorytet) — odczyt nagłówka niewrażliwy na wielkość liter
     if (normalizedEmail && normalizedEmail.includes("@")) {
-      const rowEmail = String(data["e-mail"] || "").trim().toLowerCase();
+      const rowEmail = String(obValueExact(data, "e-mail", "email") || "").trim().toLowerCase();
       if (rowEmail && rowEmail === normalizedEmail) {
         return {openingMatch: true, obData: data, matchMethod: "email"};
       }
@@ -247,8 +236,8 @@ async function findOpeningBalance(
 
     // 2. Zbierz kandydatów po imieniu i nazwisku (fallback)
     if (!nameMatch && normalizedFirst && normalizedLast) {
-      const rowFirst = normalizeStr(data["imię"] || data["imie"] || "").toLowerCase();
-      const rowLast = normalizeStr(data["nazwisko"] || "").toLowerCase();
+      const rowFirst = normalizeStr(obValueExact(data, "imię", "imie") || "").toLowerCase();
+      const rowLast = normalizeStr(obValueExact(data, "nazwisko") || "").toLowerCase();
       if (rowFirst && rowLast && rowFirst === normalizedFirst && rowLast === normalizedLast) {
         nameMatch = {openingMatch: true, obData: data, matchMethod: "name"};
       }
@@ -294,6 +283,40 @@ async function enqueueKmHistoricalMerge(
   });
 }
 
+async function enqueueGodzinkiHistMerge(
+  db: FirebaseFirestore.Firestore,
+  adminSdk: typeof admin,
+  uid: string,
+  email: string
+): Promise<void> {
+  if (!email) return;
+  const histUid = `hist_${email}`;
+  // Quick probe — czy są godzinki przejściowe do scalenia?
+  const probe = await db.collection("godzinki_ledger").where("uid", "==", histUid).limit(1).get();
+  if (probe.empty) return;
+  const jobId = `godzinki-hist-merge:${uid}`;
+  const jobRef = db.collection("service_jobs").doc(jobId);
+  await db.runTransaction(async (tx) => {
+    const ex = await tx.get(jobRef);
+    if (ex.exists) {
+      const s = String((ex.data() as any)?.status || "");
+      if (s === "queued" || s === "running" || s === "done") return;
+    }
+    const now = adminSdk.firestore.Timestamp.now();
+    tx.set(jobRef, {
+      taskId: "godzinki.mergeHistoricalUser",
+      payload: {uid, email, histUid},
+      status: "queued",
+      attempts: 0,
+      createdAt: now,
+      updatedAt: now,
+      nextRunAt: now,
+      lockOwner: null,
+      lockedUntil: null,
+    });
+  });
+}
+
 export async function handleRegisterUser(req: Request, res: Response, deps: RegisterUserDeps) {
   const {
     db,
@@ -327,8 +350,8 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
       const newUserStatusCode = normalizeStr(setupDefaults.newUserStatusCode) || "status_aktywny";
       const obMemberField = normalizeStr(setupDefaults.openingBalanceMemberField) || "członek stowarzyszenia";
       const obMemberRoleCode = normalizeStr(setupDefaults.openingBalanceMemberRoleCode) || "rola_czlonek";
-      // Godzinki z bilansu otwarcia wygasają 31.12.2029 (wymóg biznesowy)
-      const OB_HOURS_EXPIRES_AT = new Date(Date.UTC(2029, 11, 31));
+      // Godzinki z bilansu otwarcia wygasają 30.06.2029 (wymóg biznesowy)
+      const OB_HOURS_EXPIRES_AT = new Date(Date.UTC(2029, 5, 30));
 
       const decoded = tokenCheck.decoded;
       const uid = decoded.uid;
@@ -373,6 +396,7 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
           );
           if (nameFound.openingMatch && nameFound.obData) {
             roleKey = computeRoleKeyFromOpeningBalance(nameFound.obData, obMemberField, obMemberRoleCode, newUserRoleCode);
+            const adminPatch = buildOpeningBalanceAdminPatch(nameFound.obData);
             await userRef.set(
               {
                 role_key: roleKey,
@@ -380,6 +404,7 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
                 openingMatchMethod: nameFound.matchMethod,
                 openingBalance: nameFound.obData,
                 openingMatchedAt: admin.firestore.FieldValue.serverTimestamp(),
+                ...(adminPatch ? {admin: adminPatch} : {}),
                 updatedAt: admin.firestore.FieldValue.serverTimestamp(),
               },
               {merge: true}
@@ -474,6 +499,13 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
             .catch((e: any) => console.error("enqueueKmHistoricalMerge (existing user) failed", {uid, message: e?.message}));
         }
 
+        // Jednorazowo: scal przejściowe godzinki spod hist_{email} jeśli nie zrobiono jeszcze
+        if (email && !existingData.service?.godzinkiHistMergedFrom && !existingData.service?.godzinkiHistMergeEnqueued) {
+          userRef.set({"service.godzinkiHistMergeEnqueued": true}, {merge: true}).catch(() => {/* fire-and-forget */});
+          enqueueGodzinkiHistMerge(db, admin, uid, email)
+            .catch((e: any) => console.error("enqueueGodzinkiHistMerge (existing user) failed", {uid, message: e?.message}));
+        }
+
         res.status(200).json({
           ok: true,
           existed: true,
@@ -488,6 +520,7 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
           profileComplete,
           nickname: normalizeStr(mergedProfile.nickname) || null,
           firstName: normalizeStr(mergedProfile.firstName) || null,
+          contributionsPaidUntil: (data as any).admin?.contributions ?? null,
         });
         return;
       }
@@ -534,6 +567,8 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
         docToCreate.openingMatchMethod = found.matchMethod;
         docToCreate.openingBalance = found.obData;
         docToCreate.openingMatchedAt = admin.firestore.FieldValue.serverTimestamp();
+        const adminPatch = buildOpeningBalanceAdminPatch(found.obData);
+        if (adminPatch) docToCreate.admin = adminPatch;
       }
 
       if (incomingProfile.iAmKursant === true) {
@@ -574,6 +609,10 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
       enqueueKmHistoricalMerge(db, admin, uid, email)
         .catch((e: any) => console.error("enqueueKmHistoricalMerge (new user) failed", {uid, message: e?.message}));
 
+      // Fire-and-forget: scal przejściowe godzinki spod hist_{email} jeśli istnieją
+      enqueueGodzinkiHistMerge(db, admin, uid, email)
+        .catch((e: any) => console.error("enqueueGodzinkiHistMerge (new user) failed", {uid, message: e?.message}));
+
       const profileComplete = isProfileComplete(incomingProfile);
 
       // jeśli user już podał komplet profilu → sync do arkusza (await gwarantuje zapis joba przed odpowiedzią)
@@ -600,6 +639,7 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
         profileComplete,
         nickname: normalizeStr(incomingProfile.nickname) || null,
         firstName: normalizeStr(incomingProfile.firstName) || null,
+        contributionsPaidUntil: docToCreate.admin?.contributions ?? null,
       });
     } catch (err: any) {
       res.status(500).json({error: "Server error", message: err?.message || String(err)});

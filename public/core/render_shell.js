@@ -483,6 +483,16 @@ function renderHomeProfile({ viewEl, ctx }) {
           <span>${escapeHtml(hoursValue || "— h")}</span>
         </span>
       </div>
+      <div class="startStatBar" style="margin-bottom:16px;">
+        <div class="startStatChip">
+          <span class="startStatChipKey">Składki opłacone do</span>
+          <span class="startStatChipVal" id="profileContribUntil">${escapeHtml(formatContribDate(ctx?.session?.contributionsPaidUntil) || "—")}</span>
+        </div>
+        <div class="startStatChip">
+          <span class="startStatChipKey">Saldo godzinek</span>
+          <span class="startStatChipVal" id="profileGodzinkiBalance">…</span>
+        </div>
+      </div>
       `}
 
       ${!isKursant ? `<p class="muted">Więcej opcji dostępnych wkrótce.</p>` : ""}
@@ -513,6 +523,21 @@ function renderHomeProfile({ viewEl, ctx }) {
 
   if (dash.canReserveGear) {
     wireHomeReservations(viewEl, ctx);
+  }
+
+  // Saldo godzinek (+ data wygaśnięcia) dla nie-kursantów — z /api/godzinki
+  if (!isKursant && ctx?.idToken) {
+    const balEl = viewEl.querySelector("#profileGodzinkiBalance");
+    if (balEl) {
+      apiGetJson({ url: GODZINKI_URL + "?view=home", idToken: ctx.idToken })
+        .then((data) => {
+          const balance = Number(data?.balance ?? 0);
+          const sign = balance > 0 ? "+" : "";
+          const expiry = String(data?.nextExpiryMonthYear || "").trim();
+          balEl.textContent = `${sign}${balance} h` + (expiry ? ` (wygasa ${expiry})` : "");
+        })
+        .catch(() => { balEl.textContent = "—"; });
+    }
   }
 
   if (isKursant && ctx?.idToken) {
@@ -1064,6 +1089,17 @@ function getHoursValue(ctx) {
   }
 
   return "";
+}
+
+// Formatuje datę „składki opłacone do" do DD.MM.YYYY (akceptuje YYYY-MM-DD oraz DD-MM-YYYY / DD.MM.YYYY).
+function formatContribDate(raw) {
+  const s = String(raw == null ? "" : raw).trim();
+  if (!s) return "";
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) return `${m[3]}.${m[2]}.${m[1]}`;
+  m = s.match(/^(\d{2})[-.](\d{2})[-.](\d{4})$/);
+  if (m) return `${m[1]}.${m[2]}.${m[3]}`;
+  return s;
 }
 
 function roleKeyToLabel(roleKey, roleMappings) {

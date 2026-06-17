@@ -158,9 +158,63 @@ export function buildRowValuesForUpsert(args: {
 export class GoogleSheetsProvider {
   constructor(private delegatedUserEmail: string) {}
 
+  // Cache wiersza nagłówków per (spreadsheetId|tabName) — unika ponownego odczytu przy
+  // wielokrotnym zapisie komórek (np. write-back importu godzinek przejściowych).
+  private headerCache = new Map<string, string[]>();
+
   private async getSheetsClient(): Promise<sheets_v4.Sheets> {
     const auth = await getDelegatedAuth([SHEETS_SCOPES.SPREADSHEETS], this.delegatedUserEmail);
     return google.sheets({version: "v4", auth});
+  }
+
+  /** Odczytuje (z cache) wiersz nagłówków arkusza w oryginalnej postaci. */
+  private async getHeaderRow(spreadsheetId: string, tabName: string): Promise<string[]> {
+    const key = `${spreadsheetId}|${tabName}`;
+    const cached = this.headerCache.get(key);
+    if (cached) return cached;
+    const sheets = await this.getSheetsClient();
+    const headerResp = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${quoteTab(tabName)}!1:1`,
+      majorDimension: "ROWS",
+    });
+    const headers = (headerResp.data.values?.[0] || []).map((h) => normalizeStr(h));
+    this.headerCache.set(key, headers);
+    return headers;
+  }
+
+  /**
+   * Zapisuje wiele komórek JEDNEGO wiersza w pojedynczym batchUpdate (po nazwach nagłówków).
+   * Nagłówki czytane raz i cache'owane — koszt nie rośnie z liczbą zapisów.
+   * Nagłówki nieznalezione są pomijane (nie przerywa zapisu pozostałych).
+   */
+  async writeRowCells(
+    cfg: SheetTableConfig,
+    rowNumber1based: number,
+    patch: Record<string, string>
+  ): Promise<void> {
+    const spreadsheetId = normalizeStr(cfg.spreadsheetId);
+    const tabName = normalizeStr(cfg.tabName);
+    assertNonEmpty("spreadsheetId", spreadsheetId);
+    assertNonEmpty("tabName", tabName);
+
+    const headers = await this.getHeaderRow(spreadsheetId, tabName);
+    const data: {range: string; values: string[][]}[] = [];
+    for (const [header, value] of Object.entries(patch)) {
+      const colIdx = headers.indexOf(header);
+      if (colIdx === -1) continue;
+      data.push({
+        range: `${quoteTab(tabName)}!${columnToA1(colIdx)}${rowNumber1based}`,
+        values: [[value]],
+      });
+    }
+    if (!data.length) return;
+
+    const sheets = await this.getSheetsClient();
+    await sheets.spreadsheets.values.batchUpdate({
+      spreadsheetId,
+      requestBody: {valueInputOption: "RAW", data},
+    });
   }
 
   /**

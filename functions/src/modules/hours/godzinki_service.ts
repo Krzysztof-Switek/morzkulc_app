@@ -889,21 +889,20 @@ export async function creditReservationAdjustment(
 }
 
 /**
- * Zapisuje godzinki z bilansu otwarcia jako od razu zatwierdzone (approved=true).
- * Używane wyłącznie przy pierwszej rejestracji użytkownika pasującego do bilansu otwarcia.
- * expiresAt jest stałe i przekazywane z zewnątrz (wymaganie biznesowe: 31.12.2029).
+ * Zapisuje od razu zatwierdzoną (approved=true) pulę "earn" z jawną datą pracy i wygaśnięcia.
+ * Wspólna podstawa dla bilansu otwarcia i importu danych przejściowych.
+ * submittedBy="system" → backfill syncu pomija te rekordy (nie trafiają do arkusza głównego "Godzinki").
  */
-export async function creditOpeningBalance(
+export async function creditApprovedEarn(
   db: FirebaseFirestore.Firestore,
   uid: string,
   amount: number,
-  expiresAt: Date
+  grantedAt: Date,
+  expiresAt: Date,
+  opts?: {reason?: string; approvedBy?: string; submittedBy?: string}
 ): Promise<{id: string}> {
   const ref = db.collection(COLLECTION).doc();
-  const today = new Date();
-  const grantedTs = admin.firestore.Timestamp.fromDate(
-    new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()))
-  );
+  const grantedTs = admin.firestore.Timestamp.fromDate(grantedAt);
   const expiresTs = admin.firestore.Timestamp.fromDate(expiresAt);
 
   await ref.set({
@@ -916,14 +915,34 @@ export async function creditOpeningBalance(
     expiresAt: expiresTs,
     approved: true,
     approvedAt: admin.firestore.FieldValue.serverTimestamp(),
-    approvedBy: "opening_balance",
-    reason: "Bilans otwarcia",
-    submittedBy: "system",
+    approvedBy: opts?.approvedBy ?? "system",
+    reason: opts?.reason ?? "",
+    submittedBy: opts?.submittedBy ?? "system",
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 
   return {id: ref.id};
+}
+
+/**
+ * Zapisuje godzinki z bilansu otwarcia jako od razu zatwierdzone (approved=true).
+ * Używane wyłącznie przy pierwszej rejestracji użytkownika pasującego do bilansu otwarcia.
+ * grantedAt = dzisiaj (UTC), expiresAt przekazywane z zewnątrz (wymaganie biznesowe: 30.06.2029).
+ */
+export async function creditOpeningBalance(
+  db: FirebaseFirestore.Firestore,
+  uid: string,
+  amount: number,
+  expiresAt: Date
+): Promise<{id: string}> {
+  const today = new Date();
+  const grantedAt = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+  return creditApprovedEarn(db, uid, amount, grantedAt, expiresAt, {
+    reason: "Bilans otwarcia",
+    approvedBy: "opening_balance",
+    submittedBy: "system",
+  });
 }
 
 export type PurchaseInput = {

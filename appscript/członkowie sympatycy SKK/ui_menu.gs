@@ -5,11 +5,18 @@
  */
 
 function onOpen() {
-  SpreadsheetApp.getUi()
-    .createMenu("Morzkulc")
+  const ui = SpreadsheetApp.getUi();
+  ui.createMenu("Morzkulc")
     .addItem("sync setup", "syncSetupToFirestore")
     .addItem("sync członkowie", "syncUsersToFirestore")
     .addItem("sync imprezy", "syncEventsToFirestore")
     .addItem("sync godzinki", "syncHoursToFirestore")
+    .addSeparator()
+    .addSubMenu(
+      ui.createMenu("Bilans otwarcia")
+        .addItem("1. Wyczyść kolekcję bilansu", "clearOpeningBalanceCollection")
+        .addItem("2. Import bilansu → Firestore", "importOpeningBalanceToFirestore")
+        .addItem("3. Zasil kolumny arkusza członków", "seedMemberSheetBalancesFromOpeningBalance")
+    )
     .addToUi();
 }
