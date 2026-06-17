@@ -89,10 +89,23 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
         const unpaidContributions = data?.privateKayakUnpaidContributions || { count: 0, items: [] };
         const deadJobs = data?.deadJobs || { count: 0, items: [] };
         const failedCharges = data?.failedStorageCharges || { count: 0, items: [] };
-        const gearSync = data?.gearSync || { hasWarnings: false, perCategory: [], totals: {}, ranAt: null, error: null };
+        const gearSync = data?.gearSync || { hasWarnings: false, perCategory: [], totals: {}, ranAt: null, error: null, blocked: false, privateKayakErrors: [] };
+        const negativeBalances = data?.negativeBalances || { count: 0, items: [], ranAt: null, error: null };
         const godzinkiSheetUrl = data?.meta?.godzinkiSheetUrl || null;
 
         let html = "";
+
+        // Sekcja: sync sprzętu ZABLOKOWANY (prywatne kajaki bez maila/daty) — najwyższy priorytet.
+        if (gearSync.blocked && (gearSync.privateKayakErrors || []).length) {
+          html += `<div style="border:1px solid #c0392b;border-left:4px solid #c0392b;border-radius:8px;padding:12px;margin-bottom:20px;background:rgba(192,57,43,0.08);">`;
+          html += `<h3 style="margin:0 0 6px;">⛔ Sync sprzętu zablokowany — popraw dane prywatnych kajaków</h3>`;
+          html += `<p class="hint" style="margin:0 0 8px;">Dopóki poniższe błędy nie zostaną poprawione w arkuszu, synchronizacja sprzętu nie zapisuje zmian.</p>`;
+          html += `<ul style="margin:0;padding-left:18px;">`;
+          for (const e of gearSync.privateKayakErrors) {
+            html += `<li style="font-size:13px;">Kajak <strong>${escapeHtml(e.id)}</strong> — ${escapeHtml(e.reason)}</li>`;
+          }
+          html += `</ul></div>`;
+        }
 
         // Sekcja: ostrzeżenia synchronizacji sprzętu (duplikaty ID / pominięte wiersze).
         // Widoczna tylko gdy raport sygnalizuje problem — inaczej nie zaśmieca panelu.
@@ -209,8 +222,8 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
           html += `</div>`;
         }
 
-        // Sekcja: prywatne kajaki — problem z emailem właściciela
-        html += `<h3 style="margin:0 0 8px;">Prywatne kajaki — problem z emailem właściciela (${escapeHtml(String(emailIssues.count))})</h3>`;
+        // Sekcja: prywatne kajaki — braki danych (email / data wejścia do klubu)
+        html += `<h3 style="margin:0 0 8px;">Prywatne kajaki — braki danych właściciela (${escapeHtml(String(emailIssues.count))})</h3>`;
         if (!emailIssues.items?.length) {
           html += `<p class="hint" style="margin-bottom:20px;">Brak problemów.</p>`;
         } else {
@@ -308,6 +321,35 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
                         · ${escapeHtml(item.message || "—")}
                         · ${escapeHtml(dateStr)}
                       </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+          html += `</div>`;
+        }
+
+        // Sekcja: ujemne salda godzinek (snapshot z miesięcznego przeglądu).
+        const nbRanStr = negativeBalances.ranAt ? formatDatePL(negativeBalances.ranAt.slice(0, 10)) : "—";
+        html += `<h3 style="margin:16px 0 8px;">Ujemne salda godzinek (${escapeHtml(String(negativeBalances.count || 0))})</h3>`;
+        if (negativeBalances.error) {
+          html += `<p class="err" style="margin-bottom:20px;">${escapeHtml(negativeBalances.error)}</p>`;
+        } else if (!negativeBalances.items?.length) {
+          html += `<p class="hint">Brak. <span class="hint">(ostatni przegląd: ${escapeHtml(nbRanStr)})</span></p>`;
+        } else {
+          html += `<p class="hint" style="margin:0 0 8px;">Ostatni przegląd: ${escapeHtml(nbRanStr)}. Pozycje oznaczone czerwono przekraczają limit ujemnego salda.</p>`;
+          html += `<div>`;
+          for (const item of negativeBalances.items) {
+            const over = item.belowLimit;
+            const sign = item.balance > 0 ? "+" : "";
+            html += `
+              <div class="gearCard" style="margin-bottom:8px;${over ? "border-left:4px solid #c0392b;" : ""}">
+                <div class="gearCardInner">
+                  <div class="gearHead">
+                    <div class="gearTitleWrap">
+                      <div class="gearTitle">${escapeHtml(item.displayName || item.uid)} — ${escapeHtml(sign + String(item.balance))} h</div>
+                      <div class="gearSubtitle">${over ? "⚠️ przekroczony limit ujemnego salda" : "saldo ujemne"}</div>
                     </div>
                   </div>
                 </div>

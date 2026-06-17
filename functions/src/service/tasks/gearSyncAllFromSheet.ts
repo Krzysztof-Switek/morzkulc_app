@@ -427,22 +427,46 @@ export const gearSyncAllFromSheetTask: ServiceTask<Payload> = {
 
     const sheets = new GoogleSheetsProvider(cfg.workspace.delegatedSubject);
 
-    // Walidacja kajaków PRZED jakimkolwiek zapisem (atomowo) — prywatne muszą mieć mail właściciela.
+    // Walidacja kajaków PRZED jakimkolwiek zapisem (atomowo) — prywatne muszą mieć mail właściciela,
+    // a prywatne trzymane w klubie (nie-wypożyczalne) także datę wejścia do klubu (do naliczania opłat).
     const kayakCat = GEAR_CATEGORIES.find((c) => c.key === "kayaks");
     if (!kayakCat) throw new Error("Brak konfiguracji kategorii kayaks");
     const kayakTable = await sheets.readTableAsObjects({spreadsheetId, tabName: kayakCat.sheetTab});
-    const invalidPrivate: string[] = [];
+    const privateIssues: {id: string; reason: string}[] = [];
     for (const r of kayakTable.rows) {
       if (parseBool(r["Prywatny?"]) !== true) continue;
+      const id = norm(r["Numer Kajaka"]) || norm(r["ID"]) || "?";
       const owner = norm(r["kontakt do właściciela"]);
       if (!owner || !owner.includes("@")) {
-        invalidPrivate.push(norm(r["Numer Kajaka"]) || norm(r["ID"]) || "?");
+        privateIssues.push({id, reason: "brak maila właściciela"});
+        continue;
+      }
+      const storage = norm(r["Składowany"]).toLowerCase();
+      const rentable = parseBool(r["Prywatny do wypożyczenia?"]) === true;
+      if (storage === "klub" && !rentable && parseSheetDate(r["od kiedy w klubie (kajaki prywatne)"]) === null) {
+        privateIssues.push({id, reason: "brak/niepoprawna data 'od kiedy w klubie'"});
       }
     }
-    if (invalidPrivate.length > 0) {
-      const msg = `Sync zablokowany — prywatne kajaki bez maila właściciela: ${invalidPrivate.join(", ")}. Uzupełnij kolumnę "kontakt do właściciela" i uruchom ponownie.`;
-      ctx.logger.warn("gearSyncAll: validation error", {invalidPrivate});
-      return {ok: true, message: msg, details: {validationError: true, invalidPrivate, dryRun}};
+    if (privateIssues.length > 0) {
+      const listStr = privateIssues.map((i) => `${i.id} (${i.reason})`).join("; ");
+      const msg = `Sync zablokowany — prywatne kajaki z błędami: ${listStr}. Popraw arkusz i uruchom ponownie.`;
+      ctx.logger.warn("gearSyncAll: validation error", {privateIssues});
+      if (!dryRun) {
+        try {
+          await firestore.collection("service_reports").doc("gearSync").set({
+            ranAt: now,
+            ranBy: norm(payload?.requestedBy) || "system",
+            hasWarnings: true,
+            blocked: true,
+            privateKayakErrors: privateIssues,
+            totals: {},
+            perCategory: [],
+          });
+        } catch (e: any) {
+          ctx.logger.warn("gearSyncAll: nie udało się zapisać raportu walidacji", {message: e?.message || String(e)});
+        }
+      }
+      return {ok: true, message: msg, details: {validationError: true, privateIssues, dryRun}};
     }
 
     const summaries: CatSummary[] = [];

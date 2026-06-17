@@ -1363,7 +1363,10 @@ export const gearPrivateStorageMonthly = onSchedule(
   async () => {
     logger.info("gearPrivateStorageMonthly: start");
     const result = await runTaskById("gear.chargePrivateStorage", {});
-    logger.info("gearPrivateStorageMonthly: done", result as unknown as Record<string, unknown>);
+    logger.info("gearPrivateStorageMonthly: charge done", result as unknown as Record<string, unknown>);
+    // Po naliczeniu opłat: przegląd sald (snapshot ujemnych do panelu zarządu + maile przy przekroczeniu limitu).
+    const review = await runTaskById("godzinki.monthlyBalanceReview", {});
+    logger.info("gearPrivateStorageMonthly: balance review done", review as unknown as Record<string, unknown>);
   }
 );
 

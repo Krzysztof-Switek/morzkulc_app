@@ -57,6 +57,29 @@ export function toYearMonth(d: Date): string {
   return `${y}-${m}`;
 }
 
+function tsToIsoYmd(d: Date): string {
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+}
+
+/**
+ * Odczytuje datę wejścia kajaka do klubu jako ISO "YYYY-MM-DD".
+ * gear.syncAllFromSheet zapisuje pole `privateSinceInClub` jako Timestamp (z parseSheetDate),
+ * starsze/inne źródła mogą mieć `privatesinceinclub` jako string — obsługujemy oba.
+ */
+function readPrivateSinceIso(kayak: any): string {
+  const raw = kayak?.privatesinceinclub ?? kayak?.privateSinceInClub;
+  if (!raw) return "";
+  if (typeof raw === "string") return raw.trim().slice(0, 10);
+  if (typeof raw?.toDate === "function") return tsToIsoYmd(raw.toDate());
+  if (raw instanceof Date) return tsToIsoYmd(raw);
+  return "";
+}
+
+/** Odczytuje miejsce składowania, tolerując dwie nazwy pól (`storage` / `storedAt`). */
+function readStorage(kayak: any): string {
+  return norm(kayak?.storage || kayak?.storedAt).toLowerCase();
+}
+
 /**
  * Zwraca "YYYY-MM" pierwszego miesiąca za który naliczamy opłatę.
  * Zasada: tylko pełne miesiące → pierwszy pełny miesiąc = miesiąc PO privatesinceinclub.
@@ -104,8 +127,8 @@ async function processKayakChargeForMonth(args: {
 
   // --- Sprawdź warunki naliczenia ---
 
-  // storage === "Klub" (case-insensitive)
-  const storageVal = norm(kayak?.storage).toLowerCase();
+  // storage === "Klub" (case-insensitive); pole z syncu to "storedAt", starsze "storage".
+  const storageVal = readStorage(kayak);
   if (storageVal !== "klub") {
     return "notEligible";
   }
@@ -146,8 +169,8 @@ async function processKayakChargeForMonth(args: {
     return "failed";
   }
 
-  // Musi mieć datę wejścia do klubu
-  const privateSinceIso = norm(kayak?.privatesinceinclub);
+  // Musi mieć datę wejścia do klubu (Timestamp z syncu → ISO)
+  const privateSinceIso = readPrivateSinceIso(kayak);
   if (!privateSinceIso) {
     ctx.logger.warn("gearPrivateStorage: missing privatesinceinclub", {kayakId, ownerContact});
     return "notEligible";
@@ -166,29 +189,18 @@ async function processKayakChargeForMonth(args: {
     .limit(1)
     .get();
 
-  if (userSnap.empty) {
-    ctx.logger.warn("gearPrivateStorage: user not found", {kayakId, ownerContact});
-    if (!dryRun) {
-      await chargeRef.set({
-        kayakId,
-        billingMonth: month,
-        ownerContact,
-        status: "failed",
-        message: "User not found by email",
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-    }
-    return "failed";
-  }
-
-  const userDoc = userSnap.docs[0];
-  const uid = userDoc.id;
-  const roleKey = String((userDoc.data() as any)?.role_key || "");
-  const isExempt = gearVars.boardDoesNotPay &&
+  // Właściciel niezarejestrowany → naliczamy pod uid "hist_{email}" (jak godzinki przejściowe).
+  // Dług trafia od razu do ledgera; przy rejestracji task godzinki.mergeHistoricalUser
+  // przepisze rekordy na prawdziwy uid. (Brak maila jest blokowany wcześniej — w syncu.)
+  const ownerRegistered = !userSnap.empty;
+  const uid = ownerRegistered ? userSnap.docs[0].id : `hist_${ownerContact.toLowerCase()}`;
+  const roleKey = ownerRegistered ? String((userSnap.docs[0].data() as any)?.role_key || "") : "";
+  const isExempt = ownerRegistered && gearVars.boardDoesNotPay &&
     (roleKey === "rola_zarzad" || roleKey === "rola_kr");
 
   // --- Zarząd/kr zwolniony z opłaty ---
   if (isExempt) {
+    const roleLabel = roleKey === "rola_zarzad" ? "Zarząd" : "KR";
     if (!dryRun) {
       await chargeRef.set({
         kayakId,
@@ -207,7 +219,7 @@ async function processKayakChargeForMonth(args: {
         amount: 0,
         fromEarn: 0,
         overdraft: 0,
-        reason: `Opłata za przechowywanie kajaka ${kayak?.number || kayakId} — ${month} (zwolnienie zarząd/kr)`,
+        reason: `Opłata za przechowywanie kajaka ${kayak?.number || kayakId} — ${month} (zwolnienie ${roleLabel})`,
         submittedBy: "system",
         reservationId: null,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -231,6 +243,7 @@ async function processKayakChargeForMonth(args: {
     billingMonth: month,
     uid,
     ownerContact,
+    unregistered: !ownerRegistered,
     hoursCharged: costHours,
     status: "pending",
     createdAt: admin.firestore.FieldValue.serverTimestamp(),

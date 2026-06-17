@@ -77,8 +77,9 @@ function renderRecordTable(records) {
       <tbody>
         ${records.map(r => {
           const isSpend = r.type === "spend";
-          const amountClass = isSpend ? "godzinkiAmountNeg" : "godzinkiAmountPos";
-          const amountSign = isSpend ? "-" : "+";
+          const isZero = Number(r.amount) === 0;
+          const amountClass = isZero ? "" : isSpend ? "godzinkiAmountNeg" : "godzinkiAmountPos";
+          const amountSign = isZero ? "" : isSpend ? "-" : "+";
           // Kolor kwoty rozróżnia przyznane/wydane — bez szarej linii meta.
           // Wyjątek: pozycje oczekujące (earn niezatwierdzone) dostają znacznik,
           // bo wizualnie są jak przyznane (zielony +).

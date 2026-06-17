@@ -1,6 +1,6 @@
 # Project Context Map
 
-Generated at: `2026-06-12T08:30:56`
+Generated at: `2026-06-17T13:16:54`
 Project root: `C:\Users\kswitek\Documents\morzkulc_app`
 
 Purpose: this file is a compact project map for Claude Code. It shows which files exist, what functions/classes they contain, and which internal files depend on which other files.
@@ -57,12 +57,12 @@ Excluded sensitive files:
 
 ## Summary
 
-- Total scanned files: `367`
-- Python files: `37`
-- Script files JS/TS/GS/etc.: `239`
+- Total scanned files: `421`
+- Python files: `42`
+- Script files JS/TS/GS/etc.: `272`
 - Config files: `21`
-- Markdown files: `43`
-- Internal dependency edges: `371`
+- Markdown files: `57`
+- Internal dependency edges: `434`
 
 ## Project tree
 
@@ -81,6 +81,20 @@ Excluded sensitive files:
   - context_tests.md
 - Audyty/
   - 10.06_session_summary.md
+  - 12.06_godzinki_audyt.md
+  - 12.06_godzinki_podsumowanie.md
+  - 12.06_godzinki_potencjalne_problemy.md
+  - 12.06_imprezy_audyt.md
+  - 12.06_imprezy_podsumowanie_wdrożenia.md
+  - 12.06_panel_zarzadu_audyt.md
+  - 12.06_panel_zarzadu_problemy_i_plan_wdrozenia.md
+  - 12.06_podsumowanie_sesji_zarzad.md
+  - 13.06_podsumowanie_wdrożenia_sesji_zarząd.md
+  - 15.06_audyt_invoker_funkcje.md
+  - 15.06_zarząd_TO_DO.md
+  - 16.06.bilans_otwarcia_plan.md
+  - 16.06_bilans_otwarcia_TO_DO.md
+  - 17.06_prywatny_sprzęt_audyt.md
   - AUDIT_MAP.md
   - AUDIT_PLAN.md
   - GRUPY_UZYTKOWNICY_PLAN_AND_TO_DO.MD
@@ -118,6 +132,7 @@ Excluded sensitive files:
     - env_config.gs
     - events_sync.gs
     - hours_sync.gs
+    - opening_balance_import.gs
     - setup_sync.gs
     - ui_menu.gs
     - users_sync.gs
@@ -149,6 +164,7 @@ Excluded sensitive files:
   - lib/
     - api/
       - DELETE_getModulesHandler.js
+      - adminApprovalHandler.js
       - adminEventsSyncCalendarHandler.js
       - basenAdminAddGodzinyHandler.js
       - basenAdminCorrectGodzinyHandler.js
@@ -210,6 +226,7 @@ Excluded sensitive files:
         - godzinki_service.js
         - godzinki_vars.js
         - hours_quote.js
+        - opening_balance_fields.js
       - km/
         - km_log_service.js
         - km_places_service.js
@@ -217,6 +234,8 @@ Excluded sensitive files:
         - km_vars.js
       - setup/
         - setup_gear_vars.js
+      - shared/
+        - text_utils.js
       - users/
         - userStatusCheck.js
     - service/
@@ -228,12 +247,16 @@ Excluded sensitive files:
         - googleSheetsProvider.js
         - googleWorkspaceProvider.js
       - tasks/
+        - adminApprovalWriteBack.js
+        - adminNotifyPendingApprovals.js
         - basenNotifySessionCancelled.js
         - eventsSyncCalendar.js
         - eventsSyncFromSheet.js
         - gearPrivateStorage.js
         - gearSyncAllFromSheet.js
         - gearSyncKayaksFromSheet.js
+        - godzinkiImportTransitionFromSheet.js
+        - godzinkiMergeHistoricalUser.js
         - godzinkiSyncFromSheet.js
         - groupsDiagnose.js
         - kmMergeHistoricalUser.js
@@ -244,6 +267,7 @@ Excluded sensitive files:
         - listaEnforcePostingPolicy.js
         - membersSyncToSheet.js
         - onUserRegisteredWelcome.js
+        - reconcileOpeningBalance.js
         - setupSyncFromSheet.js
         - usersSyncFieldsFromSheet.js
         - usersSyncFunctionRolesFromSetup.js
@@ -260,15 +284,27 @@ Excluded sensitive files:
       - types.js
     - index.js
   - scripts/
+    - auditInvoker.js
+    - auditInvokerDebug.js
+    - deleteGhostGodzinki.js
     - deleteStuckJob.js
+    - enqueueGodzinkiTransitionImport.js
     - enqueueGroupsDiagnose.js
     - enqueueListaPolicy.js
+    - enqueueReconcileOpeningBalance.js
+    - fixGhostApprovals.js
+    - printFnUrls.js
+    - readEvents.js
     - readGearCollections.js
     - readGroupsDiag.js
+    - readPendingApprovals.js
     - readServiceJobs.js
     - readUsersActive.js
+    - removeEventsFromApp.js
+    - verifyDeploy.js
   - src/
     - api/
+      - adminApprovalHandler.ts
       - adminEventsSyncCalendarHandler.ts
       - basenAdminAddGodzinyHandler.ts
       - basenAdminCorrectGodzinyHandler.ts
@@ -329,6 +365,7 @@ Excluded sensitive files:
         - godzinki_service.ts
         - godzinki_vars.ts
         - hours_quote.ts
+        - opening_balance_fields.ts
       - km/
         - km_log_service.ts
         - km_places_service.ts
@@ -336,6 +373,8 @@ Excluded sensitive files:
         - km_vars.ts
       - setup/
         - setup_gear_vars.ts
+      - shared/
+        - text_utils.ts
       - users/
         - userStatusCheck.ts
     - service/
@@ -347,12 +386,16 @@ Excluded sensitive files:
         - googleSheetsProvider.ts
         - googleWorkspaceProvider.ts
       - tasks/
+        - adminApprovalWriteBack.ts
+        - adminNotifyPendingApprovals.ts
         - basenNotifySessionCancelled.ts
         - eventsSyncCalendar.ts
         - eventsSyncFromSheet.ts
         - gearPrivateStorage.ts
         - gearSyncAllFromSheet.ts
         - gearSyncKayaksFromSheet.ts
+        - godzinkiImportTransitionFromSheet.ts
+        - godzinkiMergeHistoricalUser.ts
         - godzinkiSyncFromSheet.ts
         - groupsDiagnose.ts
         - kmMergeHistoricalUser.ts
@@ -363,6 +406,7 @@ Excluded sensitive files:
         - listaEnforcePostingPolicy.ts
         - membersSyncToSheet.ts
         - onUserRegisteredWelcome.ts
+        - reconcileOpeningBalance.ts
         - setupSyncFromSheet.ts
         - usersSyncFieldsFromSheet.ts
         - usersSyncFunctionRolesFromSetup.ts
@@ -378,6 +422,12 @@ Excluded sensitive files:
       - service_config.ts
       - types.ts
     - index.ts
+  - test/
+    - events_core.test.ts
+    - faza2_core.test.ts
+    - gear_core.test.ts
+    - godzinki_core.test.ts
+    - sync_core.test.ts
   - .eslintrc.js
   - .gitignore
   - package-lock.json
@@ -468,12 +518,19 @@ Excluded sensitive files:
       - e2e_prod_20260409_120535.md
       - e2e_prod_20260409_144924.json
       - e2e_prod_20260409_144924.md
+      - events_e2e_run.txt
+      - godzinki_e2e_run.txt
     - .gitignore
     - config.py
+    - conftest.py
     - oauth_client.json
+    - phase0_sheet_fixes.py
+    - read_sheet_approvals.py
+    - read_sheet_headers.py
     - requirements.txt
     - run_e2e.py
     - seed_test_accounts.py
+    - test_events_api.py
     - test_gear_private_storage.py
     - test_gear_reservations_api.py
     - test_godzinki_api.py
@@ -500,6 +557,8 @@ Excluded sensitive files:
 
 ## Internal dependency map
 
+- `functions/lib/api/adminApprovalHandler.js` -> `functions/lib/modules/hours/godzinki_service.js`
+- `functions/lib/api/adminApprovalHandler.js` -> `functions/lib/modules/hours/godzinki_vars.js`
 - `functions/lib/api/basenAdminAddGodzinyHandler.js` -> `functions/lib/modules/basen/basen_godziny_service.js`
 - `functions/lib/api/basenAdminCorrectGodzinyHandler.js` -> `functions/lib/modules/basen/basen_godziny_service.js`
 - `functions/lib/api/basenCancelEnrollmentHandler.js` -> `functions/lib/modules/basen/basen_service.js`
@@ -515,7 +574,7 @@ Excluded sensitive files:
 - `functions/lib/api/gearMyReservationsHandler.js` -> `functions/lib/modules/equipment/kayaks/gear_kayaks_service.js`
 - `functions/lib/api/gearReservationCancelHandler.js` -> `functions/lib/modules/equipment/kayaks/gear_kayaks_service.js`
 - `functions/lib/api/gearReservationCreateHandler.js` -> `functions/lib/modules/calendar/calendar_utils.js`
-- `functions/lib/api/gearReservationCreateHandler.js` -> `functions/lib/modules/equipment/kayaks/gear_kayaks_service.js`
+- `functions/lib/api/gearReservationCreateHandler.js` -> `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
 - `functions/lib/api/gearReservationCreateHandler.js` -> `functions/lib/modules/users/userStatusCheck.js`
 - `functions/lib/api/gearReservationUpdateHandler.js` -> `functions/lib/modules/calendar/calendar_utils.js`
 - `functions/lib/api/gearReservationUpdateHandler.js` -> `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
@@ -540,11 +599,14 @@ Excluded sensitive files:
 - `functions/lib/api/kmMyStatsHandler.js` -> `functions/lib/modules/km/km_log_service.js`
 - `functions/lib/api/kmPlacesHandler.js` -> `functions/lib/modules/km/km_places_service.js`
 - `functions/lib/api/registerUserHandler.js` -> `functions/lib/modules/hours/godzinki_service.js`
+- `functions/lib/api/registerUserHandler.js` -> `functions/lib/modules/hours/opening_balance_fields.js`
 - `functions/lib/api/submitEventHandler.js` -> `functions/lib/modules/calendar/events_service.js`
 - `functions/lib/api/submitEventHandler.js` -> `functions/lib/modules/users/userStatusCheck.js`
 - `functions/lib/api/submitGodzinkiHandler.js` -> `functions/lib/modules/calendar/calendar_utils.js`
 - `functions/lib/api/submitGodzinkiHandler.js` -> `functions/lib/modules/hours/godzinki_service.js`
+- `functions/lib/api/submitGodzinkiHandler.js` -> `functions/lib/modules/shared/text_utils.js`
 - `functions/lib/api/submitGodzinkiHandler.js` -> `functions/lib/modules/users/userStatusCheck.js`
+- `functions/lib/index.js` -> `functions/lib/api/adminApprovalHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/adminEventsSyncCalendarHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/basenAdminAddGodzinyHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/basenAdminCorrectGodzinyHandler.js`
@@ -613,12 +675,16 @@ Excluded sensitive files:
 - `functions/lib/service/providers/googleCalendarProvider.js` -> `functions/lib/service/providers/googleAuth.js`
 - `functions/lib/service/providers/googleSheetsProvider.js` -> `functions/lib/service/providers/googleAuth.js`
 - `functions/lib/service/providers/googleWorkspaceProvider.js` -> `functions/lib/service/providers/googleAuth.js`
+- `functions/lib/service/registry.js` -> `functions/lib/service/tasks/adminApprovalWriteBack.js`
+- `functions/lib/service/registry.js` -> `functions/lib/service/tasks/adminNotifyPendingApprovals.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/basenNotifySessionCancelled.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/eventsSyncCalendar.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/eventsSyncFromSheet.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/gearPrivateStorage.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/gearSyncAllFromSheet.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/gearSyncKayaksFromSheet.js`
+- `functions/lib/service/registry.js` -> `functions/lib/service/tasks/godzinkiImportTransitionFromSheet.js`
+- `functions/lib/service/registry.js` -> `functions/lib/service/tasks/godzinkiMergeHistoricalUser.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/godzinkiSyncFromSheet.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/groupsDiagnose.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/kmMergeHistoricalUser.js`
@@ -629,6 +695,7 @@ Excluded sensitive files:
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/listaEnforcePostingPolicy.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/membersSyncToSheet.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/onUserRegisteredWelcome.js`
+- `functions/lib/service/registry.js` -> `functions/lib/service/tasks/reconcileOpeningBalance.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/setupSyncFromSheet.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/usersSyncFieldsFromSheet.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/usersSyncFunctionRolesFromSetup.js`
@@ -636,21 +703,33 @@ Excluded sensitive files:
 - `functions/lib/service/runner.js` -> `functions/lib/service/providers/googleWorkspaceProvider.js`
 - `functions/lib/service/runner.js` -> `functions/lib/service/registry.js`
 - `functions/lib/service/runner.js` -> `functions/lib/service/service_config.js`
+- `functions/lib/service/tasks/adminApprovalWriteBack.js` -> `functions/lib/service/providers/googleSheetsProvider.js`
+- `functions/lib/service/tasks/adminApprovalWriteBack.js` -> `functions/lib/service/service_config.js`
+- `functions/lib/service/tasks/adminNotifyPendingApprovals.js` -> `functions/lib/modules/shared/text_utils.js`
+- `functions/lib/service/tasks/adminNotifyPendingApprovals.js` -> `functions/lib/service/service_config.js`
 - `functions/lib/service/tasks/basenNotifySessionCancelled.js` -> `functions/lib/modules/basen/basen_service.js`
 - `functions/lib/service/tasks/eventsSyncCalendar.js` -> `functions/lib/service/providers/googleCalendarProvider.js`
 - `functions/lib/service/tasks/eventsSyncCalendar.js` -> `functions/lib/service/service_config.js`
+- `functions/lib/service/tasks/eventsSyncFromSheet.js` -> `functions/lib/modules/shared/text_utils.js`
 - `functions/lib/service/tasks/eventsSyncFromSheet.js` -> `functions/lib/service/providers/googleCalendarProvider.js`
 - `functions/lib/service/tasks/eventsSyncFromSheet.js` -> `functions/lib/service/providers/googleSheetsProvider.js`
 - `functions/lib/service/tasks/eventsSyncFromSheet.js` -> `functions/lib/service/service_config.js`
 - `functions/lib/service/tasks/gearPrivateStorage.js` -> `functions/lib/modules/hours/godzinki_service.js`
 - `functions/lib/service/tasks/gearPrivateStorage.js` -> `functions/lib/modules/hours/godzinki_vars.js`
 - `functions/lib/service/tasks/gearPrivateStorage.js` -> `functions/lib/modules/setup/setup_gear_vars.js`
+- `functions/lib/service/tasks/gearPrivateStorage.js` -> `functions/lib/modules/shared/text_utils.js`
 - `functions/lib/service/tasks/gearSyncAllFromSheet.js` -> `functions/lib/service/providers/googleSheetsProvider.js`
 - `functions/lib/service/tasks/gearSyncAllFromSheet.js` -> `functions/lib/service/service_config.js`
 - `functions/lib/service/tasks/gearSyncKayaksFromSheet.js` -> `functions/lib/service/providers/googleSheetsProvider.js`
 - `functions/lib/service/tasks/gearSyncKayaksFromSheet.js` -> `functions/lib/service/service_config.js`
+- `functions/lib/service/tasks/godzinkiImportTransitionFromSheet.js` -> `functions/lib/modules/hours/godzinki_service.js`
+- `functions/lib/service/tasks/godzinkiImportTransitionFromSheet.js` -> `functions/lib/modules/hours/godzinki_vars.js`
+- `functions/lib/service/tasks/godzinkiImportTransitionFromSheet.js` -> `functions/lib/modules/shared/text_utils.js`
+- `functions/lib/service/tasks/godzinkiImportTransitionFromSheet.js` -> `functions/lib/service/providers/googleSheetsProvider.js`
+- `functions/lib/service/tasks/godzinkiImportTransitionFromSheet.js` -> `functions/lib/service/service_config.js`
 - `functions/lib/service/tasks/godzinkiSyncFromSheet.js` -> `functions/lib/modules/hours/godzinki_service.js`
 - `functions/lib/service/tasks/godzinkiSyncFromSheet.js` -> `functions/lib/modules/hours/godzinki_vars.js`
+- `functions/lib/service/tasks/godzinkiSyncFromSheet.js` -> `functions/lib/modules/shared/text_utils.js`
 - `functions/lib/service/tasks/godzinkiSyncFromSheet.js` -> `functions/lib/service/providers/googleSheetsProvider.js`
 - `functions/lib/service/tasks/godzinkiSyncFromSheet.js` -> `functions/lib/service/service_config.js`
 - `functions/lib/service/tasks/kmRebuildRankings.js` -> `functions/lib/service/tasks/kmRebuildUserStats.js`
@@ -660,6 +739,8 @@ Excluded sensitive files:
 - `functions/lib/service/tasks/kursSyncFromSheet.js` -> `functions/lib/service/service_config.js`
 - `functions/lib/service/tasks/membersSyncToSheet.js` -> `functions/lib/service/providers/googleSheetsProvider.js`
 - `functions/lib/service/tasks/membersSyncToSheet.js` -> `functions/lib/service/service_config.js`
+- `functions/lib/service/tasks/reconcileOpeningBalance.js` -> `functions/lib/modules/hours/godzinki_service.js`
+- `functions/lib/service/tasks/reconcileOpeningBalance.js` -> `functions/lib/modules/hours/opening_balance_fields.js`
 - `functions/lib/service/tasks/setupSyncFromSheet.js` -> `functions/lib/service/providers/googleSheetsProvider.js`
 - `functions/lib/service/tasks/setupSyncFromSheet.js` -> `functions/lib/service/service_config.js`
 - `functions/lib/service/tasks/usersSyncFieldsFromSheet.js` -> `functions/lib/service/providers/googleSheetsProvider.js`
@@ -673,6 +754,8 @@ Excluded sensitive files:
 - `functions/lib/service/worker/jobProcessor.js` -> `functions/lib/service/runner.js`
 - `functions/lib/service/worker/jobProcessor.js` -> `functions/lib/service/service_config.js`
 - `functions/lib/service/worker/onJobCreatedWorker.js` -> `functions/lib/service/worker/jobProcessor.js`
+- `functions/src/api/adminApprovalHandler.ts` -> `functions/src/modules/hours/godzinki_service.ts`
+- `functions/src/api/adminApprovalHandler.ts` -> `functions/src/modules/hours/godzinki_vars.ts`
 - `functions/src/api/basenAdminAddGodzinyHandler.ts` -> `functions/src/modules/basen/basen_godziny_service.ts`
 - `functions/src/api/basenAdminCorrectGodzinyHandler.ts` -> `functions/src/modules/basen/basen_godziny_service.ts`
 - `functions/src/api/basenCancelEnrollmentHandler.ts` -> `functions/src/modules/basen/basen_service.ts`
@@ -688,7 +771,7 @@ Excluded sensitive files:
 - `functions/src/api/gearMyReservationsHandler.ts` -> `functions/src/modules/equipment/kayaks/gear_kayaks_service.ts`
 - `functions/src/api/gearReservationCancelHandler.ts` -> `functions/src/modules/equipment/kayaks/gear_kayaks_service.ts`
 - `functions/src/api/gearReservationCreateHandler.ts` -> `functions/src/modules/calendar/calendar_utils.ts`
-- `functions/src/api/gearReservationCreateHandler.ts` -> `functions/src/modules/equipment/kayaks/gear_kayaks_service.ts`
+- `functions/src/api/gearReservationCreateHandler.ts` -> `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
 - `functions/src/api/gearReservationCreateHandler.ts` -> `functions/src/modules/users/userStatusCheck.ts`
 - `functions/src/api/gearReservationUpdateHandler.ts` -> `functions/src/modules/calendar/calendar_utils.ts`
 - `functions/src/api/gearReservationUpdateHandler.ts` -> `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
@@ -712,11 +795,14 @@ Excluded sensitive files:
 - `functions/src/api/kmMyStatsHandler.ts` -> `functions/src/modules/km/km_log_service.ts`
 - `functions/src/api/kmPlacesHandler.ts` -> `functions/src/modules/km/km_places_service.ts`
 - `functions/src/api/registerUserHandler.ts` -> `functions/src/modules/hours/godzinki_service.ts`
+- `functions/src/api/registerUserHandler.ts` -> `functions/src/modules/hours/opening_balance_fields.ts`
 - `functions/src/api/submitEventHandler.ts` -> `functions/src/modules/calendar/events_service.ts`
 - `functions/src/api/submitEventHandler.ts` -> `functions/src/modules/users/userStatusCheck.ts`
 - `functions/src/api/submitGodzinkiHandler.ts` -> `functions/src/modules/calendar/calendar_utils.ts`
 - `functions/src/api/submitGodzinkiHandler.ts` -> `functions/src/modules/hours/godzinki_service.ts`
+- `functions/src/api/submitGodzinkiHandler.ts` -> `functions/src/modules/shared/text_utils.ts`
 - `functions/src/api/submitGodzinkiHandler.ts` -> `functions/src/modules/users/userStatusCheck.ts`
+- `functions/src/index.ts` -> `functions/src/api/adminApprovalHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/adminEventsSyncCalendarHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/basenAdminAddGodzinyHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/basenAdminCorrectGodzinyHandler.ts`
@@ -789,12 +875,16 @@ Excluded sensitive files:
 - `functions/src/service/providers/googleCalendarProvider.ts` -> `functions/src/service/providers/googleAuth.ts`
 - `functions/src/service/providers/googleSheetsProvider.ts` -> `functions/src/service/providers/googleAuth.ts`
 - `functions/src/service/providers/googleWorkspaceProvider.ts` -> `functions/src/service/providers/googleAuth.ts`
+- `functions/src/service/registry.ts` -> `functions/src/service/tasks/adminApprovalWriteBack.ts`
+- `functions/src/service/registry.ts` -> `functions/src/service/tasks/adminNotifyPendingApprovals.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/basenNotifySessionCancelled.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/eventsSyncCalendar.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/eventsSyncFromSheet.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/gearPrivateStorage.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/gearSyncAllFromSheet.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/gearSyncKayaksFromSheet.ts`
+- `functions/src/service/registry.ts` -> `functions/src/service/tasks/godzinkiImportTransitionFromSheet.ts`
+- `functions/src/service/registry.ts` -> `functions/src/service/tasks/godzinkiMergeHistoricalUser.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/godzinkiSyncFromSheet.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/groupsDiagnose.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/kmMergeHistoricalUser.ts`
@@ -805,6 +895,7 @@ Excluded sensitive files:
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/listaEnforcePostingPolicy.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/membersSyncToSheet.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/onUserRegisteredWelcome.ts`
+- `functions/src/service/registry.ts` -> `functions/src/service/tasks/reconcileOpeningBalance.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/setupSyncFromSheet.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/usersSyncFieldsFromSheet.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/usersSyncFunctionRolesFromSetup.ts`
@@ -814,11 +905,18 @@ Excluded sensitive files:
 - `functions/src/service/runner.ts` -> `functions/src/service/registry.ts`
 - `functions/src/service/runner.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/service/runner.ts` -> `functions/src/service/types.ts`
+- `functions/src/service/tasks/adminApprovalWriteBack.ts` -> `functions/src/service/providers/googleSheetsProvider.ts`
+- `functions/src/service/tasks/adminApprovalWriteBack.ts` -> `functions/src/service/service_config.ts`
+- `functions/src/service/tasks/adminApprovalWriteBack.ts` -> `functions/src/service/types.ts`
+- `functions/src/service/tasks/adminNotifyPendingApprovals.ts` -> `functions/src/modules/shared/text_utils.ts`
+- `functions/src/service/tasks/adminNotifyPendingApprovals.ts` -> `functions/src/service/service_config.ts`
+- `functions/src/service/tasks/adminNotifyPendingApprovals.ts` -> `functions/src/service/types.ts`
 - `functions/src/service/tasks/basenNotifySessionCancelled.ts` -> `functions/src/modules/basen/basen_service.ts`
 - `functions/src/service/tasks/basenNotifySessionCancelled.ts` -> `functions/src/service/types.ts`
 - `functions/src/service/tasks/eventsSyncCalendar.ts` -> `functions/src/service/providers/googleCalendarProvider.ts`
 - `functions/src/service/tasks/eventsSyncCalendar.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/service/tasks/eventsSyncCalendar.ts` -> `functions/src/service/types.ts`
+- `functions/src/service/tasks/eventsSyncFromSheet.ts` -> `functions/src/modules/shared/text_utils.ts`
 - `functions/src/service/tasks/eventsSyncFromSheet.ts` -> `functions/src/service/providers/googleCalendarProvider.ts`
 - `functions/src/service/tasks/eventsSyncFromSheet.ts` -> `functions/src/service/providers/googleSheetsProvider.ts`
 - `functions/src/service/tasks/eventsSyncFromSheet.ts` -> `functions/src/service/service_config.ts`
@@ -826,6 +924,7 @@ Excluded sensitive files:
 - `functions/src/service/tasks/gearPrivateStorage.ts` -> `functions/src/modules/hours/godzinki_service.ts`
 - `functions/src/service/tasks/gearPrivateStorage.ts` -> `functions/src/modules/hours/godzinki_vars.ts`
 - `functions/src/service/tasks/gearPrivateStorage.ts` -> `functions/src/modules/setup/setup_gear_vars.ts`
+- `functions/src/service/tasks/gearPrivateStorage.ts` -> `functions/src/modules/shared/text_utils.ts`
 - `functions/src/service/tasks/gearPrivateStorage.ts` -> `functions/src/service/types.ts`
 - `functions/src/service/tasks/gearSyncAllFromSheet.ts` -> `functions/src/service/providers/googleSheetsProvider.ts`
 - `functions/src/service/tasks/gearSyncAllFromSheet.ts` -> `functions/src/service/service_config.ts`
@@ -833,8 +932,16 @@ Excluded sensitive files:
 - `functions/src/service/tasks/gearSyncKayaksFromSheet.ts` -> `functions/src/service/providers/googleSheetsProvider.ts`
 - `functions/src/service/tasks/gearSyncKayaksFromSheet.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/service/tasks/gearSyncKayaksFromSheet.ts` -> `functions/src/service/types.ts`
+- `functions/src/service/tasks/godzinkiImportTransitionFromSheet.ts` -> `functions/src/modules/hours/godzinki_service.ts`
+- `functions/src/service/tasks/godzinkiImportTransitionFromSheet.ts` -> `functions/src/modules/hours/godzinki_vars.ts`
+- `functions/src/service/tasks/godzinkiImportTransitionFromSheet.ts` -> `functions/src/modules/shared/text_utils.ts`
+- `functions/src/service/tasks/godzinkiImportTransitionFromSheet.ts` -> `functions/src/service/providers/googleSheetsProvider.ts`
+- `functions/src/service/tasks/godzinkiImportTransitionFromSheet.ts` -> `functions/src/service/service_config.ts`
+- `functions/src/service/tasks/godzinkiImportTransitionFromSheet.ts` -> `functions/src/service/types.ts`
+- `functions/src/service/tasks/godzinkiMergeHistoricalUser.ts` -> `functions/src/service/types.ts`
 - `functions/src/service/tasks/godzinkiSyncFromSheet.ts` -> `functions/src/modules/hours/godzinki_service.ts`
 - `functions/src/service/tasks/godzinkiSyncFromSheet.ts` -> `functions/src/modules/hours/godzinki_vars.ts`
+- `functions/src/service/tasks/godzinkiSyncFromSheet.ts` -> `functions/src/modules/shared/text_utils.ts`
 - `functions/src/service/tasks/godzinkiSyncFromSheet.ts` -> `functions/src/service/providers/googleSheetsProvider.ts`
 - `functions/src/service/tasks/godzinkiSyncFromSheet.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/service/tasks/godzinkiSyncFromSheet.ts` -> `functions/src/service/types.ts`
@@ -854,6 +961,9 @@ Excluded sensitive files:
 - `functions/src/service/tasks/membersSyncToSheet.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/service/tasks/membersSyncToSheet.ts` -> `functions/src/service/types.ts`
 - `functions/src/service/tasks/onUserRegisteredWelcome.ts` -> `functions/src/service/types.ts`
+- `functions/src/service/tasks/reconcileOpeningBalance.ts` -> `functions/src/modules/hours/godzinki_service.ts`
+- `functions/src/service/tasks/reconcileOpeningBalance.ts` -> `functions/src/modules/hours/opening_balance_fields.ts`
+- `functions/src/service/tasks/reconcileOpeningBalance.ts` -> `functions/src/service/types.ts`
 - `functions/src/service/tasks/setupSyncFromSheet.ts` -> `functions/src/service/providers/googleSheetsProvider.ts`
 - `functions/src/service/tasks/setupSyncFromSheet.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/service/tasks/setupSyncFromSheet.ts` -> `functions/src/service/types.ts`
@@ -871,6 +981,16 @@ Excluded sensitive files:
 - `functions/src/service/worker/jobProcessor.ts` -> `functions/src/service/runner.ts`
 - `functions/src/service/worker/jobProcessor.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/service/worker/onJobCreatedWorker.ts` -> `functions/src/service/worker/jobProcessor.ts`
+- `functions/test/events_core.test.ts` -> `functions/src/service/providers/googleSheetsProvider.ts`
+- `functions/test/events_core.test.ts` -> `functions/src/service/tasks/eventsSyncFromSheet.ts`
+- `functions/test/faza2_core.test.ts` -> `functions/src/service/tasks/adminNotifyPendingApprovals.ts`
+- `functions/test/gear_core.test.ts` -> `functions/src/modules/calendar/calendar_utils.ts`
+- `functions/test/gear_core.test.ts` -> `functions/src/modules/hours/hours_quote.ts`
+- `functions/test/gear_core.test.ts` -> `functions/src/modules/setup/setup_gear_vars.ts`
+- `functions/test/gear_core.test.ts` -> `functions/src/service/tasks/gearPrivateStorage.ts`
+- `functions/test/gear_core.test.ts` -> `functions/src/service/tasks/gearSyncAllFromSheet.ts`
+- `functions/test/godzinki_core.test.ts` -> `functions/src/modules/hours/godzinki_service.ts`
+- `functions/test/sync_core.test.ts` -> `functions/src/service/tasks/godzinkiSyncFromSheet.ts`
 
 ## Python files
 
@@ -973,6 +1093,17 @@ Excluded sensitive files:
 - Functions:
   - `validate_config(cfg: EnvConfig)` (function lines 193-210) -> `list[str]` — Return list of validation errors (empty = OK).
 
+### `tests/e2e/conftest.py`
+
+- Lines: `25`
+- Size: `1090` bytes
+- SHA1: `e191cd9a7d`
+- Module aliases: `tests.e2e.conftest`
+- Imports:
+  - `import os`
+- Top-level symbols:
+  - `_CA_BUNDLE`
+
 ### `tests/e2e/helpers/__init__.py`
 
 - Lines: `1`
@@ -982,9 +1113,9 @@ Excluded sensitive files:
 
 ### `tests/e2e/helpers/api_helper.py`
 
-- Lines: `383`
-- Size: `16624` bytes
-- SHA1: `89674d8420`
+- Lines: `440`
+- Size: `18787` bytes
+- SHA1: `e945bb1a99`
 - Module aliases: `tests.e2e.helpers.api_helper`
 - Imports:
   - `import logging`
@@ -993,7 +1124,7 @@ Excluded sensitive files:
 - Top-level symbols:
   - `log`
 - Classes:
-  - class `ApiHelper` lines 36-383
+  - class `ApiHelper` lines 36-440
     - methods:
       - `__init__(self, cfg: EnvConfig)` (function lines 37-40)
       - `_headers(self, token: str)` (function lines 42-46) -> `dict`
@@ -1010,21 +1141,26 @@ Excluded sensitive files:
       - `get_godzinki(self, token: str, view: str)` (function lines 160-172) -> `dict` — GET /api/godzinki
       - `submit_godzinki(self, token: str, amount: float, granted_at: str, reason: str)` (function lines 174-186) -> `dict` — POST /api/godzinki/submit
       - `submit_godzinki_soft(self, token: str, amount: float, granted_at: str, reason: str)` (function lines 188-196) -> `dict` — Like submit_godzinki but does NOT raise on HTTP error.
-      - `reserve_bundle(self, token: str, items: list[dict], start_date: str, end_date: str, starter_category: str, starter_item_id: str)` (function lines 202-221) -> `dict` — POST /api/gear/reservations/create-bundle
-      - `reserve_bundle_soft(self, token: str, items: list[dict], start_date: str, end_date: str, starter_category: str, starter_item_id: str)` (function lines 223-238) -> `dict` — Like reserve_bundle but does NOT raise on HTTP error.
-      - `update_reservation(self, token: str, reservation_id: str, start_date: str, end_date: str)` (function lines 240-252) -> `dict` — POST /api/gear/reservations/update
-      - `update_reservation_soft(self, token: str, reservation_id: str, start_date: str, end_date: str)` (function lines 254-262) -> `dict` — Like update_reservation but does NOT raise on HTTP error.
-      - `km_add_log(self, token: str, body: dict)` (function lines 268-276) -> `dict` — POST /api/km/log/add — raises on HTTP error.
-      - `km_add_log_soft(self, token: str, body: dict)` (function lines 278-286) -> `dict` — POST /api/km/log/add — does NOT raise on HTTP error.
-      - `km_my_logs(self, token: str, limit: int, after_date: str)` (function lines 288-299) -> `dict` — GET /api/km/logs — returns {ok, logs, count}.
-      - `km_my_stats(self, token: str)` (function lines 301-308) -> `dict` — GET /api/km/stats — returns {ok, stats}.
-      - `km_rankings(self, token: str, type: str, period: str, limit: int, year: str)` (function lines 310-322) -> `dict` — GET /api/km/rankings — returns {ok, type, period, entries, count}.
-      - `km_places(self, token: str, q: str, limit: int)` (function lines 324-332) -> `dict` — GET /api/km/places — returns {ok, places, count}.
-      - `km_map_data(self, token: str)` (function lines 334-341) -> `dict` — GET /api/km/map-data — returns {ok, locations, locationCount, updatedAt}.
-      - `km_event_stats(self, token: str, event_id: str)` (function lines 343-351) -> `dict` — GET /api/km/event-stats — raises on HTTP error.
-      - `km_event_stats_soft(self, token: str, event_id: str)` (function lines 353-362) -> `dict` — GET /api/km/event-stats — does NOT raise on HTTP error.
-      - `km_admin_merge_places(self, token: str, keep_place_id: str, merge_ids: list[str])` (function lines 364-372) -> `dict` — POST /api/admin/km/places/merge — raises on HTTP error.
-      - `km_admin_merge_places_soft(self, token: str, keep_place_id: str, merge_ids: list | None)` (function lines 374-383) -> `dict` — POST /api/admin/km/places/merge — does NOT raise on HTTP error.
+      - `get_events(self, token: str, mode: str)` (function lines 202-211) -> `dict` — GET /api/events[?mode=recent|all] — zatwierdzone imprezy.
+      - `submit_event(self, token: str, body: dict)` (function lines 213-221) -> `dict` — POST /api/events/submit — body: {name, startDate, endDate, location, ...}.
+      - `submit_event_soft(self, token: str, body: dict)` (function lines 223-230) -> `dict`
+      - `get_admin_pending(self, token: str)` (function lines 232-239) -> `dict` — GET /api/admin/pending — wymaga roli zarzad/kr.
+      - `purchase_godzinki_soft(self, token: str, amount: float)` (function lines 241-253) -> `dict` — POST /api/godzinki/purchase (soft — does NOT raise on HTTP error)
+      - `reserve_bundle(self, token: str, items: list[dict], start_date: str, end_date: str, starter_category: str, starter_item_id: str)` (function lines 259-278) -> `dict` — POST /api/gear/reservations/create-bundle
+      - `reserve_bundle_soft(self, token: str, items: list[dict], start_date: str, end_date: str, starter_category: str, starter_item_id: str)` (function lines 280-295) -> `dict` — Like reserve_bundle but does NOT raise on HTTP error.
+      - `update_reservation(self, token: str, reservation_id: str, start_date: str, end_date: str)` (function lines 297-309) -> `dict` — POST /api/gear/reservations/update
+      - `update_reservation_soft(self, token: str, reservation_id: str, start_date: str, end_date: str)` (function lines 311-319) -> `dict` — Like update_reservation but does NOT raise on HTTP error.
+      - `km_add_log(self, token: str, body: dict)` (function lines 325-333) -> `dict` — POST /api/km/log/add — raises on HTTP error.
+      - `km_add_log_soft(self, token: str, body: dict)` (function lines 335-343) -> `dict` — POST /api/km/log/add — does NOT raise on HTTP error.
+      - `km_my_logs(self, token: str, limit: int, after_date: str)` (function lines 345-356) -> `dict` — GET /api/km/logs — returns {ok, logs, count}.
+      - `km_my_stats(self, token: str)` (function lines 358-365) -> `dict` — GET /api/km/stats — returns {ok, stats}.
+      - `km_rankings(self, token: str, type: str, period: str, limit: int, year: str)` (function lines 367-379) -> `dict` — GET /api/km/rankings — returns {ok, type, period, entries, count}.
+      - `km_places(self, token: str, q: str, limit: int)` (function lines 381-389) -> `dict` — GET /api/km/places — returns {ok, places, count}.
+      - `km_map_data(self, token: str)` (function lines 391-398) -> `dict` — GET /api/km/map-data — returns {ok, locations, locationCount, updatedAt}.
+      - `km_event_stats(self, token: str, event_id: str)` (function lines 400-408) -> `dict` — GET /api/km/event-stats — raises on HTTP error.
+      - `km_event_stats_soft(self, token: str, event_id: str)` (function lines 410-419) -> `dict` — GET /api/km/event-stats — does NOT raise on HTTP error.
+      - `km_admin_merge_places(self, token: str, keep_place_id: str, merge_ids: list[str])` (function lines 421-429) -> `dict` — POST /api/admin/km/places/merge — raises on HTTP error.
+      - `km_admin_merge_places_soft(self, token: str, keep_place_id: str, merge_ids: list | None)` (function lines 431-440) -> `dict` — POST /api/admin/km/places/merge — does NOT raise on HTTP error.
 
 ### `tests/e2e/helpers/firebase_auth.py`
 
@@ -1195,6 +1331,30 @@ Excluded sensitive files:
 - Functions:
   - `_get_sheets_creds(oauth_client_path: str, token_path: str)` (function lines 47-95) -> `Credentials` — Zwraca credentials do Google Sheets przez user OAuth flow.
   - `_save_token(creds: Credentials, token_path: str)` (function lines 98-101)
+
+### `tests/e2e/phase0_sheet_fixes.py`
+
+- Lines: `111`
+- Size: `3801` bytes
+- SHA1: `b19b12f783`
+- Module aliases: `tests.e2e.phase0_sheet_fixes`
+- Imports:
+  - `import os`
+  - `import sys`
+  - `from config import ACTIVE`
+  - `from helpers.sheets_helper import SheetsHelper`
+- Top-level symbols:
+  - `CHECKBOX_TOKENS`
+  - `EXECUTE`
+  - `GODZINKI_DUPLICATE_ID`
+  - `GODZINKI_NEW_COLUMN`
+  - `HEADER_RENAMES_IMPREZY`
+  - `_HERE`
+- Functions:
+  - `fix_imprezy_headers(ws)` (function lines 46-53)
+  - `add_godzinki_column(ws)` (function lines 56-64)
+  - `delete_duplicate_godzinka(ws)` (function lines 67-80)
+  - `clean_imprezy_artifact_rows(ws)` (function lines 83-96)
 
 ### `tests/e2e/phases/__init__.py`
 
@@ -1411,6 +1571,38 @@ Excluded sensitive files:
 - Functions:
   - `run(cfg: EnvConfig, ctx: dict)` (function lines 23-109) -> `PhaseResult`
 
+### `tests/e2e/read_sheet_approvals.py`
+
+- Lines: `60`
+- Size: `1925` bytes
+- SHA1: `84d00c8b17`
+- Module aliases: `tests.e2e.read_sheet_approvals`
+- Imports:
+  - `import os`
+  - `import sys`
+  - `from config import ACTIVE`
+  - `from helpers.sheets_helper import SheetsHelper`
+- Top-level symbols:
+  - `PENDING_EVENT_IDS`
+  - `PENDING_GODZINKI_IDS`
+  - `_HERE`
+- Functions:
+  - `dump_tab(sheets, tab, id_set, approval_cols)` (function lines 36-51)
+
+### `tests/e2e/read_sheet_headers.py`
+
+- Lines: `33`
+- Size: `852` bytes
+- SHA1: `629c6d6864`
+- Module aliases: `tests.e2e.read_sheet_headers`
+- Imports:
+  - `import os`
+  - `import sys`
+  - `from config import ACTIVE`
+  - `from helpers.sheets_helper import SheetsHelper`
+- Top-level symbols:
+  - `_HERE`
+
 ### `tests/e2e/run_e2e.py`
 
 - Lines: `192`
@@ -1462,11 +1654,61 @@ Excluded sensitive files:
   - `_seed_godzinki(uid: str)` (function lines 244-284) — Tworzy lub resetuje 3 pule FIFO w godzinki_ledger dla test.czlonek.
   - `main()` (function lines 291-311)
 
+### `tests/e2e/test_events_api.py`
+
+- Lines: `318`
+- Size: `13342` bytes
+- SHA1: `9d597e2b03`
+- Module aliases: `tests.e2e.test_events_api`
+- Imports:
+  - `import os`
+  - `import sys`
+  - `import unittest`
+  - `import logging`
+  - `from datetime import datetime, timezone, timedelta`
+  - `from config import ACTIVE`
+  - `from helpers.firebase_auth import FirebaseAuthHelper`
+  - `from helpers.api_helper import ApiHelper`
+  - `from helpers.firestore_helper import FirestoreHelper`
+- Top-level symbols:
+  - `EVENTS_TAB`
+  - `_HERE`
+  - `_api`
+  - `_auth`
+  - `log`
+- Classes:
+  - class `_EventsTestBase(unittest.TestCase)` lines 94-128
+    - methods:
+      - `setUp(self)` (function lines 97-103)
+      - `tearDown(self)` (function lines 105-111)
+      - `_get_event_doc(self, event_id: str)` (function lines 115-117) -> `dict | None`
+      - `_delete_sheet_row(self, sheets, event_id: str)` (function lines 119-128) — Usuwa wiersz testowej imprezy z zakładki imprezy (cleanup EV03/EV04).
+  - class `TestEventSubmit(_EventsTestBase)` lines 135-170
+    - methods:
+      - `test_EV01_submit_creates_pending_not_listed_visible_in_panel(self)` (function lines 136-164)
+      - `test_EV01b_validation_rejects_bad_dates(self)` (function lines 166-170)
+  - class `TestEventApprovalVisibility(_EventsTestBase)` lines 177-190
+    - methods:
+      - `test_EV02_approved_event_appears_on_list(self)` (function lines 178-190)
+  - class `TestEventSheetFlow(_EventsTestBase)` lines 197-313
+    - methods:
+      - `setUp(self)` (function lines 198-202)
+      - `tearDown(self)` (function lines 204-208)
+      - `_find_sheet_row(self, event_id: str)` (function lines 210-215) -> `dict | None`
+      - `_set_sheet_cell(self, event_id: str, column_header: str, value: str)` (function lines 217-222)
+      - `test_EV03_write_retry_and_sync(self)` (function lines 224-274) — 1. submit → run events.writeToSheet → wiersz w arkuszu (Zatwierdzona=NIE)
+      - `test_EV04_backfill_writes_missing_row(self)` (function lines 276-313) — Impreza z sheetSyncedAt=null bez wiersza w arkuszu (symulacja martwego joba
+- Functions:
+  - `_skip_if_missing(*attrs)` (function lines 58-62)
+  - `_future(days: int)` (function lines 65-66) -> `str`
+  - `_test_event_body(suffix: str)` (function lines 69-78) -> `dict`
+  - `_sheets_helper_or_none()` (function lines 81-91) — SheetsHelper wymaga oauth_client.json — bez niego testy arkuszowe są pomijane.
+
 ### `tests/e2e/test_gear_private_storage.py`
 
-- Lines: `525`
-- Size: `23027` bytes
-- SHA1: `2b1e969131`
+- Lines: `580`
+- Size: `25714` bytes
+- SHA1: `e11dc765fa`
 - Module aliases: `tests.e2e.test_gear_private_storage`
 - Imports:
   - `import os`
@@ -1483,25 +1725,26 @@ Excluded sensitive files:
   - `_HERE`
   - `log`
 - Classes:
-  - class `TestGearPrivateStorage(unittest.TestCase)` lines 67-520 — Testy naliczania miesięcznych opłat za prywatne kajaki.
+  - class `TestGearPrivateStorage(unittest.TestCase)` lines 70-575 — Testy naliczania miesięcznych opłat za prywatne kajaki.
     - methods:
-      - `setUp(self)` (function lines 79-98)
-      - `tearDown(self)` (function lines 100-153)
-      - `_create_kayak(self, label: str, owner_contact: str, private_since: str)` (function lines 159-175) -> `str` — Tworzy tymczasowy prywatny kajak. Zwraca docId.
-      - `_block_real_kayaks(self, month: str)` (function lines 177-200) — Blokuje prawdziwe prywatne kajaki na podany miesiąc testowy, żeby task je pominął.
-      - `_run_task(self, dry: bool)` (function lines 202-209) -> `dict`
-      - `_get_charge(self, kayak_id: str)` (function lines 211-214) -> `dict | None`
-      - `_find_spend_for_kayak(self, uid: str, kayak_number: str)` (function lines 216-229) -> `tuple | None` — Szuka spend rekordu w godzinki_ledger powiązanego z kajak_number i TEST_MONTH.
-      - `_ensure_enough_balance(self, uid: str)` (function lines 231-262) -> `str | None` — Jeśli balance + neg_limit < costHours, dodaje tymczasowy grant buforowy ze starą datą
-      - `test_PS01_empty_owner_contact_creates_failed_record(self)` (function lines 268-279) — Kajak bez ownerContact → gear_storage_charges status='failed'
-      - `test_PS01b_invalid_email_no_at_creates_failed_record(self)` (function lines 281-291) — Kajak z emailem bez @ → gear_storage_charges status='failed'
-      - `test_PS01c_second_run_same_month_does_not_overwrite_failed(self)` (function lines 293-312) — Idempotencja dla 'failed': drugi run w tym samym miesiącu → rekord nie jest nadpisywany
-      - `test_PS02_board_exempt_creates_exempt_record_and_zero_spend(self)` (function lines 318-367) — Zarząd z boardDoesNotPay=true → status='exempt', hoursCharged=0, zero-spend w godzinki_ledger
-      - `test_PS02b_board_exempt_idempotency(self)` (function lines 369-417) — Drugi run dla zarządu — kajak skipped (nie tworzy drugiego exempt rekordu)
-      - `test_PS03_member_charge_creates_charged_record_and_deducts_balance(self)` (function lines 423-471) — Normalny członek → status='charged', spend w godzinki_ledger, bilans maleje o costHours
-      - `test_PS03b_charged_record_idempotency(self)` (function lines 473-520) — Drugi run dla naładowanego kajaka → skipped, bilans nie zmienia się drugi raz
+      - `setUp(self)` (function lines 82-101)
+      - `tearDown(self)` (function lines 103-156)
+      - `_create_kayak(self, label: str, owner_contact: str, private_since: str)` (function lines 162-178) -> `str` — Tworzy tymczasowy prywatny kajak. Zwraca docId.
+      - `_block_real_kayaks(self, month: str)` (function lines 180-203) — Blokuje prawdziwe prywatne kajaki na podany miesiąc testowy, żeby task je pominął.
+      - `_run_task(self, dry: bool)` (function lines 205-212) -> `dict`
+      - `_get_charge(self, kayak_id: str)` (function lines 214-217) -> `dict | None`
+      - `_find_spend_for_kayak(self, uid: str, kayak_number: str)` (function lines 219-232) -> `tuple | None` — Szuka spend rekordu w godzinki_ledger powiązanego z kajak_number i TEST_MONTH.
+      - `_ensure_enough_balance(self, uid: str)` (function lines 234-265) -> `str | None` — Jeśli balance + neg_limit < costHours, dodaje tymczasowy grant buforowy ze starą datą
+      - `test_PS01_empty_owner_contact_creates_failed_record(self)` (function lines 271-282) — Kajak bez ownerContact → gear_storage_charges status='failed'
+      - `test_PS01b_invalid_email_no_at_creates_failed_record(self)` (function lines 284-294) — Kajak z emailem bez @ → gear_storage_charges status='failed'
+      - `test_PS01c_second_run_retries_failed_and_keeps_failed_status(self)` (function lines 296-316) — Poprawka L7: rekord 'failed' jest PONAWIANY przy kolejnym runie
+      - `test_PS01d_failed_then_fixed_email_retries_to_charged(self)` (function lines 318-367) — Poprawka L7: po naprawieniu przyczyny (uzupełniony ownerContact)
+      - `test_PS02_board_exempt_creates_exempt_record_and_zero_spend(self)` (function lines 373-422) — Zarząd z boardDoesNotPay=true → status='exempt', hoursCharged=0, zero-spend w godzinki_ledger
+      - `test_PS02b_board_exempt_idempotency(self)` (function lines 424-472) — Drugi run dla zarządu — kajak skipped (nie tworzy drugiego exempt rekordu)
+      - `test_PS03_member_charge_creates_charged_record_and_deducts_balance(self)` (function lines 478-526) — Normalny członek → status='charged', spend w godzinki_ledger, bilans maleje o costHours
+      - `test_PS03b_charged_record_idempotency(self)` (function lines 528-575) — Drugi run dla naładowanego kajaka → skipped, bilans nie zmienia się drugi raz
 - Functions:
-  - `_skip_if_missing(*attrs)` (function lines 60-64)
+  - `_skip_if_missing(*attrs)` (function lines 63-67)
 
 ### `tests/e2e/test_gear_reservations_api.py`
 
@@ -1595,9 +1838,9 @@ Excluded sensitive files:
 
 ### `tests/e2e/test_godzinki_api.py`
 
-- Lines: `627`
-- Size: `25879` bytes
-- SHA1: `4636f1aab0`
+- Lines: `874`
+- Size: `36943` bytes
+- SHA1: `9972e0cabf`
 - Module aliases: `tests.e2e.test_godzinki_api`
 - Imports:
   - `import os`
@@ -1668,9 +1911,26 @@ Excluded sensitive files:
       - `setUp(self)` (function lines 545-551)
       - `tearDown(self)` (function lines 553-558)
       - `test_G13_board_balance_unchanged_after_reservation(self)` (function lines 560-593) — Zarząd nie płaci → bilans godzinkowy nie zmienia się po rezerwacji kajaka
-  - class `TestGodzinkiManualApprovalDocumented(unittest.TestCase)` lines 600-622 — Scenariusz wymagający ręcznej interwencji — udokumentowany, nie automatyczny.
+  - class `TestGodzinkiCancelWithOverdraft(unittest.TestCase)` lines 600-715 — G14 — Anulowanie rezerwacji pokrytej (częściowo) z salda ujemnego musi
     - methods:
-      - `test_full_approval_flow_manual(self)` (function lines 621-622)
+      - `setUp(self)` (function lines 618-628)
+      - `tearDown(self)` (function lines 630-640)
+      - `_zero_balance_with_synthetic_spend(self)` (function lines 642-663) -> `float` — Jeśli saldo > 0, dodaje syntetyczny spend (overdraft=saldo) → saldo ≈ 0. Zwraca saldo po.
+      - `test_G14_cancel_overdraft_reservation_restores_exact_balance(self)` (function lines 665-715) — 1. Wyzeruj saldo syntetycznym spendem (overdraft)
+  - class `TestGodzinkiPurchasePendingGuard(unittest.TestCase)` lines 722-812 — G15 — Suma oczekujących (pending) wykupów nie może przekroczyć długu.
+    - methods:
+      - `setUp(self)` (function lines 738-748)
+      - `tearDown(self)` (function lines 750-760)
+      - `_force_debt(self, debt: float)` (function lines 762-785) -> `float` — Syntetyczny spend doprowadza saldo do ok. -debt. Zwraca saldo po.
+      - `test_G15_second_pending_purchase_above_debt_rejected(self)` (function lines 787-812) — 1. Doprowadź saldo do ok. -3h
+  - class `TestGodzinkiIntegerAmounts(unittest.TestCase)` lines 819-840 — G16 — Ułamkowe kwoty godzinek odrzucane (ochrona przed dryfem float w FIFO).
+    - methods:
+      - `setUp(self)` (function lines 822-826)
+      - `test_G16_fractional_submit_rejected(self)` (function lines 828-833) — POST /api/godzinki/submit z amount=2.5 → 400 validation_failed (must_be_integer)
+      - `test_G16b_fractional_purchase_rejected(self)` (function lines 835-840) — POST /api/godzinki/purchase z amount=0.5 → 400 validation_failed (must_be_integer)
+  - class `TestGodzinkiManualApprovalDocumented(unittest.TestCase)` lines 847-869 — Scenariusz wymagający ręcznej interwencji — udokumentowany, nie automatyczny.
+    - methods:
+      - `test_full_approval_flow_manual(self)` (function lines 868-869)
 - Functions:
   - `_skip_if_missing(*attrs)` (function lines 67-72) — Return skip reason if any of the config fields are empty.
 
@@ -2187,9 +2447,9 @@ Excluded sensitive files:
 
 ### `tests/test_godzinki.py`
 
-- Lines: `1392`
-- Size: `56851` bytes
-- SHA1: `976db96a69`
+- Lines: `1878`
+- Size: `80272` bytes
+- SHA1: `d33c4bbed8`
 - Module aliases: `tests.test_godzinki`
 - Imports:
   - `import unittest`
@@ -2206,98 +2466,123 @@ Excluded sensitive files:
     - methods:
       - `setUp(self)` (function lines 61-69)
       - `tearDown(self)` (function lines 71-74)
-  - class `TestBilansApproval(VerboseBusinessTestCase)` lines 414-466 — Testy zatwierdzania godzinek (approved).
+  - class `TestBilansApproval(VerboseBusinessTestCase)` lines 592-644 — Testy zatwierdzania godzinek (approved).
     - methods:
-      - `test_niezatwierdzone_nie_licza_sie_do_bilansu(self)` (function lines 417-423) — OCZEKIWANE: Rekord earn z approved=False ma remaining=0 i nie wchodzi do bilansu.
-      - `test_niezatwierdzone_nie_widoczne_nawet_po_dacie(self)` (function lines 425-430) — OCZEKIWANE: Stary rekord niezatwierdzony (z przeszłości) dalej nie liczy się do bilansu.
-      - `test_zatwierdzone_wchodzi_do_bilansu(self)` (function lines 432-438) — OCZEKIWANE: Po zatwierdzeniu (approved=True) rekord earn wchodzi do bilansu.
-      - `test_mix_zatwierdzonych_i_niezatwierdzonych(self)` (function lines 440-448) — OCZEKIWANE: Bilans uwzględnia tylko zatwierdzone. Niezatwierdzone 20h są niewidoczne.
-      - `test_zatwierdzenie_po_syncu_zmienia_bilans(self)` (function lines 450-466) — OCZEKIWANE: Symulacja syncu — ustawienie approved=True i remaining=amount
-  - class `TestWygasanie(VerboseBusinessTestCase)` lines 469-539 — Testy wygasania godzinek po 4 latach.
+      - `test_niezatwierdzone_nie_licza_sie_do_bilansu(self)` (function lines 595-601) — OCZEKIWANE: Rekord earn z approved=False ma remaining=0 i nie wchodzi do bilansu.
+      - `test_niezatwierdzone_nie_widoczne_nawet_po_dacie(self)` (function lines 603-608) — OCZEKIWANE: Stary rekord niezatwierdzony (z przeszłości) dalej nie liczy się do bilansu.
+      - `test_zatwierdzone_wchodzi_do_bilansu(self)` (function lines 610-616) — OCZEKIWANE: Po zatwierdzeniu (approved=True) rekord earn wchodzi do bilansu.
+      - `test_mix_zatwierdzonych_i_niezatwierdzonych(self)` (function lines 618-626) — OCZEKIWANE: Bilans uwzględnia tylko zatwierdzone. Niezatwierdzone 20h są niewidoczne.
+      - `test_zatwierdzenie_po_syncu_zmienia_bilans(self)` (function lines 628-644) — OCZEKIWANE: Symulacja syncu — ustawienie approved=True i remaining=amount
+  - class `TestWygasanie(VerboseBusinessTestCase)` lines 647-717 — Testy wygasania godzinek po 4 latach.
     - methods:
-      - `test_wygasle_rekordy_nie_licza_sie(self)` (function lines 472-478) — OCZEKIWANE: Godzinki przyznane 5 lat temu (wygasłe 1 rok temu) mają wartość 0 w bilansie.
-      - `test_nevygasle_rekordy_licza_sie(self)` (function lines 480-486) — OCZEKIWANE: Godzinki przyznane rok temu (wygasają za 3 lata) są liczone normalnie.
-      - `test_wygasanie_dokladnie_dzisiaj_nie_liczy_sie(self)` (function lines 488-494) — OCZEKIWANE: Godzinki wygasające dziś (expiresAt == NOW) NIE są liczone — warunek strict >now.
-      - `test_mix_wygasle_i_aktualne(self)` (function lines 496-504) — OCZEKIWANE: Bilans = tylko aktualne (niewygasłe). Wygasłe 10h + aktualne 15h = 15h salda.
-      - `test_nastepna_data_wygasniecia(self)` (function lines 506-517) — OCZEKIWANE: Funkcja compute_next_expiry zwraca datę wygaśnięcia najstarszej puli z remaining > 0.
-      - `test_brak_next_expiry_gdy_wszystko_wygasle(self)` (function lines 519-524) — OCZEKIWANE: Gdy wszystkie rekordy są wygasłe, next_expiry = None.
-      - `test_brak_next_expiry_gdy_wszystko_niezatwierdzone(self)` (function lines 526-531) — OCZEKIWANE: Gdy wszystkie rekordy są niezatwierdzone, next_expiry = None.
-      - `test_brak_next_expiry_gdy_remaining_zero(self)` (function lines 533-539) — OCZEKIWANE: Jeśli wszystkie earn.remaining = 0 (zużyte), next_expiry = None.
-  - class `TestFIFO(VerboseBusinessTestCase)` lines 542-661 — Testy wydawania FIFO — najstarsze pule zużywane najpierw.
+      - `test_wygasle_rekordy_nie_licza_sie(self)` (function lines 650-656) — OCZEKIWANE: Godzinki przyznane 5 lat temu (wygasłe 1 rok temu) mają wartość 0 w bilansie.
+      - `test_nevygasle_rekordy_licza_sie(self)` (function lines 658-664) — OCZEKIWANE: Godzinki przyznane rok temu (wygasają za 3 lata) są liczone normalnie.
+      - `test_wygasanie_dokladnie_dzisiaj_nie_liczy_sie(self)` (function lines 666-672) — OCZEKIWANE: Godzinki wygasające dziś (expiresAt == NOW) NIE są liczone — warunek strict >now.
+      - `test_mix_wygasle_i_aktualne(self)` (function lines 674-682) — OCZEKIWANE: Bilans = tylko aktualne (niewygasłe). Wygasłe 10h + aktualne 15h = 15h salda.
+      - `test_nastepna_data_wygasniecia(self)` (function lines 684-695) — OCZEKIWANE: Funkcja compute_next_expiry zwraca datę wygaśnięcia najstarszej puli z remaining > 0.
+      - `test_brak_next_expiry_gdy_wszystko_wygasle(self)` (function lines 697-702) — OCZEKIWANE: Gdy wszystkie rekordy są wygasłe, next_expiry = None.
+      - `test_brak_next_expiry_gdy_wszystko_niezatwierdzone(self)` (function lines 704-709) — OCZEKIWANE: Gdy wszystkie rekordy są niezatwierdzone, next_expiry = None.
+      - `test_brak_next_expiry_gdy_remaining_zero(self)` (function lines 711-717) — OCZEKIWANE: Jeśli wszystkie earn.remaining = 0 (zużyte), next_expiry = None.
+  - class `TestFIFO(VerboseBusinessTestCase)` lines 720-839 — Testy wydawania FIFO — najstarsze pule zużywane najpierw.
     - methods:
-      - `test_fifo_jedna_pula_pelne_zuzycie(self)` (function lines 545-556) — OCZEKIWANE: Przy jednej puli 10h i wydaniu 10h — remaining=0, overdraft=0.
-      - `test_fifo_jedna_pula_czesciowe_zuzycie(self)` (function lines 558-568) — OCZEKIWANE: Przy jednej puli 10h i wydaniu 6h — remaining=4, overdraft=0.
-      - `test_fifo_dwie_pule_zuzycie_z_obu(self)` (function lines 570-593) — OCZEKIWANE: Pula A (starsza, 10h) + Pula B (nowsza, 10h). Wydanie 15h:
-      - `test_fifo_trzy_pule_czesciowe_zuzycie(self)` (function lines 595-615) — OCZEKIWANE: 3 pule (A=5h, B=8h, C=12h). Wydanie 10h:
-      - `test_bilans_po_czesciowym_zuzyciu_wielu_pul(self)` (function lines 617-633) — OCZEKIWANE: Po kilku operacjach wydania z wielu pul bilans jest poprawnie sumowany.
-      - `test_fifo_pomija_niezatwierdzone(self)` (function lines 635-647) — OCZEKIWANE: FIFO nie tknrze niezatwierdzonych rekordów earn. Wydanie ze swobodnych pul tylko.
-      - `test_fifo_pomija_wygasle(self)` (function lines 649-661) — OCZEKIWANE: FIFO nie używa wygasłych rekordów earn.
-  - class `TestSaldoUjemne(VerboseBusinessTestCase)` lines 664-725 — Testy salda ujemnego — limit, blokada, dopuszczalne schodzenie na minus.
+      - `test_fifo_jedna_pula_pelne_zuzycie(self)` (function lines 723-734) — OCZEKIWANE: Przy jednej puli 10h i wydaniu 10h — remaining=0, overdraft=0.
+      - `test_fifo_jedna_pula_czesciowe_zuzycie(self)` (function lines 736-746) — OCZEKIWANE: Przy jednej puli 10h i wydaniu 6h — remaining=4, overdraft=0.
+      - `test_fifo_dwie_pule_zuzycie_z_obu(self)` (function lines 748-771) — OCZEKIWANE: Pula A (starsza, 10h) + Pula B (nowsza, 10h). Wydanie 15h:
+      - `test_fifo_trzy_pule_czesciowe_zuzycie(self)` (function lines 773-793) — OCZEKIWANE: 3 pule (A=5h, B=8h, C=12h). Wydanie 10h:
+      - `test_bilans_po_czesciowym_zuzyciu_wielu_pul(self)` (function lines 795-811) — OCZEKIWANE: Po kilku operacjach wydania z wielu pul bilans jest poprawnie sumowany.
+      - `test_fifo_pomija_niezatwierdzone(self)` (function lines 813-825) — OCZEKIWANE: FIFO nie tknrze niezatwierdzonych rekordów earn. Wydanie ze swobodnych pul tylko.
+      - `test_fifo_pomija_wygasle(self)` (function lines 827-839) — OCZEKIWANE: FIFO nie używa wygasłych rekordów earn.
+  - class `TestSaldoUjemne(VerboseBusinessTestCase)` lines 842-903 — Testy salda ujemnego — limit, blokada, dopuszczalne schodzenie na minus.
     - methods:
-      - `test_schodzenie_na_minus_dozwolone_do_limitu(self)` (function lines 667-676) — OCZEKIWANE: Przy pustym saldzie i limicie -20, wydanie 15h jest dozwolone.
-      - `test_schodzenie_na_minus_dokladnie_do_limitu(self)` (function lines 678-687) — OCZEKIWANE: Wydanie dokładnie do limitu (-20) jest dozwolone.
-      - `test_przekroczenie_limitu_blokuje(self)` (function lines 689-698) — OCZEKIWANE: Próba wydania godzinek, które zejdą poniżej -20 (limitu), MUSI być zablokowana.
-      - `test_przekroczenie_limitu_o_jeden(self)` (function lines 700-712) — OCZEKIWANE: Próba zejścia o 1 poniżej limitu (-20) jest zablokowana.
-      - `test_rozne_limity_z_setup(self)` (function lines 714-725) — OCZEKIWANE: Limit ujemnego salda pochodzi z setup/vars_godzinki.
-  - class `TestWykup(VerboseBusinessTestCase)` lines 728-815 — Testy wykupu salda ujemnego.
+      - `test_schodzenie_na_minus_dozwolone_do_limitu(self)` (function lines 845-854) — OCZEKIWANE: Przy pustym saldzie i limicie -20, wydanie 15h jest dozwolone.
+      - `test_schodzenie_na_minus_dokladnie_do_limitu(self)` (function lines 856-865) — OCZEKIWANE: Wydanie dokładnie do limitu (-20) jest dozwolone.
+      - `test_przekroczenie_limitu_blokuje(self)` (function lines 867-876) — OCZEKIWANE: Próba wydania godzinek, które zejdą poniżej -20 (limitu), MUSI być zablokowana.
+      - `test_przekroczenie_limitu_o_jeden(self)` (function lines 878-890) — OCZEKIWANE: Próba zejścia o 1 poniżej limitu (-20) jest zablokowana.
+      - `test_rozne_limity_z_setup(self)` (function lines 892-903) — OCZEKIWANE: Limit ujemnego salda pochodzi z setup/vars_godzinki.
+  - class `TestWykup(VerboseBusinessTestCase)` lines 906-1003 — Testy wykupu salda ujemnego.
     - methods:
-      - `test_wykup_przy_ujemnym_saldzie(self)` (function lines 731-740) — OCZEKIWANE: Przy saldzie -10h, wykup 5h podnosi saldo do -5h.
-      - `test_wykup_do_zera(self)` (function lines 742-750) — OCZEKIWANE: Wykup dokładnie równy saldzie ujemnemu daje bilans = 0.
-      - `test_wykup_gdy_saldo_dodatnie_jest_zabroniony(self)` (function lines 752-762) — OCZEKIWANE: Nie można wykupić godzinek gdy saldo jest dodatnie lub równe 0.
-      - `test_wykup_gdy_saldo_zero_jest_zabroniony(self)` (function lines 764-770) — OCZEKIWANE: Nie można wykupić godzinek gdy saldo = 0.
-      - `test_wykup_nie_moze_wyjsc_na_plus(self)` (function lines 772-783) — OCZEKIWANE: Wykup większy niż saldo ujemne MUSI być zablokowany.
-      - `test_wykup_dokladnie_jeden_za_duzo(self)` (function lines 785-793) — OCZEKIWANE: Saldo = -5h. Wykup 6h (o 1 za dużo) MUSI być zablokowany.
-      - `test_wykup_nie_dotyka_zatwierdzonych_earn(self)` (function lines 795-815) — OCZEKIWANE: Wykup działa niezależnie od puli earn.
-  - class `TestWarunkiBrzegowe(VerboseBusinessTestCase)` lines 818-940 — Testy warunków brzegowych.
+      - `test_wykup_przy_ujemnym_saldzie(self)` (function lines 909-923) — OCZEKIWANE: Przy saldzie -10h, wykup 5h jest pending (saldo bez zmian),
+      - `test_wykup_do_zera(self)` (function lines 925-935) — OCZEKIWANE: Wykup dokładnie równy saldzie ujemnemu po zatwierdzeniu daje bilans = 0.
+      - `test_wykup_gdy_saldo_dodatnie_jest_zabroniony(self)` (function lines 937-947) — OCZEKIWANE: Nie można wykupić godzinek gdy saldo jest dodatnie lub równe 0.
+      - `test_wykup_gdy_saldo_zero_jest_zabroniony(self)` (function lines 949-955) — OCZEKIWANE: Nie można wykupić godzinek gdy saldo = 0.
+      - `test_wykup_nie_moze_wyjsc_na_plus(self)` (function lines 957-968) — OCZEKIWANE: Wykup większy niż saldo ujemne MUSI być zablokowany.
+      - `test_wykup_dokladnie_jeden_za_duzo(self)` (function lines 970-978) — OCZEKIWANE: Saldo = -5h. Wykup 6h (o 1 za dużo) MUSI być zablokowany.
+      - `test_wykup_nie_dotyka_zatwierdzonych_earn(self)` (function lines 980-1003) — OCZEKIWANE: Wykup działa niezależnie od puli earn.
+  - class `TestWarunkiBrzegowe(VerboseBusinessTestCase)` lines 1006-1128 — Testy warunków brzegowych.
     - methods:
-      - `test_brak_rekordow_bilans_zero(self)` (function lines 821-825) — OCZEKIWANE: Nowy użytkownik bez żadnych rekordów ma saldo = 0.
-      - `test_brak_rekordow_brak_expiry(self)` (function lines 827-831) — OCZEKIWANE: Nowy użytkownik bez rekordów nie ma daty wygaśnięcia.
-      - `test_tylko_wygasle_rekordy_bilans_zero(self)` (function lines 833-841) — OCZEKIWANE: Gdy wszystkie earn są wygasłe, bilans = 0 niezależnie od ich kwot.
-      - `test_tylko_niezatwierdzone_bilans_zero(self)` (function lines 843-851) — OCZEKIWANE: Gdy wszystkie earn są niezatwierdzone, bilans = 0.
-      - `test_saldo_dokladnie_zero_po_wydaniu(self)` (function lines 853-861) — OCZEKIWANE: Dokładne wydanie całego salda daje bilans = 0, nie ujemny.
-      - `test_saldo_dokladnie_na_granicy_limitu_ujemnego(self)` (function lines 863-874) — OCZEKIWANE: Bilans = -20 (dokładnie na limicie). Stan jest poprawny — kolejne wydanie
-      - `test_fifo_wygasniecie_nie_niszczy_salda(self)` (function lines 876-908) — OCZEKIWANE (kluczowy test FIFO): Wydanie z dwóch pul FIFO, potem wygaśnięcie starszej.
-      - `test_pełna_ścieżka_submit_approve_spend_expiry(self)` (function lines 910-940) — OCZEKIWANE: Pełna ścieżka życia godzinek:
-  - class `TestRefundowaneIWykupApproval(VerboseBusinessTestCase)` lines 943-1046 — Testy kompatybilności wstecznej i flag refunded/approved.
+      - `test_brak_rekordow_bilans_zero(self)` (function lines 1009-1013) — OCZEKIWANE: Nowy użytkownik bez żadnych rekordów ma saldo = 0.
+      - `test_brak_rekordow_brak_expiry(self)` (function lines 1015-1019) — OCZEKIWANE: Nowy użytkownik bez rekordów nie ma daty wygaśnięcia.
+      - `test_tylko_wygasle_rekordy_bilans_zero(self)` (function lines 1021-1029) — OCZEKIWANE: Gdy wszystkie earn są wygasłe, bilans = 0 niezależnie od ich kwot.
+      - `test_tylko_niezatwierdzone_bilans_zero(self)` (function lines 1031-1039) — OCZEKIWANE: Gdy wszystkie earn są niezatwierdzone, bilans = 0.
+      - `test_saldo_dokladnie_zero_po_wydaniu(self)` (function lines 1041-1049) — OCZEKIWANE: Dokładne wydanie całego salda daje bilans = 0, nie ujemny.
+      - `test_saldo_dokladnie_na_granicy_limitu_ujemnego(self)` (function lines 1051-1062) — OCZEKIWANE: Bilans = -20 (dokładnie na limicie). Stan jest poprawny — kolejne wydanie
+      - `test_fifo_wygasniecie_nie_niszczy_salda(self)` (function lines 1064-1096) — OCZEKIWANE (kluczowy test FIFO): Wydanie z dwóch pul FIFO, potem wygaśnięcie starszej.
+      - `test_pełna_ścieżka_submit_approve_spend_expiry(self)` (function lines 1098-1128) — OCZEKIWANE: Pełna ścieżka życia godzinek:
+  - class `TestRefundowaneIWykupApproval(VerboseBusinessTestCase)` lines 1131-1234 — Testy kompatybilności wstecznej i flag refunded/approved.
     - methods:
-      - `test_zrefundowany_spend_nie_liczy_sie_do_bilansu(self)` (function lines 949-960) — SPRAWDZAM: spend.refunded=True nie wchodzi do bilansu.
-      - `test_niezrefundowany_spend_liczy_sie(self)` (function lines 962-972) — SPRAWDZAM: spend.refunded=False (aktywny) wchodzi do bilansu normalnie.
-      - `test_stary_spend_bez_pola_refunded_liczy_sie(self)` (function lines 974-981) — SPRAWDZAM: kompatybilność wsteczna — stary rekord bez pola 'refunded' (brak klucza)
-      - `test_niezatwierdzony_purchase_nie_liczy_sie(self)` (function lines 983-994) — SPRAWDZAM: purchase.approved=False (pending) nie wchodzi do bilansu.
-      - `test_zatwierdzony_purchase_redukuje_overdraft(self)` (function lines 996-1006) — SPRAWDZAM: purchase.approved=True zmniejsza saldo ujemne.
-      - `test_stary_purchase_bez_pola_approved_liczy_sie(self)` (function lines 1008-1015) — SPRAWDZAM: kompatybilność wsteczna — stary rekord purchase bez pola 'approved'
-      - `test_mix_refunded_i_aktywnych_spend(self)` (function lines 1017-1033) — SPRAWDZAM: Mix anulowanych i aktywnych spend — tylko aktywne obciążają bilans.
-      - `test_mix_approved_i_pending_purchase(self)` (function lines 1035-1046) — SPRAWDZAM: Mix zatwierdzonych i oczekujących purchase.
-  - class `TestKorekcjaRezerwacji(VerboseBusinessTestCase)` lines 1049-1209 — Testy logiki korekty i anulowania rezerwacji.
+      - `test_zrefundowany_spend_nie_liczy_sie_do_bilansu(self)` (function lines 1137-1148) — SPRAWDZAM: spend.refunded=True nie wchodzi do bilansu.
+      - `test_niezrefundowany_spend_liczy_sie(self)` (function lines 1150-1160) — SPRAWDZAM: spend.refunded=False (aktywny) wchodzi do bilansu normalnie.
+      - `test_stary_spend_bez_pola_refunded_liczy_sie(self)` (function lines 1162-1169) — SPRAWDZAM: kompatybilność wsteczna — stary rekord bez pola 'refunded' (brak klucza)
+      - `test_niezatwierdzony_purchase_nie_liczy_sie(self)` (function lines 1171-1182) — SPRAWDZAM: purchase.approved=False (pending) nie wchodzi do bilansu.
+      - `test_zatwierdzony_purchase_redukuje_overdraft(self)` (function lines 1184-1194) — SPRAWDZAM: purchase.approved=True zmniejsza saldo ujemne.
+      - `test_stary_purchase_bez_pola_approved_liczy_sie(self)` (function lines 1196-1203) — SPRAWDZAM: kompatybilność wsteczna — stary rekord purchase bez pola 'approved'
+      - `test_mix_refunded_i_aktywnych_spend(self)` (function lines 1205-1221) — SPRAWDZAM: Mix anulowanych i aktywnych spend — tylko aktywne obciążają bilans.
+      - `test_mix_approved_i_pending_purchase(self)` (function lines 1223-1234) — SPRAWDZAM: Mix zatwierdzonych i oczekujących purchase.
+  - class `TestKorekcjaRezerwacji(VerboseBusinessTestCase)` lines 1237-1382 — Testy logiki korekty i anulowania rezerwacji.
     - methods:
-      - `_simulate_credit_adjustment(self, records, amount, granted_at, expiry_years)` (function lines 1055-1074) — Symuluje creditReservationAdjustment — tworzy earn z sourceType='adjustment'.
-      - `_simulate_refund_with_adjustment_revocation(self, records, reservation_earn_deductions, overdraft)` (function lines 1076-1101) — Symuluje refundHoursForReservation z poprawką BUG #1:
-      - `test_skrocenie_i_anulowanie_bilans_prawidlowy(self)` (function lines 1103-1135) — SPRAWDZAM: Scenariusz który był BUG #1 przed poprawką.
-      - `test_skrocenie_bez_anulowania_bilans_prawidlowy(self)` (function lines 1137-1149) — SPRAWDZAM: Skrócenie rezerwacji BEZ anulowania działa poprawnie.
-      - `test_wydluzenie_i_anulowanie_bilans_prawidlowy(self)` (function lines 1151-1182) — SPRAWDZAM: Wydłużenie rezerwacji (delta>0) + anulowanie zwraca pełny koszt.
-      - `test_wielokrotne_skrocenia_i_anulowanie(self)` (function lines 1184-1209) — SPRAWDZAM: Dwa skrócenia + anulowanie — WSZYSTKIE adjustment earn zerowane.
-  - class `TestWyswietlanieHistorii(VerboseBusinessTestCase)` lines 1212-1264 — Testy poprawności danych do wyświetlenia historii.
+      - `_simulate_credit_adjustment(self, records, amount, granted_at, expiry_years)` (function lines 1243-1262) — Symuluje creditReservationAdjustment — tworzy earn z sourceType='adjustment'.
+      - `_simulate_refund_with_adjustment_revocation(self, records, reservation_earn_deductions, overdraft)` (function lines 1264-1274) — Deleguje do refund_hours_for_reservation (mirror refundHoursForReservationInTx
+      - `test_skrocenie_i_anulowanie_bilans_prawidlowy(self)` (function lines 1276-1308) — SPRAWDZAM: Scenariusz który był BUG #1 przed poprawką.
+      - `test_skrocenie_bez_anulowania_bilans_prawidlowy(self)` (function lines 1310-1322) — SPRAWDZAM: Skrócenie rezerwacji BEZ anulowania działa poprawnie.
+      - `test_wydluzenie_i_anulowanie_bilans_prawidlowy(self)` (function lines 1324-1355) — SPRAWDZAM: Wydłużenie rezerwacji (delta>0) + anulowanie zwraca pełny koszt.
+      - `test_wielokrotne_skrocenia_i_anulowanie(self)` (function lines 1357-1382) — SPRAWDZAM: Dwa skrócenia + anulowanie — WSZYSTKIE adjustment earn zerowane.
+  - class `TestWyswietlanieHistorii(VerboseBusinessTestCase)` lines 1385-1437 — Testy poprawności danych do wyświetlenia historii.
     - methods:
-      - `test_historia_zawiera_wszystkie_typy_rekordow(self)` (function lines 1215-1233) — OCZEKIWANE: Historia użytkownika zawiera rekordy earn, spend i purchase.
-      - `test_nastepne_wygasniecie_format_mm_rrrr(self)` (function lines 1235-1245) — OCZEKIWANE: Funkcja compute_next_expiry zwraca datę, którą UI formatuje jako MM-RRRR.
-      - `test_bilans_i_ostatnie_rekordy_na_dashboard(self)` (function lines 1247-1264) — OCZEKIWANE: Dashboard pokazuje bieżące saldo + ostatnie godzinki.
-  - class `TestStorageMiesieczna(VerboseBusinessTestCase)` lines 1267-1388 — Testy logiki naliczania miesięcznej opłaty za prywatne kajaki (gear.chargePrivateStorage).
+      - `test_historia_zawiera_wszystkie_typy_rekordow(self)` (function lines 1388-1406) — OCZEKIWANE: Historia użytkownika zawiera rekordy earn, spend i purchase.
+      - `test_nastepne_wygasniecie_format_mm_rrrr(self)` (function lines 1408-1418) — OCZEKIWANE: Funkcja compute_next_expiry zwraca datę, którą UI formatuje jako MM-RRRR.
+      - `test_bilans_i_ostatnie_rekordy_na_dashboard(self)` (function lines 1420-1437) — OCZEKIWANE: Dashboard pokazuje bieżące saldo + ostatnie godzinki.
+  - class `TestStorageMiesieczna(VerboseBusinessTestCase)` lines 1440-1575 — Testy logiki naliczania miesięcznej opłaty za prywatne kajaki (gear.chargePrivateStorage).
     - methods:
-      - `_first_chargeable_month(self, private_since_iso)` (function lines 1275-1292) — Mirrors firstChargeableMonth() — zwraca 'YYYY-MM' pierwszego naliczalnego miesiąca.
-      - `_is_chargeable_this_month(self, private_since_iso, current_month)` (function lines 1294-1304) — Mirrors isChargeableThisMonth() — true jeśli current_month >= firstChargeableMonth.
-      - `test_wejscie_drugiego_marca_pierwszy_miesiąc_kwiecień(self)` (function lines 1306-1308) — Kajak wszedł 02.03 → marzec niepełny → pierwszy naliczany = kwiecień.
-      - `test_wejscie_pierwszego_marca_pierwszy_miesiąc_kwiecień(self)` (function lines 1310-1312) — Kajak wszedł 01.03 → marzec też niepełny (wchodzi w miesiąc, nie go wyprzedza) → kwiecień.
-      - `test_wejscie_ostatniego_marca_pierwszy_miesiąc_kwiecień(self)` (function lines 1314-1316) — Kajak wszedł 31.03 → marzec niepełny → kwiecień.
-      - `test_wejscie_w_grudniu_pierwszy_miesiąc_styczeń_następnego_roku(self)` (function lines 1318-1320) — Grudzień → rollover roku → następny miesiąc = styczeń następnego roku.
-      - `test_brak_daty_brak_naliczenia(self)` (function lines 1322-1326) — Brak daty wejścia → firstChargeableMonth zwraca None → nie naliczamy.
-      - `test_scheduler_01_04_dla_kajaka_z_02_03_nalicza(self)` (function lines 1328-1330) — Scheduler działa 01.04 — kajak wszedł 02.03 — naliczamy (2025-04 >= 2025-04).
-      - `test_scheduler_01_03_dla_kajaka_z_02_03_nie_nalicza(self)` (function lines 1332-1334) — Scheduler działa 01.03 — kajak wszedł 02.03 tego samego miesiąca — nie naliczamy.
-      - `test_scheduler_przed_wejsciem_nie_nalicza(self)` (function lines 1336-1338) — Bieżący miesiąc jest PRZED miesiącem wejścia — nie naliczamy.
-      - `test_scheduler_wiele_miesiecy_po_wejsciu_nalicza(self)` (function lines 1340-1342) — Wiele miesięcy po wejściu — naliczamy (lata później).
-      - `test_pierwszy_naliczany_miesiac_dokladnie(self)` (function lines 1344-1348) — Bieżący miesiąc == firstChargeableMonth → granica — naliczamy.
-      - `test_oplata_storage_odlicza_godzinki(self)` (function lines 1350-1361) — SPRAWDZAM: Naliczenie opłaty magazynowej odlicza godzinki z puli.
-      - `test_oplata_storage_przy_niewystarczajacym_saldzie_schodzi_na_minus(self)` (function lines 1363-1374) — SPRAWDZAM: Gdy saldo < koszt, opłata nadal zostaje pobrana — tworzy overdraft.
-      - `test_oplata_storage_blokada_przy_przekroczeniu_limitu(self)` (function lines 1376-1388) — SPRAWDZAM: Gdy limit overdraft przekroczony (overdraft >= max_overdraft), dedukcja nie przechodzi.
+      - `_first_chargeable_month(self, private_since_iso)` (function lines 1448-1465) — Mirrors firstChargeableMonth() — zwraca 'YYYY-MM' pierwszego naliczalnego miesiąca.
+      - `_is_chargeable_this_month(self, private_since_iso, current_month)` (function lines 1467-1477) — Mirrors isChargeableThisMonth() — true jeśli current_month >= firstChargeableMonth.
+      - `test_wejscie_drugiego_marca_pierwszy_miesiąc_kwiecień(self)` (function lines 1479-1481) — Kajak wszedł 02.03 → marzec niepełny → pierwszy naliczany = kwiecień.
+      - `test_wejscie_pierwszego_marca_pierwszy_miesiąc_kwiecień(self)` (function lines 1483-1485) — Kajak wszedł 01.03 → marzec też niepełny (wchodzi w miesiąc, nie go wyprzedza) → kwiecień.
+      - `test_wejscie_ostatniego_marca_pierwszy_miesiąc_kwiecień(self)` (function lines 1487-1489) — Kajak wszedł 31.03 → marzec niepełny → kwiecień.
+      - `test_wejscie_w_grudniu_pierwszy_miesiąc_styczeń_następnego_roku(self)` (function lines 1491-1493) — Grudzień → rollover roku → następny miesiąc = styczeń następnego roku.
+      - `test_brak_daty_brak_naliczenia(self)` (function lines 1495-1499) — Brak daty wejścia → firstChargeableMonth zwraca None → nie naliczamy.
+      - `test_scheduler_01_04_dla_kajaka_z_02_03_nalicza(self)` (function lines 1501-1503) — Scheduler działa 01.04 — kajak wszedł 02.03 — naliczamy (2025-04 >= 2025-04).
+      - `test_scheduler_01_03_dla_kajaka_z_02_03_nie_nalicza(self)` (function lines 1505-1507) — Scheduler działa 01.03 — kajak wszedł 02.03 tego samego miesiąca — nie naliczamy.
+      - `test_scheduler_przed_wejsciem_nie_nalicza(self)` (function lines 1509-1511) — Bieżący miesiąc jest PRZED miesiącem wejścia — nie naliczamy.
+      - `test_scheduler_wiele_miesiecy_po_wejsciu_nalicza(self)` (function lines 1513-1515) — Wiele miesięcy po wejściu — naliczamy (lata później).
+      - `test_pierwszy_naliczany_miesiac_dokladnie(self)` (function lines 1517-1521) — Bieżący miesiąc == firstChargeableMonth → granica — naliczamy.
+      - `test_oplata_storage_odlicza_godzinki(self)` (function lines 1523-1534) — SPRAWDZAM: Naliczenie opłaty magazynowej odlicza godzinki z puli.
+      - `test_oplata_storage_przy_niewystarczajacym_saldzie_schodzi_na_minus(self)` (function lines 1536-1547) — SPRAWDZAM: Gdy saldo < koszt, opłata nadal zostaje pobrana — tworzy overdraft.
+      - `test_zwykla_dedukcja_blokowana_przy_przekroczeniu_limitu(self)` (function lines 1549-1560) — SPRAWDZAM: Zwykła dedukcja (wypożyczenie, force=False) przy przekroczonym
+      - `test_oplata_storage_force_pomija_limit_ujemnego_salda(self)` (function lines 1562-1575) — SPRAWDZAM (poprawka L7): Opłata magazynowa (force=True) NIE podlega limitowi
+  - class `TestRefundOverdraftuL1(VerboseBusinessTestCase)` lines 1578-1660 — Testy regresyjne poprawki L1: anulowanie rezerwacji z overdraftem zwracało
+    - methods:
+      - `test_anulowanie_z_czesciowym_overdraftem_wraca_do_stanu_wyjsciowego(self)` (function lines 1586-1605) — SCENARIUSZ (przykład z audytu):
+      - `test_anulowanie_rezerwacji_w_calosci_na_kredyt_nie_tworzy_godzinek(self)` (function lines 1607-1622) — EXPLOIT z audytu: saldo 0 → rezerwacja w całości na kredyt (5h) → anulowanie.
+      - `test_brak_nowej_puli_earn_po_refundzie_z_overdraftem(self)` (function lines 1624-1635) — Po refundzie nie może powstać żadna nowa pula earn (stary kod tworzył pulę za overdraft).
+      - `test_refund_oznacza_spend_jako_refunded(self)` (function lines 1637-1648) — Spend rezerwacji po refundzie musi mieć refunded=True (przestaje obciążać bilans).
+      - `test_refund_z_wygasla_pula_blokuje(self)` (function lines 1650-1660) — Pula wygasła między rezerwacją a anulowaniem → pool_expired (anulowanie zablokowane).
+  - class `TestWykupRewalidacjaL2(VerboseBusinessTestCase)` lines 1663-1749 — Testy regresyjne poprawki L2: wykup salda ujemnego.
+    - methods:
+      - `test_drugi_pending_wykup_ponad_dlug_odrzucony(self)` (function lines 1670-1683) — SCENARIUSZ z audytu: dług -5h → wykup 5h (pending) → drugi wykup 5h
+      - `test_pending_rezerwuje_czesc_dlugu(self)` (function lines 1685-1696) — Dług -5h, pending 3h → kolejny wykup max 2h (3h odrzucone, 2h przechodzi).
+      - `test_zatwierdzenie_po_splacie_dlugu_odrzucone(self)` (function lines 1698-1716) — SCENARIUSZ z audytu: dług -5h → pending wykup 5h → saldo wraca do 0
+      - `test_zatwierdzenie_gdy_dlug_zmalal_odrzucone(self)` (function lines 1718-1731) — Dług zmalał z -5h do -3h → zatwierdzenie wykupu 5h odrzucone (wyniosłoby saldo na +2h).
+      - `test_zatwierdzenie_przy_aktualnym_dlugu_przechodzi(self)` (function lines 1733-1742) — Ścieżka pozytywna: dług -5h, pending 5h, nic się nie zmieniło → zatwierdzenie OK, saldo 0.
+      - `test_zatwierdzenie_idempotentne(self)` (function lines 1744-1749) — Ponowne zatwierdzenie już zatwierdzonego wykupu → ok, bez zmian salda.
+  - class `TestReverseDeductL3(VerboseBusinessTestCase)` lines 1752-1874 — Testy regresyjne poprawki L3: skrócenie rezerwacji cofa dedukcję do
+    - methods:
+      - `test_skrocenie_przywraca_oryginalna_pule_bez_odswiezania_waznosci(self)` (function lines 1760-1783) — SCENARIUSZ "prania" z audytu: pula wygasa za ~2 miesiące → rezerwacja 10h
+      - `test_skrocenie_pomniejsza_spend_i_refund_zwraca_reszte(self)` (function lines 1785-1804) — Spójność skrócenie+anulowanie: spend pomniejszony, pełny refund zwraca dokładnie resztę.
+      - `test_skrocenie_cofa_najpierw_overdraft(self)` (function lines 1806-1819) — Rezerwacja częściowo na kredyt: skrócenie najpierw redukuje overdraft.
+      - `test_skrocenie_cofa_od_najnowszego_spend(self)` (function lines 1821-1836) — Rezerwacja z dwoma spend (wydłużenie): reverse cofa najpierw nowszy spend.
+      - `test_skrocenie_z_wygasla_pula_zrodlowa_blokuje(self)` (function lines 1838-1848) — Pula źródłowa wygasła po rezerwacji → reverse zwraca pool_expired (korekta zablokowana).
+      - `test_legacy_spend_bez_sladu_fallback_adjustment(self)` (function lines 1850-1867) — Stary spend bez śladu earn_deductions (sprzed refund-flow): nieodtwarzalna
+      - `test_brak_spend_dla_rezerwacji_blokuje(self)` (function lines 1869-1874) — Brak zapisu godzinkowego rezerwacji → spend_not_found (integralność danych).
 - Functions:
   - `_to_debug_value(value)` (function lines 29-37) — Konwertuje obiekty do formatu czytelnego w konsoli.
   - `_debug_dump(label, value)` (function lines 40-45) — Czytelny print JSON do konsoli.
@@ -2308,8 +2593,11 @@ Excluded sensitive files:
   - `make_purchase(amount, approved)` (function lines 157-174) — Tworzy rekord typu 'purchase' (wykup salda ujemnego).
   - `compute_balance(records, now)` (function lines 177-216) — Oblicza aktualne saldo godzinek.
   - `compute_next_expiry(records, now)` (function lines 219-245) — Zwraca datę najbliższego wygaśnięcia godzinek (najstarsza pula z remaining > 0).
-  - `deduct_hours(records, amount, vars_config, now)` (function lines 248-345) — Odlicza godzinki metodą FIFO. Modyfikuje earn.remaining w rekordach.
-  - `purchase_negative_balance(records, amount, now)` (function lines 348-403) — Wykup salda ujemnego. Można wykupić tylko tyle, żeby saldo nie przekroczyło 0.
+  - `deduct_hours(records, amount, vars_config, now, force, reservation_id)` (function lines 248-357) — Odlicza godzinki metodą FIFO. Modyfikuje earn.remaining w rekordach.
+  - `refund_hours_for_reservation(records, earn_restores, now)` (function lines 360-400) — Mirror refundHoursForReservationInTx z godzinki_service.ts (PO poprawce L1):
+  - `reverse_deduct_hours(records, reservation_id, amount, expiry_years, now)` (function lines 403-480) — Mirror reverseDeductHoursInTx z godzinki_service.ts (poprawka L3 — skrócenie rezerwacji):
+  - `approve_purchase(records, idx, now)` (function lines 483-516) — Mirror processApproval (gałąź purchase) z godzinki_service.ts (PO poprawce L2):
+  - `purchase_negative_balance(records, amount, now)` (function lines 519-581) — Wykup salda ujemnego. Można wykupić tylko tyle, żeby saldo nie przekroczyło 0.
 
 ### `tests/test_pwa.py`
 
@@ -2476,7 +2764,7 @@ Excluded sensitive files:
 ### `appscript/członkowie sympatycy SKK/common_helpers.gs`
 
 - Lines: `319`
-- Size: `8861` bytes
+- Size: `8543` bytes
 - Functions:
   - `assertBoardAccess_`
   - `callBackendSync_`
@@ -2505,35 +2793,31 @@ Excluded sensitive files:
 
 ### `appscript/członkowie sympatycy SKK/events_sync.gs`
 
-- Lines: `347`
-- Size: `11069` bytes
+- Lines: `24`
+- Size: `1127` bytes
 - Functions:
-  - `addChangedPathIfNeededForEvents_`
-  - `buildEventDiff_`
-  - `isTruthySheetSyncedFlag_`
-  - `markEventRowSynced_`
-  - `normalizeComparableForEvents_`
-  - `normalizeSheetDateToYmd_`
-  - `normalizeStringForEvents_`
-  - `patchFirestoreDocumentFieldsForEvents_`
-  - `readEventsForSync_`
   - `syncEventsToFirestore`
-  - `valuesEqualForEventsSync_`
 
 ### `appscript/członkowie sympatycy SKK/hours_sync.gs`
 
-- Lines: `274`
-- Size: `7673` bytes
+- Lines: `26`
+- Size: `1143` bytes
 - Functions:
-  - `addChangedPathIfNeededForHours_`
-  - `buildHoursDiff_`
-  - `isTruthyHoursSheetSyncedFlag_`
-  - `markHoursRowSynced_`
-  - `normalizeComparableForHours_`
-  - `patchFirestoreDocumentFieldsForHours_`
-  - `readHoursForSync_`
   - `syncHoursToFirestore`
-  - `valuesEqualForHoursSync_`
+
+### `appscript/członkowie sympatycy SKK/opening_balance_import.gs`
+
+- Lines: `234`
+- Size: `9535` bytes
+- Functions:
+  - `clearOpeningBalanceCollection`
+  - `importOpeningBalanceToFirestore`
+  - `norm`
+  - `obCellToFieldValue_`
+  - `obFormatDate_`
+  - `obGetSheetFlexible_`
+  - `obIsTruthy_`
+  - `seedMemberSheetBalancesFromOpeningBalance`
 
 ### `appscript/członkowie sympatycy SKK/setup_sync.gs`
 
@@ -2548,8 +2832,8 @@ Excluded sensitive files:
 
 ### `appscript/członkowie sympatycy SKK/ui_menu.gs`
 
-- Lines: `15`
-- Size: `436` bytes
+- Lines: `22`
+- Size: `809` bytes
 - Functions:
   - `onOpen`
 
@@ -2590,8 +2874,8 @@ Excluded sensitive files:
 
 ### `appscript/kilometrówka/common_helpers.gs`
 
-- Lines: `309`
-- Size: `8980` bytes
+- Lines: `319`
+- Size: `9296` bytes
 - Functions:
   - `assertBoardAccess_`
   - `enqueueServiceJob_`
@@ -2603,7 +2887,6 @@ Excluded sensitive files:
   - `firestoreValueToJs_`
   - `getPathValue_`
   - `isIsoTimestamp_`
-  - `isUserInGroup_`
   - `normalizeHeader_`
   - `setPathValue_`
   - `toFirestoreFields_`
@@ -2635,8 +2918,8 @@ Excluded sensitive files:
 
 ### `appscript/kurs/common_helpers.gs`
 
-- Lines: `321`
-- Size: `9945` bytes
+- Lines: `343`
+- Size: `10699` bytes
 - Functions:
   - `assertBoardAccess_`
   - `enqueueServiceJob_`
@@ -2650,7 +2933,6 @@ Excluded sensitive files:
   - `getPathValue_`
   - `isDateObject_`
   - `isIsoTimestamp_`
-  - `isUserInGroup_`
   - `normalizeBoolish_`
   - `normalizeDateString_`
   - `normalizeEmail_`
@@ -2801,14 +3083,35 @@ Excluded sensitive files:
 - Lines: `62`
 - Size: `1541` bytes
 
+### `functions/lib/api/adminApprovalHandler.js`
+
+- Lines: `232`
+- Size: `10801` bytes
+- Internal dependencies:
+  - `functions/lib/modules/hours/godzinki_service.js`
+  - `functions/lib/modules/hours/godzinki_vars.js`
+- Imports:
+  - `import/require ../modules/hours/godzinki_service`
+  - `import/require ../modules/hours/godzinki_vars`
+  - `import/require firebase-admin`
+  - `import/require firebase-functions/v2`
+- Functions:
+  - `authorizeAdmin`
+  - `enqueueJob`
+  - `handleAdminApprove`
+  - `handleAdminReject`
+  - `norm`
+  - `parseKindId`
+
 ### `functions/lib/api/adminEventsSyncCalendarHandler.js`
 
-- Lines: `84`
-- Size: `3724` bytes
+- Lines: `94`
+- Size: `4474` bytes
 - Imports:
   - `import/require firebase-admin`
   - `import/require firebase-functions/v2`
 - Functions:
+  - `enqueue`
   - `handleAdminEventsSyncCalendar`
 
 ### `functions/lib/api/basenAdminAddGodzinyHandler.js`
@@ -2982,15 +3285,15 @@ Excluded sensitive files:
 
 ### `functions/lib/api/gearReservationCreateHandler.js`
 
-- Lines: `79`
-- Size: `3702` bytes
+- Lines: `85`
+- Size: `4207` bytes
 - Internal dependencies:
   - `functions/lib/modules/calendar/calendar_utils.js`
-  - `functions/lib/modules/equipment/kayaks/gear_kayaks_service.js`
+  - `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
   - `functions/lib/modules/users/userStatusCheck.js`
 - Imports:
   - `import/require ../modules/calendar/calendar_utils`
-  - `import/require ../modules/equipment/kayaks/gear_kayaks_service`
+  - `import/require ../modules/equipment/bundle/gear_bundle_service`
   - `import/require ../modules/users/userStatusCheck`
   - `import/require firebase-functions/v2`
 - Functions:
@@ -3014,16 +3317,19 @@ Excluded sensitive files:
 
 ### `functions/lib/api/getAdminPendingHandler.js`
 
-- Lines: `232`
-- Size: `12217` bytes
+- Lines: `326`
+- Size: `19249` bytes
 - Internal dependencies:
   - `functions/lib/service/service_config.js`
 - Imports:
   - `import/require ../service/service_config`
   - `import/require firebase-functions/v2`
 - Functions:
+  - `docsOf`
+  - `errorOf`
   - `handleGetAdminPending`
   - `norm`
+  - `snapOf`
   - `tsToIso`
 
 ### `functions/lib/api/getBasenGodzinyHandler.js`
@@ -3124,8 +3430,8 @@ Excluded sensitive files:
 
 ### `functions/lib/api/getGodzinkiHandler.js`
 
-- Lines: `125`
-- Size: `6145` bytes
+- Lines: `135`
+- Size: `6882` bytes
 - Internal dependencies:
   - `functions/lib/modules/hours/godzinki_service.js`
   - `functions/lib/modules/hours/godzinki_vars.js`
@@ -3194,8 +3500,8 @@ Excluded sensitive files:
 
 ### `functions/lib/api/godzinkiPurchaseHandler.js`
 
-- Lines: `73`
-- Size: `3300` bytes
+- Lines: `77`
+- Size: `3502` bytes
 - Internal dependencies:
   - `functions/lib/modules/hours/godzinki_service.js`
   - `functions/lib/modules/users/userStatusCheck.js`
@@ -3293,17 +3599,19 @@ Excluded sensitive files:
 
 ### `functions/lib/api/registerUserHandler.js`
 
-- Lines: `478`
-- Size: `23307` bytes
+- Lines: `505`
+- Size: `25904` bytes
 - Internal dependencies:
   - `functions/lib/modules/hours/godzinki_service.js`
+  - `functions/lib/modules/hours/opening_balance_fields.js`
 - Imports:
   - `import/require ../modules/hours/godzinki_service`
+  - `import/require ../modules/hours/opening_balance_fields`
 - Functions:
   - `computeRoleKeyFromOpeningBalance`
+  - `enqueueGodzinkiHistMerge`
   - `enqueueKmHistoricalMerge`
   - `findOpeningBalance`
-  - `getObHours`
   - `handleRegisterUser`
   - `isDateNotInFuture`
   - `isIsoDateYYYYMMDD`
@@ -3318,8 +3626,8 @@ Excluded sensitive files:
 
 ### `functions/lib/api/submitEventHandler.js`
 
-- Lines: `77`
-- Size: `3638` bytes
+- Lines: `97`
+- Size: `4961` bytes
 - Internal dependencies:
   - `functions/lib/modules/calendar/events_service.js`
   - `functions/lib/modules/users/userStatusCheck.js`
@@ -3333,19 +3641,20 @@ Excluded sensitive files:
 
 ### `functions/lib/api/submitGodzinkiHandler.js`
 
-- Lines: `98`
-- Size: `4476` bytes
+- Lines: `123`
+- Size: `6497` bytes
 - Internal dependencies:
   - `functions/lib/modules/calendar/calendar_utils.js`
   - `functions/lib/modules/hours/godzinki_service.js`
+  - `functions/lib/modules/shared/text_utils.js`
   - `functions/lib/modules/users/userStatusCheck.js`
 - Imports:
   - `import/require ../modules/calendar/calendar_utils`
   - `import/require ../modules/hours/godzinki_service`
+  - `import/require ../modules/shared/text_utils`
   - `import/require ../modules/users/userStatusCheck`
 - Functions:
   - `handleSubmitGodzinki`
-  - `norm`
 
 ### `functions/lib/api/userWeightHandler.js`
 
@@ -3358,9 +3667,10 @@ Excluded sensitive files:
 
 ### `functions/lib/index.js`
 
-- Lines: `1235`
-- Size: `50607` bytes
+- Lines: `1310`
+- Size: `55078` bytes
 - Internal dependencies:
+  - `functions/lib/api/adminApprovalHandler.js`
   - `functions/lib/api/adminEventsSyncCalendarHandler.js`
   - `functions/lib/api/basenAdminAddGodzinyHandler.js`
   - `functions/lib/api/basenAdminCorrectGodzinyHandler.js`
@@ -3409,6 +3719,7 @@ Excluded sensitive files:
   - `functions/lib/service/worker/fallbackDailyWorker.js`
   - `functions/lib/service/worker/onJobCreatedWorker.js`
 - Imports:
+  - `import/require ./api/adminApprovalHandler`
   - `import/require ./api/adminEventsSyncCalendarHandler`
   - `import/require ./api/basenAdminAddGodzinyHandler`
   - `import/require ./api/basenAdminCorrectGodzinyHandler`
@@ -3536,8 +3847,8 @@ Excluded sensitive files:
 
 ### `functions/lib/modules/calendar/events_service.js`
 
-- Lines: `90`
-- Size: `3318` bytes
+- Lines: `97`
+- Size: `3751` bytes
 - Internal dependencies:
   - `functions/lib/modules/calendar/calendar_utils.js`
 - Imports:
@@ -3551,8 +3862,8 @@ Excluded sensitive files:
 
 ### `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
 
-- Lines: `686`
-- Size: `34919` bytes
+- Lines: `708`
+- Size: `36559` bytes
 - Internal dependencies:
   - `functions/lib/modules/calendar/calendar_utils.js`
   - `functions/lib/modules/equipment/kayaks/gear_kayaks_service.js`
@@ -3591,8 +3902,8 @@ Excluded sensitive files:
 
 ### `functions/lib/modules/equipment/kayaks/gear_kayaks_service.js`
 
-- Lines: `334`
-- Size: `16021` bytes
+- Lines: `255`
+- Size: `13503` bytes
 - Internal dependencies:
   - `functions/lib/modules/calendar/calendar_utils.js`
   - `functions/lib/modules/hours/godzinki_service.js`
@@ -3610,13 +3921,11 @@ Excluded sensitive files:
 - Functions:
   - `cancelReservation`
   - `countMyOverlappingItems`
-  - `createReservation`
   - `findConflicts`
   - `getUserRole`
   - `listKayaks`
   - `listMyReservations`
   - `norm`
-  - `uniq`
   - `updateReservationDates`
 
 ### `functions/lib/modules/equipment/shared/gear_catalog_service.js`
@@ -3634,23 +3943,27 @@ Excluded sensitive files:
 
 ### `functions/lib/modules/hours/godzinki_service.js`
 
-- Lines: `599`
-- Size: `24787` bytes
+- Lines: `819`
+- Size: `37562` bytes
 - Imports:
   - `import/require firebase-admin`
 - Functions:
   - `computeBalance`
   - `computeNextExpiry`
+  - `creditApprovedEarn`
   - `creditOpeningBalance`
   - `creditReservationAdjustment`
   - `deductHours`
+  - `deductHoursInTx`
   - `getAllRecords`
   - `getBalance`
   - `getHistory`
   - `getNextExpiry`
-  - `getRecentEarnings`
+  - `markApprovalRejected`
   - `processApproval`
   - `refundHoursForReservation`
+  - `refundHoursForReservationInTx`
+  - `reverseDeductHoursInTx`
   - `submitEarning`
   - `submitPurchaseRequest`
   - `toDate`
@@ -3675,6 +3988,18 @@ Excluded sensitive files:
   - `import/require ../calendar/calendar_utils`
 - Functions:
   - `quoteKayaksCostHours`
+
+### `functions/lib/modules/hours/opening_balance_fields.js`
+
+- Lines: `88`
+- Size: `3976` bytes
+- Functions:
+  - `buildOpeningBalanceAdminPatch`
+  - `getObHours`
+  - `normObKey`
+  - `obBool`
+  - `obValueByPrefix`
+  - `obValueExact`
 
 ### `functions/lib/modules/km/km_log_service.js`
 
@@ -3732,6 +4057,13 @@ Excluded sensitive files:
   - `toBool`
   - `toNumber`
 
+### `functions/lib/modules/shared/text_utils.js`
+
+- Lines: `11`
+- Size: `350` bytes
+- Functions:
+  - `norm`
+
 ### `functions/lib/modules/users/userStatusCheck.js`
 
 - Lines: `36`
@@ -3770,8 +4102,8 @@ Excluded sensitive files:
 
 ### `functions/lib/service/providers/googleCalendarProvider.js`
 
-- Lines: `58`
-- Size: `2210` bytes
+- Lines: `76`
+- Size: `3080` bytes
 - Internal dependencies:
   - `functions/lib/service/providers/googleAuth.js`
 - Imports:
@@ -3785,8 +4117,8 @@ Excluded sensitive files:
 
 ### `functions/lib/service/providers/googleSheetsProvider.js`
 
-- Lines: `267`
-- Size: `11986` bytes
+- Lines: `423`
+- Size: `19515` bytes
 - Internal dependencies:
   - `functions/lib/service/providers/googleAuth.js`
 - Imports:
@@ -3796,15 +4128,19 @@ Excluded sensitive files:
   - `GoogleSheetsProvider`
 - Functions:
   - `assertNonEmpty`
+  - `buildLooseRowGetter`
   - `buildRowValues`
+  - `buildRowValuesForUpsert`
+  - `canonicalHeader`
   - `columnToA1`
+  - `findFirstEmptySlotIndex`
   - `normalizeStr`
   - `quoteTab`
 
 ### `functions/lib/service/providers/googleWorkspaceProvider.js`
 
 - Lines: `459`
-- Size: `20636` bytes
+- Size: `20675` bytes
 - Internal dependencies:
   - `functions/lib/service/providers/googleAuth.js`
 - Imports:
@@ -3819,15 +4155,19 @@ Excluded sensitive files:
 
 ### `functions/lib/service/registry.js`
 
-- Lines: `57`
-- Size: `3044` bytes
+- Lines: `67`
+- Size: `3797` bytes
 - Internal dependencies:
+  - `functions/lib/service/tasks/adminApprovalWriteBack.js`
+  - `functions/lib/service/tasks/adminNotifyPendingApprovals.js`
   - `functions/lib/service/tasks/basenNotifySessionCancelled.js`
   - `functions/lib/service/tasks/eventsSyncCalendar.js`
   - `functions/lib/service/tasks/eventsSyncFromSheet.js`
   - `functions/lib/service/tasks/gearPrivateStorage.js`
   - `functions/lib/service/tasks/gearSyncAllFromSheet.js`
   - `functions/lib/service/tasks/gearSyncKayaksFromSheet.js`
+  - `functions/lib/service/tasks/godzinkiImportTransitionFromSheet.js`
+  - `functions/lib/service/tasks/godzinkiMergeHistoricalUser.js`
   - `functions/lib/service/tasks/godzinkiSyncFromSheet.js`
   - `functions/lib/service/tasks/groupsDiagnose.js`
   - `functions/lib/service/tasks/kmMergeHistoricalUser.js`
@@ -3838,17 +4178,22 @@ Excluded sensitive files:
   - `functions/lib/service/tasks/listaEnforcePostingPolicy.js`
   - `functions/lib/service/tasks/membersSyncToSheet.js`
   - `functions/lib/service/tasks/onUserRegisteredWelcome.js`
+  - `functions/lib/service/tasks/reconcileOpeningBalance.js`
   - `functions/lib/service/tasks/setupSyncFromSheet.js`
   - `functions/lib/service/tasks/usersSyncFieldsFromSheet.js`
   - `functions/lib/service/tasks/usersSyncFunctionRolesFromSetup.js`
   - `functions/lib/service/tasks/usersSyncRolesFromSheet.js`
 - Imports:
+  - `import/require ./tasks/adminApprovalWriteBack`
+  - `import/require ./tasks/adminNotifyPendingApprovals`
   - `import/require ./tasks/basenNotifySessionCancelled`
   - `import/require ./tasks/eventsSyncCalendar`
   - `import/require ./tasks/eventsSyncFromSheet`
   - `import/require ./tasks/gearPrivateStorage`
   - `import/require ./tasks/gearSyncAllFromSheet`
   - `import/require ./tasks/gearSyncKayaksFromSheet`
+  - `import/require ./tasks/godzinkiImportTransitionFromSheet`
+  - `import/require ./tasks/godzinkiMergeHistoricalUser`
   - `import/require ./tasks/godzinkiSyncFromSheet`
   - `import/require ./tasks/groupsDiagnose`
   - `import/require ./tasks/kmMergeHistoricalUser`
@@ -3859,6 +4204,7 @@ Excluded sensitive files:
   - `import/require ./tasks/listaEnforcePostingPolicy`
   - `import/require ./tasks/membersSyncToSheet`
   - `import/require ./tasks/onUserRegisteredWelcome`
+  - `import/require ./tasks/reconcileOpeningBalance`
   - `import/require ./tasks/setupSyncFromSheet`
   - `import/require ./tasks/usersSyncFieldsFromSheet`
   - `import/require ./tasks/usersSyncFunctionRolesFromSetup`
@@ -3886,12 +4232,39 @@ Excluded sensitive files:
 
 ### `functions/lib/service/service_config.js`
 
-- Lines: `254`
-- Size: `13065` bytes
+- Lines: `270`
+- Size: `13839` bytes
 - Imports:
   - `import/require firebase-functions`
 - Functions:
+  - `adminNotifyAgeDays`
   - `getServiceConfig`
+
+### `functions/lib/service/tasks/adminApprovalWriteBack.js`
+
+- Lines: `61`
+- Size: `3579` bytes
+- Internal dependencies:
+  - `functions/lib/service/providers/googleSheetsProvider.js`
+  - `functions/lib/service/service_config.js`
+- Imports:
+  - `import/require ../providers/googleSheetsProvider`
+  - `import/require ../service_config`
+
+### `functions/lib/service/tasks/adminNotifyPendingApprovals.js`
+
+- Lines: `186`
+- Size: `9719` bytes
+- Internal dependencies:
+  - `functions/lib/modules/shared/text_utils.js`
+  - `functions/lib/service/service_config.js`
+- Imports:
+  - `import/require ../../modules/shared/text_utils`
+  - `import/require ../service_config`
+- Functions:
+  - `ageDaysFrom`
+  - `buildPendingDigest`
+  - `resolveDisplayName`
 
 ### `functions/lib/service/tasks/basenNotifySessionCancelled.js`
 
@@ -3906,58 +4279,65 @@ Excluded sensitive files:
 
 ### `functions/lib/service/tasks/eventsSyncCalendar.js`
 
-- Lines: `102`
-- Size: `5176` bytes
+- Lines: `176`
+- Size: `8660` bytes
 - Internal dependencies:
   - `functions/lib/service/providers/googleCalendarProvider.js`
   - `functions/lib/service/service_config.js`
 - Imports:
   - `import/require ../providers/googleCalendarProvider`
   - `import/require ../service_config`
+  - `import/require firebase-admin`
 - Functions:
   - `norm`
 
 ### `functions/lib/service/tasks/eventsSyncFromSheet.js`
 
-- Lines: `265`
-- Size: `12449` bytes
+- Lines: `479`
+- Size: `25575` bytes
 - Internal dependencies:
+  - `functions/lib/modules/shared/text_utils.js`
   - `functions/lib/service/providers/googleCalendarProvider.js`
   - `functions/lib/service/providers/googleSheetsProvider.js`
   - `functions/lib/service/service_config.js`
 - Imports:
+  - `import/require ../../modules/shared/text_utils`
   - `import/require ../providers/googleCalendarProvider`
   - `import/require ../providers/googleSheetsProvider`
   - `import/require ../service_config`
   - `import/require firebase-admin`
 - Functions:
+  - `buildEventRowPatch`
+  - `findHeaderCaseInsensitive`
   - `isApproved`
-  - `norm`
   - `normDate`
+  - `shouldScrapAbsentEvent`
 
 ### `functions/lib/service/tasks/gearPrivateStorage.js`
 
-- Lines: `286`
-- Size: `13681` bytes
+- Lines: `329`
+- Size: `15019` bytes
 - Internal dependencies:
   - `functions/lib/modules/hours/godzinki_service.js`
   - `functions/lib/modules/hours/godzinki_vars.js`
   - `functions/lib/modules/setup/setup_gear_vars.js`
+  - `functions/lib/modules/shared/text_utils.js`
 - Imports:
   - `import/require ../../modules/hours/godzinki_service`
   - `import/require ../../modules/hours/godzinki_vars`
   - `import/require ../../modules/setup/setup_gear_vars`
+  - `import/require ../../modules/shared/text_utils`
   - `import/require firebase-admin`
 - Functions:
   - `firstChargeableMonth`
   - `isChargeableThisMonth`
-  - `norm`
+  - `processKayakChargeForMonth`
   - `toYearMonth`
 
 ### `functions/lib/service/tasks/gearSyncAllFromSheet.js`
 
-- Lines: `285`
-- Size: `15169` bytes
+- Lines: `349`
+- Size: `18564` bytes
 - Internal dependencies:
   - `functions/lib/service/providers/googleSheetsProvider.js`
   - `functions/lib/service/service_config.js`
@@ -3967,12 +4347,14 @@ Excluded sensitive files:
   - `import/require firebase-admin`
 - Functions:
   - `buildDoc`
+  - `classifyGearRows`
   - `flush`
   - `isRealRow`
   - `norm`
   - `parseBool`
   - `parseNumber`
   - `parseSheetDate`
+  - `rowNumberLabel`
   - `sflush`
   - `syncCategory`
 
@@ -3992,24 +4374,60 @@ Excluded sensitive files:
   - `parseBool`
   - `parseNumber`
 
-### `functions/lib/service/tasks/godzinkiSyncFromSheet.js`
+### `functions/lib/service/tasks/godzinkiImportTransitionFromSheet.js`
 
-- Lines: `212`
-- Size: `10429` bytes
+- Lines: `169`
+- Size: `8920` bytes
 - Internal dependencies:
   - `functions/lib/modules/hours/godzinki_service.js`
   - `functions/lib/modules/hours/godzinki_vars.js`
+  - `functions/lib/modules/shared/text_utils.js`
   - `functions/lib/service/providers/googleSheetsProvider.js`
   - `functions/lib/service/service_config.js`
 - Imports:
   - `import/require ../../modules/hours/godzinki_service`
   - `import/require ../../modules/hours/godzinki_vars`
+  - `import/require ../../modules/shared/text_utils`
+  - `import/require ../providers/googleSheetsProvider`
+  - `import/require ../service_config`
+- Functions:
+  - `isApproved`
+  - `isIsoDate`
+  - `parseHours`
+
+### `functions/lib/service/tasks/godzinkiMergeHistoricalUser.js`
+
+- Lines: `131`
+- Size: `6137` bytes
+- Imports:
+  - `import/require firebase-admin`
+- Functions:
+  - `norm`
+
+### `functions/lib/service/tasks/godzinkiSyncFromSheet.js`
+
+- Lines: `440`
+- Size: `21383` bytes
+- Internal dependencies:
+  - `functions/lib/modules/hours/godzinki_service.js`
+  - `functions/lib/modules/hours/godzinki_vars.js`
+  - `functions/lib/modules/shared/text_utils.js`
+  - `functions/lib/service/providers/googleSheetsProvider.js`
+  - `functions/lib/service/service_config.js`
+- Imports:
+  - `import/require ../../modules/hours/godzinki_service`
+  - `import/require ../../modules/hours/godzinki_vars`
+  - `import/require ../../modules/shared/text_utils`
   - `import/require ../providers/googleSheetsProvider`
   - `import/require ../service_config`
   - `import/require firebase-admin`
 - Functions:
+  - `buildLedgerRowPatch`
+  - `buildPendingCorrection`
   - `isApproved`
-  - `norm`
+  - `isIsoDate`
+  - `readUserName`
+  - `tsToIsoDate`
 
 ### `functions/lib/service/tasks/groupsDiagnose.js`
 
@@ -4106,6 +4524,21 @@ Excluded sensitive files:
   - `assertString`
   - `listaRoleForUserRole`
 
+### `functions/lib/service/tasks/reconcileOpeningBalance.js`
+
+- Lines: `196`
+- Size: `9863` bytes
+- Internal dependencies:
+  - `functions/lib/modules/hours/godzinki_service.js`
+  - `functions/lib/modules/hours/opening_balance_fields.js`
+- Imports:
+  - `import/require ../../modules/hours/godzinki_service`
+  - `import/require ../../modules/hours/opening_balance_fields`
+  - `import/require firebase-admin`
+- Functions:
+  - `lower`
+  - `norm`
+
 ### `functions/lib/service/tasks/setupSyncFromSheet.js`
 
 - Lines: `287`
@@ -4155,8 +4588,8 @@ Excluded sensitive files:
 
 ### `functions/lib/service/tasks/usersSyncFunctionRolesFromSetup.js`
 
-- Lines: `448`
-- Size: `21670` bytes
+- Lines: `470`
+- Size: `23071` bytes
 - Imports:
   - `import/require firebase-admin`
 - Functions:
@@ -4246,12 +4679,47 @@ Excluded sensitive files:
   - `import/require ./jobProcessor`
   - `import/require firebase-functions/v2/firestore`
 
+### `functions/scripts/auditInvoker.js`
+
+- Lines: `57`
+- Size: `2727` bytes
+- Imports:
+  - `import/require google-auth-library`
+- Functions:
+  - `pad`
+
+### `functions/scripts/auditInvokerDebug.js`
+
+- Lines: `41`
+- Size: `2090` bytes
+- Imports:
+  - `import/require google-auth-library`
+
+### `functions/scripts/deleteGhostGodzinki.js`
+
+- Lines: `104`
+- Size: `3676` bytes
+- Imports:
+  - `import/require firebase-admin`
+- Functions:
+  - `hasSheetRow`
+  - `parseIds`
+
 ### `functions/scripts/deleteStuckJob.js`
 
 - Lines: `26`
 - Size: `799` bytes
 - Imports:
   - `import/require firebase-admin`
+
+### `functions/scripts/enqueueGodzinkiTransitionImport.js`
+
+- Lines: `65`
+- Size: `2544` bytes
+- Imports:
+  - `import/require firebase-admin`
+- Functions:
+  - `getOpt`
 
 ### `functions/scripts/enqueueGroupsDiagnose.js`
 
@@ -4266,6 +4734,38 @@ Excluded sensitive files:
 - Size: `1213` bytes
 - Imports:
   - `import/require firebase-admin`
+
+### `functions/scripts/enqueueReconcileOpeningBalance.js`
+
+- Lines: `54`
+- Size: `2109` bytes
+- Imports:
+  - `import/require firebase-admin`
+- Functions:
+  - `projArg`
+
+### `functions/scripts/fixGhostApprovals.js`
+
+- Lines: `71`
+- Size: `2836` bytes
+- Imports:
+  - `import/require firebase-admin`
+
+### `functions/scripts/printFnUrls.js`
+
+- Lines: `19`
+- Size: `1016` bytes
+- Imports:
+  - `import/require google-auth-library`
+
+### `functions/scripts/readEvents.js`
+
+- Lines: `44`
+- Size: `1324` bytes
+- Imports:
+  - `import/require firebase-admin`
+- Functions:
+  - `tsToIso`
 
 ### `functions/scripts/readGearCollections.js`
 
@@ -4282,6 +4782,16 @@ Excluded sensitive files:
 - Size: `1256` bytes
 - Imports:
   - `import/require firebase-admin`
+
+### `functions/scripts/readPendingApprovals.js`
+
+- Lines: `68`
+- Size: `2476` bytes
+- Imports:
+  - `import/require firebase-admin`
+- Functions:
+  - `ageDays`
+  - `tsToIso`
 
 ### `functions/scripts/readServiceJobs.js`
 
@@ -4303,15 +4813,53 @@ Excluded sensitive files:
   - `norm`
   - `tsToIso`
 
+### `functions/scripts/removeEventsFromApp.js`
+
+- Lines: `92`
+- Size: `3396` bytes
+- Imports:
+  - `import/require firebase-admin`
+- Functions:
+  - `parseIds`
+
+### `functions/scripts/verifyDeploy.js`
+
+- Lines: `40`
+- Size: `1898` bytes
+- Imports:
+  - `import/require google-auth-library`
+
+### `functions/src/api/adminApprovalHandler.ts`
+
+- Lines: `222`
+- Size: `8699` bytes
+- Internal dependencies:
+  - `functions/src/modules/hours/godzinki_service.ts`
+  - `functions/src/modules/hours/godzinki_vars.ts`
+- Imports:
+  - `import/require ../modules/hours/godzinki_service`
+  - `import/require ../modules/hours/godzinki_vars`
+  - `import/require express`
+  - `import/require firebase-admin`
+  - `import/require firebase-functions/v2`
+- Functions:
+  - `authorizeAdmin`
+  - `enqueueJob`
+  - `handleAdminApprove`
+  - `handleAdminReject`
+  - `norm`
+  - `parseKindId`
+
 ### `functions/src/api/adminEventsSyncCalendarHandler.ts`
 
-- Lines: `72`
-- Size: `2320` bytes
+- Lines: `83`
+- Size: `2997` bytes
 - Imports:
   - `import/require express`
   - `import/require firebase-admin`
   - `import/require firebase-functions/v2`
 - Functions:
+  - `enqueue`
   - `handleAdminEventsSyncCalendar`
 
 ### `functions/src/api/basenAdminAddGodzinyHandler.ts`
@@ -4476,15 +5024,15 @@ Excluded sensitive files:
 
 ### `functions/src/api/gearReservationCreateHandler.ts`
 
-- Lines: `98`
-- Size: `3354` bytes
+- Lines: `104`
+- Size: `3823` bytes
 - Internal dependencies:
   - `functions/src/modules/calendar/calendar_utils.ts`
-  - `functions/src/modules/equipment/kayaks/gear_kayaks_service.ts`
+  - `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
   - `functions/src/modules/users/userStatusCheck.ts`
 - Imports:
   - `import/require ../modules/calendar/calendar_utils`
-  - `import/require ../modules/equipment/kayaks/gear_kayaks_service`
+  - `import/require ../modules/equipment/bundle/gear_bundle_service`
   - `import/require ../modules/users/userStatusCheck`
   - `import/require express`
   - `import/require firebase-functions/v2`
@@ -4510,8 +5058,8 @@ Excluded sensitive files:
 
 ### `functions/src/api/getAdminPendingHandler.ts`
 
-- Lines: `296`
-- Size: `10001` bytes
+- Lines: `410`
+- Size: `15422` bytes
 - Internal dependencies:
   - `functions/src/service/service_config.ts`
 - Imports:
@@ -4519,6 +5067,7 @@ Excluded sensitive files:
   - `import/require express`
   - `import/require firebase-functions/v2`
 - Functions:
+  - `docsOf`
   - `handleGetAdminPending`
   - `norm`
   - `tsToIso`
@@ -4628,8 +5177,8 @@ Excluded sensitive files:
 
 ### `functions/src/api/getGodzinkiHandler.ts`
 
-- Lines: `146`
-- Size: `5191` bytes
+- Lines: `156`
+- Size: `5582` bytes
 - Internal dependencies:
   - `functions/src/modules/hours/godzinki_service.ts`
   - `functions/src/modules/hours/godzinki_vars.ts`
@@ -4679,8 +5228,8 @@ Excluded sensitive files:
 
 ### `functions/src/api/godzinkiPurchaseHandler.ts`
 
-- Lines: `93`
-- Size: `3225` bytes
+- Lines: `97`
+- Size: `3395` bytes
 - Internal dependencies:
   - `functions/src/modules/hours/godzinki_service.ts`
   - `functions/src/modules/users/userStatusCheck.ts`
@@ -4790,19 +5339,21 @@ Excluded sensitive files:
 
 ### `functions/src/api/registerUserHandler.ts`
 
-- Lines: `609`
-- Size: `21924` bytes
+- Lines: `649`
+- Size: `23993` bytes
 - Internal dependencies:
   - `functions/src/modules/hours/godzinki_service.ts`
+  - `functions/src/modules/hours/opening_balance_fields.ts`
 - Imports:
   - `import/require ../modules/hours/godzinki_service`
+  - `import/require ../modules/hours/opening_balance_fields`
   - `import/require express`
   - `import/require firebase-admin`
 - Functions:
   - `computeRoleKeyFromOpeningBalance`
+  - `enqueueGodzinkiHistMerge`
   - `enqueueKmHistoricalMerge`
   - `findOpeningBalance`
-  - `getObHours`
   - `handleRegisterUser`
   - `isDateNotInFuture`
   - `isIsoDateYYYYMMDD`
@@ -4817,8 +5368,8 @@ Excluded sensitive files:
 
 ### `functions/src/api/submitEventHandler.ts`
 
-- Lines: `113`
-- Size: `3431` bytes
+- Lines: `132`
+- Size: `4422` bytes
 - Internal dependencies:
   - `functions/src/modules/calendar/events_service.ts`
   - `functions/src/modules/users/userStatusCheck.ts`
@@ -4833,20 +5384,21 @@ Excluded sensitive files:
 
 ### `functions/src/api/submitGodzinkiHandler.ts`
 
-- Lines: `116`
-- Size: `4229` bytes
+- Lines: `135`
+- Size: `5525` bytes
 - Internal dependencies:
   - `functions/src/modules/calendar/calendar_utils.ts`
   - `functions/src/modules/hours/godzinki_service.ts`
+  - `functions/src/modules/shared/text_utils.ts`
   - `functions/src/modules/users/userStatusCheck.ts`
 - Imports:
   - `import/require ../modules/calendar/calendar_utils`
   - `import/require ../modules/hours/godzinki_service`
+  - `import/require ../modules/shared/text_utils`
   - `import/require ../modules/users/userStatusCheck`
   - `import/require express`
 - Functions:
   - `handleSubmitGodzinki`
-  - `norm`
 
 ### `functions/src/api/userWeightHandler.ts`
 
@@ -4860,9 +5412,10 @@ Excluded sensitive files:
 
 ### `functions/src/index.ts`
 
-- Lines: `1369`
-- Size: `42629` bytes
+- Lines: `1458`
+- Size: `46793` bytes
 - Internal dependencies:
+  - `functions/src/api/adminApprovalHandler.ts`
   - `functions/src/api/adminEventsSyncCalendarHandler.ts`
   - `functions/src/api/basenAdminAddGodzinyHandler.ts`
   - `functions/src/api/basenAdminCorrectGodzinyHandler.ts`
@@ -4911,6 +5464,7 @@ Excluded sensitive files:
   - `functions/src/service/worker/fallbackDailyWorker.ts`
   - `functions/src/service/worker/onJobCreatedWorker.ts`
 - Imports:
+  - `import/require ./api/adminApprovalHandler`
   - `import/require ./api/adminEventsSyncCalendarHandler`
   - `import/require ./api/basenAdminAddGodzinyHandler`
   - `import/require ./api/basenAdminCorrectGodzinyHandler`
@@ -5039,8 +5593,8 @@ Excluded sensitive files:
 
 ### `functions/src/modules/calendar/events_service.ts`
 
-- Lines: `131`
-- Size: `3705` bytes
+- Lines: `139`
+- Size: `4139` bytes
 - Internal dependencies:
   - `functions/src/modules/calendar/calendar_utils.ts`
 - Imports:
@@ -5054,8 +5608,8 @@ Excluded sensitive files:
 
 ### `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
 
-- Lines: `851`
-- Size: `31225` bytes
+- Lines: `878`
+- Size: `32706` bytes
 - Internal dependencies:
   - `functions/src/modules/calendar/calendar_utils.ts`
   - `functions/src/modules/equipment/kayaks/gear_kayaks_service.ts`
@@ -5093,8 +5647,8 @@ Excluded sensitive files:
 
 ### `functions/src/modules/equipment/kayaks/gear_kayaks_service.ts`
 
-- Lines: `421`
-- Size: `13912` bytes
+- Lines: `317`
+- Size: `11585` bytes
 - Internal dependencies:
   - `functions/src/modules/calendar/calendar_utils.ts`
   - `functions/src/modules/hours/godzinki_service.ts`
@@ -5112,13 +5666,11 @@ Excluded sensitive files:
 - Functions:
   - `cancelReservation`
   - `countMyOverlappingItems`
-  - `createReservation`
   - `findConflicts`
   - `getUserRole`
   - `listKayaks`
   - `listMyReservations`
   - `norm`
-  - `uniq`
   - `updateReservationDates`
 
 ### `functions/src/modules/equipment/shared/gear_catalog_service.ts`
@@ -5136,8 +5688,8 @@ Excluded sensitive files:
 
 ### `functions/src/modules/hours/godzinki_service.ts`
 
-- Lines: `730`
-- Size: `24391` bytes
+- Lines: `1019`
+- Size: `37283` bytes
 - Internal dependencies:
   - `functions/src/modules/hours/godzinki_vars.ts`
 - Imports:
@@ -5146,16 +5698,20 @@ Excluded sensitive files:
 - Functions:
   - `computeBalance`
   - `computeNextExpiry`
+  - `creditApprovedEarn`
   - `creditOpeningBalance`
   - `creditReservationAdjustment`
   - `deductHours`
+  - `deductHoursInTx`
   - `getAllRecords`
   - `getBalance`
   - `getHistory`
   - `getNextExpiry`
-  - `getRecentEarnings`
+  - `markApprovalRejected`
   - `processApproval`
   - `refundHoursForReservation`
+  - `refundHoursForReservationInTx`
+  - `reverseDeductHoursInTx`
   - `submitEarning`
   - `submitPurchaseRequest`
   - `toDate`
@@ -5182,6 +5738,18 @@ Excluded sensitive files:
   - `import/require ../setup/setup_gear_vars`
 - Functions:
   - `quoteKayaksCostHours`
+
+### `functions/src/modules/hours/opening_balance_fields.ts`
+
+- Lines: `82`
+- Size: `3579` bytes
+- Functions:
+  - `buildOpeningBalanceAdminPatch`
+  - `getObHours`
+  - `normObKey`
+  - `obBool`
+  - `obValueByPrefix`
+  - `obValueExact`
 
 ### `functions/src/modules/km/km_log_service.ts`
 
@@ -5245,6 +5813,13 @@ Excluded sensitive files:
   - `toBool`
   - `toNumber`
 
+### `functions/src/modules/shared/text_utils.ts`
+
+- Lines: `9`
+- Size: `233` bytes
+- Functions:
+  - `norm`
+
 ### `functions/src/modules/users/userStatusCheck.ts`
 
 - Lines: `40`
@@ -5283,8 +5858,8 @@ Excluded sensitive files:
 
 ### `functions/src/service/providers/googleCalendarProvider.ts`
 
-- Lines: `66`
-- Size: `2153` bytes
+- Lines: `82`
+- Size: `2803` bytes
 - Internal dependencies:
   - `functions/src/service/providers/googleAuth.ts`
 - Imports:
@@ -5298,8 +5873,8 @@ Excluded sensitive files:
 
 ### `functions/src/service/providers/googleSheetsProvider.ts`
 
-- Lines: `339`
-- Size: `11048` bytes
+- Lines: `518`
+- Size: `18381` bytes
 - Internal dependencies:
   - `functions/src/service/providers/googleAuth.ts`
 - Imports:
@@ -5309,14 +5884,18 @@ Excluded sensitive files:
   - `GoogleSheetsProvider`
 - Functions:
   - `assertNonEmpty`
+  - `buildLooseRowGetter`
+  - `buildRowValuesForUpsert`
+  - `canonicalHeader`
   - `columnToA1`
+  - `findFirstEmptySlotIndex`
   - `normalizeStr`
   - `quoteTab`
 
 ### `functions/src/service/providers/googleWorkspaceProvider.ts`
 
 - Lines: `531`
-- Size: `18147` bytes
+- Size: `18186` bytes
 - Internal dependencies:
   - `functions/src/service/providers/googleAuth.ts`
 - Imports:
@@ -5331,15 +5910,19 @@ Excluded sensitive files:
 
 ### `functions/src/service/registry.ts`
 
-- Lines: `56`
-- Size: `2479` bytes
+- Lines: `66`
+- Size: `3080` bytes
 - Internal dependencies:
+  - `functions/src/service/tasks/adminApprovalWriteBack.ts`
+  - `functions/src/service/tasks/adminNotifyPendingApprovals.ts`
   - `functions/src/service/tasks/basenNotifySessionCancelled.ts`
   - `functions/src/service/tasks/eventsSyncCalendar.ts`
   - `functions/src/service/tasks/eventsSyncFromSheet.ts`
   - `functions/src/service/tasks/gearPrivateStorage.ts`
   - `functions/src/service/tasks/gearSyncAllFromSheet.ts`
   - `functions/src/service/tasks/gearSyncKayaksFromSheet.ts`
+  - `functions/src/service/tasks/godzinkiImportTransitionFromSheet.ts`
+  - `functions/src/service/tasks/godzinkiMergeHistoricalUser.ts`
   - `functions/src/service/tasks/godzinkiSyncFromSheet.ts`
   - `functions/src/service/tasks/groupsDiagnose.ts`
   - `functions/src/service/tasks/kmMergeHistoricalUser.ts`
@@ -5350,18 +5933,23 @@ Excluded sensitive files:
   - `functions/src/service/tasks/listaEnforcePostingPolicy.ts`
   - `functions/src/service/tasks/membersSyncToSheet.ts`
   - `functions/src/service/tasks/onUserRegisteredWelcome.ts`
+  - `functions/src/service/tasks/reconcileOpeningBalance.ts`
   - `functions/src/service/tasks/setupSyncFromSheet.ts`
   - `functions/src/service/tasks/usersSyncFieldsFromSheet.ts`
   - `functions/src/service/tasks/usersSyncFunctionRolesFromSetup.ts`
   - `functions/src/service/tasks/usersSyncRolesFromSheet.ts`
   - `functions/src/service/types.ts`
 - Imports:
+  - `import/require ./tasks/adminApprovalWriteBack`
+  - `import/require ./tasks/adminNotifyPendingApprovals`
   - `import/require ./tasks/basenNotifySessionCancelled`
   - `import/require ./tasks/eventsSyncCalendar`
   - `import/require ./tasks/eventsSyncFromSheet`
   - `import/require ./tasks/gearPrivateStorage`
   - `import/require ./tasks/gearSyncAllFromSheet`
   - `import/require ./tasks/gearSyncKayaksFromSheet`
+  - `import/require ./tasks/godzinkiImportTransitionFromSheet`
+  - `import/require ./tasks/godzinkiMergeHistoricalUser`
   - `import/require ./tasks/godzinkiSyncFromSheet`
   - `import/require ./tasks/groupsDiagnose`
   - `import/require ./tasks/kmMergeHistoricalUser`
@@ -5372,6 +5960,7 @@ Excluded sensitive files:
   - `import/require ./tasks/listaEnforcePostingPolicy`
   - `import/require ./tasks/membersSyncToSheet`
   - `import/require ./tasks/onUserRegisteredWelcome`
+  - `import/require ./tasks/reconcileOpeningBalance`
   - `import/require ./tasks/setupSyncFromSheet`
   - `import/require ./tasks/usersSyncFieldsFromSheet`
   - `import/require ./tasks/usersSyncFunctionRolesFromSetup`
@@ -5402,12 +5991,43 @@ Excluded sensitive files:
 
 ### `functions/src/service/service_config.ts`
 
-- Lines: `345`
-- Size: `12702` bytes
+- Lines: `376`
+- Size: `13961` bytes
 - Imports:
   - `import/require firebase-functions`
 - Functions:
+  - `adminNotifyAgeDays`
   - `getServiceConfig`
+
+### `functions/src/service/tasks/adminApprovalWriteBack.ts`
+
+- Lines: `90`
+- Size: `3677` bytes
+- Internal dependencies:
+  - `functions/src/service/providers/googleSheetsProvider.ts`
+  - `functions/src/service/service_config.ts`
+  - `functions/src/service/types.ts`
+- Imports:
+  - `import/require ../providers/googleSheetsProvider`
+  - `import/require ../service_config`
+  - `import/require ../types`
+
+### `functions/src/service/tasks/adminNotifyPendingApprovals.ts`
+
+- Lines: `252`
+- Size: `9019` bytes
+- Internal dependencies:
+  - `functions/src/modules/shared/text_utils.ts`
+  - `functions/src/service/service_config.ts`
+  - `functions/src/service/types.ts`
+- Imports:
+  - `import/require ../../modules/shared/text_utils`
+  - `import/require ../service_config`
+  - `import/require ../types`
+- Functions:
+  - `ageDaysFrom`
+  - `buildPendingDigest`
+  - `resolveDisplayName`
 
 ### `functions/src/service/tasks/basenNotifySessionCancelled.ts`
 
@@ -5424,8 +6044,8 @@ Excluded sensitive files:
 
 ### `functions/src/service/tasks/eventsSyncCalendar.ts`
 
-- Lines: `127`
-- Size: `4149` bytes
+- Lines: `169`
+- Size: `5824` bytes
 - Internal dependencies:
   - `functions/src/service/providers/googleCalendarProvider.ts`
   - `functions/src/service/service_config.ts`
@@ -5434,54 +6054,61 @@ Excluded sensitive files:
   - `import/require ../providers/googleCalendarProvider`
   - `import/require ../service_config`
   - `import/require ../types`
+  - `import/require firebase-admin`
 - Functions:
   - `norm`
 
 ### `functions/src/service/tasks/eventsSyncFromSheet.ts`
 
-- Lines: `284`
-- Size: `9453` bytes
+- Lines: `514`
+- Size: `20668` bytes
 - Internal dependencies:
+  - `functions/src/modules/shared/text_utils.ts`
   - `functions/src/service/providers/googleCalendarProvider.ts`
   - `functions/src/service/providers/googleSheetsProvider.ts`
   - `functions/src/service/service_config.ts`
   - `functions/src/service/types.ts`
 - Imports:
+  - `import/require ../../modules/shared/text_utils`
   - `import/require ../providers/googleCalendarProvider`
   - `import/require ../providers/googleSheetsProvider`
   - `import/require ../service_config`
   - `import/require ../types`
   - `import/require firebase-admin`
 - Functions:
+  - `buildEventRowPatch`
+  - `findHeaderCaseInsensitive`
   - `isApproved`
-  - `norm`
   - `normDate`
+  - `shouldScrapAbsentEvent`
 
 ### `functions/src/service/tasks/gearPrivateStorage.ts`
 
-- Lines: `316`
-- Size: `11217` bytes
+- Lines: `387`
+- Size: `13597` bytes
 - Internal dependencies:
   - `functions/src/modules/hours/godzinki_service.ts`
   - `functions/src/modules/hours/godzinki_vars.ts`
   - `functions/src/modules/setup/setup_gear_vars.ts`
+  - `functions/src/modules/shared/text_utils.ts`
   - `functions/src/service/types.ts`
 - Imports:
   - `import/require ../../modules/hours/godzinki_service`
   - `import/require ../../modules/hours/godzinki_vars`
   - `import/require ../../modules/setup/setup_gear_vars`
+  - `import/require ../../modules/shared/text_utils`
   - `import/require ../types`
   - `import/require firebase-admin`
 - Functions:
   - `firstChargeableMonth`
   - `isChargeableThisMonth`
-  - `norm`
+  - `processKayakChargeForMonth`
   - `toYearMonth`
 
 ### `functions/src/service/tasks/gearSyncAllFromSheet.ts`
 
-- Lines: `434`
-- Size: `14204` bytes
+- Lines: `511`
+- Size: `17528` bytes
 - Internal dependencies:
   - `functions/src/service/providers/googleSheetsProvider.ts`
   - `functions/src/service/service_config.ts`
@@ -5493,12 +6120,14 @@ Excluded sensitive files:
   - `import/require firebase-admin`
 - Functions:
   - `buildDoc`
+  - `classifyGearRows`
   - `flush`
   - `isRealRow`
   - `norm`
   - `parseBool`
   - `parseNumber`
   - `parseSheetDate`
+  - `rowNumberLabel`
   - `sflush`
   - `syncCategory`
 
@@ -5520,26 +6149,67 @@ Excluded sensitive files:
   - `parseBool`
   - `parseNumber`
 
-### `functions/src/service/tasks/godzinkiSyncFromSheet.ts`
+### `functions/src/service/tasks/godzinkiImportTransitionFromSheet.ts`
 
-- Lines: `242`
-- Size: `7619` bytes
+- Lines: `228`
+- Size: `8728` bytes
 - Internal dependencies:
   - `functions/src/modules/hours/godzinki_service.ts`
   - `functions/src/modules/hours/godzinki_vars.ts`
+  - `functions/src/modules/shared/text_utils.ts`
   - `functions/src/service/providers/googleSheetsProvider.ts`
   - `functions/src/service/service_config.ts`
   - `functions/src/service/types.ts`
 - Imports:
   - `import/require ../../modules/hours/godzinki_service`
   - `import/require ../../modules/hours/godzinki_vars`
+  - `import/require ../../modules/shared/text_utils`
+  - `import/require ../providers/googleSheetsProvider`
+  - `import/require ../service_config`
+  - `import/require ../types`
+- Functions:
+  - `isApproved`
+  - `isIsoDate`
+  - `parseHours`
+
+### `functions/src/service/tasks/godzinkiMergeHistoricalUser.ts`
+
+- Lines: `119`
+- Size: `4138` bytes
+- Internal dependencies:
+  - `functions/src/service/types.ts`
+- Imports:
+  - `import/require ../types`
+  - `import/require firebase-admin`
+- Functions:
+  - `norm`
+
+### `functions/src/service/tasks/godzinkiSyncFromSheet.ts`
+
+- Lines: `510`
+- Size: `17885` bytes
+- Internal dependencies:
+  - `functions/src/modules/hours/godzinki_service.ts`
+  - `functions/src/modules/hours/godzinki_vars.ts`
+  - `functions/src/modules/shared/text_utils.ts`
+  - `functions/src/service/providers/googleSheetsProvider.ts`
+  - `functions/src/service/service_config.ts`
+  - `functions/src/service/types.ts`
+- Imports:
+  - `import/require ../../modules/hours/godzinki_service`
+  - `import/require ../../modules/hours/godzinki_vars`
+  - `import/require ../../modules/shared/text_utils`
   - `import/require ../providers/googleSheetsProvider`
   - `import/require ../service_config`
   - `import/require ../types`
   - `import/require firebase-admin`
 - Functions:
+  - `buildLedgerRowPatch`
+  - `buildPendingCorrection`
   - `isApproved`
-  - `norm`
+  - `isIsoDate`
+  - `readUserName`
+  - `tsToIsoDate`
 
 ### `functions/src/service/tasks/groupsDiagnose.ts`
 
@@ -5662,6 +6332,23 @@ Excluded sensitive files:
   - `assertString`
   - `listaRoleForUserRole`
 
+### `functions/src/service/tasks/reconcileOpeningBalance.ts`
+
+- Lines: `174`
+- Size: `7000` bytes
+- Internal dependencies:
+  - `functions/src/modules/hours/godzinki_service.ts`
+  - `functions/src/modules/hours/opening_balance_fields.ts`
+  - `functions/src/service/types.ts`
+- Imports:
+  - `import/require ../../modules/hours/godzinki_service`
+  - `import/require ../../modules/hours/opening_balance_fields`
+  - `import/require ../types`
+  - `import/require firebase-admin`
+- Functions:
+  - `lower`
+  - `norm`
+
 ### `functions/src/service/tasks/setupSyncFromSheet.ts`
 
 - Lines: `287`
@@ -5713,8 +6400,8 @@ Excluded sensitive files:
 
 ### `functions/src/service/tasks/usersSyncFunctionRolesFromSetup.ts`
 
-- Lines: `508`
-- Size: `17710` bytes
+- Lines: `528`
+- Size: `18735` bytes
 - Internal dependencies:
   - `functions/src/service/types.ts`
 - Imports:
@@ -5809,6 +6496,80 @@ Excluded sensitive files:
   - `import/require ./jobProcessor`
   - `import/require firebase-functions/v2/firestore`
 
+### `functions/test/events_core.test.ts`
+
+- Lines: `275`
+- Size: `11696` bytes
+- Internal dependencies:
+  - `functions/src/service/providers/googleSheetsProvider.ts`
+  - `functions/src/service/tasks/eventsSyncFromSheet.ts`
+- Imports:
+  - `import/require ../src/service/providers/googleSheetsProvider`
+  - `import/require ../src/service/tasks/eventsSyncFromSheet`
+  - `import/require vitest`
+
+### `functions/test/faza2_core.test.ts`
+
+- Lines: `81`
+- Size: `3024` bytes
+- Internal dependencies:
+  - `functions/src/service/tasks/adminNotifyPendingApprovals.ts`
+- Imports:
+  - `import/require ../src/service/tasks/adminNotifyPendingApprovals`
+  - `import/require vitest`
+- Functions:
+  - `baseInput`
+  - `mustDigest`
+
+### `functions/test/gear_core.test.ts`
+
+- Lines: `138`
+- Size: `5598` bytes
+- Internal dependencies:
+  - `functions/src/modules/calendar/calendar_utils.ts`
+  - `functions/src/modules/hours/hours_quote.ts`
+  - `functions/src/modules/setup/setup_gear_vars.ts`
+  - `functions/src/service/tasks/gearPrivateStorage.ts`
+  - `functions/src/service/tasks/gearSyncAllFromSheet.ts`
+- Imports:
+  - `import/require ../src/modules/calendar/calendar_utils`
+  - `import/require ../src/modules/hours/hours_quote`
+  - `import/require ../src/modules/setup/setup_gear_vars`
+  - `import/require ../src/service/tasks/gearPrivateStorage`
+  - `import/require ../src/service/tasks/gearSyncAllFromSheet`
+  - `import/require vitest`
+- Functions:
+  - `mkRow`
+  - `vars`
+
+### `functions/test/godzinki_core.test.ts`
+
+- Lines: `150`
+- Size: `5505` bytes
+- Internal dependencies:
+  - `functions/src/modules/hours/godzinki_service.ts`
+- Imports:
+  - `import/require ../src/modules/hours/godzinki_service`
+  - `import/require vitest`
+- Functions:
+  - `makeEarn`
+  - `makePurchase`
+  - `makeSpend`
+  - `ts`
+
+### `functions/test/sync_core.test.ts`
+
+- Lines: `126`
+- Size: `4528` bytes
+- Internal dependencies:
+  - `functions/src/service/tasks/godzinkiSyncFromSheet.ts`
+- Imports:
+  - `import/require ../src/service/tasks/godzinkiSyncFromSheet`
+  - `import/require vitest`
+- Functions:
+  - `earnData`
+  - `ts`
+
 ### `public/core/access_control.js`
 
 - Lines: `41`
@@ -5870,8 +6631,8 @@ Excluded sensitive files:
 
 ### `public/core/modules_registry.js`
 
-- Lines: `165`
-- Size: `5393` bytes
+- Lines: `167`
+- Size: `5505` bytes
 - Imports:
   - `import/require /core/module_stub.js`
   - `import/require /modules/admin_pending_module.js`
@@ -5889,8 +6650,8 @@ Excluded sensitive files:
 
 ### `public/core/render_shell.js`
 
-- Lines: `1169`
-- Size: `49444` bytes
+- Lines: `1214`
+- Size: `52116` bytes
 - Imports:
   - `import/require /core/access_control.js`
   - `import/require /core/api_client.js`
@@ -5905,13 +6666,13 @@ Excluded sensitive files:
   - `countReservationDays`
   - `escapeHtml`
   - `fieldErrorToPl`
+  - `formatContribDate`
   - `formatDatePL`
-  - `formatDayMonth`
+  - `formatShortDate`
   - `getDashboardConfig`
   - `getGearRoute`
   - `getHelloName`
   - `getHoursValue`
-  - `getMembershipPaidUntil`
   - `getModuleRouteByLabelOrId`
   - `getModuleRouteByType`
   - `getReservationKayakTitles`
@@ -5932,6 +6693,7 @@ Excluded sensitive files:
   - `statusKeyToLabel`
   - `tryParseJsonFromHttpError`
   - `updateBadge`
+  - `wireHomeReservations`
 
 ### `public/core/router.js`
 
@@ -5963,8 +6725,8 @@ Excluded sensitive files:
 
 ### `public/modules/admin_pending_module.js`
 
-- Lines: `284`
-- Size: `13723` bytes
+- Lines: `393`
+- Size: `21003` bytes
 - Imports:
   - `import/require /core/api_client.js`
   - `import/require /core/router.js`
@@ -6006,8 +6768,8 @@ Excluded sensitive files:
 
 ### `public/modules/gear_module.js`
 
-- Lines: `2277`
-- Size: `95814` bytes
+- Lines: `2273`
+- Size: `95665` bytes
 - Imports:
   - `import/require /core/api_client.js`
   - `import/require /core/firebase_client.js`
@@ -6079,31 +6841,29 @@ Excluded sensitive files:
 
 ### `public/modules/godzinki_module.js`
 
-- Lines: `391`
-- Size: `14112` bytes
+- Lines: `417`
+- Size: `16171` bytes
 - Imports:
   - `import/require /core/api_client.js`
 - Functions:
-  - `buildMeta`
   - `createGodzinkiModule`
   - `esc`
   - `formatBalanceSign`
   - `formatDate`
   - `infoBarHtml`
+  - `purchaseSectionHtml`
   - `recordTypeClass`
-  - `recordTypeLabel`
   - `renderGodzinkiView`
   - `renderHistoryView`
-  - `renderHomeView`
   - `renderPage`
   - `renderRecordTable`
   - `renderSubmitView`
-  - `renderTabsHtml`
   - `setErr`
   - `setOk`
   - `shortenReason`
   - `spinnerHtml`
   - `todayIso`
+  - `wirePurchaseForm`
 
 ### `public/modules/impreza_module.js`
 
@@ -6193,7 +6953,7 @@ Excluded sensitive files:
 ### `public/modules/my_reservations_module.js`
 
 - Lines: `603`
-- Size: `23084` bytes
+- Size: `23004` bytes
 - Imports:
   - `import/require /core/api_client.js`
   - `import/require /core/router.js`
@@ -6206,7 +6966,7 @@ Excluded sensitive files:
   - `escapeAttr`
   - `escapeHtml`
   - `formatDatePL`
-  - `formatDayMonth`
+  - `formatShortDate`
   - `getReservationKayakTitles`
   - `loadKayakMap`
   - `loadReservations`
@@ -6239,8 +6999,8 @@ Excluded sensitive files:
 
 ### `.claude/settings.local.json`
 
-- Lines: `12`
-- Size: `550` bytes
+- Lines: `15`
+- Size: `707` bytes
 - Detected top-level keys / sections:
   - `permissions`
 
@@ -6305,7 +7065,7 @@ Excluded sensitive files:
 ### `appscript/członkowie sympatycy SKK/appsscript.json`
 
 - Lines: `13`
-- Size: `370` bytes
+- Size: `382` bytes
 - Detected top-level keys / sections:
   - `dependencies`
   - `exceptionLogging`
@@ -6323,8 +7083,8 @@ Excluded sensitive files:
 
 ### `appscript/kilometrówka/appsscript.json`
 
-- Lines: `22`
-- Size: `599` bytes
+- Lines: `12`
+- Size: `359` bytes
 - Detected top-level keys / sections:
   - `dependencies`
   - `exceptionLogging`
@@ -6334,8 +7094,8 @@ Excluded sensitive files:
 
 ### `appscript/kurs/appsscript.json`
 
-- Lines: `22`
-- Size: `599` bytes
+- Lines: `12`
+- Size: `359` bytes
 - Detected top-level keys / sections:
   - `dependencies`
   - `exceptionLogging`
@@ -6346,7 +7106,7 @@ Excluded sensitive files:
 ### `appscript/sprzęt/appsscript.json`
 
 - Lines: `13`
-- Size: `370` bytes
+- Size: `382` bytes
 - Detected top-level keys / sections:
   - `dependencies`
   - `exceptionLogging`
@@ -6356,8 +7116,8 @@ Excluded sensitive files:
 
 ### `firebase.json`
 
-- Lines: `401`
-- Size: `9960` bytes
+- Lines: `415`
+- Size: `10284` bytes
 - Detected top-level keys / sections:
   - `firestore`
   - `functions`
@@ -6365,16 +7125,16 @@ Excluded sensitive files:
 
 ### `firestore.indexes.json`
 
-- Lines: `120`
-- Size: `3444` bytes
+- Lines: `153`
+- Size: `4415` bytes
 - Detected top-level keys / sections:
   - `fieldOverrides`
   - `indexes`
 
 ### `functions/package-lock.json`
 
-- Lines: `9926`
-- Size: `356135` bytes
+- Lines: `11105`
+- Size: `394869` bytes
 - Detected top-level keys / sections:
   - `lockfileVersion`
   - `name`
@@ -6383,8 +7143,8 @@ Excluded sensitive files:
 
 ### `functions/package.json`
 
-- Lines: `34`
-- Size: `932` bytes
+- Lines: `36`
+- Size: `982` bytes
 - Detected top-level keys / sections:
   - `dependencies`
   - `devDependencies`
@@ -6396,8 +7156,8 @@ Excluded sensitive files:
 
 ### `functions/tsconfig.dev.json`
 
-- Lines: `6`
-- Size: `42` bytes
+- Lines: `7`
+- Size: `54` bytes
 - Detected top-level keys / sections:
   - `include`
 
@@ -6857,6 +7617,303 @@ Excluded sensitive files:
   - `## 7. Uruchamianie skryptów diagnostycznych (Windows — gotchas)`
   - `## 8. Drugie zagadnienie: niezgodność `users_active` (23) vs arkusz (19)`
   - `## 9. Otwarte / następne kroki`
+
+### `Audyty/12.06_godzinki_audyt.md`
+
+- Lines: `241`
+- Size: `18997` bytes
+- Headings:
+  - `# Audyt systemu godzinek i opłat za sprzęt — stan wdrożenia`
+  - `## 1. Architektura — przegląd`
+  - `## 2. Model danych — `godzinki_ledger``
+  - `## 3. Przepływ: zgłoszenie → arkusz → zatwierdzenie`
+  - `### 3.1 Zgłoszenie (użytkownik, aplikacja)`
+  - `### 3.2 Zapis do arkusza (automatyczny)`
+  - `### 3.3 Zatwierdzenie (admin, arkusz)`
+  - `### 3.4 Wykup salda ujemnego`
+  - `### 3.5 Odczyt (frontend)`
+  - `## 4. Opłaty za wypożyczanie sprzętu (godzinki)`
+  - `### 4.1 Wycena (`hours_quote.ts`)`
+  - `### 4.2 Pobranie przy rezerwacji`
+  - `### 4.3 Zmiana dat rezerwacji`
+  - `### 4.4 Anulowanie i zwrot`
+  - `## 5. Opłata za prywatny kajak w klubie`
+  - `## 6. Pokrycie testami (stan obecny)`
+  - `## 7. Zidentyfikowane luki i ryzyka`
+  - `## 8. Konfiguracja — defaulty z kodu vs. do weryfikacji na prod`
+  - `## 9. Pytania otwarte (decyzje biznesowe)`
+  - `## 10. Rekomendowane następne kroki`
+
+### `Audyty/12.06_godzinki_podsumowanie.md`
+
+- Lines: `194`
+- Size: `19067` bytes
+- Headings:
+  - `# Podsumowanie sesji 12.06.2026 — audyt i naprawa systemu godzinek`
+  - `## CZĘŚĆ 1 — Audyt (faza analityczna)`
+  - `## CZĘŚĆ 2 — Naprawy L1–L7 (saldo, transakcje, opłaty)`
+  - `### L1 — Podwójny zwrot overdraftu przy anulowaniu (KRYTYCZNY)`
+  - `### L2 — Wykup salda ujemnego bez rewalidacji`
+  - `### L3 — "Pranie" wygasających godzinek przez skrócenie rezerwacji`
+  - `### L4 + L5 — Double-booking i okna awarii (naprawione razem, bo to jeden mechanizm)`
+  - `### L6 — Kwoty ułamkowe`
+  - `### L7 — Opłata magazynowa: przepadające naliczenia i paradoks limitu`
+  - `## CZĘŚĆ 3 — Naprawy P1–P4 (przepływ arkuszowy)`
+  - `### P1 — Arkusz jako realne narzędzie admina`
+  - `### P2 — Samonaprawa po martwych jobach zapisu do arkusza`
+  - `### P3 — Automatyczny sync zatwierdzeń`
+  - `### P4 — Duplikaty i braki ID`
+  - `## CZĘŚĆ 4 — Naprawy D1–D4 (duplikacje)`
+  - `### D1 — Testy wykonujące kod produkcyjny zamiast luster`
+  - `### D2 — Jedna implementacja tworzenia rezerwacji`
+  - `### D3 — Martwy kod w AppScript`
+  - `### D4 — Drobne duplikacje`
+  - `## CZĘŚĆ 5 — Naprawy L8–L11`
+  - `### L8 — UI wykupu salda ujemnego`
+  - `### L9 — Anulowanie przez zawieszonych: decyzja utrwalona`
+  - `### L10 — Martwe pule po zatwierdzeniu starych zgłoszeń`
+  - `### L11 — Granica dnia w strefie klubu`
+  - `## CZĘŚĆ 6 — Testy (stan końcowy)`
+  - `## CZĘŚĆ 7 — Zmiany zachowania wymagające akceptacji biznesowej`
+  - `## CZĘŚĆ 8 — Czynności przy wdrożeniu`
+
+### `Audyty/12.06_godzinki_potencjalne_problemy.md`
+
+- Lines: `264`
+- Size: `23751` bytes
+- Headings:
+  - `# Godzinki i opłaty za sprzęt — braki logiczne, źródła problemów, powielenia kodu`
+  - `## A. Błędy i braki logiczne`
+  - `### L1. KRYTYCZNY — Podwójny zwrot overdraftu przy anulowaniu rezerwacji`
+  - `### L2. WYSOKI — Wykup salda ujemnego: brak rewalidacji przy zatwierdzeniu i brak blokady wielu pending`
+  - `### L3. WYSOKI — Odświeżanie ważności godzinek przy skróceniu rezerwacji ("pranie" wygasających pul)`
+  - `### L4. WYSOKI — Race condition przy równoległych rezerwacjach (double-booking)`
+  - `### L5. ŚREDNI — Nieatomowość rezerwacja ↔ dedukcja godzinek (okna awarii)`
+  - `### L6. ŚREDNI — Brak walidacji całkowitości kwoty godzinek (ułamki i dryf zmiennoprzecinkowy)`
+  - `### L7. WYSOKI — Opłata magazynowa: nieudane naliczenie przepada bez śladu dla admina`
+  - `### L8. ŚREDNI — Sympatyk/kursant jako właściciel prywatnego kajaka: dług strukturalnie niespłacalny`
+  - `### L9. ŚREDNI — Niespójność uprawnień: anulowanie rezerwacji nie sprawdza zawieszenia konta`
+  - `### L10. NISKI — Zatwierdzenie starego zgłoszenia tworzy "martwą" pulę bez ostrzeżenia`
+  - `### L11. NISKI — Granica dnia w UTC (zgłoszenia po północy czasu polskiego)`
+  - `## B. Powielenia kodu (ryzyko rozjazdu logiki)`
+  - `### D1. KRYTYCZNY w skutkach — Formuła bilansu zaimplementowana niezależnie 4 razy`
+  - `### D2. WYSOKI — Zdublowany pełny przepływ rezerwacji: kajaki (legacy) vs bundle`
+  - `### D3. ŚREDNI — Martwy duplikat syncu w AppScript o INNEJ semantyce`
+  - `### D4. NISKI — Drobne duplikacje`
+  - `## C. Źródła problemów w przepływie danych (arkusz ↔ Firestore)`
+  - `### P1. WYSOKI — Arkusz wygląda na narzędzie korekt, ale nim nie jest`
+  - `### P2. ŚREDNI — Zgłoszenie może nigdy nie dotrzeć do arkusza (fire-and-forget bez monitoringu)`
+  - `### P3. ŚREDNI — Brak automatycznego syncu zatwierdzeń + koszt ręcznego`
+  - `### P4. NISKI — Identyfikacja wierszy wyłącznie po kolumnie `ID``
+  - `## D. Luki w pokryciu testowym (zweryfikowane)`
+  - `## E. Podsumowanie priorytetów`
+  - `## F. Status naprawy (12.06.2026)`
+
+### `Audyty/12.06_imprezy_audyt.md`
+
+- Lines: `153`
+- Size: `19775` bytes
+- Headings:
+  - `# Audyt mechanizmu dodawania i zatwierdzania imprez — stan wdrożenia`
+  - `## 1. Mapa przepływu — komponenty`
+  - `## 2. Przepływ etapami — oczekiwany vs faktyczny`
+  - `### E1. Użytkownik dodaje imprezę w aplikacji — ✅ DZIAŁA`
+  - `### E2. Impreza pojawia się w arkuszu do zatwierdzenia — ⚠️ KRUCHE`
+  - `### E3. Informacja o oczekujących w panelu zarządu — ⚠️ CZĘŚCIOWO`
+  - `### E4. Zarząd modyfikuje wpisy w arkuszu przed zatwierdzeniem — ✅ logika działa, ❌ dociera tylko przy ręcznym syncu`
+  - `### E5. Sync do bazy — ❌ NAJWIĘKSZA DZIURA: BRAK AUTOMATYZACJI`
+  - `### E6. Wyświetlanie w aplikacji — ✅ działa, pod warunkiem indeksów`
+  - `### E7 (bonus). Google Calendar — ⚠️ jednokierunkowy, bez sprzątania`
+  - `## 3. Tabela ryzyk`
+  - `## 4. Pokrycie testowe`
+  - `## 5. Do weryfikacji na żywym środowisku (read-only)`
+  - `## 5a. Status naprawy (12.06.2026) — I1–I3 + zgłoszony bug`
+  - `## 6. Rekomendacje napraw (wsad pod plan naprawczy)`
+
+### `Audyty/12.06_imprezy_podsumowanie_wdrożenia.md`
+
+- Lines: `128`
+- Size: `11250` bytes
+- Headings:
+  - `# Podsumowanie wdrożenia — mechanizm imprez (audyt + naprawy)`
+  - `## 1. Audyt — co ustalono (skrót)`
+  - `## 2. Zgłoszony bug: "dodanie imprezy w aplikacji nie dodaje jej do arkusza"`
+  - `## 3. Naprawy (wszystkie wdrożone na prod 12.06)`
+  - `### 3.1. Bug "wiersze poniżej tabeli" — `findFirstEmptySlotIndex``
+  - `### 3.2. I1 — automatyczny sync arkusz→Firestore`
+  - `### 3.3. I2 — indeksy Firestore w repozytorium`
+  - `### 3.4. I3 — retry nie cofa decyzji admina`
+  - `### 3.5. I4 — backfill (samonaprawa brakujących wierszy)`
+  - `### 3.6. I5 — imprezy dodane ręcznie w arkuszu widoczne w panelu`
+  - `### 3.7. I7 — potwierdzenie syncu w arkuszu (zgłoszone przez użytkownika po pierwszej turze)`
+  - `## 4. Testy`
+  - `## 5. Po wdrożeniu — weryfikacja na prod (checklist)`
+  - `## 6. Pozycje audytu imprez nadal otwarte`
+
+### `Audyty/12.06_panel_zarzadu_audyt.md`
+
+- Lines: `106`
+- Size: `9630` bytes
+- Headings:
+  - `# Audyt panelu zarządu — powiadomienia o oczekujących zatwierdzeniach`
+  - `## 1. Pipeline powiadomień panelu (stan obecny)`
+  - `## 2. Dlaczego powiadomienia NIE znikają — dowody z prod (stan 12.06)`
+  - `### 2a. Rekordy-widma godzinek (2 szt.) — NIE DA SIĘ ich zatwierdzić`
+  - `### 2b. Imprezy-widma (3 szt.) — wiersze ZNIKNĘŁY z arkusza`
+  - `### 2c. Pozostałe 3 godzinki — panel działa POPRAWNIE`
+  - `### 2d. Znalezisko krytyczne przy okazji: nagłówki zakładki `imprezy` ≠ kod`
+  - `## 3. Wykonalność: e-mail na zarzad@morzkulc.pl przy zaległościach >3 dni — TAK, niski koszt`
+  - `## 4. Wykonalność: zatwierdzanie z aplikacji + odzwierciedlenie w arkuszu — TAK, średni koszt`
+  - `## 5. Rekomendowane działania natychmiastowe (porządkowe, przed implementacją 3/4)`
+  - `## 6. Diagnostyka użyta w audycie (do ponownego użycia)`
+
+### `Audyty/12.06_panel_zarzadu_problemy_i_plan_wdrozenia.md`
+
+- Lines: `134`
+- Size: `16423` bytes
+- Headings:
+  - `# Panel zarządu + spójność kod↔arkusze — pełny rejestr problemów i plan wdrożenia`
+  - `## CZĘŚĆ A — Rejestr problemów i nieścisłości (Z1–Z17)`
+  - `### A1. Rozjazdy kod ↔ arkusz (zakładka `imprezy`)`
+  - `### A2. Rozjazdy kod ↔ arkusz (zakładka `godzinki`)`
+  - `### A3. Dane-widma (powód "powiadomienia nie znikają")`
+  - `### A4. Logika panelu i syncu`
+  - `### A5. Brakujące funkcje (zamówione)`
+  - `## CZĘŚĆ B — Plan wdrożenia`
+  - `### FAZA 0 — Porządki arkusza i danych (operacyjne, z udziałem zarządu; bez deployu)`
+  - `### FAZA 1 — Hardening syncu i panelu (kod)`
+  - `### FAZA 2 — Nowe funkcje (Z17)`
+  - `### FAZA 3 — Testy i wdrożenie`
+  - `### Decyzje wymagane od zarządu/użytkownika przed startem`
+  - `### Status wykonania (12.06 wieczorem)`
+  - `### Szacunek zakresu`
+
+### `Audyty/12.06_podsumowanie_sesji_zarzad.md`
+
+- Lines: `99`
+- Size: `9473` bytes
+- Headings:
+  - `## 1. Audyt — co ustalono (z dowodami z danych produkcyjnych)`
+  - `### 1a. Pipeline powiadomień`
+  - `### 1b. Dlaczego "po zatwierdzeniu powiadomienia nie znikają" — 3 realne przyczyny`
+  - `### 1c. Rozjazdy kod↔arkusz (inwentaryzacja nagłówków WSZYSTKICH zakładek)`
+  - `### 1d. Wykonalność funkcji zamówionych (projekty w audycie, realizacja = faza 2)`
+  - `## 2. FAZA 0 — porządki danych i arkusza (WYKONANA NA PROD)`
+  - `## 3. FAZA 1 — hardening kodu (WYKONANA, CZEKA NA `firebase deploy`)`
+  - `## 4. Następne kroki`
+  - `## 5. Pozycje rejestru Z1–Z17 — stan po sesji`
+
+### `Audyty/13.06_podsumowanie_wdrożenia_sesji_zarząd.md`
+
+- Lines: `118`
+- Size: `8833` bytes
+- Headings:
+  - `# Podsumowanie wdrożenia — sesja zarządu (Faza 1 + Faza 2)`
+  - `## 1. Stan ogólny`
+  - `## 2. Co zostało wdrożone (Faza 2 — pliki)`
+  - `## 3. Weryfikacja po wdrożeniu (probing przez prod Hosting)`
+  - `## 4. 🔴 BLOKER — invoker dla nowych funkcji (do naprawy)`
+  - `## 5. Pozostało do zrobienia`
+  - `### 5a. Po naprawie IAM — checklist weryfikacji (FAZA 3.3)`
+  - `### 5b. Decyzje operacyjne zarządu`
+  - `### 5c. FAZA 3 — testy i raport (uruchamia użytkownik)`
+  - `## 6. Stan rejestru Z1–Z17 po wdrożeniu`
+  - `## 7. Środowisko sesji (na przyszłość)`
+
+### `Audyty/15.06_audyt_invoker_funkcje.md`
+
+- Lines: `64`
+- Size: `5025` bytes
+- Headings:
+  - `# Audyt IAM invoker funkcji (public vs require-auth) — wyjaśnienie i klasyfikacja`
+  - `## ⭐ DWIE RÓŻNE „AUTORYZACJE" — sedno`
+  - `## Dlaczego „Require authentication" psuje funkcje w aplikacji`
+  - `## Stan rzeczywisty = konsola Cloud Run (mix), NIE „wszystko prywatne"`
+  - `## Klasyfikacja docelowa (co z czym)`
+  - `## Rekomendacje`
+  - `## Sprostowanie do narzędzi`
+
+### `Audyty/15.06_zarząd_TO_DO.md`
+
+- Lines: `56`
+- Size: `4565` bytes
+- Headings:
+  - `# Panel zarządu — TO DO (stan na 15.06.2026)`
+  - `## Stan potwierdzony (15.06) — co JUŻ jest live na prod`
+  - `## TO DO`
+  - `### 1. Higiena repo — ✅ ZROBIONE (15.06)`
+  - `### 2. FAZA 3 — weryfikacja manualna (checklist z 13.06-doc §5a)`
+  - `### 3. FAZA 3 — testy automatyczne (uruchamia użytkownik)`
+  - `### 4. Decyzje operacyjne zarządu`
+  - `### 5. Raport końcowy`
+  - `## Notatki techniczne (środowisko, na przyszłość)`
+
+### `Audyty/16.06.bilans_otwarcia_plan.md`
+
+- Lines: `177`
+- Size: `20178` bytes
+- Headings:
+  - `# Bilans otwarcia + import danych przejściowych do Firestore`
+  - `## Stan implementacji (16.06) — KOD GOTOWY, NIE WDROŻONY`
+  - `## Context`
+  - `## Nagłówki zakładki `bilans_otwarcia_26` (POTWIERDZONE)`
+  - `## Zakładka tegorocznych godzinek (POTWIERDZONE)`
+  - `## Workstream A — Apps Script: import bilansu → `users_opening_balance_26``
+  - `## Workstream B — Functions: wzbogacenie rejestracji (bilans → users_active) + data wygaśnięcia`
+  - `## Workstream C — Functions: import przejściowy godzinek (`hist_{email}` w godzinki_ledger + scalenie km-style)`
+  - `### C1 — Task importu `godzinki.importTransitionFromSheet` (nowy, w Functions)`
+  - `### C2 — Bieżące korekty (okres przejściowy do końca IX 2026) — ZREALIZOWANE w tasku importu`
+  - `### C3 — Scalenie przy rejestracji: task `godzinki.mergeHistoricalUser` (nowy, klon `kmMergeHistoricalUser.ts`)`
+  - `### C4 — Drobne rozszerzenie `godzinki_service.ts``
+  - `## Workstream D — Apps Script: jednorazowe zasilenie kolumn arkusza członków`
+  - `## Workstream E — Functions: reconciliation już-zarejestrowanych (jednorazowy task)`
+  - `## Kolejność wdrożenia (ważne metodycznie)`
+  - `## Critical files`
+  - `## Weryfikacja`
+
+### `Audyty/16.06_bilans_otwarcia_TO_DO.md`
+
+- Lines: `164`
+- Size: `11470` bytes
+- Headings:
+  - `# Bilans otwarcia — TO DO (kroki do wykonania)`
+  - `## 0. Wymagania wstępne (raz)`
+  - `## 1. Przygotowanie arkuszy (zanim cokolwiek odpalisz)`
+  - `### 1a. Zakładka bilansu `bilans_otwarcia_26` (arkusz USERS_ARCHIVE)`
+  - `### 1b. Zakładka przejściowa „Godzinki 2026 i korekty" (arkusz „DECODER KSYWEK I SKŁADKI")`
+  - `### 1c. Arkusz członków „członkowie i sympatycy" (USERS_SPREADSHEET)`
+  - `## 2. Konfiguracja env (DEV i PROD)`
+  - `## 3. DEV — wdrożenie kodu`
+  - `## 4. DEV — import bilansu otwarcia (Workstream A)`
+  - `## 5. DEV — reconciliation już-zarejestrowanych (Workstream E)`
+  - `## 6. DEV — zasilenie kolumn arkusza członków (Workstream D)`
+  - `## 7. DEV — import tegorocznych godzinek (Workstream C)`
+  - `## 8. DEV — test end-to-end rejestracji`
+  - `## 9. PROD — powtórz po pomyślnym DEV`
+  - `## 10. Otwarcie rejestracji`
+  - `## Uwagi`
+  - `## Wariant bez DEV (gdy nie ma środowiska testowego)`
+  - `## Decyzje`
+  - `## Otwarte (do Twojej decyzji — nie blokuje wdrożenia)`
+
+### `Audyty/17.06_prywatny_sprzęt_audyt.md`
+
+- Lines: `86`
+- Size: `6397` bytes
+- Headings:
+  - `# Audyt: opłaty za przechowywanie prywatnego sprzętu w klubie`
+  - `## Cel`
+  - `## Gdzie to żyje (kod)`
+  - `## Na jakiej podstawie naliczane (warunki — wszystkie muszą być spełnione)`
+  - `## Kiedy`
+  - `## Wysokość`
+  - `## Zwolnienia`
+  - `## Idempotencja / retry`
+  - `## Czy KOMUŚ jest teraz naliczane? (dane PROD, odczyt arkusza sprzętu 17.06)`
+  - `## Co gdy właściciel NIE jest zarejestrowany (a trzyma prywatny kajak)`
+  - `## Zidentyfikowane luki / ryzyka`
+  - `## Weryfikacja (jak potwierdzić stan danych)`
+  - `## (Opcjonalna) remediacja — do decyzji użytkownika`
 
 ### `Audyty/AUDIT_MAP.md`
 
@@ -7895,7 +8952,7 @@ Excluded sensitive files:
 
 - `.firebaserc` — 10 lines, 157 bytes
 - `.gitattributes` — 4 lines, 71 bytes
-- `.gitignore` — 65 lines, 1057 bytes
+- `.gitignore` — 72 lines, 1187 bytes
 - `ai_full_audit_report.txt` — 1918 lines, 88991 bytes
 - `appscript/członkowie sympatycy SKK/api_router` — 280 lines, 7928 bytes
 - `functions/.gitignore` — 10 lines, 153 bytes
@@ -7909,14 +8966,16 @@ Excluded sensitive files:
 - `public/skrypt_kurs/chapters/ch05.html` — 132 lines, 7205 bytes
 - `public/skrypt_kurs/chapters/ch06.html` — 265 lines, 13264 bytes
 - `public/styles/app.css` — 10 lines, 254 bytes
-- `public/styles/base.css` — 440 lines, 9623 bytes
+- `public/styles/base.css` — 457 lines, 10295 bytes
 - `public/styles/basen.css` — 266 lines, 4666 bytes
 - `public/styles/dashboard.css` — 162 lines, 2708 bytes
 - `public/styles/events.css` — 143 lines, 2366 bytes
 - `public/styles/gear.css` — 1169 lines, 20867 bytes
-- `public/styles/godzinki.css` — 120 lines, 1997 bytes
+- `public/styles/godzinki.css` — 152 lines, 2704 bytes
 - `public/styles/km.css` — 496 lines, 10234 bytes
 - `public/styles/kurs.css` — 430 lines, 7128 bytes
-- `public/styles/start.css` — 206 lines, 5071 bytes
-- `tests/e2e/.gitignore` — 8 lines, 101 bytes
+- `public/styles/start.css` — 226 lines, 6558 bytes
+- `tests/e2e/.gitignore` — 11 lines, 142 bytes
+- `tests/e2e/reports/events_e2e_run.txt` — 110 lines, 8703 bytes
+- `tests/e2e/reports/godzinki_e2e_run.txt` — 57 lines, 5149 bytes
 - `tests/e2e/requirements.txt` — 7 lines, 141 bytes

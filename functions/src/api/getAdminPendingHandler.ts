@@ -64,6 +64,8 @@ type FailedStorageCharge = {
 type GearSyncReport = {
   hasWarnings: boolean;
   ranAt: string | null;
+  blocked: boolean;
+  privateKayakErrors: Array<{id: string; reason: string}>;
   totals: Record<string, number>;
   perCategory: Array<{
     key: string;
@@ -76,6 +78,19 @@ type GearSyncReport = {
     skippedNotReal: number;
     scrapped: number;
   }>;
+  error: string | null;
+};
+
+type NegativeBalanceItem = {
+  uid: string;
+  displayName: string;
+  balance: number;
+  belowLimit: boolean;
+};
+
+type NegativeBalancesReport = {
+  ranAt: string | null;
+  items: NegativeBalanceItem[];
   error: string | null;
 };
 
@@ -249,7 +264,8 @@ export async function handleGetAdminPending(req: Request, res: Response, deps: G
 
       for (const kayakDoc of privateKayaksSnap.docs) {
         const kayak = kayakDoc.data() as any;
-        const storage = norm(kayak?.storage).toLowerCase();
+        // gear.syncAllFromSheet zapisuje pole "storedAt"; starsze rekordy "storage" — czytamy oba.
+        const storage = norm(kayak?.storage || kayak?.storedAt).toLowerCase();
 
         if (storage !== "klub") continue;
         if (kayak?.isPrivateRentable === true) continue;
@@ -267,6 +283,22 @@ export async function handleGetAdminPending(req: Request, res: Response, deps: G
             reason: "Brak adresu email właściciela",
           });
           continue;
+        }
+
+        // Brak/niepoprawna data wejścia do klubu → opłata nie będzie naliczana (cicho).
+        const sinceRaw = kayak?.privatesinceinclub ?? kayak?.privateSinceInClub;
+        const hasSince = !!sinceRaw && (
+          typeof (sinceRaw as any)?.toDate === "function" ||
+          sinceRaw instanceof Date ||
+          (typeof sinceRaw === "string" && /^\d{4}-\d{2}-\d{2}/.test(sinceRaw.trim()))
+        );
+        if (!hasSince) {
+          privateKayakEmailIssues.push({
+            kayakId,
+            number,
+            ownerContact,
+            reason: "Brak daty wejścia do klubu (od kiedy w klubie)",
+          });
         }
 
         const ownerSnap = await db.collection("users_active")
@@ -353,7 +385,7 @@ export async function handleGetAdminPending(req: Request, res: Response, deps: G
       // gear.syncAllFromSheet. Duplikat ID nie jest wykrywalny po fakcie w Firestore
       // (kolaps do jednego dokumentu), więc panel czyta utrwalony raport z momentu syncu.
       const emptyGearSync: GearSyncReport = {
-        hasWarnings: false, ranAt: null, totals: {}, perCategory: [], error: null,
+        hasWarnings: false, ranAt: null, blocked: false, privateKayakErrors: [], totals: {}, perCategory: [], error: null,
       };
       let gearSync: GearSyncReport = emptyGearSync;
       try {
@@ -363,6 +395,9 @@ export async function handleGetAdminPending(req: Request, res: Response, deps: G
           gearSync = {
             hasWarnings: d?.hasWarnings === true,
             ranAt: tsToIso(d?.ranAt),
+            blocked: d?.blocked === true,
+            privateKayakErrors: Array.isArray(d?.privateKayakErrors) ?
+              d.privateKayakErrors.map((x: any) => ({id: norm(x?.id), reason: norm(x?.reason)})) : [],
             totals: (d?.totals as Record<string, number>) || {},
             perCategory: Array.isArray(d?.perCategory) ?
               d.perCategory
@@ -389,6 +424,30 @@ export async function handleGetAdminPending(req: Request, res: Response, deps: G
         gearSync = {...emptyGearSync, error: "Sekcja chwilowo niedostępna"};
       }
 
+      // Ujemne salda — snapshot z miesięcznego godzinki.monthlyBalanceReview (jak gearSync).
+      let negativeBalances: NegativeBalancesReport = {ranAt: null, items: [], error: null};
+      try {
+        const nbSnap = await db.collection("service_reports").doc("negativeBalances").get();
+        if (nbSnap.exists) {
+          const d = nbSnap.data() as any;
+          negativeBalances = {
+            ranAt: tsToIso(d?.ranAt),
+            items: Array.isArray(d?.items) ?
+              d.items.map((x: any) => ({
+                uid: norm(x?.uid),
+                displayName: norm(x?.displayName) || norm(x?.uid),
+                balance: Number(x?.balance ?? 0),
+                belowLimit: x?.belowLimit === true,
+              })).sort((a: NegativeBalanceItem, b: NegativeBalanceItem) => a.balance - b.balance) :
+              [],
+            error: null,
+          };
+        }
+      } catch (e: any) {
+        logger.error("getAdminPending: negativeBalances report read failed", {message: e?.message});
+        negativeBalances = {ranAt: null, items: [], error: "Sekcja chwilowo niedostępna"};
+      }
+
       res.status(200).json({
         ok: true,
         meta: {godzinkiSheetUrl},
@@ -400,6 +459,7 @@ export async function handleGetAdminPending(req: Request, res: Response, deps: G
         deadJobs: {count: deadJobs.length, items: deadJobs, error: deadJobsSnap.error},
         failedStorageCharges: {count: failedStorageCharges.length, items: failedStorageCharges, error: failedChargesSnap.error},
         gearSync,
+        negativeBalances: {count: negativeBalances.items.length, ranAt: negativeBalances.ranAt, items: negativeBalances.items, error: negativeBalances.error},
       });
     } catch (err: any) {
       logger.error("getAdminPending failed", {message: err?.message, stack: err?.stack});
