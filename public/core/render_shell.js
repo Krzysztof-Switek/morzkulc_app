@@ -419,7 +419,6 @@ function renderHomeProfile({ viewEl, ctx }) {
   const roleKey = String(ctx?.session?.role_key || "");
   const roleLabel = roleKeyToLabel(roleKey, ctx?.setup?.roleMappings);
   const statusLabel = statusKeyToLabel(String(ctx?.session?.status_key || ""), ctx?.setup?.statusMappings);
-  const hoursValue = getHoursValue(ctx);
   const isKursant = roleKey === "rola_kursant";
   const dash = getDashboardConfig(ctx);
 
@@ -469,33 +468,18 @@ function renderHomeProfile({ viewEl, ctx }) {
         </div>
       </div>
       ` : `
-      <div class="startStatInline" style="margin-bottom:16px;">
-        <span class="startStatInlineItem">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          <span>— km</span>
-        </span>
-        <span class="startStatInlineItem">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
-          <span>— miejsce</span>
-        </span>
-        <span class="startStatInlineItem">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          <span>${escapeHtml(hoursValue || "— h")}</span>
-        </span>
-      </div>
       <div class="startStatBar" style="margin-bottom:16px;">
         <div class="startStatChip">
           <span class="startStatChipKey">Składki opłacone do</span>
           <span class="startStatChipVal" id="profileContribUntil">${escapeHtml(formatContribDate(ctx?.session?.contributionsPaidUntil) || "—")}</span>
         </div>
-        <div class="startStatChip">
+        <div class="startStatChip" data-profile-action="godzinki" role="link" tabindex="0" style="cursor:pointer;">
           <span class="startStatChipKey">Saldo godzinek</span>
-          <span class="startStatChipVal" id="profileGodzinkiBalance">…</span>
+          <span class="startStatChipVal" id="profileGodzinkiBalance" style="text-decoration:underline;">…</span>
         </div>
       </div>
       `}
 
-      ${!isKursant ? `<p class="muted">Więcej opcji dostępnych wkrótce.</p>` : ""}
       <div class="actions">
         <button type="button" class="ghost" id="profileBackBtn">← Wróć</button>
       </div>
@@ -519,6 +503,18 @@ function renderHomeProfile({ viewEl, ctx }) {
 
   viewEl.querySelectorAll("[data-profile-action='all-reservations']").forEach((btn) => {
     btn.addEventListener("click", () => setHash("my_reservations", "list"));
+  });
+
+  // „Saldo godzinek" jako link do listy godzinek (jak kafelek „Godzinki" na stronie głównej)
+  viewEl.querySelectorAll("[data-profile-action='godzinki']").forEach((el) => {
+    const goToGodzinki = () => {
+      const t = getModuleRouteByType(ctx, "godzinki");
+      if (t.moduleId !== "home") setHash(t.moduleId, "history");
+    };
+    el.addEventListener("click", goToGodzinki);
+    el.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); goToGodzinki(); }
+    });
   });
 
   if (dash.canReserveGear) {
