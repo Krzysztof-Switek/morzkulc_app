@@ -1,4 +1,4 @@
-import {computeBlockIso, overlapsIso, maxEndIsoByWeeks, todayIsoUTC} from "../../calendar/calendar_utils";
+import {computeBlockIso, overlapsIso, maxStartIsoByWeeks, todayIsoUTC, daysOnWaterInclusive} from "../../calendar/calendar_utils";
 import {getGearVars, roleMaxItems, roleMaxWeeks} from "../../setup/setup_gear_vars";
 import {quoteKayaksCostHours} from "../../hours/hours_quote";
 import {deductHoursInTx, refundHoursForReservationInTx, reverseDeductHoursInTx} from "../../hours/godzinki_service";
@@ -225,9 +225,15 @@ export async function updateReservationDates(
     const maxWeeks = roleMaxWeeks(vars, roleKey);
     const maxItems = roleMaxItems(vars, roleKey);
 
-    const maxEndIso = maxEndIsoByWeeks(maxWeeks);
-    if (args.endDate > maxEndIso) {
-      return {ok: false, code: "max_time_exceeded", message: "Too far in future", details: {maxWeeks}} as const;
+    // Horyzont — jak daleko od dziś można ZACZĄĆ rezerwację
+    const maxStartIso = maxStartIsoByWeeks(maxWeeks);
+    if (args.startDate > maxStartIso) {
+      return {ok: false, code: "max_time_exceeded", message: "Start too far in future", details: {maxWeeks}} as const;
+    }
+    // Długość — maks. liczba dni włącznie (start→end, bez offsetu)
+    const maxLenDays = vars.maxReservationLengthDays;
+    if (maxLenDays > 0 && daysOnWaterInclusive(args.startDate, args.endDate) > maxLenDays) {
+      return {ok: false, code: "max_length_exceeded", message: "Reservation too long", details: {maxDays: maxLenDays}} as const;
     }
 
     const {blockStartIso, blockEndIso} = computeBlockIso(args.startDate, args.endDate, vars.offsetDays);

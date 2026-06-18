@@ -77,8 +77,16 @@ export function mapUserFacingApiError(error, fallbackPrefix = "") {
     case "max_time_exceeded": {
       const maxWeeks = Number(details?.maxWeeks || 0);
       const msg = maxWeeks > 0
-        ? `Przekroczono maksymalny czas rezerwacji dla Twojej roli. Maksymalnie możesz zarezerwować sprzęt na ${maxWeeks} tyg.`
-        : "Przekroczono maksymalny czas rezerwacji dla Twojej roli.";
+        ? `Nie możesz rezerwować tak daleko w przyszłość. Rezerwacja może zaczynać się maksymalnie ${maxWeeks} tyg. od dziś.`
+        : "Nie możesz rezerwować tak daleko w przyszłość.";
+      return joinPrefix(fallbackPrefix, msg);
+    }
+
+    case "max_length_exceeded": {
+      const maxDays = Number(details?.maxDays || 0);
+      const msg = maxDays > 0
+        ? `Rezerwacja jest za długa. Sprzęt możesz zarezerwować maksymalnie na ${maxDays} dni.`
+        : "Rezerwacja jest za długa.";
       return joinPrefix(fallbackPrefix, msg);
     }
 

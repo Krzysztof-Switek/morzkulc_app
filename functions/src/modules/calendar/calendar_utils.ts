@@ -33,7 +33,9 @@ export function computeBlockIso(startIso: string, endIso: string, offsetDays: nu
   };
 }
 
-export function maxEndIsoByWeeks(weeks: number): string {
+// Najpóźniejsza dozwolona data ROZPOCZĘCIA rezerwacji (horyzont): dziś + tygodnie*7.
+// Ogranicza, jak daleko w przyszłość można rezerwować (nie dotyczy długości rezerwacji).
+export function maxStartIsoByWeeks(weeks: number): string {
   const today = todayIsoUTC();
   return addDaysIso(today, Number(weeks || 0) * 7);
 }
