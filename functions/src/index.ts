@@ -662,6 +662,7 @@ const APPS_SCRIPT_SYNC_ALLOWED_TASKS = new Set<string>([
   "users.syncRolesFromSheet",
   "events.syncFromSheet",
   "godzinki.syncFromSheet",
+  "godzinki.importTransitionFromSheet",
   "gear.syncAllFromSheet",
 ]);
 
@@ -683,6 +684,11 @@ function buildAppsScriptSyncSummary(taskId: string, details: any): string {
       (Number(d.removed) > 0 ? `\nUsunięte (skasowane z arkusza): ${n(d.removed)}.` : "") +
       (Number(d.backfilled) > 0 ? `\nUzupełnione w arkuszu (zaległe zgłoszenia z aplikacji): ${n(d.backfilled)}.` : "") +
       (Number(d.confirmedInSheet) > 0 ? `\nPotwierdzone w kolumnie zsynchronizowano: ${n(d.confirmedInSheet)}.` : "");
+  case "godzinki.importTransitionFromSheet":
+    return `Korekty/godzinki 2026 zaimportowane.\nDodane: +${n(d.createdEarn)} zgłoszeń, +${n(d.createdSpend)} potrąceń · pominięte (już zsync.): ${n(d.alreadySynced)} · oczekujące (bez TAK): ${n(d.pending)}.` +
+      ((Number(d.skippedNoEmail || 0) + Number(d.skippedBadAmount || 0) + Number(d.skippedBadDate || 0)) > 0 ?
+        `\nPominięte z błędami: brak e-mail ${n(d.skippedNoEmail)}, zła kwota ${n(d.skippedBadAmount)}, zła data ${n(d.skippedBadDate)}.` : "") +
+      (Number(d.errors || 0) > 0 ? `\nBłędy: ${n(d.errors)} — sprawdź logi.` : "");
   case "godzinki.syncFromSheet":
     return `Godzinki zsynchronizowane.\nZatwierdzone: ${n(d.approved)} · skorygowane: ${n(d.corrected)} · uzupełnione w arkuszu: ${n(d.backfilled)}.` +
       (Number(d.approvalRejected) > 0 ? `\nOdrzucone zatwierdzenia (przeterminowane/nieaktualny wykup): ${n(d.approvalRejected)} — wiersze bez daty w "Zsynchronizowano".` : "") +

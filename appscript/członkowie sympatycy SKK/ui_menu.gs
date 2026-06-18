@@ -17,6 +17,7 @@ function onOpen() {
         .addItem("1. Wyczyść kolekcję bilansu", "clearOpeningBalanceCollection")
         .addItem("2. Import bilansu → Firestore", "importOpeningBalanceToFirestore")
         .addItem("3. Zasil kolumny arkusza członków", "seedMemberSheetBalancesFromOpeningBalance")
+        .addItem("4. Import korekt godzinek 2026", "importGodzinkiKorektyToFirestore")
     )
     .addToUi();
 }

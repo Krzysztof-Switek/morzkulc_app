@@ -23,3 +23,14 @@
 function syncHoursToFirestore() {
   runSync_("godzinki.syncFromSheet");
 }
+
+/**
+ * Import korekt/godzinek z okresu przejściowego (zakładka „Godzinki 2026 i korekty"
+ * w arkuszu DEKODER) → godzinki_ledger. Task backendowy godzinki.importTransitionFromSheet
+ * czyta arkusz kontem serwisowym (admin@morzkulc.pl musi mieć dostęp z edycją).
+ * Zarejestrowani → wpis pod ich uid; niezarejestrowani → hist_{email} (scalany przy rejestracji).
+ * Idempotentne: wiersze z wypełnionym „Zsynchronizowano" są pomijane.
+ */
+function importGodzinkiKorektyToFirestore() {
+  runSync_("godzinki.importTransitionFromSheet");
+}
