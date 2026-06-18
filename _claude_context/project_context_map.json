@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-17T13:16:54",
+  "generated_at": "2026-06-18T11:41:20",
   "project_root": "C:\\Users\\kswitek\\Documents\\morzkulc_app",
   "settings": {
     "excluded_dirs": [
@@ -675,9 +675,9 @@
     {
       "path": "appscript/członkowie sympatycy SKK/appsscript.json",
       "extension": ".json",
-      "size_bytes": 382,
-      "line_count": 13,
-      "sha1_short": "a2d4fe4558",
+      "size_bytes": 432,
+      "line_count": 14,
+      "sha1_short": "a8a5c63f83",
       "kind": "config",
       "module_aliases": [],
       "imports": [],
@@ -951,15 +951,25 @@
     {
       "path": "appscript/członkowie sympatycy SKK/hours_sync.gs",
       "extension": ".gs",
-      "size_bytes": 1143,
-      "line_count": 26,
-      "sha1_short": "dec7cb90b0",
+      "size_bytes": 1695,
+      "line_count": 37,
+      "sha1_short": "292e0b5d00",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
       "internal_dependencies": [],
       "classes": [],
       "functions": [
+        {
+          "name": "importGodzinkiKorektyToFirestore",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
         {
           "name": "syncHoursToFirestore",
           "type": "function",
@@ -1145,9 +1155,9 @@
     {
       "path": "appscript/członkowie sympatycy SKK/ui_menu.gs",
       "extension": ".gs",
-      "size_bytes": 809,
-      "line_count": 22,
-      "sha1_short": "70da501498",
+      "size_bytes": 875,
+      "line_count": 23,
+      "sha1_short": "9fe9e0668a",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -3422,6 +3432,68 @@
         "## Zidentyfikowane luki / ryzyka",
         "## Weryfikacja (jak potwierdzić stan danych)",
         "## (Opcjonalna) remediacja — do decyzji użytkownika"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "Audyty/17.06_prywatny_sprzęt_podsumowanie.md",
+      "extension": ".md",
+      "size_bytes": 6996,
+      "line_count": 112,
+      "sha1_short": "389389ca84",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# Podsumowanie wdrożenia: opłaty za prywatny sprzęt + raportowanie ujemnego salda (17.06)",
+        "## 1. Znalezione błędy",
+        "### BŁĄD KRYTYCZNY — rozjazd nazw pól (mechanizm był martwy)",
+        "### Błąd 2 — cicha bezczynność przy brakującej dacie",
+        "### Błąd 3 — brak naliczenia dla niezarejestrowanego właściciela bez odzysku",
+        "### Stan danych PROD (potwierdzony 17.06 z arkusza sprzętu)",
+        "## 2. Co zostało zrobione (wg workstreamów)",
+        "### WS0 (prerekwizyt) — naprawa odczytu pól",
+        "### WS1 — walidacja przy syncu (wymóg 1)",
+        "### WS2 — `hist_{email}` dla niezarejestrowanych (wymóg 2)",
+        "### WS3 — widoczność zwolnienia Zarząd/KR (wymóg 3)",
+        "### WS4 + WS5 — miesięczny przegląd sald (wymogi 4 i 5)",
+        "## 3. Pliki",
+        "## 4. Weryfikacja",
+        "## 5. Do zrobienia przed/po wdrożeniu"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "Audyty/17.06_prywatny_sprzęt_TO_DO.md",
+      "extension": ".md",
+      "size_bytes": 7130,
+      "line_count": 89,
+      "sha1_short": "4e0c5c2afd",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# Remediacja: opłaty za prywatny sprzęt + raportowanie ujemnego salda",
+        "## Context",
+        "## Stan istniejący (potwierdzony w kodzie)",
+        "## Workstreamy",
+        "### WS1 — Walidacja przy syncu (wymóg 1)",
+        "### WS2 — `hist_{email}` dla niezarejestrowanych (wymóg 2)",
+        "### WS3 — Widoczność zwolnienia Zarząd/KR (wymóg 3)",
+        "### WS4 + WS5 — Miesięczny przegląd sald (wymogi 4 i 5) — DECYZJA: raz w miesiącu, przy naliczaniu opłat",
+        "## Pliki kluczowe",
+        "## Weryfikacja",
+        "## Decyzje (zatwierdzone)"
       ],
       "config_keys": [],
       "notes": []
@@ -5840,9 +5912,9 @@
     {
       "path": "functions/lib/api/getAdminPendingHandler.js",
       "extension": ".js",
-      "size_bytes": 19249,
-      "line_count": 326,
-      "sha1_short": "9c39746e16",
+      "size_bytes": 23126,
+      "line_count": 373,
+      "sha1_short": "e3cbb420b4",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -7459,9 +7531,9 @@
     {
       "path": "functions/lib/index.js",
       "extension": ".js",
-      "size_bytes": 55078,
-      "line_count": 1310,
-      "sha1_short": "b3cd467869",
+      "size_bytes": 56077,
+      "line_count": 1319,
+      "sha1_short": "11a45686af",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -10188,9 +10260,9 @@
     {
       "path": "functions/lib/service/registry.js",
       "extension": ".js",
-      "size_bytes": 3797,
-      "line_count": 67,
-      "sha1_short": "98b6240b49",
+      "size_bytes": 3954,
+      "line_count": 69,
+      "sha1_short": "0a41635474",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -10260,6 +10332,13 @@
         {
           "raw": "import/require ./tasks/godzinkiMergeHistoricalUser",
           "module": "./tasks/godzinkiMergeHistoricalUser",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./tasks/godzinkiMonthlyBalanceReview",
+          "module": "./tasks/godzinkiMonthlyBalanceReview",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -10381,6 +10460,7 @@
         "functions/lib/service/tasks/gearSyncKayaksFromSheet.js",
         "functions/lib/service/tasks/godzinkiImportTransitionFromSheet.js",
         "functions/lib/service/tasks/godzinkiMergeHistoricalUser.js",
+        "functions/lib/service/tasks/godzinkiMonthlyBalanceReview.js",
         "functions/lib/service/tasks/godzinkiSyncFromSheet.js",
         "functions/lib/service/tasks/groupsDiagnose.js",
         "functions/lib/service/tasks/kmMergeHistoricalUser.js",
@@ -10846,9 +10926,9 @@
     {
       "path": "functions/lib/service/tasks/gearPrivateStorage.js",
       "extension": ".js",
-      "size_bytes": 15019,
-      "line_count": 329,
-      "sha1_short": "e85a42ab33",
+      "size_bytes": 16274,
+      "line_count": 345,
+      "sha1_short": "cb711ea512",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -10927,7 +11007,37 @@
           "doc": null
         },
         {
+          "name": "readPrivateSinceIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "readStorage",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "toYearMonth",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "tsToIsoYmd",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -10945,9 +11055,9 @@
     {
       "path": "functions/lib/service/tasks/gearSyncAllFromSheet.js",
       "extension": ".js",
-      "size_bytes": 18564,
-      "line_count": 349,
-      "sha1_short": "3562d01de3",
+      "size_bytes": 22539,
+      "line_count": 428,
+      "sha1_short": "2bf574cfba",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -10991,6 +11101,16 @@
         },
         {
           "name": "classifyGearRows",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "cleanCell",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -11280,6 +11400,67 @@
       "functions": [
         {
           "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/service/tasks/godzinkiMonthlyBalanceReview.js",
+      "extension": ".js",
+      "size_bytes": 8125,
+      "line_count": 156,
+      "sha1_short": "665edfb68d",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../../modules/hours/godzinki_service",
+          "module": "../../modules/hours/godzinki_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../../modules/hours/godzinki_vars",
+          "module": "../../modules/hours/godzinki_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../service_config",
+          "module": "../service_config",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/hours/godzinki_service.js",
+        "functions/lib/modules/hours/godzinki_vars.js",
+        "functions/lib/service/service_config.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "fmtBalance",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -14231,9 +14412,9 @@
     {
       "path": "functions/src/api/getAdminPendingHandler.ts",
       "extension": ".ts",
-      "size_bytes": 15422,
-      "line_count": 410,
-      "sha1_short": "fbfa9bec96",
+      "size_bytes": 18333,
+      "line_count": 473,
+      "sha1_short": "09edead76f",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -15854,9 +16035,9 @@
     {
       "path": "functions/src/index.ts",
       "extension": ".ts",
-      "size_bytes": 46793,
-      "line_count": 1458,
-      "sha1_short": "9281ef5015",
+      "size_bytes": 47763,
+      "line_count": 1467,
+      "sha1_short": "81c69609f6",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -18605,9 +18786,9 @@
     {
       "path": "functions/src/service/registry.ts",
       "extension": ".ts",
-      "size_bytes": 3080,
-      "line_count": 66,
-      "sha1_short": "6ac21b3171",
+      "size_bytes": 3205,
+      "line_count": 68,
+      "sha1_short": "091d2f6dd5",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -18677,6 +18858,13 @@
         {
           "raw": "import/require ./tasks/godzinkiMergeHistoricalUser",
           "module": "./tasks/godzinkiMergeHistoricalUser",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./tasks/godzinkiMonthlyBalanceReview",
+          "module": "./tasks/godzinkiMonthlyBalanceReview",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -18805,6 +18993,7 @@
         "functions/src/service/tasks/gearSyncKayaksFromSheet.ts",
         "functions/src/service/tasks/godzinkiImportTransitionFromSheet.ts",
         "functions/src/service/tasks/godzinkiMergeHistoricalUser.ts",
+        "functions/src/service/tasks/godzinkiMonthlyBalanceReview.ts",
         "functions/src/service/tasks/godzinkiSyncFromSheet.ts",
         "functions/src/service/tasks/groupsDiagnose.ts",
         "functions/src/service/tasks/kmMergeHistoricalUser.ts",
@@ -19319,9 +19508,9 @@
     {
       "path": "functions/src/service/tasks/gearPrivateStorage.ts",
       "extension": ".ts",
-      "size_bytes": 13597,
-      "line_count": 387,
-      "sha1_short": "8227b30f2b",
+      "size_bytes": 14746,
+      "line_count": 400,
+      "sha1_short": "a04c3153d2",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -19408,7 +19597,37 @@
           "doc": null
         },
         {
+          "name": "readPrivateSinceIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "readStorage",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "toYearMonth",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "tsToIsoYmd",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -19426,9 +19645,9 @@
     {
       "path": "functions/src/service/tasks/gearSyncAllFromSheet.ts",
       "extension": ".ts",
-      "size_bytes": 17528,
-      "line_count": 511,
-      "sha1_short": "dcf4f3fbeb",
+      "size_bytes": 20933,
+      "line_count": 582,
+      "sha1_short": "1e9b31b2ac",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -19480,6 +19699,16 @@
         },
         {
           "name": "classifyGearRows",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "cleanCell",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -19794,6 +20023,75 @@
       "functions": [
         {
           "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/src/service/tasks/godzinkiMonthlyBalanceReview.ts",
+      "extension": ".ts",
+      "size_bytes": 6151,
+      "line_count": 150,
+      "sha1_short": "fb8963efe9",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../../modules/hours/godzinki_service",
+          "module": "../../modules/hours/godzinki_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../../modules/hours/godzinki_vars",
+          "module": "../../modules/hours/godzinki_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../service_config",
+          "module": "../service_config",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../types",
+          "module": "../types",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/src/modules/hours/godzinki_service.ts",
+        "functions/src/modules/hours/godzinki_vars.ts",
+        "functions/src/service/service_config.ts",
+        "functions/src/service/types.ts"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "fmtBalance",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -21348,9 +21646,9 @@
     {
       "path": "functions/test/gear_core.test.ts",
       "extension": ".ts",
-      "size_bytes": 5598,
-      "line_count": 138,
-      "sha1_short": "5b419f0b79",
+      "size_bytes": 6388,
+      "line_count": 157,
+      "sha1_short": "8f19136b3c",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -21418,6 +21716,16 @@
         },
         {
           "name": "vars",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "ymd",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -23258,9 +23566,9 @@
     {
       "path": "public/modules/admin_pending_module.js",
       "extension": ".js",
-      "size_bytes": 21003,
-      "line_count": 393,
-      "sha1_short": "6b6492975d",
+      "size_bytes": 24615,
+      "line_count": 449,
+      "sha1_short": "21463c700e",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -23574,9 +23882,9 @@
     {
       "path": "public/modules/gear_module.js",
       "extension": ".js",
-      "size_bytes": 95665,
-      "line_count": 2273,
-      "sha1_short": "71bae357ab",
+      "size_bytes": 95809,
+      "line_count": 2274,
+      "sha1_short": "dda9afc967",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -24244,9 +24552,9 @@
     {
       "path": "public/modules/godzinki_module.js",
       "extension": ".js",
-      "size_bytes": 16171,
-      "line_count": 417,
-      "sha1_short": "4b6c8e4349",
+      "size_bytes": 16248,
+      "line_count": 418,
+      "sha1_short": "c70a5a0e14",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -25555,9 +25863,9 @@
     {
       "path": "public/styles/gear.css",
       "extension": ".css",
-      "size_bytes": 20867,
-      "line_count": 1169,
-      "sha1_short": "2b03514cf6",
+      "size_bytes": 21098,
+      "line_count": 1177,
+      "sha1_short": "6bbe65cb39",
       "kind": "text",
       "module_aliases": [],
       "imports": [],
@@ -25642,7 +25950,7 @@
       "extension": ".js",
       "size_bytes": 4997,
       "line_count": 147,
-      "sha1_short": "b511804e05",
+      "sha1_short": "e623f0cdaa",
       "kind": "script",
       "module_aliases": [],
       "imports": [],

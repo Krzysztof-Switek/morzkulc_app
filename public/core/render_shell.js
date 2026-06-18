@@ -982,21 +982,45 @@ function renderProfileForm({ viewEl, ctx }) {
     btn.disabled = true;
     btn.textContent = "Zapisuję...";
 
+    const submitRegistration = (extra) => apiPostJson({
+      url: REGISTER_URL,
+      idToken: ctx.idToken,
+      body: {
+        firstName: fn,
+        lastName: ln,
+        nickname: nn,
+        phone: ph,
+        dateOfBirth: dob,
+        consentRodo,
+        consentStatute,
+        iAmKursant,
+        ...(extra || {})
+      }
+    });
+
     try {
-      const session = await apiPostJson({
-        url: REGISTER_URL,
-        idToken: ctx.idToken,
-        body: {
-          firstName: fn,
-          lastName: ln,
-          nickname: nn,
-          phone: ph,
-          dateOfBirth: dob,
-          consentRodo,
-          consentStatute,
-          iAmKursant
-        }
-      });
+      const session = await submitRegistration();
+
+      // Dane dopasowane po imieniu i nazwisku pod innym adresem — wymagane potwierdzenie.
+      if (session?.openingNameMatchPendingConfirm) {
+        renderOpeningEmailConfirm({
+          viewEl,
+          obEmail: String(session.obEmail || ""),
+          loginEmail: String(ctx?.user?.email || ""),
+          onConfirm: async () => {
+            const s2 = await submitRegistration({ confirmOpeningEmailUpdate: true });
+            if (s2?.openingEmailCollision) return { collision: true };
+            ctx.session = s2;
+            location.reload();
+            return { collision: false };
+          },
+          onSkip: () => {
+            ctx.session = session;
+            location.reload();
+          }
+        });
+        return;
+      }
 
       ctx.session = session;
       location.reload();
@@ -1020,6 +1044,58 @@ function renderProfileForm({ viewEl, ctx }) {
       btn.textContent = "Zapisz";
     }
   });
+}
+
+// Krok potwierdzenia: dane bilansu znaleziono po imieniu i nazwisku, ale pod innym
+// adresem e-mail. Użytkownik potwierdza, że logujący adres jest aktualny → backend
+// zaktualizuje e-mail w bilansie otwarcia i wczyta dane (rola, godzinki).
+function renderOpeningEmailConfirm({ viewEl, obEmail, loginEmail, onConfirm, onSkip }) {
+  viewEl.innerHTML = `
+    <h2>Potwierdź swój adres e-mail</h2>
+    <div class="card center" style="max-width:460px;margin:24px auto;">
+      <p>Znaleźliśmy Twoje dane w bilansie otwarcia na podstawie imienia i nazwiska, ale przypisane do innego adresu e-mail:</p>
+      <p style="font-weight:600;margin:8px 0;">${escapeHtml(obEmail || "—")}</p>
+      <p>Logujesz się jako <strong>${escapeHtml(loginEmail || "—")}</strong>.</p>
+      <p>Czy to Twój aktualny adres? Po potwierdzeniu zaktualizujemy e-mail w bilansie otwarcia i wczytamy Twoje dane (rola, godzinki).</p>
+      <div class="actions">
+        <button id="obConfirmBtn" class="primary" type="button">Tak, to mój adres — zaktualizuj</button>
+        <button id="obSkipBtn" class="ghost" type="button">Pomiń</button>
+      </div>
+      <div id="obConfirmErr" class="err hidden"></div>
+    </div>
+  `;
+
+  const errEl = viewEl.querySelector("#obConfirmErr");
+  const confirmBtn = viewEl.querySelector("#obConfirmBtn");
+  const skipBtn = viewEl.querySelector("#obSkipBtn");
+
+  const resetBtns = () => {
+    confirmBtn.disabled = false;
+    skipBtn.disabled = false;
+    confirmBtn.textContent = "Tak, to mój adres — zaktualizuj";
+  };
+
+  confirmBtn.addEventListener("click", async () => {
+    errEl.classList.add("hidden");
+    confirmBtn.disabled = true;
+    skipBtn.disabled = true;
+    confirmBtn.textContent = "Aktualizuję...";
+    try {
+      const res = await onConfirm();
+      if (res && res.collision) {
+        errEl.textContent = "Ten adres e-mail jest już przypisany do innej osoby w bilansie otwarcia. Sprawdź poprawność lub skontaktuj się z zarządem: zarzad@morzkulc.pl";
+        errEl.classList.remove("hidden");
+        resetBtns();
+      }
+      // Sukces → onConfirm wykonuje location.reload().
+    } catch (e) {
+      errEl.textContent = "Nie udało się: " + String(e?.message || e);
+      errEl.classList.remove("hidden");
+      resetBtns();
+    }
+  });
+
+  skipBtn.addEventListener("click", () => { onSkip(); });
 }
 
 function getGearRoute(ctx) {

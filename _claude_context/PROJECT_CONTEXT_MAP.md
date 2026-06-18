@@ -1,6 +1,6 @@
 # Project Context Map
 
-Generated at: `2026-06-17T13:16:54`
+Generated at: `2026-06-18T11:41:20`
 Project root: `C:\Users\kswitek\Documents\morzkulc_app`
 
 Purpose: this file is a compact project map for Claude Code. It shows which files exist, what functions/classes they contain, and which internal files depend on which other files.
@@ -57,12 +57,12 @@ Excluded sensitive files:
 
 ## Summary
 
-- Total scanned files: `421`
+- Total scanned files: `425`
 - Python files: `42`
-- Script files JS/TS/GS/etc.: `272`
+- Script files JS/TS/GS/etc.: `274`
 - Config files: `21`
-- Markdown files: `57`
-- Internal dependency edges: `434`
+- Markdown files: `59`
+- Internal dependency edges: `443`
 
 ## Project tree
 
@@ -94,7 +94,9 @@ Excluded sensitive files:
   - 15.06_zarząd_TO_DO.md
   - 16.06.bilans_otwarcia_plan.md
   - 16.06_bilans_otwarcia_TO_DO.md
+  - 17.06_prywatny_sprzęt_TO_DO.md
   - 17.06_prywatny_sprzęt_audyt.md
+  - 17.06_prywatny_sprzęt_podsumowanie.md
   - AUDIT_MAP.md
   - AUDIT_PLAN.md
   - GRUPY_UZYTKOWNICY_PLAN_AND_TO_DO.MD
@@ -257,6 +259,7 @@ Excluded sensitive files:
         - gearSyncKayaksFromSheet.js
         - godzinkiImportTransitionFromSheet.js
         - godzinkiMergeHistoricalUser.js
+        - godzinkiMonthlyBalanceReview.js
         - godzinkiSyncFromSheet.js
         - groupsDiagnose.js
         - kmMergeHistoricalUser.js
@@ -396,6 +399,7 @@ Excluded sensitive files:
         - gearSyncKayaksFromSheet.ts
         - godzinkiImportTransitionFromSheet.ts
         - godzinkiMergeHistoricalUser.ts
+        - godzinkiMonthlyBalanceReview.ts
         - godzinkiSyncFromSheet.ts
         - groupsDiagnose.ts
         - kmMergeHistoricalUser.ts
@@ -685,6 +689,7 @@ Excluded sensitive files:
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/gearSyncKayaksFromSheet.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/godzinkiImportTransitionFromSheet.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/godzinkiMergeHistoricalUser.js`
+- `functions/lib/service/registry.js` -> `functions/lib/service/tasks/godzinkiMonthlyBalanceReview.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/godzinkiSyncFromSheet.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/groupsDiagnose.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/kmMergeHistoricalUser.js`
@@ -727,6 +732,9 @@ Excluded sensitive files:
 - `functions/lib/service/tasks/godzinkiImportTransitionFromSheet.js` -> `functions/lib/modules/shared/text_utils.js`
 - `functions/lib/service/tasks/godzinkiImportTransitionFromSheet.js` -> `functions/lib/service/providers/googleSheetsProvider.js`
 - `functions/lib/service/tasks/godzinkiImportTransitionFromSheet.js` -> `functions/lib/service/service_config.js`
+- `functions/lib/service/tasks/godzinkiMonthlyBalanceReview.js` -> `functions/lib/modules/hours/godzinki_service.js`
+- `functions/lib/service/tasks/godzinkiMonthlyBalanceReview.js` -> `functions/lib/modules/hours/godzinki_vars.js`
+- `functions/lib/service/tasks/godzinkiMonthlyBalanceReview.js` -> `functions/lib/service/service_config.js`
 - `functions/lib/service/tasks/godzinkiSyncFromSheet.js` -> `functions/lib/modules/hours/godzinki_service.js`
 - `functions/lib/service/tasks/godzinkiSyncFromSheet.js` -> `functions/lib/modules/hours/godzinki_vars.js`
 - `functions/lib/service/tasks/godzinkiSyncFromSheet.js` -> `functions/lib/modules/shared/text_utils.js`
@@ -885,6 +893,7 @@ Excluded sensitive files:
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/gearSyncKayaksFromSheet.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/godzinkiImportTransitionFromSheet.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/godzinkiMergeHistoricalUser.ts`
+- `functions/src/service/registry.ts` -> `functions/src/service/tasks/godzinkiMonthlyBalanceReview.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/godzinkiSyncFromSheet.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/groupsDiagnose.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/kmMergeHistoricalUser.ts`
@@ -939,6 +948,10 @@ Excluded sensitive files:
 - `functions/src/service/tasks/godzinkiImportTransitionFromSheet.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/service/tasks/godzinkiImportTransitionFromSheet.ts` -> `functions/src/service/types.ts`
 - `functions/src/service/tasks/godzinkiMergeHistoricalUser.ts` -> `functions/src/service/types.ts`
+- `functions/src/service/tasks/godzinkiMonthlyBalanceReview.ts` -> `functions/src/modules/hours/godzinki_service.ts`
+- `functions/src/service/tasks/godzinkiMonthlyBalanceReview.ts` -> `functions/src/modules/hours/godzinki_vars.ts`
+- `functions/src/service/tasks/godzinkiMonthlyBalanceReview.ts` -> `functions/src/service/service_config.ts`
+- `functions/src/service/tasks/godzinkiMonthlyBalanceReview.ts` -> `functions/src/service/types.ts`
 - `functions/src/service/tasks/godzinkiSyncFromSheet.ts` -> `functions/src/modules/hours/godzinki_service.ts`
 - `functions/src/service/tasks/godzinkiSyncFromSheet.ts` -> `functions/src/modules/hours/godzinki_vars.ts`
 - `functions/src/service/tasks/godzinkiSyncFromSheet.ts` -> `functions/src/modules/shared/text_utils.ts`
@@ -2800,9 +2813,10 @@ Excluded sensitive files:
 
 ### `appscript/członkowie sympatycy SKK/hours_sync.gs`
 
-- Lines: `26`
-- Size: `1143` bytes
+- Lines: `37`
+- Size: `1695` bytes
 - Functions:
+  - `importGodzinkiKorektyToFirestore`
   - `syncHoursToFirestore`
 
 ### `appscript/członkowie sympatycy SKK/opening_balance_import.gs`
@@ -2832,8 +2846,8 @@ Excluded sensitive files:
 
 ### `appscript/członkowie sympatycy SKK/ui_menu.gs`
 
-- Lines: `22`
-- Size: `809` bytes
+- Lines: `23`
+- Size: `875` bytes
 - Functions:
   - `onOpen`
 
@@ -3317,8 +3331,8 @@ Excluded sensitive files:
 
 ### `functions/lib/api/getAdminPendingHandler.js`
 
-- Lines: `326`
-- Size: `19249` bytes
+- Lines: `373`
+- Size: `23126` bytes
 - Internal dependencies:
   - `functions/lib/service/service_config.js`
 - Imports:
@@ -3667,8 +3681,8 @@ Excluded sensitive files:
 
 ### `functions/lib/index.js`
 
-- Lines: `1310`
-- Size: `55078` bytes
+- Lines: `1319`
+- Size: `56077` bytes
 - Internal dependencies:
   - `functions/lib/api/adminApprovalHandler.js`
   - `functions/lib/api/adminEventsSyncCalendarHandler.js`
@@ -4155,8 +4169,8 @@ Excluded sensitive files:
 
 ### `functions/lib/service/registry.js`
 
-- Lines: `67`
-- Size: `3797` bytes
+- Lines: `69`
+- Size: `3954` bytes
 - Internal dependencies:
   - `functions/lib/service/tasks/adminApprovalWriteBack.js`
   - `functions/lib/service/tasks/adminNotifyPendingApprovals.js`
@@ -4168,6 +4182,7 @@ Excluded sensitive files:
   - `functions/lib/service/tasks/gearSyncKayaksFromSheet.js`
   - `functions/lib/service/tasks/godzinkiImportTransitionFromSheet.js`
   - `functions/lib/service/tasks/godzinkiMergeHistoricalUser.js`
+  - `functions/lib/service/tasks/godzinkiMonthlyBalanceReview.js`
   - `functions/lib/service/tasks/godzinkiSyncFromSheet.js`
   - `functions/lib/service/tasks/groupsDiagnose.js`
   - `functions/lib/service/tasks/kmMergeHistoricalUser.js`
@@ -4194,6 +4209,7 @@ Excluded sensitive files:
   - `import/require ./tasks/gearSyncKayaksFromSheet`
   - `import/require ./tasks/godzinkiImportTransitionFromSheet`
   - `import/require ./tasks/godzinkiMergeHistoricalUser`
+  - `import/require ./tasks/godzinkiMonthlyBalanceReview`
   - `import/require ./tasks/godzinkiSyncFromSheet`
   - `import/require ./tasks/groupsDiagnose`
   - `import/require ./tasks/kmMergeHistoricalUser`
@@ -4315,8 +4331,8 @@ Excluded sensitive files:
 
 ### `functions/lib/service/tasks/gearPrivateStorage.js`
 
-- Lines: `329`
-- Size: `15019` bytes
+- Lines: `345`
+- Size: `16274` bytes
 - Internal dependencies:
   - `functions/lib/modules/hours/godzinki_service.js`
   - `functions/lib/modules/hours/godzinki_vars.js`
@@ -4332,12 +4348,15 @@ Excluded sensitive files:
   - `firstChargeableMonth`
   - `isChargeableThisMonth`
   - `processKayakChargeForMonth`
+  - `readPrivateSinceIso`
+  - `readStorage`
   - `toYearMonth`
+  - `tsToIsoYmd`
 
 ### `functions/lib/service/tasks/gearSyncAllFromSheet.js`
 
-- Lines: `349`
-- Size: `18564` bytes
+- Lines: `428`
+- Size: `22539` bytes
 - Internal dependencies:
   - `functions/lib/service/providers/googleSheetsProvider.js`
   - `functions/lib/service/service_config.js`
@@ -4348,6 +4367,7 @@ Excluded sensitive files:
 - Functions:
   - `buildDoc`
   - `classifyGearRows`
+  - `cleanCell`
   - `flush`
   - `isRealRow`
   - `norm`
@@ -4403,6 +4423,22 @@ Excluded sensitive files:
   - `import/require firebase-admin`
 - Functions:
   - `norm`
+
+### `functions/lib/service/tasks/godzinkiMonthlyBalanceReview.js`
+
+- Lines: `156`
+- Size: `8125` bytes
+- Internal dependencies:
+  - `functions/lib/modules/hours/godzinki_service.js`
+  - `functions/lib/modules/hours/godzinki_vars.js`
+  - `functions/lib/service/service_config.js`
+- Imports:
+  - `import/require ../../modules/hours/godzinki_service`
+  - `import/require ../../modules/hours/godzinki_vars`
+  - `import/require ../service_config`
+  - `import/require firebase-admin`
+- Functions:
+  - `fmtBalance`
 
 ### `functions/lib/service/tasks/godzinkiSyncFromSheet.js`
 
@@ -5058,8 +5094,8 @@ Excluded sensitive files:
 
 ### `functions/src/api/getAdminPendingHandler.ts`
 
-- Lines: `410`
-- Size: `15422` bytes
+- Lines: `473`
+- Size: `18333` bytes
 - Internal dependencies:
   - `functions/src/service/service_config.ts`
 - Imports:
@@ -5412,8 +5448,8 @@ Excluded sensitive files:
 
 ### `functions/src/index.ts`
 
-- Lines: `1458`
-- Size: `46793` bytes
+- Lines: `1467`
+- Size: `47763` bytes
 - Internal dependencies:
   - `functions/src/api/adminApprovalHandler.ts`
   - `functions/src/api/adminEventsSyncCalendarHandler.ts`
@@ -5910,8 +5946,8 @@ Excluded sensitive files:
 
 ### `functions/src/service/registry.ts`
 
-- Lines: `66`
-- Size: `3080` bytes
+- Lines: `68`
+- Size: `3205` bytes
 - Internal dependencies:
   - `functions/src/service/tasks/adminApprovalWriteBack.ts`
   - `functions/src/service/tasks/adminNotifyPendingApprovals.ts`
@@ -5923,6 +5959,7 @@ Excluded sensitive files:
   - `functions/src/service/tasks/gearSyncKayaksFromSheet.ts`
   - `functions/src/service/tasks/godzinkiImportTransitionFromSheet.ts`
   - `functions/src/service/tasks/godzinkiMergeHistoricalUser.ts`
+  - `functions/src/service/tasks/godzinkiMonthlyBalanceReview.ts`
   - `functions/src/service/tasks/godzinkiSyncFromSheet.ts`
   - `functions/src/service/tasks/groupsDiagnose.ts`
   - `functions/src/service/tasks/kmMergeHistoricalUser.ts`
@@ -5950,6 +5987,7 @@ Excluded sensitive files:
   - `import/require ./tasks/gearSyncKayaksFromSheet`
   - `import/require ./tasks/godzinkiImportTransitionFromSheet`
   - `import/require ./tasks/godzinkiMergeHistoricalUser`
+  - `import/require ./tasks/godzinkiMonthlyBalanceReview`
   - `import/require ./tasks/godzinkiSyncFromSheet`
   - `import/require ./tasks/groupsDiagnose`
   - `import/require ./tasks/kmMergeHistoricalUser`
@@ -6084,8 +6122,8 @@ Excluded sensitive files:
 
 ### `functions/src/service/tasks/gearPrivateStorage.ts`
 
-- Lines: `387`
-- Size: `13597` bytes
+- Lines: `400`
+- Size: `14746` bytes
 - Internal dependencies:
   - `functions/src/modules/hours/godzinki_service.ts`
   - `functions/src/modules/hours/godzinki_vars.ts`
@@ -6103,12 +6141,15 @@ Excluded sensitive files:
   - `firstChargeableMonth`
   - `isChargeableThisMonth`
   - `processKayakChargeForMonth`
+  - `readPrivateSinceIso`
+  - `readStorage`
   - `toYearMonth`
+  - `tsToIsoYmd`
 
 ### `functions/src/service/tasks/gearSyncAllFromSheet.ts`
 
-- Lines: `511`
-- Size: `17528` bytes
+- Lines: `582`
+- Size: `20933` bytes
 - Internal dependencies:
   - `functions/src/service/providers/googleSheetsProvider.ts`
   - `functions/src/service/service_config.ts`
@@ -6121,6 +6162,7 @@ Excluded sensitive files:
 - Functions:
   - `buildDoc`
   - `classifyGearRows`
+  - `cleanCell`
   - `flush`
   - `isRealRow`
   - `norm`
@@ -6183,6 +6225,24 @@ Excluded sensitive files:
   - `import/require firebase-admin`
 - Functions:
   - `norm`
+
+### `functions/src/service/tasks/godzinkiMonthlyBalanceReview.ts`
+
+- Lines: `150`
+- Size: `6151` bytes
+- Internal dependencies:
+  - `functions/src/modules/hours/godzinki_service.ts`
+  - `functions/src/modules/hours/godzinki_vars.ts`
+  - `functions/src/service/service_config.ts`
+  - `functions/src/service/types.ts`
+- Imports:
+  - `import/require ../../modules/hours/godzinki_service`
+  - `import/require ../../modules/hours/godzinki_vars`
+  - `import/require ../service_config`
+  - `import/require ../types`
+  - `import/require firebase-admin`
+- Functions:
+  - `fmtBalance`
 
 ### `functions/src/service/tasks/godzinkiSyncFromSheet.ts`
 
@@ -6523,8 +6583,8 @@ Excluded sensitive files:
 
 ### `functions/test/gear_core.test.ts`
 
-- Lines: `138`
-- Size: `5598` bytes
+- Lines: `157`
+- Size: `6388` bytes
 - Internal dependencies:
   - `functions/src/modules/calendar/calendar_utils.ts`
   - `functions/src/modules/hours/hours_quote.ts`
@@ -6541,6 +6601,7 @@ Excluded sensitive files:
 - Functions:
   - `mkRow`
   - `vars`
+  - `ymd`
 
 ### `functions/test/godzinki_core.test.ts`
 
@@ -6725,8 +6786,8 @@ Excluded sensitive files:
 
 ### `public/modules/admin_pending_module.js`
 
-- Lines: `393`
-- Size: `21003` bytes
+- Lines: `449`
+- Size: `24615` bytes
 - Imports:
   - `import/require /core/api_client.js`
   - `import/require /core/router.js`
@@ -6768,8 +6829,8 @@ Excluded sensitive files:
 
 ### `public/modules/gear_module.js`
 
-- Lines: `2273`
-- Size: `95665` bytes
+- Lines: `2274`
+- Size: `95809` bytes
 - Imports:
   - `import/require /core/api_client.js`
   - `import/require /core/firebase_client.js`
@@ -6841,8 +6902,8 @@ Excluded sensitive files:
 
 ### `public/modules/godzinki_module.js`
 
-- Lines: `417`
-- Size: `16171` bytes
+- Lines: `418`
+- Size: `16248` bytes
 - Imports:
   - `import/require /core/api_client.js`
 - Functions:
@@ -7064,8 +7125,8 @@ Excluded sensitive files:
 
 ### `appscript/członkowie sympatycy SKK/appsscript.json`
 
-- Lines: `13`
-- Size: `382` bytes
+- Lines: `14`
+- Size: `432` bytes
 - Detected top-level keys / sections:
   - `dependencies`
   - `exceptionLogging`
@@ -7914,6 +7975,44 @@ Excluded sensitive files:
   - `## Zidentyfikowane luki / ryzyka`
   - `## Weryfikacja (jak potwierdzić stan danych)`
   - `## (Opcjonalna) remediacja — do decyzji użytkownika`
+
+### `Audyty/17.06_prywatny_sprzęt_podsumowanie.md`
+
+- Lines: `112`
+- Size: `6996` bytes
+- Headings:
+  - `# Podsumowanie wdrożenia: opłaty za prywatny sprzęt + raportowanie ujemnego salda (17.06)`
+  - `## 1. Znalezione błędy`
+  - `### BŁĄD KRYTYCZNY — rozjazd nazw pól (mechanizm był martwy)`
+  - `### Błąd 2 — cicha bezczynność przy brakującej dacie`
+  - `### Błąd 3 — brak naliczenia dla niezarejestrowanego właściciela bez odzysku`
+  - `### Stan danych PROD (potwierdzony 17.06 z arkusza sprzętu)`
+  - `## 2. Co zostało zrobione (wg workstreamów)`
+  - `### WS0 (prerekwizyt) — naprawa odczytu pól`
+  - `### WS1 — walidacja przy syncu (wymóg 1)`
+  - `### WS2 — `hist_{email}` dla niezarejestrowanych (wymóg 2)`
+  - `### WS3 — widoczność zwolnienia Zarząd/KR (wymóg 3)`
+  - `### WS4 + WS5 — miesięczny przegląd sald (wymogi 4 i 5)`
+  - `## 3. Pliki`
+  - `## 4. Weryfikacja`
+  - `## 5. Do zrobienia przed/po wdrożeniu`
+
+### `Audyty/17.06_prywatny_sprzęt_TO_DO.md`
+
+- Lines: `89`
+- Size: `7130` bytes
+- Headings:
+  - `# Remediacja: opłaty za prywatny sprzęt + raportowanie ujemnego salda`
+  - `## Context`
+  - `## Stan istniejący (potwierdzony w kodzie)`
+  - `## Workstreamy`
+  - `### WS1 — Walidacja przy syncu (wymóg 1)`
+  - `### WS2 — `hist_{email}` dla niezarejestrowanych (wymóg 2)`
+  - `### WS3 — Widoczność zwolnienia Zarząd/KR (wymóg 3)`
+  - `### WS4 + WS5 — Miesięczny przegląd sald (wymogi 4 i 5) — DECYZJA: raz w miesiącu, przy naliczaniu opłat`
+  - `## Pliki kluczowe`
+  - `## Weryfikacja`
+  - `## Decyzje (zatwierdzone)`
 
 ### `Audyty/AUDIT_MAP.md`
 
@@ -8970,7 +9069,7 @@ Excluded sensitive files:
 - `public/styles/basen.css` — 266 lines, 4666 bytes
 - `public/styles/dashboard.css` — 162 lines, 2708 bytes
 - `public/styles/events.css` — 143 lines, 2366 bytes
-- `public/styles/gear.css` — 1169 lines, 20867 bytes
+- `public/styles/gear.css` — 1177 lines, 21098 bytes
 - `public/styles/godzinki.css` — 152 lines, 2704 bytes
 - `public/styles/km.css` — 496 lines, 10234 bytes
 - `public/styles/kurs.css` — 430 lines, 7128 bytes

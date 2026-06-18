@@ -8,7 +8,9 @@
       "PowerShell(node --use-system-ca \"C:\\\\Users\\\\kswitek\\\\Documents\\\\morzkulc_app\\\\functions\\\\scripts\\\\readServiceJobs.js\" | Out-String)",
       "PowerShell(npm *)",
       "PowerShell(firebase deploy *)",
-      "Bash(awk '/switch \\\\\\(code\\\\\\)/{f=1} f' public/core/user_error_messages.js)"
+      "Bash(awk '/switch \\\\\\(code\\\\\\)/{f=1} f' public/core/user_error_messages.js)",
+      "Bash(ls api/)",
+      "Bash(grep -rln \"basen.enroll\\\\|events.submit\\\\|memberRoleKeys\\\\|status_zawieszony\\\\|blocksAccess\" api/ service/)"
     ]
   }
 }

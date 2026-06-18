@@ -25,6 +25,14 @@ export function obValueExact(obData: any, ...names: string[]): any {
   return key ? obData[key] : undefined;
 }
 
+/** Rzeczywisty klucz nagłówka e-maila w wierszu bilansu (do aktualizacji wartości). */
+export function obEmailKey(obData: any): string | null {
+  if (!obData) return null;
+  const wanted = ["e-mail", "email"].map(normObKey);
+  const key = Object.keys(obData).find((k) => wanted.includes(normObKey(k)));
+  return key || null;
+}
+
 export function obBool(v: any): boolean {
   if (v === true) return true;
   return ["tak", "true", "1", "✓"].includes(String(v == null ? "" : v).toLowerCase().trim());

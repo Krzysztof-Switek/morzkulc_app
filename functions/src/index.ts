@@ -664,6 +664,7 @@ const APPS_SCRIPT_SYNC_ALLOWED_TASKS = new Set<string>([
   "godzinki.syncFromSheet",
   "godzinki.importTransitionFromSheet",
   "gear.syncAllFromSheet",
+  "opening.reconcile",
 ]);
 
 // Buduje krótkie, przyjazne podsumowanie PL na podstawie wyniku taska (bez nazw funkcji/ID).
@@ -701,6 +702,23 @@ function buildAppsScriptSyncSummary(taskId: string, details: any): string {
     return `Sprzęt ${d.dryRun ? "(podgląd — nic nie zapisano)" : "zsynchronizowany"}.\n` +
       `Dodane/zmienione: ${n(d.upserted)} · zezłomowane (brak w arkuszu): ${n(d.scrapped)}.` +
       (Number(d.duplicateId) > 0 ? `\nUWAGA: zduplikowane ID w arkuszu: ${n(d.duplicateId)} — sztuki pominięte (pierwsza została), popraw ID i zsynchronizuj ponownie.` : "");
+  case "opening.reconcile": {
+    if (d.userFound === false) {
+      return `Nie znaleziono użytkownika o adresie ${d.targetEmail || "(brak)"} w bazie. Sprawdź, czy osoba jest zarejestrowana w aplikacji.`;
+    }
+    if (Number(d.matched) === 0) {
+      return `Nie znaleziono dopasowania w bilansie otwarcia dla ${d.targetEmail || "(brak)"} (po mailu ani po imieniu i nazwisku).`;
+    }
+    const hoursMsg = Number(d.hoursCreated) > 0 ?
+      "utworzono pulę godzinek z bilansu" :
+      Number(d.hoursFixed) > 0 ?
+        "zaktualizowano istniejącą pulę godzinek z bilansu" :
+        "brak godzinek do naliczenia w bilansie (0 h)";
+    let msg = `Bilans otwarcia uzgodniony dla ${d.targetEmail || "użytkownika"}.\n${hoursMsg}.`;
+    if (Number(d.emailUpdated) > 0) msg += "\nMail w bilansie otwarcia zaktualizowano na podany adres.";
+    if (Number(d.emailUpdateSkipped) > 0) msg += "\nUWAGA: maila w bilansie NIE zmieniono — podany adres występuje już w innym wierszu (sprawdź duplikat).";
+    return msg;
+  }
   default:
     return "Synchronizacja zakończona.";
   }

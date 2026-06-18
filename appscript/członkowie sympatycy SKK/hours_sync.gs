@@ -34,3 +34,40 @@ function syncHoursToFirestore() {
 function importGodzinkiKorektyToFirestore() {
   runSync_("godzinki.importTransitionFromSheet");
 }
+
+/**
+ * Punktowe uzupełnienie godzinek z bilansu otwarcia dla JEDNEGO użytkownika (po mailu).
+ *
+ * Po co: saldo godzinek w aplikacji liczone jest z kolekcji godzinki_ledger. Jeśli
+ * użytkownik był już zarejestrowany, a pula „bilans otwarcia" nigdy nie powstała
+ * (np. rola nadana przez sync arkusza, bez dopasowania do bilansu), w aplikacji
+ * widać 0 mimo godzin w arkuszu. Ta akcja tworzy/poprawia pulę w godzinki_ledger.
+ *
+ * Dodatkowo: gdy dopasowanie do bilansu nastąpi po imieniu i nazwisku, a mail w
+ * bilansie różni się od podanego — backend zaktualizuje mail w bilansie otwarcia
+ * (przypadek rejestracji innym adresem niż w bilansie). Roli NIE zmienia.
+ *
+ * Logika w backendzie: task "opening.reconcile" z payload { email }.
+ */
+function reconcileOpeningBalanceByEmailPrompt() {
+  var ui = SpreadsheetApp.getUi();
+  var resp = ui.prompt(
+    "Uzupełnij godzinki z bilansu otwarcia",
+    "Podaj adres e-mail użytkownika (taki, jakim loguje się do aplikacji):",
+    ui.ButtonSet.OK_CANCEL
+  );
+  if (resp.getSelectedButton() !== ui.Button.OK) return;
+
+  var email = String(resp.getResponseText() || "").trim().toLowerCase();
+  if (!email || email.indexOf("@") < 1) {
+    ui.alert("❌ Nieprawidłowy adres e-mail.");
+    return;
+  }
+
+  try {
+    var r = callBackendSync_("opening.reconcile", { email: email });
+    ui.alert("✅ Gotowe!\n\n" + (r && r.summary ? r.summary : "Operacja zakończona."));
+  } catch (e) {
+    ui.alert("❌ Nie udało się.\n\n" + (e && e.message ? e.message : String(e)));
+  }
+}

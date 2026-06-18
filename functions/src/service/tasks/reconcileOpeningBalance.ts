@@ -1,15 +1,22 @@
 import * as admin from "firebase-admin";
 import {ServiceTask} from "../types";
 import {creditOpeningBalance} from "../../modules/hours/godzinki_service";
-import {getObHours, buildOpeningBalanceAdminPatch, obValueExact} from "../../modules/hours/opening_balance_fields";
+import {getObHours, buildOpeningBalanceAdminPatch, obValueExact, obEmailKey} from "../../modules/hours/opening_balance_fields";
 
 /**
- * Task: opening.reconcile (jednorazowy)
+ * Task: opening.reconcile
  *
  * Uzgadnia już-zarejestrowanych użytkowników ze ŚWIEŻĄ kolekcją users_opening_balance_26.
- * Uruchamiany RAZ po imporcie bilansu, przed otwarciem rejestracji.
  *
- * Dla każdego users_active dopasowanego po e-mailu (fallback imię+nazwisko):
+ * Dwa tryby:
+ *   - HURTOWY (bez payload.email): iteruje wszystkich users_active. Uruchamiany RAZ
+ *     po imporcie bilansu (skrypt node enqueueReconcileOpeningBalance.js).
+ *   - PUNKTOWY (payload.email): przetwarza tylko jednego użytkownika o podanym mailu.
+ *     Uruchamiany z menu arkusza „członkowie sympatycy SKK" (po mailu). Dodatkowo,
+ *     gdy dopasowanie nastąpiło po imieniu+nazwisku, a mail w bilansie różni się od
+ *     maila rejestracyjnego → AKTUALIZUJE mail w wierszu bilansu otwarcia (Problem 3).
+ *
+ * Dla każdego dopasowanego (po e-mailu, fallback imię+nazwisko):
  *   - ustawia pola admin.* z bilansu (jak rejestracja),
  *   - ustawia openingMatch/method/balance/matchedAt gdy brakuje,
  *   - poprawia pulę lump-sum w godzinki_ledger (approvedBy="opening_balance"):
@@ -24,6 +31,7 @@ const OB_HOURS_EXPIRES_AT = new Date(Date.UTC(2029, 5, 30)); // 30.06.2029
 
 type Payload = {
   dry?: boolean;
+  email?: string;
 };
 
 function norm(v: any): string {
@@ -33,9 +41,11 @@ function lower(v: any): string {
   return norm(v).toLowerCase();
 }
 
+type ObEntry = {data: any; ref: FirebaseFirestore.DocumentReference};
+
 export const reconcileOpeningBalanceTask: ServiceTask<Payload> = {
   id: "opening.reconcile",
-  description: "Jednorazowo uzgadnia już-zarejestrowanych użytkowników ze świeżą kolekcją users_opening_balance_26.",
+  description: "Uzgadnia zarejestrowanych użytkowników ze świeżą kolekcją users_opening_balance_26. Tryb hurtowy lub punktowy (payload.email).",
 
   validate: (_payload) => {
     // brak wymaganych pól
@@ -43,52 +53,71 @@ export const reconcileOpeningBalanceTask: ServiceTask<Payload> = {
 
   run: async (payload, ctx) => {
     const dryRun = ctx.dryRun || Boolean(payload?.dry);
-    ctx.logger.info("opening.reconcile: start", {dryRun});
+    const targetEmail = lower(payload?.email);
+    ctx.logger.info("opening.reconcile: start", {dryRun, targetEmail: targetEmail || null});
 
-    // 1) Wczytaj kolekcję bilansu i zbuduj indeksy (e-mail oraz imię+nazwisko)
+    // 1) Wczytaj kolekcję bilansu i zbuduj indeksy (e-mail oraz imię+nazwisko), z referencjami dokumentów
     const obSnap = await ctx.firestore.collection("users_opening_balance_26").get();
-    const byEmail = new Map<string, any>();
-    const byName = new Map<string, any>();
+    const byEmail = new Map<string, ObEntry>();
+    const byName = new Map<string, ObEntry>();
     for (const doc of obSnap.docs) {
       const data = doc.data() as any;
       const email = lower(obValueExact(data, "e-mail", "email"));
-      if (email && email.includes("@") && !byEmail.has(email)) byEmail.set(email, data);
+      if (email && email.includes("@") && !byEmail.has(email)) byEmail.set(email, {data, ref: doc.ref});
       const first = lower(obValueExact(data, "imię", "imie"));
       const last = lower(obValueExact(data, "nazwisko"));
       if (first && last) {
         const key = `${first}|${last}`;
-        if (!byName.has(key)) byName.set(key, data);
+        if (!byName.has(key)) byName.set(key, {data, ref: doc.ref});
       }
     }
     ctx.logger.info("opening.reconcile: opening balance loaded", {docs: obSnap.size, emails: byEmail.size, names: byName.size});
 
-    // 2) Iteruj users_active
-    const usersSnap = await ctx.firestore.collection("users_active").get();
+    // 2) Wyznacz zbiór użytkowników do przetworzenia (jeden albo wszyscy)
+    let userDocs: FirebaseFirestore.QueryDocumentSnapshot[];
+    if (targetEmail) {
+      const q = await ctx.firestore.collection("users_active").where("email", "==", targetEmail).limit(1).get();
+      userDocs = q.docs;
+      if (userDocs.length === 0) {
+        ctx.logger.warn("opening.reconcile: user not found by email", {targetEmail});
+        return {
+          ok: false,
+          message: `Nie znaleziono użytkownika o adresie ${targetEmail} w users_active.`,
+          details: {targetEmail, userFound: false, matched: 0, hoursCreated: 0, hoursFixed: 0, emailUpdated: 0, dryRun},
+        };
+      }
+    } else {
+      const usersSnap = await ctx.firestore.collection("users_active").get();
+      userDocs = usersSnap.docs;
+    }
 
     let matched = 0;
     let adminUpdated = 0;
     let hoursFixed = 0;
     let hoursCreated = 0;
     let partialConsumed = 0;
+    let emailUpdated = 0;
+    let emailUpdateSkipped = 0;
     let errors = 0;
 
-    for (const userDoc of usersSnap.docs) {
+    for (const userDoc of userDocs) {
       const uid = userDoc.id;
       const u = userDoc.data() as any;
       const email = lower(u.email);
       const first = lower(u.profile?.firstName);
       const last = lower(u.profile?.lastName);
 
-      let obData: any = null;
+      let entry: ObEntry | undefined;
       let method: "email" | "name" | null = null;
       if (email && byEmail.has(email)) {
-        obData = byEmail.get(email);
+        entry = byEmail.get(email);
         method = "email";
       } else if (first && last && byName.has(`${first}|${last}`)) {
-        obData = byName.get(`${first}|${last}`);
+        entry = byName.get(`${first}|${last}`);
         method = "name";
       }
-      if (!obData) continue;
+      if (!entry) continue;
+      const obData = entry.data;
       matched++;
 
       try {
@@ -111,7 +140,29 @@ export const reconcileOpeningBalanceTask: ServiceTask<Payload> = {
         }
         adminUpdated++;
 
-        // 2b) Poprawa puli lump-sum w godzinki_ledger
+        // 2b) Tryb punktowy: aktualizacja maila w wierszu bilansu, gdy dopasowano po nazwisku
+        //     a mail w bilansie różni się od maila rejestracyjnego (Problem 3).
+        if (targetEmail && method === "name" && email) {
+          const obEmail = lower(obValueExact(obData, "e-mail", "email"));
+          if (obEmail !== email) {
+            // Kolizja: mail rejestracyjny już występuje w INNYM wierszu bilansu → nie nadpisujemy.
+            const existing = byEmail.get(email);
+            const collision = !!existing && existing.ref.path !== entry.ref.path;
+            if (collision) {
+              emailUpdateSkipped++;
+              ctx.logger.warn("opening.reconcile: email collision in BO26 — skip email update", {uid, email, obEmail});
+            } else {
+              const emailKey = obEmailKey(obData);
+              if (emailKey) {
+                if (!dryRun) await entry.ref.update({[emailKey]: email});
+                emailUpdated++;
+                ctx.logger.info("opening.reconcile: updated BO26 email", {uid, from: obEmail, to: email});
+              }
+            }
+          }
+        }
+
+        // 2c) Poprawa puli lump-sum w godzinki_ledger
         const obHours = getObHours(obData);
         // Filtr approvedBy w pamięci — unika wymogu indeksu kompozytowego (uid+approvedBy).
         const ledgerSnap = await ctx.firestore.collection("godzinki_ledger")
@@ -161,12 +212,20 @@ export const reconcileOpeningBalanceTask: ServiceTask<Payload> = {
       }
     }
 
-    const summary = {users: usersSnap.size, matched, adminUpdated, hoursFixed, hoursCreated, partialConsumed, errors, dryRun};
+    const summary = {
+      users: userDocs.length,
+      targetEmail: targetEmail || null,
+      userFound: targetEmail ? userDocs.length > 0 : undefined,
+      matched, adminUpdated, hoursFixed, hoursCreated, partialConsumed,
+      emailUpdated, emailUpdateSkipped, errors, dryRun,
+    };
     ctx.logger.info("opening.reconcile: done", summary);
 
     return {
       ok: errors === 0,
-      message: `reconcile: matched=${matched}, adminUpdated=${adminUpdated}, hoursFixed=${hoursFixed}, hoursCreated=${hoursCreated}, errors=${errors}`,
+      message: targetEmail ?
+        `reconcile(${targetEmail}): matched=${matched}, hoursCreated=${hoursCreated}, hoursFixed=${hoursFixed}, emailUpdated=${emailUpdated}, errors=${errors}` :
+        `reconcile: matched=${matched}, adminUpdated=${adminUpdated}, hoursFixed=${hoursFixed}, hoursCreated=${hoursCreated}, errors=${errors}`,
       details: summary,
     };
   },
