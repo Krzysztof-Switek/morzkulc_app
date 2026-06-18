@@ -1629,7 +1629,7 @@ function renderKayakCard(k, isFav = false, canUserReserve = true) {
   const detailsRows = buildKayakDetailsRows(k);
 
   return `
-    <div class="gearCard ${working ? "gearOk" : "gearBad"}${isPool ? " gearPool" : ""}" data-gear-card-id="${escapeAttr(String(k?.id || ""))}">
+    <div class="gearCard ${isPrivate ? "gearPrivate" : working ? "gearOk" : "gearBad"}${isPool ? " gearPool" : ""}" data-gear-card-id="${escapeAttr(String(k?.id || ""))}">
       <div class="gearCardInner">
 
         <div class="gearHead">
@@ -1693,8 +1693,9 @@ function renderKayakCard(k, isFav = false, canUserReserve = true) {
 
         <div class="gearMiniBar">
           <div class="gearMiniIcons">
-            <span class="gearMiniStatusIcon ${working ? "gearMiniOk" : "gearMiniBad"}"
-              title="${working ? "Sprawny" : "Niesprawny"}">${workingIconSvg(working)}</span>
+            ${isPrivate
+              ? `<span class="gearMiniStatusIcon gearMiniPriv" title="Kajak prywatny">priv</span>`
+              : `<span class="gearMiniStatusIcon ${working ? "gearMiniOk" : "gearMiniBad"}" title="${working ? "Sprawny" : "Niesprawny"}">${workingIconSvg(working)}</span>`}
             ${reservedNow ? `<span class="gearMiniStatusIcon gearMiniLocked" title="Zarezerwowany teraz">${lockIconSvg()}</span>` : ""}
             <button type="button" class="gearMiniMoreBtn gearMoreBtn" title="Szczegóły" aria-label="Szczegóły">${dotsIconSvg()}</button>
           </div>

@@ -61,20 +61,37 @@ function parseNumber(v: any): number | null {
 }
 
 // dd[.:/-]mm[.:/-]yyyy → Date (dane z Sheets API to stringi). Inaczej null.
-function parseSheetDate(v: any): Date | null {
+// Akceptowany format daty w arkuszu — pokazywany w komunikatach walidacji.
+const SHEET_DATE_FORMAT_HINT = "RRRR-MM-DD, np. 2026-06-10";
+
+export function parseSheetDate(v: any): Date | null {
   const s = norm(v);
   if (!s) return null;
-  const m = s.match(/^(\d{1,2})[:./-](\d{1,2})[:./-](\d{4})$/);
-  if (!m) return null;
-  const day = Number(m[1]);
-  const month = Number(m[2]);
-  const year = Number(m[3]);
+  let year: number; let month: number; let day: number;
+  // ISO: rok 4-cyfrowy pierwszy (jednoznaczne) — np. 2026-06-10
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (iso) {
+    year = Number(iso[1]); month = Number(iso[2]); day = Number(iso[3]);
+  } else {
+    // Format zastany: dzień-miesiąc-rok (np. 10.06.2026 / 10-06-2026)
+    const m = s.match(/^(\d{1,2})[:./-](\d{1,2})[:./-](\d{4})$/);
+    if (!m) return null;
+    day = Number(m[1]); month = Number(m[2]); year = Number(m[3]);
+  }
   const d = new Date(year, month - 1, day);
   if (d.getFullYear() !== year || d.getMonth() !== month - 1 || d.getDate() !== day) return null;
   return d;
 }
 
 type Row = Record<string, string>;
+
+/** Wartość komórki z traktowaniem placeholderów ("N/A", "-") jako pustej. */
+function cleanCell(v: any): string {
+  const s = norm(v);
+  const low = s.toLowerCase();
+  if (!s || low === "n/a" || low === "na" || s === "-") return "";
+  return s;
+}
 
 function isRealRow(key: string, r: Row): boolean {
   switch (key) {
@@ -427,30 +444,59 @@ export const gearSyncAllFromSheetTask: ServiceTask<Payload> = {
 
     const sheets = new GoogleSheetsProvider(cfg.workspace.delegatedSubject);
 
-    // Walidacja kajaków PRZED jakimkolwiek zapisem (atomowo) — prywatne muszą mieć mail właściciela,
-    // a prywatne trzymane w klubie (nie-wypożyczalne) także datę wejścia do klubu (do naliczania opłat).
+    // ── Walidacja PRZED jakimkolwiek zapisem (atomowo) ──────────────────────────
+    // (a) Duplikaty ID w DOWOLNEJ kategorii — ID jest kluczem dokumentu (col.doc(id)),
+    //     więc duplikat = cicha utrata sztuki. Błąd krytyczny → blokuje cały sync.
+    // (b) Prywatne kajaki: mail właściciela + data wejścia do klubu (do naliczania opłat).
     const kayakCat = GEAR_CATEGORIES.find((c) => c.key === "kayaks");
     if (!kayakCat) throw new Error("Brak konfiguracji kategorii kayaks");
-    const kayakTable = await sheets.readTableAsObjects({spreadsheetId, tabName: kayakCat.sheetTab});
+
+    const duplicateIdErrors: {category: string; id: string; rowNumber: string}[] = [];
+    let kayakTable: {headers: string[]; rows: Row[]} | null = null;
+    for (const cat of GEAR_CATEGORIES) {
+      let table;
+      try {
+        table = await sheets.readTableAsObjects({spreadsheetId, tabName: cat.sheetTab});
+      } catch (e: any) {
+        throw new Error(`Nie można odczytać zakładki "${cat.sheetTab}": ${e?.message || e}`);
+      }
+      if (cat.key === "kayaks") kayakTable = table;
+      if (!table.headers.includes(cat.idHeader)) continue; // brak kolumny ID — syncCategory zgłosi to później
+      const {duplicates} = classifyGearRows(cat.key, cat.idHeader, table.rows);
+      for (const d of duplicates) {
+        duplicateIdErrors.push({category: cat.label, id: d.id, rowNumber: d.rowNumber});
+      }
+    }
+
     const privateIssues: {id: string; reason: string}[] = [];
-    for (const r of kayakTable.rows) {
+    for (const r of (kayakTable?.rows || [])) {
       if (parseBool(r["Prywatny?"]) !== true) continue;
-      const id = norm(r["Numer Kajaka"]) || norm(r["ID"]) || "?";
+      const idCol = cleanCell(r["ID"]);
+      const numCol = cleanCell(r["Numer Kajaka"]);
+      const rowNum = norm(r["_rowNumber"]);
+      const label = `ID ${idCol || "?"}${numCol ? ` / nr ${numCol}` : ""}${rowNum ? `, wiersz ${rowNum}` : ""}`;
       const owner = norm(r["kontakt do właściciela"]);
       if (!owner || !owner.includes("@")) {
-        privateIssues.push({id, reason: "brak maila właściciela"});
+        privateIssues.push({id: label, reason: "brak maila właściciela"});
         continue;
       }
       const storage = norm(r["Składowany"]).toLowerCase();
       const rentable = parseBool(r["Prywatny do wypożyczenia?"]) === true;
       if (storage === "klub" && !rentable && parseSheetDate(r["od kiedy w klubie (kajaki prywatne)"]) === null) {
-        privateIssues.push({id, reason: "brak/niepoprawna data 'od kiedy w klubie'"});
+        privateIssues.push({id: label, reason: `brak/niepoprawna data 'od kiedy w klubie' — wpisz w formacie ${SHEET_DATE_FORMAT_HINT}`});
       }
     }
-    if (privateIssues.length > 0) {
-      const listStr = privateIssues.map((i) => `${i.id} (${i.reason})`).join("; ");
-      const msg = `Sync zablokowany — prywatne kajaki z błędami: ${listStr}. Popraw arkusz i uruchom ponownie.`;
-      ctx.logger.warn("gearSyncAll: validation error", {privateIssues});
+
+    if (duplicateIdErrors.length > 0 || privateIssues.length > 0) {
+      const parts: string[] = [];
+      if (duplicateIdErrors.length) {
+        parts.push("zduplikowane ID: " + duplicateIdErrors.map((d) => `${d.category} ID ${d.id}${d.rowNumber ? ` (wiersz ${d.rowNumber})` : ""}`).join("; "));
+      }
+      if (privateIssues.length) {
+        parts.push("prywatne kajaki: " + privateIssues.map((i) => `${i.id} — ${i.reason}`).join("; "));
+      }
+      const msg = `Sync zablokowany — ${parts.join(" | ")}. Popraw arkusz i uruchom ponownie.`;
+      ctx.logger.warn("gearSyncAll: validation error", {duplicateIdErrors, privateIssues});
       if (!dryRun) {
         try {
           await firestore.collection("service_reports").doc("gearSync").set({
@@ -459,6 +505,7 @@ export const gearSyncAllFromSheetTask: ServiceTask<Payload> = {
             hasWarnings: true,
             blocked: true,
             privateKayakErrors: privateIssues,
+            duplicateIdErrors,
             totals: {},
             perCategory: [],
           });
@@ -466,7 +513,7 @@ export const gearSyncAllFromSheetTask: ServiceTask<Payload> = {
           ctx.logger.warn("gearSyncAll: nie udało się zapisać raportu walidacji", {message: e?.message || String(e)});
         }
       }
-      return {ok: true, message: msg, details: {validationError: true, privateIssues, dryRun}};
+      return {ok: true, message: msg, details: {validationError: true, duplicateIdErrors, privateIssues, dryRun}};
     }
 
     const summaries: CatSummary[] = [];

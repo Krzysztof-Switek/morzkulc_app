@@ -9,7 +9,7 @@ import {quoteKayaksCostHours} from "../src/modules/hours/hours_quote";
 import {GearVars} from "../src/modules/setup/setup_gear_vars";
 import {daysOnWaterInclusive} from "../src/modules/calendar/calendar_utils";
 import {firstChargeableMonth, isChargeableThisMonth, toYearMonth} from "../src/service/tasks/gearPrivateStorage";
-import {classifyGearRows} from "../src/service/tasks/gearSyncAllFromSheet";
+import {classifyGearRows, parseSheetDate} from "../src/service/tasks/gearSyncAllFromSheet";
 
 function vars(overrides: Partial<GearVars> = {}): GearVars {
   return {
@@ -90,6 +90,25 @@ describe("toYearMonth", () => {
   it("formatuje YYYY-MM w UTC", () => {
     expect(toYearMonth(new Date("2026-06-01T02:00:00Z"))).toBe("2026-06");
     expect(toYearMonth(new Date("2026-01-31T23:59:59Z"))).toBe("2026-01");
+  });
+});
+
+describe("parseSheetDate — akceptuje ISO i DD-MM-YYYY", () => {
+  const ymd = (d: Date | null) =>
+    d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}` : null;
+
+  it("ISO YYYY-MM-DD", () => {
+    expect(ymd(parseSheetDate("2026-06-10"))).toBe("2026-06-10");
+  });
+  it("DD-MM-YYYY (format zastany)", () => {
+    expect(ymd(parseSheetDate("10-06-2026"))).toBe("2026-06-10");
+    expect(ymd(parseSheetDate("10.06.2026"))).toBe("2026-06-10");
+  });
+  it("puste / niepoprawne → null", () => {
+    expect(parseSheetDate("")).toBeNull();
+    expect(parseSheetDate("N/A")).toBeNull();
+    expect(parseSheetDate("2026/06/10")).toBeNull();
+    expect(parseSheetDate("2026-13-10")).toBeNull(); // miesiąc 13
   });
 });
 

@@ -66,6 +66,7 @@ type GearSyncReport = {
   ranAt: string | null;
   blocked: boolean;
   privateKayakErrors: Array<{id: string; reason: string}>;
+  duplicateIdErrors: Array<{category: string; id: string; rowNumber: string}>;
   totals: Record<string, number>;
   perCategory: Array<{
     key: string;
@@ -385,7 +386,7 @@ export async function handleGetAdminPending(req: Request, res: Response, deps: G
       // gear.syncAllFromSheet. Duplikat ID nie jest wykrywalny po fakcie w Firestore
       // (kolaps do jednego dokumentu), więc panel czyta utrwalony raport z momentu syncu.
       const emptyGearSync: GearSyncReport = {
-        hasWarnings: false, ranAt: null, blocked: false, privateKayakErrors: [], totals: {}, perCategory: [], error: null,
+        hasWarnings: false, ranAt: null, blocked: false, privateKayakErrors: [], duplicateIdErrors: [], totals: {}, perCategory: [], error: null,
       };
       let gearSync: GearSyncReport = emptyGearSync;
       try {
@@ -398,6 +399,8 @@ export async function handleGetAdminPending(req: Request, res: Response, deps: G
             blocked: d?.blocked === true,
             privateKayakErrors: Array.isArray(d?.privateKayakErrors) ?
               d.privateKayakErrors.map((x: any) => ({id: norm(x?.id), reason: norm(x?.reason)})) : [],
+            duplicateIdErrors: Array.isArray(d?.duplicateIdErrors) ?
+              d.duplicateIdErrors.map((x: any) => ({category: norm(x?.category), id: norm(x?.id), rowNumber: norm(x?.rowNumber)})) : [],
             totals: (d?.totals as Record<string, number>) || {},
             perCategory: Array.isArray(d?.perCategory) ?
               d.perCategory

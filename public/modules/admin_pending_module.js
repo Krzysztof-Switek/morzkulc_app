@@ -89,22 +89,36 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
         const unpaidContributions = data?.privateKayakUnpaidContributions || { count: 0, items: [] };
         const deadJobs = data?.deadJobs || { count: 0, items: [] };
         const failedCharges = data?.failedStorageCharges || { count: 0, items: [] };
-        const gearSync = data?.gearSync || { hasWarnings: false, perCategory: [], totals: {}, ranAt: null, error: null, blocked: false, privateKayakErrors: [] };
+        const gearSync = data?.gearSync || { hasWarnings: false, perCategory: [], totals: {}, ranAt: null, error: null, blocked: false, privateKayakErrors: [], duplicateIdErrors: [] };
         const negativeBalances = data?.negativeBalances || { count: 0, items: [], ranAt: null, error: null };
         const godzinkiSheetUrl = data?.meta?.godzinkiSheetUrl || null;
 
         let html = "";
 
-        // Sekcja: sync sprzętu ZABLOKOWANY (prywatne kajaki bez maila/daty) — najwyższy priorytet.
-        if (gearSync.blocked && (gearSync.privateKayakErrors || []).length) {
+        // Sekcja: sync sprzętu ZABLOKOWANY (duplikaty ID / prywatne kajaki bez maila/daty) — najwyższy priorytet.
+        const dupErrors = gearSync.duplicateIdErrors || [];
+        const privErrors = gearSync.privateKayakErrors || [];
+        if (gearSync.blocked && (dupErrors.length || privErrors.length)) {
           html += `<div style="border:1px solid #c0392b;border-left:4px solid #c0392b;border-radius:8px;padding:12px;margin-bottom:20px;background:rgba(192,57,43,0.08);">`;
-          html += `<h3 style="margin:0 0 6px;">⛔ Sync sprzętu zablokowany — popraw dane prywatnych kajaków</h3>`;
-          html += `<p class="hint" style="margin:0 0 8px;">Dopóki poniższe błędy nie zostaną poprawione w arkuszu, synchronizacja sprzętu nie zapisuje zmian.</p>`;
-          html += `<ul style="margin:0;padding-left:18px;">`;
-          for (const e of gearSync.privateKayakErrors) {
-            html += `<li style="font-size:13px;">Kajak <strong>${escapeHtml(e.id)}</strong> — ${escapeHtml(e.reason)}</li>`;
+          html += `<h3 style="margin:0 0 6px;">⛔ Sync sprzętu zablokowany — popraw dane w arkuszu</h3>`;
+          html += `<p class="hint" style="margin:0 0 8px;">Dopóki poniższe błędy nie zostaną poprawione, synchronizacja sprzętu nie zapisuje zmian.</p>`;
+          if (dupErrors.length) {
+            html += `<div style="margin-bottom:6px;"><strong>Zduplikowane ID (krytyczne — nadpisałoby sztukę):</strong></div>`;
+            html += `<ul style="margin:0 0 8px;padding-left:18px;">`;
+            for (const e of dupErrors) {
+              html += `<li style="font-size:13px;">${escapeHtml(e.category)} — ID <strong>${escapeHtml(e.id)}</strong>${e.rowNumber ? ` (wiersz ${escapeHtml(e.rowNumber)})` : ""}</li>`;
+            }
+            html += `</ul>`;
           }
-          html += `</ul></div>`;
+          if (privErrors.length) {
+            html += `<div style="margin-bottom:6px;"><strong>Prywatne kajaki — braki danych:</strong></div>`;
+            html += `<ul style="margin:0;padding-left:18px;">`;
+            for (const e of privErrors) {
+              html += `<li style="font-size:13px;">${escapeHtml(e.id)} — ${escapeHtml(e.reason)}</li>`;
+            }
+            html += `</ul>`;
+          }
+          html += `</div>`;
         }
 
         // Sekcja: ostrzeżenia synchronizacji sprzętu (duplikaty ID / pominięte wiersze).
