@@ -45,18 +45,26 @@ export async function getGearVars(db: FirebaseFirestore.Firestore): Promise<Gear
   const hoursPerPrivateKayakPerMonth = toNumber(getVar(raw, "godzinki_za_sprzęt_prywatny"), 0);
   const maxReservationLengthDays = toNumber(getVar(raw, "max_reservation_length"), 14);
 
+  // Kursant celowo dzieli te same zmienne setup co kandydat — limity ilości i
+  // czasu są identyczne, więc zmiana progu kandydata automatycznie zmienia
+  // kursanta. (Wypożyczenie kursanta jest dodatkowo bezpłatne — patrz hours_quote.)
+  const kandydatMaxTime = toNumber(getVar(raw, "kandydat_max_time"), 1);
+  const kandydatMaxItems = toNumber(getVar(raw, "kandydat_max_items"), 1);
+
   const maxWeeksByRole: Record<string, number> = {
     rola_zarzad: toNumber(getVar(raw, "zarząd_max_time"), 4),
     rola_kr: toNumber(getVar(raw, "zarząd_max_time"), 4),
     rola_czlonek: toNumber(getVar(raw, "członek_max_time"), 2),
-    rola_kandydat: toNumber(getVar(raw, "kandydat_max_time"), 1),
+    rola_kandydat: kandydatMaxTime,
+    rola_kursant: kandydatMaxTime,
   };
 
   const maxItemsByRole: Record<string, number> = {
     rola_zarzad: toNumber(getVar(raw, "zarząd_max_items"), 100),
     rola_kr: toNumber(getVar(raw, "zarząd_max_items"), 100),
     rola_czlonek: toNumber(getVar(raw, "członek_max_items"), 3),
-    rola_kandydat: toNumber(getVar(raw, "kandydat_max_items"), 1),
+    rola_kandydat: kandydatMaxItems,
+    rola_kursant: kandydatMaxItems,
   };
 
   return {

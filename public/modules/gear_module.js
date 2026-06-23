@@ -702,7 +702,9 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
           });
 
           if (bundleOkEl) {
-            bundleOkEl.textContent = `Rezerwacja zapisana.${resp?.costHours ? ` Godzinki: ${resp.costHours}` : ""}`;
+            bundleOkEl.textContent = resp?.waived
+              ? "Rezerwacja zapisana. Wypożyczenie bezpłatne (szkoleniówka)."
+              : `Rezerwacja zapisana.${resp?.costHours ? ` Godzinki: ${resp.costHours}` : ""}`;
             bundleOkEl.classList.remove("hidden");
           }
 
@@ -1134,7 +1136,9 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
           });
 
           setReservationOk(
-            `Rezerwacja zapisana. Godzinki: ${String(resp?.costHours || 0)}`
+            resp?.waived
+              ? "Rezerwacja zapisana. Wypożyczenie bezpłatne (szkoleniówka)."
+              : `Rezerwacja zapisana. Godzinki: ${String(resp?.costHours || 0)}`
           );
 
           await loadGear("kayaks");

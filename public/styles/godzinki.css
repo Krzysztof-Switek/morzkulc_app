@@ -46,6 +46,18 @@
   color: var(--success, #4a4);
 }
 
+/* Zwolnienie z opłaty — koszt przekreślony, neutralny dla salda */
+.godzinkiAmountWaived {
+  color: var(--muted, #888);
+}
+.godzinkiWaivedTag {
+  display: inline-block;
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--success, #4a4);
+}
+
 /* Kolumna daty */
 .godzinkiDateCell {
   white-space: nowrap;

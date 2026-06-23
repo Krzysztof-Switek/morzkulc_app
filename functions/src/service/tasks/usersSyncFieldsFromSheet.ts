@@ -208,6 +208,16 @@ export const usersSyncFieldsFromSheetTask: ServiceTask<Payload> = {
         }
       }
 
+      // Data wpłaty wpisowego (rok+miesiąc) — z daty syncu, przy PIERWSZYM pojawieniu
+      // się wpisowego oraz przy ZMIANIE wartości kolumny (odnowienie po 12 mc).
+      // Niezmieniona wartość → nie ruszamy (istniejące konta uzupełnia jednorazowy backfill,
+      // żeby nie nadpisać daty wpłaty bieżącym miesiącem).
+      const incomingFee = norm(sheetUser.admin.entryFeeYear);
+      const existingFee = norm(getPath(data, "admin.entryFeeYear"));
+      if (incomingFee && existingFee !== incomingFee) {
+        patch["admin.entryFeePaidAt"] = now.slice(0, 7); // YYYY-MM
+      }
+
       // Wykryj zmianę roli/statusu (faktyczny sync robi users.syncRolesFromSheet)
       const roleChanged = roleKey !== norm(data?.role_key);
       const statusChanged = statusKey !== norm(data?.status_key);

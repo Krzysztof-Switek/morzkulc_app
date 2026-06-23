@@ -205,7 +205,9 @@ export function createMyReservationsModule({ id, type, label, defaultRoute, orde
                       <div class="gearTitle">${escapeHtml(kayakTitles.join(", ") || "Rezerwacja")}</div>
                       <div class="gearSubtitle">
                         ${escapeHtml(formatShortDate(String(rsv?.blockStartIso || rsv?.startDate || "")))} – ${escapeHtml(formatShortDate(String(rsv?.blockEndIso || rsv?.endDate || "")))} (${escapeHtml(pluralizeDays(countReservationDays(String(rsv?.startDate || ""), String(rsv?.endDate || ""))))})
-                        · <strong>${escapeHtml(String(rsv?.costHours ?? "—"))} godz.</strong>
+                        · ${rsv?.waived
+                            ? `<strong><s>${escapeHtml(String(rsv?.costHours ?? 0))} godz.</s></strong> <span class="gearWaivedTag">zwolnienie</span>`
+                            : `<strong>${escapeHtml(String(rsv?.costHours ?? "—"))} godz.</strong>`}
                       </div>
                     </div>
                     <div class="gearBadges">
@@ -300,7 +302,9 @@ export function createMyReservationsModule({ id, type, label, defaultRoute, orde
             }
           });
 
-          setOk(`Rezerwacja zmieniona. Godzinki: ${String(resp?.costHours || 0)}`);
+          setOk(resp?.waived
+            ? "Rezerwacja zmieniona. Wypożyczenie bezpłatne (szkoleniówka)."
+            : `Rezerwacja zmieniona. Godzinki: ${String(resp?.costHours || 0)}`);
           closeEditModal();
           await loadReservations();
         } catch (e) {

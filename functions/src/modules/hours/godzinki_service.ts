@@ -39,6 +39,10 @@ export type GodzinkiRecord = {
   overdraft?: number;
   reservationId?: string | null;
   refunded?: boolean;
+  // Zwolnienie z opłaty (tegoroczna szkoleniówka, do końca września). Rekord jest
+  // widoczny w historii (przekreślony koszt), ale neutralny dla salda:
+  // fromEarn=0, overdraft=0 → computeBalance go nie liczy.
+  waived?: boolean;
   refundedAt?: FirebaseFirestore.Timestamp | null;
   earnDeductions?: {earnId: string; amount: number}[];
 
@@ -491,6 +495,43 @@ export async function deductHours(
   now: Date = new Date()
 ): Promise<{ok: boolean; code?: string; message?: string; fromEarn?: number; overdraft?: number}> {
   return db.runTransaction(async (tx) => deductHoursInTx(tx, db, uid, input, vars, now));
+}
+
+/**
+ * Zapisuje rekord "spend" zwolniony z opłaty (waived) wewnątrz ISTNIEJĄCEJ transakcji.
+ *
+ * Przeznaczenie: bezpłatne wypożyczenie sprzętu (tegoroczna szkoleniówka, do końca
+ * września). Rekord pokazuje koszt, który normalnie byłby pobrany (amount), ale ma
+ * fromEarn=0, overdraft=0 i waived=true — więc NIE zmienia salda (computeBalance liczy
+ * tylko overdraft). Front renderuje go przekreślonego. Brak earnDeductions sprawia,
+ * że anulowanie/zwrot rezerwacji jest dla niego no-opem (oznacza refunded, saldo bez zmian).
+ */
+export function writeWaivedSpendInTx(
+  tx: FirebaseFirestore.Transaction,
+  db: FirebaseFirestore.Firestore,
+  uid: string,
+  input: {amount: number; reason: string; reservationId?: string}
+): void {
+  const amount = Number(input.amount);
+  if (!amount || amount <= 0) return;
+
+  const spendRef = db.collection(COLLECTION).doc();
+  tx.set(spendRef, {
+    id: spendRef.id,
+    uid,
+    type: "spend",
+    amount,
+    fromEarn: 0,
+    overdraft: 0,
+    waived: true,
+    earnDeductions: [],
+    reservationId: input.reservationId ? String(input.reservationId) : null,
+    refunded: false,
+    reason: String(input.reason || "").trim(),
+    submittedBy: uid,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
 }
 
 /**

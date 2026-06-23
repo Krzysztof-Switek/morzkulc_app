@@ -1,6 +1,6 @@
 # Project Context Map
 
-Generated at: `2026-06-18T11:41:20`
+Generated at: `2026-06-22T17:18:10`
 Project root: `C:\Users\kswitek\Documents\morzkulc_app`
 
 Purpose: this file is a compact project map for Claude Code. It shows which files exist, what functions/classes they contain, and which internal files depend on which other files.
@@ -57,11 +57,11 @@ Excluded sensitive files:
 
 ## Summary
 
-- Total scanned files: `425`
+- Total scanned files: `429`
 - Python files: `42`
 - Script files JS/TS/GS/etc.: `274`
 - Config files: `21`
-- Markdown files: `59`
+- Markdown files: `63`
 - Internal dependency edges: `443`
 
 ## Project tree
@@ -97,6 +97,10 @@ Excluded sensitive files:
   - 17.06_prywatny_sprzęt_TO_DO.md
   - 17.06_prywatny_sprzęt_audyt.md
   - 17.06_prywatny_sprzęt_podsumowanie.md
+  - 18.06_kandydat_audyt_TO_DO.md
+  - 18.06_rejestracja_problemy_TO_DO.md
+  - 18.06_rejestracja_problemy_podsumowaie.md
+  - 18.06_rezerwacje_czas_audyt_TO_DO.md
   - AUDIT_MAP.md
   - AUDIT_PLAN.md
   - GRUPY_UZYTKOWNICY_PLAN_AND_TO_DO.MD
@@ -2813,10 +2817,11 @@ Excluded sensitive files:
 
 ### `appscript/członkowie sympatycy SKK/hours_sync.gs`
 
-- Lines: `37`
-- Size: `1695` bytes
+- Lines: `74`
+- Size: `3238` bytes
 - Functions:
   - `importGodzinkiKorektyToFirestore`
+  - `reconcileOpeningBalanceByEmailPrompt`
   - `syncHoursToFirestore`
 
 ### `appscript/członkowie sympatycy SKK/opening_balance_import.gs`
@@ -2846,8 +2851,8 @@ Excluded sensitive files:
 
 ### `appscript/członkowie sympatycy SKK/ui_menu.gs`
 
-- Lines: `23`
-- Size: `875` bytes
+- Lines: `24`
+- Size: `977` bytes
 - Functions:
   - `onOpen`
 
@@ -3613,8 +3618,8 @@ Excluded sensitive files:
 
 ### `functions/lib/api/registerUserHandler.js`
 
-- Lines: `505`
-- Size: `25904` bytes
+- Lines: `583`
+- Size: `30248` bytes
 - Internal dependencies:
   - `functions/lib/modules/hours/godzinki_service.js`
   - `functions/lib/modules/hours/opening_balance_fields.js`
@@ -3623,6 +3628,7 @@ Excluded sensitive files:
   - `import/require ../modules/hours/opening_balance_fields`
 - Functions:
   - `computeRoleKeyFromOpeningBalance`
+  - `emailExistsInOtherObRow`
   - `enqueueGodzinkiHistMerge`
   - `enqueueKmHistoricalMerge`
   - `findOpeningBalance`
@@ -3636,6 +3642,7 @@ Excluded sensitive files:
   - `normalizePhoneDigits`
   - `normalizeStr`
   - `readProfileInput`
+  - `updateObEmail`
   - `validateIncomingProfile`
 
 ### `functions/lib/api/submitEventHandler.js`
@@ -3681,8 +3688,8 @@ Excluded sensitive files:
 
 ### `functions/lib/index.js`
 
-- Lines: `1319`
-- Size: `56077` bytes
+- Lines: `1339`
+- Size: `57305` bytes
 - Internal dependencies:
   - `functions/lib/api/adminApprovalHandler.js`
   - `functions/lib/api/adminEventsSyncCalendarHandler.js`
@@ -3847,14 +3854,14 @@ Excluded sensitive files:
 
 ### `functions/lib/modules/calendar/calendar_utils.js`
 
-- Lines: `55`
-- Size: `2112` bytes
+- Lines: `57`
+- Size: `2305` bytes
 - Functions:
   - `addDaysIso`
   - `computeBlockIso`
   - `daysOnWaterInclusive`
   - `isIsoDateYYYYMMDD`
-  - `maxEndIsoByWeeks`
+  - `maxStartIsoByWeeks`
   - `overlapsIso`
   - `parseIsoToUtcDate`
   - `todayIsoUTC`
@@ -3876,8 +3883,8 @@ Excluded sensitive files:
 
 ### `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
 
-- Lines: `708`
-- Size: `36559` bytes
+- Lines: `720`
+- Size: `37503` bytes
 - Internal dependencies:
   - `functions/lib/modules/calendar/calendar_utils.js`
   - `functions/lib/modules/equipment/kayaks/gear_kayaks_service.js`
@@ -3916,8 +3923,8 @@ Excluded sensitive files:
 
 ### `functions/lib/modules/equipment/kayaks/gear_kayaks_service.js`
 
-- Lines: `255`
-- Size: `13503` bytes
+- Lines: `261`
+- Size: `13987` bytes
 - Internal dependencies:
   - `functions/lib/modules/calendar/calendar_utils.js`
   - `functions/lib/modules/hours/godzinki_service.js`
@@ -4005,13 +4012,14 @@ Excluded sensitive files:
 
 ### `functions/lib/modules/hours/opening_balance_fields.js`
 
-- Lines: `88`
-- Size: `3976` bytes
+- Lines: `97`
+- Size: `4329` bytes
 - Functions:
   - `buildOpeningBalanceAdminPatch`
   - `getObHours`
   - `normObKey`
   - `obBool`
+  - `obEmailKey`
   - `obValueByPrefix`
   - `obValueExact`
 
@@ -4061,8 +4069,8 @@ Excluded sensitive files:
 
 ### `functions/lib/modules/setup/setup_gear_vars.js`
 
-- Lines: `57`
-- Size: `2271` bytes
+- Lines: `59`
+- Size: `2395` bytes
 - Functions:
   - `getGearVars`
   - `getVar`
@@ -4562,8 +4570,8 @@ Excluded sensitive files:
 
 ### `functions/lib/service/tasks/reconcileOpeningBalance.js`
 
-- Lines: `196`
-- Size: `9863` bytes
+- Lines: `254`
+- Size: `13306` bytes
 - Internal dependencies:
   - `functions/lib/modules/hours/godzinki_service.js`
   - `functions/lib/modules/hours/opening_balance_fields.js`
@@ -5375,8 +5383,8 @@ Excluded sensitive files:
 
 ### `functions/src/api/registerUserHandler.ts`
 
-- Lines: `649`
-- Size: `23993` bytes
+- Lines: `740`
+- Size: `27774` bytes
 - Internal dependencies:
   - `functions/src/modules/hours/godzinki_service.ts`
   - `functions/src/modules/hours/opening_balance_fields.ts`
@@ -5387,6 +5395,7 @@ Excluded sensitive files:
   - `import/require firebase-admin`
 - Functions:
   - `computeRoleKeyFromOpeningBalance`
+  - `emailExistsInOtherObRow`
   - `enqueueGodzinkiHistMerge`
   - `enqueueKmHistoricalMerge`
   - `findOpeningBalance`
@@ -5400,6 +5409,7 @@ Excluded sensitive files:
   - `normalizePhoneDigits`
   - `normalizeStr`
   - `readProfileInput`
+  - `updateObEmail`
   - `validateIncomingProfile`
 
 ### `functions/src/api/submitEventHandler.ts`
@@ -5448,8 +5458,8 @@ Excluded sensitive files:
 
 ### `functions/src/index.ts`
 
-- Lines: `1467`
-- Size: `47763` bytes
+- Lines: `1485`
+- Size: `48809` bytes
 - Internal dependencies:
   - `functions/src/api/adminApprovalHandler.ts`
   - `functions/src/api/adminEventsSyncCalendarHandler.ts`
@@ -5615,14 +5625,14 @@ Excluded sensitive files:
 
 ### `functions/src/modules/calendar/calendar_utils.ts`
 
-- Lines: `52`
-- Size: `1826` bytes
+- Lines: `54`
+- Size: `2015` bytes
 - Functions:
   - `addDaysIso`
   - `computeBlockIso`
   - `daysOnWaterInclusive`
   - `isIsoDateYYYYMMDD`
-  - `maxEndIsoByWeeks`
+  - `maxStartIsoByWeeks`
   - `overlapsIso`
   - `parseIsoToUtcDate`
   - `todayIsoUTC`
@@ -5644,8 +5654,8 @@ Excluded sensitive files:
 
 ### `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
 
-- Lines: `878`
-- Size: `32706` bytes
+- Lines: `889`
+- Size: `33599` bytes
 - Internal dependencies:
   - `functions/src/modules/calendar/calendar_utils.ts`
   - `functions/src/modules/equipment/kayaks/gear_kayaks_service.ts`
@@ -5683,8 +5693,8 @@ Excluded sensitive files:
 
 ### `functions/src/modules/equipment/kayaks/gear_kayaks_service.ts`
 
-- Lines: `317`
-- Size: `11585` bytes
+- Lines: `323`
+- Size: `12050` bytes
 - Internal dependencies:
   - `functions/src/modules/calendar/calendar_utils.ts`
   - `functions/src/modules/hours/godzinki_service.ts`
@@ -5777,13 +5787,14 @@ Excluded sensitive files:
 
 ### `functions/src/modules/hours/opening_balance_fields.ts`
 
-- Lines: `82`
-- Size: `3579` bytes
+- Lines: `90`
+- Size: `3911` bytes
 - Functions:
   - `buildOpeningBalanceAdminPatch`
   - `getObHours`
   - `normObKey`
   - `obBool`
+  - `obEmailKey`
   - `obValueByPrefix`
   - `obValueExact`
 
@@ -5839,8 +5850,8 @@ Excluded sensitive files:
 
 ### `functions/src/modules/setup/setup_gear_vars.ts`
 
-- Lines: `74`
-- Size: `2437` bytes
+- Lines: `80`
+- Size: `2756` bytes
 - Functions:
   - `getGearVars`
   - `getVar`
@@ -6394,8 +6405,8 @@ Excluded sensitive files:
 
 ### `functions/src/service/tasks/reconcileOpeningBalance.ts`
 
-- Lines: `174`
-- Size: `7000` bytes
+- Lines: `233`
+- Size: `10001` bytes
 - Internal dependencies:
   - `functions/src/modules/hours/godzinki_service.ts`
   - `functions/src/modules/hours/opening_balance_fields.ts`
@@ -6711,8 +6722,8 @@ Excluded sensitive files:
 
 ### `public/core/render_shell.js`
 
-- Lines: `1214`
-- Size: `52116` bytes
+- Lines: `1286`
+- Size: `54400` bytes
 - Imports:
   - `import/require /core/access_control.js`
   - `import/require /core/api_client.js`
@@ -6737,6 +6748,7 @@ Excluded sensitive files:
   - `getModuleRouteByLabelOrId`
   - `getModuleRouteByType`
   - `getReservationKayakTitles`
+  - `goToGodzinki`
   - `isIsoDateYYYYMMDD`
   - `isPhoneValid`
   - `loadAdminPendingBadge`
@@ -6745,13 +6757,16 @@ Excluded sensitive files:
   - `renderHomeDashboard`
   - `renderHomeProfile`
   - `renderNav`
+  - `renderOpeningEmailConfirm`
   - `renderProfileForm`
   - `renderView`
+  - `resetBtns`
   - `roleKeyToLabel`
   - `set`
   - `setErr`
   - `spinnerHtml`
   - `statusKeyToLabel`
+  - `submitRegistration`
   - `tryParseJsonFromHttpError`
   - `updateBadge`
   - `wireHomeReservations`
@@ -6777,8 +6792,8 @@ Excluded sensitive files:
 
 ### `public/core/user_error_messages.js`
 
-- Lines: `135`
-- Size: `4035` bytes
+- Lines: `143`
+- Size: `4344` bytes
 - Functions:
   - `joinPrefix`
   - `mapUserFacingApiError`
@@ -7060,8 +7075,8 @@ Excluded sensitive files:
 
 ### `.claude/settings.local.json`
 
-- Lines: `15`
-- Size: `707` bytes
+- Lines: `17`
+- Size: `862` bytes
 - Detected top-level keys / sections:
   - `permissions`
 
@@ -8013,6 +8028,105 @@ Excluded sensitive files:
   - `## Pliki kluczowe`
   - `## Weryfikacja`
   - `## Decyzje (zatwierdzone)`
+
+### `Audyty/18.06_kandydat_audyt_TO_DO.md`
+
+- Lines: `126`
+- Size: `10476` bytes
+- Headings:
+  - `# 18.06 — Audyt roli „kandydat" + plan działania (TO-DO)`
+  - `## CZĘŚĆ 1 — WYNIKI AUDYTU (stan zastany)`
+  - `### 1.1 Jak powstaje kandydat`
+  - `### 1.2 Co kandydat MOŻE faktycznie (backend)`
+  - `### 1.3 Co kandydat WIDZI (frontend)`
+  - `### 1.4 Czy kandydat ma własne ekrany?`
+  - `### 1.5 🔴 GŁÓWNA NIESPÓJNOŚĆ (do naprawy)`
+  - `### 1.6 Stan trzech wymagań docelowych vs. kod`
+  - `### 1.7 „Szkoleniowiec" — ustalenie modelu`
+  - `### 1.8 Mechanika sesji (istotne dla implementacji)`
+  - `## CZĘŚĆ 2 — DECYZJE PRODUKTOWE (potwierdzone przez użytkownika)`
+  - `## CZĘŚĆ 3 — PLAN DZIAŁANIA (TO-DO)`
+  - `### A. Backend — sync pól z arkusza (`functions/src/service/tasks/usersSyncFieldsFromSheet.ts`)`
+  - `### B. Backend — odpowiedź rejestracji (`functions/src/api/registerUserHandler.ts`)`
+  - `### C. Frontend — `public/core/render_shell.js``
+  - `### D. Prerekwizyty operacyjne (poza kodem — użytkownik)`
+  - `## CZĘŚĆ 4 — PLIKI DO ZMIANY`
+  - `## CZĘŚĆ 5 — WERYFIKACJA`
+  - `## CZĘŚĆ 6 — POZA ZAKRESEM`
+
+### `Audyty/18.06_rejestracja_problemy_podsumowaie.md`
+
+- Lines: `108`
+- Size: `7535` bytes
+- Headings:
+  - `# 18.06 — Rejestracja + bilans otwarcia: podsumowanie wdrożenia (kod)`
+  - `## Zakres`
+  - `## CZĘŚĆ B — wybiórczy reconcile po mailu (Problem 2 i 3)`
+  - `### B1. Task `opening.reconcile` — tryb pojedynczy`
+  - `### B2. Endpoint `appsScriptSync``
+  - `### B3. Menu Apps Script`
+  - `## CZĘŚĆ A — potwierdzenie maila przy dopasowaniu po nazwisku (Problem 1)`
+  - `### A0. Wspólny helper`
+  - `### A1. Backend rejestracji`
+  - `### A2. Frontend rejestracji`
+  - `## Fakt techniczny utrwalony w kodzie/decyzjach`
+  - `## Pliki zmienione`
+  - `## Stan jakości`
+  - `## TO-DO wdrożenia (NIE wykonane)`
+
+### `Audyty/18.06_rejestracja_problemy_TO_DO.md`
+
+- Lines: `165`
+- Size: `14250` bytes
+- Headings:
+  - `# 18.06 — Rejestracja + bilans otwarcia: problemy i plan (TO-DO)`
+  - `## Fakt fundamentalny (tłumaczy problemy #2 i #3)`
+  - `## PROBLEM 1 — rejestracja innym mailem, dane są pod imieniem i nazwiskiem → brak pytania do użytkownika i brak aktualizacji maila w bilansie`
+  - `### Wymaganie (cel)`
+  - `### Stan zastany (kod)`
+  - `### Proponowane rozwiązanie`
+  - `### Pliki do zmiany`
+  - `## PROBLEM 2 — konto KR: w arkuszu 300h, w aplikacji 0h. Czy sync arkusza to naprawi?`
+  - `### Diagnoza`
+  - `### Czy „sync arkusza członków" to naprawi? → **NIE**`
+  - `### Rozwiązanie → task `opening.reconcile``
+  - `## PROBLEM 3 — user zarejestrowany innym mailem potraktowany jako nieistniejący. Czy zmiana maila w BO26 + sync do Firestore naprawi?`
+  - `### Diagnoza`
+  - `### Rozwiązanie → ponownie `opening.reconcile``
+  - `### Podsumowanie kroków naprawy pojedynczego konta (Problem 3)`
+  - `## Mapa: który mechanizm co robi (ściągawka)`
+  - `## DECYZJE (18.06) — zatwierdzone przez zarząd`
+  - `### Problem 1 (flow potwierdzenia maila) — WDRAŻAMY`
+  - `### Problem 2 (konto KR 300h) — WDRAŻAMY mechanizm wybiórczy`
+  - `### Problem 3 (konto z błędnym mailem) — WDRAŻAMY w ramach Problemu 1 + reconcile po mailu`
+  - `## PLAN WDROŻENIA`
+  - `### Część A — Problem 1: flow potwierdzenia przy dopasowaniu po nazwisku`
+  - `### Część B — Problem 2 i 3: wybiórczy reconcile po mailu z menu arkusza`
+  - `### Weryfikacja`
+  - `### Poza zakresem`
+
+### `Audyty/18.06_rezerwacje_czas_audyt_TO_DO.md`
+
+- Lines: `119`
+- Size: `8661` bytes
+- Headings:
+  - `# 18.06 — Rezerwacje sprzętu: czas/horyzont — audyt + plan (TO-DO)`
+  - `## CZĘŚĆ 1 — WYNIKI AUDYTU`
+  - `### 1.1 Przyczyna źródłowa`
+  - `### 1.2 Co naprawdę znaczą zmienne (ważna różnica)`
+  - `### 1.3 Skąd biorą się limity (i sprawa „brakującej zmiennej w arkuszu")`
+  - `### 1.4 Gdzie występuje błąd (cały proces rezerwacji)`
+  - `### 1.5 Offset a długość`
+  - `## CZĘŚĆ 2 — DECYZJE (zatwierdzone)`
+  - `## CZĘŚĆ 3 — PLAN WDROŻENIA`
+  - `### 3.1 `functions/src/modules/calendar/calendar_utils.ts``
+  - `### 3.2 `functions/src/modules/setup/setup_gear_vars.ts``
+  - `### 3.3 Trzy miejsca walidacji — wzorzec zamiany`
+  - `### 3.4 `public/core/user_error_messages.js``
+  - `### 3.5 Operacyjnie (arkusz gear, zakładka SETUP)`
+  - `## CZĘŚĆ 4 — PLIKI DO ZMIANY`
+  - `## CZĘŚĆ 5 — WERYFIKACJA`
+  - `## CZĘŚĆ 6 — POZA ZAKRESEM`
 
 ### `Audyty/AUDIT_MAP.md`
 

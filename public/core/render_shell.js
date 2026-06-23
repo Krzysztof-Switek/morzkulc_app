@@ -470,8 +470,13 @@ function renderHomeProfile({ viewEl, ctx }) {
       ` : `
       <div class="startStatBar" style="margin-bottom:16px;">
         <div class="startStatChip">
+          ${dash.isKandydat ? `
+          <span class="startStatChipKey">Wpisowe ważne do</span>
+          <span class="startStatChipVal" id="profileContribUntil">${escapeHtml(formatEntryFeeValidUntil(ctx?.session?.entryFeePaidAt) || "—")}</span>
+          ` : `
           <span class="startStatChipKey">Składki opłacone do</span>
           <span class="startStatChipVal" id="profileContribUntil">${escapeHtml(formatContribDate(ctx?.session?.contributionsPaidUntil) || "—")}</span>
+          `}
         </div>
         <div class="startStatChip" data-profile-action="godzinki" role="link" tabindex="0" style="cursor:pointer;">
           <span class="startStatChipKey">Saldo godzinek</span>
@@ -1172,6 +1177,22 @@ function formatContribDate(raw) {
   m = s.match(/^(\d{2})[-.](\d{2})[-.](\d{4})$/);
   if (m) return `${m[1]}.${m[2]}.${m[3]}`;
   return s;
+}
+
+const POLISH_MONTHS = [
+  "styczeń", "luty", "marzec", "kwiecień", "maj", "czerwiec",
+  "lipiec", "sierpień", "wrzesień", "październik", "listopad", "grudzień",
+];
+
+// „Wpisowe ważne do" — wpisowe ważne 12 mc od wpłaty. Wejście: data wpłaty „YYYY-MM"
+// (admin.entryFeePaidAt). Zwraca np. „czerwiec 2027" (ten sam miesiąc, rok+1). Pusto/błąd → "".
+function formatEntryFeeValidUntil(paidAt) {
+  const s = String(paidAt == null ? "" : paidAt).trim();
+  const m = s.match(/^(\d{4})-(\d{2})$/);
+  if (!m) return "";
+  const monthIdx = Number(m[2]) - 1;
+  if (monthIdx < 0 || monthIdx > 11) return "";
+  return `${POLISH_MONTHS[monthIdx]} ${Number(m[1]) + 1}`;
 }
 
 function roleKeyToLabel(roleKey, roleMappings) {

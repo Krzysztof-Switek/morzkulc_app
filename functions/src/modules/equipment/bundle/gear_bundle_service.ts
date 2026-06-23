@@ -1,7 +1,7 @@
 import {computeBlockIso, overlapsIso, maxStartIsoByWeeks, todayIsoUTC, daysOnWaterInclusive} from "../../calendar/calendar_utils";
 import {getGearVars, roleMaxItems, roleMaxWeeks} from "../../setup/setup_gear_vars";
 import {quoteKayaksCostHours} from "../../hours/hours_quote";
-import {deductHoursInTx, reverseDeductHoursInTx} from "../../hours/godzinki_service";
+import {deductHoursInTx, reverseDeductHoursInTx, writeWaivedSpendInTx, refundHoursForReservationInTx} from "../../hours/godzinki_service";
 import {getGodzinkiVars} from "../../hours/godzinki_vars";
 import {isUserStatusBlocked} from "../../users/userStatusCheck";
 import {updateReservationDates} from "../kayaks/gear_kayaks_service";
@@ -147,6 +147,55 @@ async function getUserRole(db: FirebaseFirestore.Firestore, uid: string) {
     statusKey: norm(data?.status_key) || "status_aktywny",
     email: norm(data?.email),
   };
+}
+
+/**
+ * Wyciąga 4-cyfrowy rok ze stringa "rok szkoleniówki"/daty.
+ * "2026" / "15.02.2026" / "2026-02-15" → 2026; "wpisowe" / puste / inne → null.
+ */
+function parseSchoolYear(raw: any): number | null {
+  const m = String(raw ?? "").trim().match(/(\d{4})/);
+  if (!m) return null;
+  const y = Number(m[1]);
+  return Number.isFinite(y) && y >= 2000 && y <= 2100 ? y : null;
+}
+
+/**
+ * Rok rozpoczęcia kursu (szkoleniówki) użytkownika:
+ *   - kursant  → kurs_uczestnicy/{email}.rokSzkoleniowki,
+ *   - kandydat → users_active/{uid}.admin.schoolYear (kolumna arkusza "rok_szkoleniowki"),
+ *   - inne role → null.
+ */
+async function resolveSchoolYear(
+  db: FirebaseFirestore.Firestore,
+  roleKey: string,
+  uid: string,
+  email: string
+): Promise<number | null> {
+  if (roleKey === "rola_kursant") {
+    const docId = norm(email).toLowerCase();
+    if (!docId) return null;
+    const snap = await db.collection("kurs_uczestnicy").doc(docId).get();
+    return parseSchoolYear(snap.exists ? (snap.data() as any)?.rokSzkoleniowki : null);
+  }
+  if (roleKey === "rola_kandydat") {
+    const snap = await db.collection("users_active").doc(uid).get();
+    return parseSchoolYear(snap.exists ? (snap.data() as any)?.admin?.schoolYear : null);
+  }
+  return null;
+}
+
+/**
+ * Czy rezerwacja jest zwolniona z opłaty godzinkowej za sprzęt.
+ *
+ * Reguła (decyzja zarządu): tegoroczna szkoleniówka (rok == bieżący rok kalendarzowy)
+ * i rezerwacja składana do końca września tego roku — liczone po DACIE ZŁOŻENIA
+ * rezerwacji (now), nie po terminie rezerwacji. Zwolnienie obejmuje kursanta i kandydata.
+ */
+function isFreeRentalExempt(schoolYear: number | null, now: Date = new Date()): boolean {
+  if (!schoolYear) return false;
+  if (schoolYear !== now.getUTCFullYear()) return false;
+  return now.toISOString().slice(0, 10) <= `${schoolYear}-09-30`;
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -437,6 +486,25 @@ export async function createBundleReservation(
     return {ok: false, code: "forbidden", message: "Role not allowed"} as const;
   }
 
+  // Zwolnienie z opłaty: tegoroczna szkoleniówka, rezerwacja składana do końca września.
+  const now = new Date();
+  const schoolYear = await resolveSchoolYear(db, roleKey, args.uid, user.email);
+  const exempt = isFreeRentalExempt(schoolYear, now);
+
+  // Kursant rezerwuje WYŁĄCZNIE bezpłatnie w oknie + globalny przełącznik zarządu.
+  if (roleKey === "rola_kursant") {
+    const flagSnap = await db.collection("var_members").doc("kurs_wypożycza").get();
+    const flagOn = flagSnap.exists && flagSnap.data()?.value === true;
+    if (!flagOn) {
+      return {ok: false, code: "forbidden", message: "Rezerwacje dla kursantów są obecnie wyłączone."} as const;
+    }
+    if (!exempt) {
+      return schoolYear ?
+        {ok: false, code: "kursant_window_closed", message: `Jako kursant możesz wypożyczać sprzęt bezpłatnie tylko do 30 września ${schoolYear}.`, details: {schoolYear}} as const :
+        {ok: false, code: "kursant_no_year", message: "Brak roku szkoleniówki na liście kursantów — skontaktuj się z zarządem: zarzad@morzkulc.pl"} as const;
+    }
+  }
+
   // Normalise and deduplicate items
   const rawItems: BundleItemInput[] = args.items
     .map((i) => ({itemId: norm(i.itemId), category: norm(i.category).toLowerCase()}))
@@ -496,10 +564,11 @@ export async function createBundleReservation(
   // Cost: only kayaks are priced
   const kayakIds = items.filter((i) => i.category === "kayaks").map((i) => i.itemId);
   const costHours = quoteKayaksCostHours(vars, roleKey, args.startDate, args.endDate, kayakIds.length);
-  const godzinkiVars = costHours > 0 ? await getGodzinkiVars(db) : null;
+  // Zwolnieni nie płacą — koszt zapisujemy jako "waived" (saldo bez zmian), więc
+  // pula godzinek potrzebna jest tylko dla normalnej dedukcji.
+  const godzinkiVars = (!exempt && costHours > 0) ? await getGodzinkiVars(db) : null;
 
   const ref = db.collection("gear_reservations").doc();
-  const now = new Date();
 
   const doc = {
     id: ref.id,
@@ -535,6 +604,7 @@ export async function createBundleReservation(
     kayakCount: kayakIds.length,
 
     costHours,
+    waived: exempt && costHours > 0,
     createdAt: now,
     updatedAt: now,
   };
@@ -564,27 +634,36 @@ export async function createBundleReservation(
       } as const;
     }
 
-    // Deduct hours in the same transaction
-    if (costHours > 0 && godzinkiVars) {
-      const deductResult = await deductHoursInTx(
-        tx,
-        db,
-        args.uid,
-        {
+    // Godzinki: zwolnieni → neutralny rekord "waived" (przekreślony koszt, saldo bez
+    // zmian); pozostali → normalna dedukcja FIFO w tej samej transakcji.
+    if (costHours > 0) {
+      if (exempt) {
+        writeWaivedSpendInTx(tx, db, args.uid, {
           amount: costHours,
-          reason: buildCostReason(itemDetails, args.startDate, args.endDate),
+          reason: `${buildCostReason(itemDetails, args.startDate, args.endDate)} — zwolnienie (szkoleniówka ${schoolYear})`,
           reservationId: ref.id,
-        },
-        godzinkiVars,
-        now
-      );
+        });
+      } else if (godzinkiVars) {
+        const deductResult = await deductHoursInTx(
+          tx,
+          db,
+          args.uid,
+          {
+            amount: costHours,
+            reason: buildCostReason(itemDetails, args.startDate, args.endDate),
+            reservationId: ref.id,
+          },
+          godzinkiVars,
+          now
+        );
 
-      if (!deductResult.ok) {
-        return {
-          ok: false,
-          code: deductResult.code || "hours_deduction_failed",
-          message: deductResult.message || "Insufficient hours",
-        } as const;
+        if (!deductResult.ok) {
+          return {
+            ok: false,
+            code: deductResult.code || "hours_deduction_failed",
+            message: deductResult.message || "Insufficient hours",
+          } as const;
+        }
       }
     }
 
@@ -598,6 +677,7 @@ export async function createBundleReservation(
     ok: true,
     reservationId: ref.id,
     costHours,
+    waived: exempt && costHours > 0,
     reservationKind,
     blockStartIso,
     blockEndIso,
@@ -654,6 +734,26 @@ async function updateBundleReservationDates(
   const vars = await getGearVars(db);
   const godzinkiVars = await getGodzinkiVars(db);
   const roleKey = user.roleKey;
+
+  // Zwolnienie z opłaty liczone po dacie tej edycji — spójnie z tworzeniem.
+  const updNow = new Date();
+  const schoolYear = await resolveSchoolYear(db, roleKey, args.uid, user.email);
+  const exempt = isFreeRentalExempt(schoolYear, updNow);
+
+  // Kursant: edycja dozwolona tylko bezpłatnie w oknie + przełącznik zarządu.
+  if (roleKey === "rola_kursant") {
+    const flagSnap = await db.collection("var_members").doc("kurs_wypożycza").get();
+    const flagOn = flagSnap.exists && flagSnap.data()?.value === true;
+    if (!flagOn) {
+      return {ok: false, code: "forbidden", message: "Rezerwacje dla kursantów są obecnie wyłączone."} as const;
+    }
+    if (!exempt) {
+      return schoolYear ?
+        {ok: false, code: "kursant_window_closed", message: `Jako kursant możesz wypożyczać sprzęt bezpłatnie tylko do 30 września ${schoolYear}.`, details: {schoolYear}} as const :
+        {ok: false, code: "kursant_no_year", message: "Brak roku szkoleniówki na liście kursantów — skontaktuj się z zarządem: zarzad@morzkulc.pl"} as const;
+    }
+  }
+
   const ref = db.collection("gear_reservations").doc(rid);
 
   // Jedna transakcja: świeży odczyt rezerwacji + kontrole + korekta godzinek
@@ -729,18 +829,65 @@ async function updateBundleReservationDates(
 
     const kayakCount = Number(r?.kayakCount ?? 0);
     const newCostHours = quoteKayaksCostHours(vars, roleKey, args.startDate, args.endDate, kayakCount);
-    const oldCostHours = Number(r?.costHours ?? 0);
-    const delta = newCostHours - oldCostHours;
+    const wasWaived = r?.waived === true;
+    // Koszt realnie pobrany wcześniej: 0 jeśli rezerwacja była zwolniona (waived).
+    const oldCostHours = wasWaived ? 0 : Number(r?.costHours ?? 0);
     const now = new Date();
 
-    if (delta > 0) {
+    if (exempt) {
+      // Pozostaje/staje się bezpłatne — saldo nie może zostać obciążone.
+      if (wasWaived) {
+        // Zwolnione → zwolnione: zaktualizuj kwotę istniejącego rekordu "waived",
+        // gdy koszt zmienił się wraz z terminem (spójność wyświetlania).
+        if (newCostHours !== Number(r?.costHours ?? 0)) {
+          const wsnap = await tx.get(
+            db.collection("godzinki_ledger")
+              .where("uid", "==", args.uid)
+              .where("type", "==", "spend")
+              .where("reservationId", "==", rid)
+          );
+          for (const wd of wsnap.docs) {
+            const w = wd.data() as any;
+            if (w.waived === true && w.refunded !== true) {
+              tx.update(wd.ref, {amount: newCostHours, updatedAt: now});
+            }
+          }
+        }
+      } else if (oldCostHours > 0) {
+        // Płatne → zwolnione: zwróć wcześniejszą opłatę do pul FIFO i zapisz koszt
+        // jako "waived" (przekreślony) — spójnie z rezerwacją tworzoną w oknie.
+        const refundResult = await refundHoursForReservationInTx(tx, db, args.uid, rid, oldCostHours, now);
+        if (!refundResult.ok) {
+          return {
+            ok: false,
+            code: refundResult.code || "hours_refund_failed",
+            message: refundResult.message || "Nie udało się zwrócić wcześniejszej opłaty.",
+          } as const;
+        }
+        if (newCostHours > 0) {
+          writeWaivedSpendInTx(tx, db, args.uid, {
+            amount: newCostHours,
+            reason: `Korekta rezerwacji ${rid} — zwolnienie (szkoleniówka ${schoolYear})`,
+            reservationId: rid,
+          });
+        }
+      } else if (newCostHours > 0) {
+        // Wcześniej brak kosztu (np. bez kajaka) → zapisz "waived".
+        writeWaivedSpendInTx(tx, db, args.uid, {
+          amount: newCostHours,
+          reason: `Korekta rezerwacji ${rid} — zwolnienie (szkoleniówka ${schoolYear})`,
+          reservationId: rid,
+        });
+      }
+    } else if (wasWaived && newCostHours > 0) {
+      // Było bezpłatne (np. edycja po wrześniu) → pobierz pełny koszt teraz.
       const deductResult = await deductHoursInTx(
         tx,
         db,
         args.uid,
         {
-          amount: delta,
-          reason: `Korekta rezerwacji ${rid} (${oldCostHours}h → ${newCostHours}h)`,
+          amount: newCostHours,
+          reason: `Korekta rezerwacji ${rid} (zwolnienie wygasło, ${newCostHours}h)`,
           reservationId: rid,
         },
         godzinkiVars,
@@ -753,23 +900,46 @@ async function updateBundleReservationDates(
           message: deductResult.message || "Insufficient hours for updated reservation",
         } as const;
       }
-    } else if (delta < 0) {
-      // Cofnij dedukcję do oryginalnych pul FIFO (zachowuje oryginalną ważność)
-      const reverseResult = await reverseDeductHoursInTx(
-        tx,
-        db,
-        args.uid,
-        rid,
-        Math.abs(delta),
-        godzinkiVars.expiryYears,
-        now
-      );
-      if (!reverseResult.ok) {
-        return {
-          ok: false,
-          code: reverseResult.code || "hours_reverse_failed",
-          message: reverseResult.message || "Cannot reverse hours for updated reservation",
-        } as const;
+    } else {
+      const delta = newCostHours - oldCostHours;
+      if (delta > 0) {
+        const deductResult = await deductHoursInTx(
+          tx,
+          db,
+          args.uid,
+          {
+            amount: delta,
+            reason: `Korekta rezerwacji ${rid} (${oldCostHours}h → ${newCostHours}h)`,
+            reservationId: rid,
+          },
+          godzinkiVars,
+          now
+        );
+        if (!deductResult.ok) {
+          return {
+            ok: false,
+            code: deductResult.code || "hours_deduction_failed",
+            message: deductResult.message || "Insufficient hours for updated reservation",
+          } as const;
+        }
+      } else if (delta < 0) {
+        // Cofnij dedukcję do oryginalnych pul FIFO (zachowuje oryginalną ważność)
+        const reverseResult = await reverseDeductHoursInTx(
+          tx,
+          db,
+          args.uid,
+          rid,
+          Math.abs(delta),
+          godzinkiVars.expiryYears,
+          now
+        );
+        if (!reverseResult.ok) {
+          return {
+            ok: false,
+            code: reverseResult.code || "hours_reverse_failed",
+            message: reverseResult.message || "Cannot reverse hours for updated reservation",
+          } as const;
+        }
       }
     }
 
@@ -782,13 +952,14 @@ async function updateBundleReservationDates(
         blockStartIso,
         blockEndIso,
         costHours: newCostHours,
+        waived: exempt && newCostHours > 0,
         updatedAt: now,
         modifiedFrom: {startDate: oldStart, endDate: oldEnd},
       },
       {merge: true}
     );
 
-    return {ok: true, costHours: newCostHours, blockStartIso, blockEndIso} as const;
+    return {ok: true, costHours: newCostHours, waived: exempt && newCostHours > 0, blockStartIso, blockEndIso} as const;
   });
 }
 

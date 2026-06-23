@@ -389,7 +389,20 @@ export const getSetup = onRequest({invoker: "private"}, async (req, res) => {
 
       const filteredSetup = filterSetupForUser(setup, uid, email, effectiveRoleKey, statusKey);
 
-      const kursWypozycza = kursWypozyczaSnap.exists && kursWypozyczaSnap.data()?.value === true;
+      let kursWypozycza = kursWypozyczaSnap.exists && kursWypozyczaSnap.data()?.value === true;
+      // Dla realnych kursantów ogranicz przycisk rezerwacji do okna wypożyczeń
+      // (do końca września roku szkoleniówki). Tryb podglądu (kursPreviewMode)
+      // zostaje na samej fladze — backend i tak egzekwuje eligibility per żądanie.
+      if (kursWypozycza && roleKey === "rola_kursant") {
+        const uSnap = await db.collection("kurs_uczestnicy").doc(email).get();
+        const rok = Number(uSnap.exists ? (uSnap.data() as any)?.rokSzkoleniowki : NaN);
+        const now = new Date();
+        const todayIso = now.toISOString().slice(0, 10);
+        // Zwolnienie/okno: tegoroczna szkoleniówka i przed końcem września.
+        if (!Number.isFinite(rok) || rok !== now.getUTCFullYear() || todayIso > `${rok}-09-30`) {
+          kursWypozycza = false;
+        }
+      }
 
       res.status(200).json({
         ok: true,

@@ -46,6 +46,7 @@ function serializeRecord(r: GodzinkiRecord): Record<string, any> {
     out.fromEarn = r.fromEarn ?? 0;
     out.overdraft = r.overdraft ?? 0;
     out.reservationId = r.reservationId ?? null;
+    out.waived = r.waived === true;
   }
 
   return out;

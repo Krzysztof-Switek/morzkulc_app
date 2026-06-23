@@ -63,7 +63,10 @@ export async function handleGearReservationCreate(req: Request, res: Response, d
         res.status(403).json({ok: false, code: "forbidden", message: "Konto zawieszone."});
         return;
       }
-      if (!deps.memberRoleKeys.includes(roleKey)) {
+      // Kursant przechodzi przez bramkę roli — jego eligibility (flaga kurs_wypożycza
+      // + okno wypożyczeń do końca września roku szkoleniówki) egzekwuje
+      // createBundleReservation. Pozostałe role spoza memberRoleKeys odrzucamy tutaj.
+      if (!deps.memberRoleKeys.includes(roleKey) && roleKey !== "rola_kursant") {
         res.status(403).json({ok: false, code: "forbidden", message: "Rezerwacja sprzętu wymaga roli Członek."});
         return;
       }

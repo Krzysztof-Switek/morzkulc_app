@@ -4,7 +4,11 @@
  * Environment: controlled by ACTIVE_ENV in env_config.gs
  *
  * Zakładka "uczestnicy" — wymagane kolumny:
- *   Imię | Nazwisko | e-mail | Opłata | PESEL | Telefon | waga | wzrost
+ *   Imię | Nazwisko | e-mail | Opłata | PESEL | Telefon | waga | wzrost | rok szkoleniówki
+ *
+ * "rok szkoleniówki" = rok rozpoczęcia kursu. Steruje bezpłatnym oknem
+ * wypożyczeń sprzętu kursanta (do 30 września tego roku) — patrz backend
+ * gear_bundle_service.checkKursantRentalEligibility.
  *
  * ID dokumentu Firestore = znormalizowany email (unikalny per uczestnik).
  * Sync tworzy nowe dokumenty lub patchuje tylko zmienione pola.
@@ -135,6 +139,7 @@ function readUczestnicyForSync_() {
     const feeRaw    = idx("oplata")  !== -1 ? row[idx("oplata")]  : null;
     const weightRaw = idx("waga")    !== -1 ? row[idx("waga")]    : null;
     const heightRaw = idx("wzrost")  !== -1 ? row[idx("wzrost")]  : null;
+    const rokRaw    = idx("rok_szkoleniowki") !== -1 ? row[idx("rok_szkoleniowki")] : null;
 
     out.push({
       docId: email,
@@ -147,6 +152,7 @@ function readUczestnicyForSync_() {
         phone:     toStringOrEmpty_(idx("telefon")  !== -1 ? row[idx("telefon")]  : ""),
         weight:    toNumberOrNull_(weightRaw),
         height:    toNumberOrNull_(heightRaw),
+        rokSzkoleniowki: toNumberOrNull_(rokRaw),
       },
     });
   }
@@ -165,7 +171,7 @@ function buildUczestnikDiff_(sheetData, firestoreData) {
     }
   }
 
-  const numFields = ["fee", "weight", "height"];
+  const numFields = ["fee", "weight", "height", "rokSzkoleniowki"];
   for (let i = 0; i < numFields.length; i++) {
     const f = numFields[i];
     const sheetVal = sheetData[f];
