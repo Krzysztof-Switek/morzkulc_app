@@ -357,6 +357,57 @@ async function enqueueGodzinkiHistMerge(
   });
 }
 
+type Szkoleniowiec = {name: string; email: string};
+
+/**
+ * Rozwiązuje aktualnego szkoleniowca (opiekun stażu #1) do nazwy + kontaktu funkcyjnego.
+ *
+ * Źródło operatora: service_state/function_roles.szkoleniowiec.{email,mailbox}
+ * (ustawiane przez users.syncFunctionRolesFromSetup). Fallback: setup/vars_members.vars.szkoleniowiec.value.
+ * Kontakt zawsze przez skrzynkę funkcyjną (mailbox), nie prywatny adres operatora.
+ * Wywoływać TYLKO dla kandydata (ogranicza odczyty Firestore).
+ */
+async function resolveSzkoleniowiec(db: FirebaseFirestore.Firestore): Promise<Szkoleniowiec> {
+  const FALLBACK_MAILBOX = "szkoleniowiec@morzkulc.pl";
+  let operatorEmail = "";
+  let mailbox = FALLBACK_MAILBOX;
+
+  try {
+    const stateSnap = await db.collection("service_state").doc("function_roles").get();
+    const szk = stateSnap.exists ? (stateSnap.data() as any)?.szkoleniowiec : null;
+    operatorEmail = String(szk?.email || "").trim().toLowerCase();
+    mailbox = String(szk?.mailbox || "").trim() || FALLBACK_MAILBOX;
+
+    // Fallback do setup vars, gdy stan funkcyjny nie zna jeszcze operatora.
+    if (!operatorEmail) {
+      const varsSnap = await db.collection("setup").doc("vars_members").get();
+      const raw = varsSnap.exists ? (varsSnap.data() as any)?.vars?.szkoleniowiec?.value : null;
+      const fromVars = String(raw || "").trim().toLowerCase();
+      if (fromVars && fromVars.includes("@") && !fromVars.includes(",") && !fromVars.includes(";")) {
+        operatorEmail = fromVars;
+      }
+    }
+  } catch {
+    // brak stanu/uprawnień — zwracamy samą skrzynkę funkcyjną poniżej
+  }
+
+  if (!operatorEmail) return {name: "Szkoleniowiec SKK", email: mailbox};
+
+  try {
+    const userSnap = await db.collection("users_active").where("email", "==", operatorEmail).limit(1).get();
+    if (!userSnap.empty) {
+      const u = userSnap.docs[0].data() as any;
+      const fullName = `${String(u?.profile?.firstName || "").trim()} ${String(u?.profile?.lastName || "").trim()}`.trim();
+      const name = fullName || String(u?.displayName || "").trim() || "Szkoleniowiec SKK";
+      return {name, email: mailbox};
+    }
+  } catch {
+    // nie udało się rozwiązać nazwy — fallback poniżej
+  }
+
+  return {name: "Szkoleniowiec SKK", email: mailbox};
+}
+
 export async function handleRegisterUser(req: Request, res: Response, deps: RegisterUserDeps) {
   const {
     db,
@@ -574,6 +625,10 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
             .catch((e: any) => console.error("enqueueGodzinkiHistMerge (existing user) failed", {uid, message: e?.message}));
         }
 
+        // Opiekunowie stażu kandydata: #2 z arkusza (admin.mentor), #1 = aktualny
+        // szkoleniowiec (rozwiązywany tylko dla kandydata — ogranicza odczyty).
+        const szkoleniowiec = roleKey === "rola_kandydat" ? await resolveSzkoleniowiec(db) : null;
+
         res.status(200).json({
           ok: true,
           existed: true,
@@ -590,6 +645,8 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
           firstName: normalizeStr(mergedProfile.firstName) || null,
           contributionsPaidUntil: (data as any).admin?.contributions ?? null,
           entryFeePaidAt: (data as any).admin?.entryFeePaidAt ?? null,
+          mentor: (data as any).admin?.mentor ?? null,
+          szkoleniowiec,
           openingNameMatchPendingConfirm,
           obEmail: obEmailForConfirm,
           openingEmailCollision,
@@ -714,6 +771,10 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
         });
       }
 
+      // Opiekunowie stażu (jak w gałęzi istniejącego usera). Nowy kandydat zwykle nie ma
+      // jeszcze admin.mentor (trafia syncem z arkusza) — wtedy null.
+      const szkoleniowiec = roleKey === "rola_kandydat" ? await resolveSzkoleniowiec(db) : null;
+
       res.status(200).json({
         ok: true,
         existed: false,
@@ -730,6 +791,8 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
         firstName: normalizeStr(incomingProfile.firstName) || null,
         contributionsPaidUntil: docToCreate.admin?.contributions ?? null,
         entryFeePaidAt: docToCreate.admin?.entryFeePaidAt ?? null,
+        mentor: docToCreate.admin?.mentor ?? null,
+        szkoleniowiec,
         openingNameMatchPendingConfirm,
         obEmail: obEmailForConfirm,
         openingEmailCollision,

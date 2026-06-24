@@ -125,6 +125,27 @@ export function computeBalance(records: GodzinkiRecord[], now: Date = new Date()
 }
 
 /**
+ * Suma WYPRACOWANYCH godzinek: zatwierdzone rekordy "earn" (approved=true),
+ * z pominięciem korekt rezerwacji (sourceType="adjustment" — to zwroty z edycji
+ * rezerwacji, nie praca).
+ *
+ * To licznik kumulacyjny „ile łącznie zarobiono" — NIE jest pomniejszany o wydane
+ * godzinki ani o wygaśnięcie pul. Używany do progresu stażu kandydata (cel 20 h):
+ * saldo może być ujemne (sprzęt wypożyczany na bieżąco), ale staż liczymy po sumie
+ * zarobionych godzinek.
+ */
+export function computeEarnedTotal(records: GodzinkiRecord[]): number {
+  let total = 0;
+  for (const r of records) {
+    if (r.type !== "earn") continue;
+    if (r.approved !== true) continue;
+    if (r.sourceType === "adjustment") continue;
+    total += Number(r.amount ?? 0);
+  }
+  return total;
+}
+
+/**
  * Zwraca datę najbliższego wygaśnięcia godzinek (najstarsza pula z remaining > 0).
  */
 export function computeNextExpiry(records: GodzinkiRecord[], now: Date = new Date()): Date | null {

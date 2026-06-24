@@ -1,6 +1,6 @@
 # Project Context Map
 
-Generated at: `2026-06-22T17:18:10`
+Generated at: `2026-06-24T12:21:50`
 Project root: `C:\Users\kswitek\Documents\morzkulc_app`
 
 Purpose: this file is a compact project map for Claude Code. It shows which files exist, what functions/classes they contain, and which internal files depend on which other files.
@@ -57,9 +57,9 @@ Excluded sensitive files:
 
 ## Summary
 
-- Total scanned files: `429`
+- Total scanned files: `431`
 - Python files: `42`
-- Script files JS/TS/GS/etc.: `274`
+- Script files JS/TS/GS/etc.: `276`
 - Config files: `21`
 - Markdown files: `63`
 - Internal dependency edges: `443`
@@ -293,6 +293,7 @@ Excluded sensitive files:
   - scripts/
     - auditInvoker.js
     - auditInvokerDebug.js
+    - backfillEntryFeePaidAt.js
     - deleteGhostGodzinki.js
     - deleteStuckJob.js
     - enqueueGodzinkiTransitionImport.js
@@ -309,6 +310,7 @@ Excluded sensitive files:
     - readUsersActive.js
     - removeEventsFromApp.js
     - verifyDeploy.js
+    - waiveUserGearCharges.js
   - src/
     - api/
       - adminApprovalHandler.ts
@@ -2858,28 +2860,10 @@ Excluded sensitive files:
 
 ### `appscript/członkowie sympatycy SKK/users_sync.gs`
 
-- Lines: `437`
-- Size: `13142` bytes
+- Lines: `14`
+- Size: `603` bytes
 - Functions:
-  - `addChangedPathIfNeeded_`
-  - `buildUserDiff_`
-  - `findUserDocumentByMemberId_`
-  - `firestoreFieldsToJs_`
-  - `firestoreValueToJs_`
-  - `getPathValue_`
-  - `idx`
-  - `mapRoleDisplayToKey_`
-  - `mapStatusDisplayToKey_`
-  - `normalizeBoolish_`
-  - `normalizeComparable_`
-  - `normalizeDateString_`
-  - `normalizeEmail_`
-  - `normalizeString_`
-  - `patchFirestoreUserFields_`
-  - `readUsersForSync_`
-  - `setPathValue_`
   - `syncUsersToFirestore`
-  - `valuesEqualForSync_`
 
 ### `appscript/kilometrówka/archiwum_sync.gs`
 
@@ -2987,8 +2971,8 @@ Excluded sensitive files:
 
 ### `appscript/kurs/uczestnicy_sync.gs`
 
-- Lines: `187`
-- Size: `6090` bytes
+- Lines: `193`
+- Size: `6483` bytes
 - Functions:
   - `buildUczestnikDiff_`
   - `normalizeComparable_`
@@ -3099,8 +3083,8 @@ Excluded sensitive files:
 
 ### `functions/.eslintrc.js`
 
-- Lines: `62`
-- Size: `1541` bytes
+- Lines: `65`
+- Size: `1722` bytes
 
 ### `functions/lib/api/adminApprovalHandler.js`
 
@@ -3197,8 +3181,8 @@ Excluded sensitive files:
 
 ### `functions/lib/api/basenEnrollHandler.js`
 
-- Lines: `89`
-- Size: `4529` bytes
+- Lines: `90`
+- Size: `4634` bytes
 - Internal dependencies:
   - `functions/lib/modules/basen/basen_service.js`
   - `functions/lib/modules/users/userStatusCheck.js`
@@ -3244,8 +3228,8 @@ Excluded sensitive files:
 
 ### `functions/lib/api/gearBundleReservationCreateHandler.js`
 
-- Lines: `93`
-- Size: `4181` bytes
+- Lines: `96`
+- Size: `4487` bytes
 - Internal dependencies:
   - `functions/lib/modules/calendar/calendar_utils.js`
   - `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
@@ -3304,8 +3288,8 @@ Excluded sensitive files:
 
 ### `functions/lib/api/gearReservationCreateHandler.js`
 
-- Lines: `85`
-- Size: `4207` bytes
+- Lines: `88`
+- Size: `4513` bytes
 - Internal dependencies:
   - `functions/lib/modules/calendar/calendar_utils.js`
   - `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
@@ -3449,8 +3433,8 @@ Excluded sensitive files:
 
 ### `functions/lib/api/getGodzinkiHandler.js`
 
-- Lines: `135`
-- Size: `6882` bytes
+- Lines: `136`
+- Size: `6922` bytes
 - Internal dependencies:
   - `functions/lib/modules/hours/godzinki_service.js`
   - `functions/lib/modules/hours/godzinki_vars.js`
@@ -3618,8 +3602,8 @@ Excluded sensitive files:
 
 ### `functions/lib/api/registerUserHandler.js`
 
-- Lines: `583`
-- Size: `30248` bytes
+- Lines: `585`
+- Size: `30577` bytes
 - Internal dependencies:
   - `functions/lib/modules/hours/godzinki_service.js`
   - `functions/lib/modules/hours/opening_balance_fields.js`
@@ -3688,8 +3672,8 @@ Excluded sensitive files:
 
 ### `functions/lib/index.js`
 
-- Lines: `1339`
-- Size: `57305` bytes
+- Lines: `1356`
+- Size: `58424` bytes
 - Internal dependencies:
   - `functions/lib/api/adminApprovalHandler.js`
   - `functions/lib/api/adminEventsSyncCalendarHandler.js`
@@ -3883,8 +3867,8 @@ Excluded sensitive files:
 
 ### `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
 
-- Lines: `720`
-- Size: `37503` bytes
+- Lines: `881`
+- Size: `46371` bytes
 - Internal dependencies:
   - `functions/lib/modules/calendar/calendar_utils.js`
   - `functions/lib/modules/equipment/kayaks/gear_kayaks_service.js`
@@ -3914,9 +3898,12 @@ Excluded sensitive files:
   - `getItemsWithAvailability`
   - `getReservedCompositeIdsForPeriod`
   - `getUserRole`
+  - `isFreeRentalExempt`
   - `isSupportedBundleCategory`
   - `listMyBundleReservations`
   - `norm`
+  - `parseSchoolYear`
+  - `resolveSchoolYear`
   - `uniqBy`
   - `updateBundleReservationDates`
   - `updateGearReservationDates`
@@ -3964,8 +3951,8 @@ Excluded sensitive files:
 
 ### `functions/lib/modules/hours/godzinki_service.js`
 
-- Lines: `819`
-- Size: `37562` bytes
+- Lines: `851`
+- Size: `38876` bytes
 - Imports:
   - `import/require firebase-admin`
 - Functions:
@@ -3989,6 +3976,7 @@ Excluded sensitive files:
   - `submitPurchaseRequest`
   - `toDate`
   - `toTimestamp`
+  - `writeWaivedSpendInTx`
 
 ### `functions/lib/modules/hours/godzinki_vars.js`
 
@@ -4001,8 +3989,8 @@ Excluded sensitive files:
 
 ### `functions/lib/modules/hours/hours_quote.js`
 
-- Lines: `16`
-- Size: `703` bytes
+- Lines: `19`
+- Size: `965` bytes
 - Internal dependencies:
   - `functions/lib/modules/calendar/calendar_utils.js`
 - Imports:
@@ -4069,8 +4057,8 @@ Excluded sensitive files:
 
 ### `functions/lib/modules/setup/setup_gear_vars.js`
 
-- Lines: `59`
-- Size: `2395` bytes
+- Lines: `66`
+- Size: `2821` bytes
 - Functions:
   - `getGearVars`
   - `getVar`
@@ -4609,8 +4597,8 @@ Excluded sensitive files:
 
 ### `functions/lib/service/tasks/usersSyncFieldsFromSheet.js`
 
-- Lines: `269`
-- Size: `11650` bytes
+- Lines: `278`
+- Size: `12309` bytes
 - Internal dependencies:
   - `functions/lib/service/providers/googleSheetsProvider.js`
   - `functions/lib/service/service_config.js`
@@ -4738,6 +4726,15 @@ Excluded sensitive files:
 - Size: `2090` bytes
 - Imports:
   - `import/require google-auth-library`
+
+### `functions/scripts/backfillEntryFeePaidAt.js`
+
+- Lines: `66`
+- Size: `2301` bytes
+- Imports:
+  - `import/require firebase-admin`
+- Functions:
+  - `norm`
 
 ### `functions/scripts/deleteGhostGodzinki.js`
 
@@ -4873,6 +4870,17 @@ Excluded sensitive files:
 - Imports:
   - `import/require google-auth-library`
 
+### `functions/scripts/waiveUserGearCharges.js`
+
+- Lines: `138`
+- Size: `5592` bytes
+- Imports:
+  - `import/require firebase-admin`
+- Functions:
+  - `EMAIL`
+  - `computeBalance`
+  - `toDate`
+
 ### `functions/src/api/adminApprovalHandler.ts`
 
 - Lines: `222`
@@ -4977,8 +4985,8 @@ Excluded sensitive files:
 
 ### `functions/src/api/basenEnrollHandler.ts`
 
-- Lines: `111`
-- Size: `3945` bytes
+- Lines: `112`
+- Size: `4044` bytes
 - Internal dependencies:
   - `functions/src/modules/basen/basen_service.ts`
   - `functions/src/modules/users/userStatusCheck.ts`
@@ -5003,8 +5011,8 @@ Excluded sensitive files:
 
 ### `functions/src/api/gearBundleReservationCreateHandler.ts`
 
-- Lines: `117`
-- Size: `3924` bytes
+- Lines: `120`
+- Size: `4212` bytes
 - Internal dependencies:
   - `functions/src/modules/calendar/calendar_utils.ts`
   - `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
@@ -5068,8 +5076,8 @@ Excluded sensitive files:
 
 ### `functions/src/api/gearReservationCreateHandler.ts`
 
-- Lines: `104`
-- Size: `3823` bytes
+- Lines: `107`
+- Size: `4111` bytes
 - Internal dependencies:
   - `functions/src/modules/calendar/calendar_utils.ts`
   - `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
@@ -5221,8 +5229,8 @@ Excluded sensitive files:
 
 ### `functions/src/api/getGodzinkiHandler.ts`
 
-- Lines: `156`
-- Size: `5582` bytes
+- Lines: `157`
+- Size: `5618` bytes
 - Internal dependencies:
   - `functions/src/modules/hours/godzinki_service.ts`
   - `functions/src/modules/hours/godzinki_vars.ts`
@@ -5383,8 +5391,8 @@ Excluded sensitive files:
 
 ### `functions/src/api/registerUserHandler.ts`
 
-- Lines: `740`
-- Size: `27774` bytes
+- Lines: `742`
+- Size: `27912` bytes
 - Internal dependencies:
   - `functions/src/modules/hours/godzinki_service.ts`
   - `functions/src/modules/hours/opening_balance_fields.ts`
@@ -5458,8 +5466,8 @@ Excluded sensitive files:
 
 ### `functions/src/index.ts`
 
-- Lines: `1485`
-- Size: `48809` bytes
+- Lines: `1502`
+- Size: `49781` bytes
 - Internal dependencies:
   - `functions/src/api/adminApprovalHandler.ts`
   - `functions/src/api/adminEventsSyncCalendarHandler.ts`
@@ -5654,8 +5662,8 @@ Excluded sensitive files:
 
 ### `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
 
-- Lines: `889`
-- Size: `33599` bytes
+- Lines: `1060`
+- Size: `41383` bytes
 - Internal dependencies:
   - `functions/src/modules/calendar/calendar_utils.ts`
   - `functions/src/modules/equipment/kayaks/gear_kayaks_service.ts`
@@ -5685,9 +5693,12 @@ Excluded sensitive files:
   - `getItemsWithAvailability`
   - `getReservedCompositeIdsForPeriod`
   - `getUserRole`
+  - `isFreeRentalExempt`
   - `isSupportedBundleCategory`
   - `listMyBundleReservations`
   - `norm`
+  - `parseSchoolYear`
+  - `resolveSchoolYear`
   - `updateBundleReservationDates`
   - `updateGearReservationDates`
 
@@ -5734,8 +5745,8 @@ Excluded sensitive files:
 
 ### `functions/src/modules/hours/godzinki_service.ts`
 
-- Lines: `1019`
-- Size: `37283` bytes
+- Lines: `1060`
+- Size: `38863` bytes
 - Internal dependencies:
   - `functions/src/modules/hours/godzinki_vars.ts`
 - Imports:
@@ -5762,6 +5773,7 @@ Excluded sensitive files:
   - `submitPurchaseRequest`
   - `toDate`
   - `toTimestamp`
+  - `writeWaivedSpendInTx`
 
 ### `functions/src/modules/hours/godzinki_vars.ts`
 
@@ -5774,8 +5786,8 @@ Excluded sensitive files:
 
 ### `functions/src/modules/hours/hours_quote.ts`
 
-- Lines: `15`
-- Size: `586` bytes
+- Lines: `18`
+- Size: `842` bytes
 - Internal dependencies:
   - `functions/src/modules/calendar/calendar_utils.ts`
   - `functions/src/modules/setup/setup_gear_vars.ts`
@@ -5850,8 +5862,8 @@ Excluded sensitive files:
 
 ### `functions/src/modules/setup/setup_gear_vars.ts`
 
-- Lines: `80`
-- Size: `2756` bytes
+- Lines: `88`
+- Size: `3165` bytes
 - Functions:
   - `getGearVars`
   - `getVar`
@@ -6447,8 +6459,8 @@ Excluded sensitive files:
 
 ### `functions/src/service/tasks/usersSyncFieldsFromSheet.ts`
 
-- Lines: `260`
-- Size: `9445` bytes
+- Lines: `270`
+- Size: `10049` bytes
 - Internal dependencies:
   - `functions/src/service/providers/googleSheetsProvider.ts`
   - `functions/src/service/service_config.ts`
@@ -6722,8 +6734,8 @@ Excluded sensitive files:
 
 ### `public/core/render_shell.js`
 
-- Lines: `1286`
-- Size: `54400` bytes
+- Lines: `1316`
+- Size: `56190` bytes
 - Imports:
   - `import/require /core/access_control.js`
   - `import/require /core/api_client.js`
@@ -6740,6 +6752,7 @@ Excluded sensitive files:
   - `fieldErrorToPl`
   - `formatContribDate`
   - `formatDatePL`
+  - `formatEntryFeeValidUntil`
   - `formatShortDate`
   - `getDashboardConfig`
   - `getGearRoute`
@@ -6844,8 +6857,8 @@ Excluded sensitive files:
 
 ### `public/modules/gear_module.js`
 
-- Lines: `2274`
-- Size: `95809` bytes
+- Lines: `2280`
+- Size: `96199` bytes
 - Imports:
   - `import/require /core/api_client.js`
   - `import/require /core/firebase_client.js`
@@ -6917,8 +6930,8 @@ Excluded sensitive files:
 
 ### `public/modules/godzinki_module.js`
 
-- Lines: `418`
-- Size: `16248` bytes
+- Lines: `425`
+- Size: `16704` bytes
 - Imports:
   - `import/require /core/api_client.js`
 - Functions:
@@ -6964,8 +6977,8 @@ Excluded sensitive files:
 
 ### `public/modules/km_module.js`
 
-- Lines: `1480`
-- Size: `58027` bytes
+- Lines: `1486`
+- Size: `58526` bytes
 - Imports:
   - `import/require /core/api_client.js`
 - Functions:
@@ -7028,8 +7041,8 @@ Excluded sensitive files:
 
 ### `public/modules/my_reservations_module.js`
 
-- Lines: `603`
-- Size: `23004` bytes
+- Lines: `607`
+- Size: `23309` bytes
 - Imports:
   - `import/require /core/api_client.js`
   - `import/require /core/router.js`
@@ -9183,8 +9196,8 @@ Excluded sensitive files:
 - `public/styles/basen.css` — 266 lines, 4666 bytes
 - `public/styles/dashboard.css` — 162 lines, 2708 bytes
 - `public/styles/events.css` — 143 lines, 2366 bytes
-- `public/styles/gear.css` — 1177 lines, 21098 bytes
-- `public/styles/godzinki.css` — 152 lines, 2704 bytes
+- `public/styles/gear.css` — 1184 lines, 21257 bytes
+- `public/styles/godzinki.css` — 164 lines, 2969 bytes
 - `public/styles/km.css` — 496 lines, 10234 bytes
 - `public/styles/kurs.css` — 430 lines, 7128 bytes
 - `public/styles/start.css` — 226 lines, 6558 bytes

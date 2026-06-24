@@ -224,3 +224,27 @@
 .startEventDetailRow strong { color: var(--text-muted); font-weight: 700; }
 .startEventDetailRow a { color: var(--accent, #5b9dff); font-weight: 700; text-decoration: none; }
 .startEventDetailRow a:hover { text-decoration: underline; }
+
+/* ── Profil: jedna spójna karta (staż, opiekunowie, popover roli) ── */
+.profileChipsWrap { position: relative; }
+.profileBlock { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); text-align: left; }
+.profileBlockTitle { margin: 0 0 8px; font-size: 14px; font-weight: 800; color: var(--text); }
+.stazVal { font-size: 15px; color: var(--text); margin-bottom: 8px; }
+.stazVal strong { font-size: 22px; font-weight: 800; }
+.stazProgress { height: 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.08); overflow: hidden; margin-bottom: 8px; }
+:root[data-theme="light"] .stazProgress { background: rgba(12, 18, 32, 0.1); }
+.stazBar { height: 100%; border-radius: 4px; background: var(--primary); transition: width 0.3s; }
+.stazRemaining { margin: 0 0 8px; font-weight: 700; color: var(--text); }
+.stazRemaining.stazDone { color: var(--ok); }
+.stazHint { margin: 0; font-size: 12px; line-height: 1.4; }
+.mentorRow { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.mentorRow:last-child { border-bottom: none; }
+.mentorRole { color: var(--text-muted); flex-shrink: 0; }
+.mentorName { color: var(--text); font-weight: 700; text-align: right; }
+
+/* Ikonka „i" przy roli + wyskakująca chmurka z wyjaśnieniem (tylko po kliknięciu) */
+.infoIcon { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; margin-left: 6px; padding: 0; border-radius: 50%; border: 1px solid var(--border); background: transparent; color: var(--text-muted); font-size: 11px; font-weight: 800; font-style: italic; line-height: 1; cursor: pointer; vertical-align: middle; }
+.infoIcon:hover { color: var(--text); border-color: var(--text-muted); }
+.infoPopover { display: none; position: absolute; top: calc(100% + 8px); left: 0; right: 0; z-index: 20; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); font-size: 12.5px; line-height: 1.45; box-shadow: var(--shadow-1); text-align: left; cursor: pointer; }
+.infoPopover.show { display: block; }
+.infoPopover::before { content: ""; position: absolute; top: -6px; left: 20px; width: 10px; height: 10px; background: var(--surface); border-left: 1px solid var(--border); border-top: 1px solid var(--border); transform: rotate(45deg); }

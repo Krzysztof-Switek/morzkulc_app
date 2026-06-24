@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-22T17:18:10",
+  "generated_at": "2026-06-24T12:21:50",
   "project_root": "C:\\Users\\kswitek\\Documents\\morzkulc_app",
   "settings": {
     "excluded_dirs": [
@@ -1193,9 +1193,9 @@
     {
       "path": "appscript/członkowie sympatycy SKK/users_sync.gs",
       "extension": ".gs",
-      "size_bytes": 13142,
-      "line_count": 437,
-      "sha1_short": "05f855605a",
+      "size_bytes": 603,
+      "line_count": 14,
+      "sha1_short": "9c1669e2bd",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -1203,187 +1203,7 @@
       "classes": [],
       "functions": [
         {
-          "name": "addChangedPathIfNeeded_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "buildUserDiff_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "findUserDocumentByMemberId_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "firestoreFieldsToJs_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "firestoreValueToJs_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "getPathValue_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "idx",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "mapRoleDisplayToKey_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "mapStatusDisplayToKey_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "normalizeBoolish_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "normalizeComparable_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "normalizeDateString_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "normalizeEmail_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "normalizeString_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "patchFirestoreUserFields_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "readUsersForSync_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "setPathValue_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
           "name": "syncUsersToFirestore",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "valuesEqualForSync_",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -2147,9 +1967,9 @@
     {
       "path": "appscript/kurs/uczestnicy_sync.gs",
       "extension": ".gs",
-      "size_bytes": 6090,
-      "line_count": 187,
-      "sha1_short": "42b12dc97e",
+      "size_bytes": 6483,
+      "line_count": 193,
+      "sha1_short": "cad9a75742",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -5032,9 +4852,9 @@
     {
       "path": "functions/.eslintrc.js",
       "extension": ".js",
-      "size_bytes": 1541,
-      "line_count": 62,
-      "sha1_short": "8cb8072e9c",
+      "size_bytes": 1722,
+      "line_count": 65,
+      "sha1_short": "85643874f8",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -5447,9 +5267,9 @@
     {
       "path": "functions/lib/api/basenEnrollHandler.js",
       "extension": ".js",
-      "size_bytes": 4529,
-      "line_count": 89,
-      "sha1_short": "e17cf5038d",
+      "size_bytes": 4634,
+      "line_count": 90,
+      "sha1_short": "287e23359a",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -5698,9 +5518,9 @@
     {
       "path": "functions/lib/api/gearBundleReservationCreateHandler.js",
       "extension": ".js",
-      "size_bytes": 4181,
-      "line_count": 93,
-      "sha1_short": "0dc1776de3",
+      "size_bytes": 4487,
+      "line_count": 96,
+      "sha1_short": "e1de61ec54",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -5932,9 +5752,9 @@
     {
       "path": "functions/lib/api/gearReservationCreateHandler.js",
       "extension": ".js",
-      "size_bytes": 4207,
-      "line_count": 85,
-      "sha1_short": "2a19ea3f04",
+      "size_bytes": 4513,
+      "line_count": 88,
+      "sha1_short": "18553d2a03",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -6557,9 +6377,9 @@
     {
       "path": "functions/lib/api/getGodzinkiHandler.js",
       "extension": ".js",
-      "size_bytes": 6882,
-      "line_count": 135,
-      "sha1_short": "90c42ba7d8",
+      "size_bytes": 6922,
+      "line_count": 136,
+      "sha1_short": "467229de71",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -7341,9 +7161,9 @@
     {
       "path": "functions/lib/api/registerUserHandler.js",
       "extension": ".js",
-      "size_bytes": 30248,
-      "line_count": 583,
-      "sha1_short": "81bc55c189",
+      "size_bytes": 30577,
+      "line_count": 585,
+      "sha1_short": "752029255d",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -7708,9 +7528,9 @@
     {
       "path": "functions/lib/index.js",
       "extension": ".js",
-      "size_bytes": 57305,
-      "line_count": 1339,
-      "sha1_short": "afa825ba04",
+      "size_bytes": 58424,
+      "line_count": 1356,
+      "sha1_short": "6421026f88",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -8785,9 +8605,9 @@
     {
       "path": "functions/lib/modules/equipment/bundle/gear_bundle_service.js",
       "extension": ".js",
-      "size_bytes": 37503,
-      "line_count": 720,
-      "sha1_short": "fa7799e078",
+      "size_bytes": 46371,
+      "line_count": 881,
+      "sha1_short": "7196cd3907",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -8973,6 +8793,16 @@
           "doc": null
         },
         {
+          "name": "isFreeRentalExempt",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "isSupportedBundleCategory",
           "type": "function",
           "line_start": null,
@@ -8994,6 +8824,26 @@
         },
         {
           "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "parseSchoolYear",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "resolveSchoolYear",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -9277,9 +9127,9 @@
     {
       "path": "functions/lib/modules/hours/godzinki_service.js",
       "extension": ".js",
-      "size_bytes": 37562,
-      "line_count": 819,
-      "sha1_short": "b91fb83564",
+      "size_bytes": 38876,
+      "line_count": 851,
+      "sha1_short": "617910037a",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -9493,6 +9343,16 @@
           "decorators": [],
           "returns": null,
           "doc": null
+        },
+        {
+          "name": "writeWaivedSpendInTx",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
         }
       ],
       "top_level_symbols": [],
@@ -9551,9 +9411,9 @@
     {
       "path": "functions/lib/modules/hours/hours_quote.js",
       "extension": ".js",
-      "size_bytes": 703,
-      "line_count": 16,
-      "sha1_short": "08aa50029b",
+      "size_bytes": 965,
+      "line_count": 19,
+      "sha1_short": "1e2a12823a",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -9904,9 +9764,9 @@
     {
       "path": "functions/lib/modules/setup/setup_gear_vars.js",
       "extension": ".js",
-      "size_bytes": 2395,
-      "line_count": 59,
-      "sha1_short": "cab4c578c5",
+      "size_bytes": 2821,
+      "line_count": 66,
+      "sha1_short": "6e451facd0",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -12421,9 +12281,9 @@
     {
       "path": "functions/lib/service/tasks/usersSyncFieldsFromSheet.js",
       "extension": ".js",
-      "size_bytes": 11650,
-      "line_count": 269,
-      "sha1_short": "871c780a70",
+      "size_bytes": 12309,
+      "line_count": 278,
+      "sha1_short": "2d9698036c",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -13102,6 +12962,42 @@
       "notes": []
     },
     {
+      "path": "functions/scripts/backfillEntryFeePaidAt.js",
+      "extension": ".js",
+      "size_bytes": 2301,
+      "line_count": 66,
+      "sha1_short": "b8b485d500",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/scripts/deleteGhostGodzinki.js",
       "extension": ".js",
       "size_bytes": 3676,
@@ -13641,6 +13537,62 @@
       "notes": []
     },
     {
+      "path": "functions/scripts/waiveUserGearCharges.js",
+      "extension": ".js",
+      "size_bytes": 5592,
+      "line_count": 138,
+      "sha1_short": "69bb368d42",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "EMAIL",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "computeBalance",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "toDate",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/src/api/adminApprovalHandler.ts",
       "extension": ".ts",
       "size_bytes": 8699,
@@ -14081,9 +14033,9 @@
     {
       "path": "functions/src/api/basenEnrollHandler.ts",
       "extension": ".ts",
-      "size_bytes": 3945,
-      "line_count": 111,
-      "sha1_short": "f08ab9d328",
+      "size_bytes": 4044,
+      "line_count": 112,
+      "sha1_short": "c625e14509",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -14179,9 +14131,9 @@
     {
       "path": "functions/src/api/gearBundleReservationCreateHandler.ts",
       "extension": ".ts",
-      "size_bytes": 3924,
-      "line_count": 117,
-      "sha1_short": "fdbd663793",
+      "size_bytes": 4212,
+      "line_count": 120,
+      "sha1_short": "23bd7f0168",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -14448,9 +14400,9 @@
     {
       "path": "functions/src/api/gearReservationCreateHandler.ts",
       "extension": ".ts",
-      "size_bytes": 3823,
-      "line_count": 104,
-      "sha1_short": "b6b0dfdf8e",
+      "size_bytes": 4111,
+      "line_count": 107,
+      "sha1_short": "7a4aed8c03",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -15129,9 +15081,9 @@
     {
       "path": "functions/src/api/getGodzinkiHandler.ts",
       "extension": ".ts",
-      "size_bytes": 5582,
-      "line_count": 156,
-      "sha1_short": "01abd58310",
+      "size_bytes": 5618,
+      "line_count": 157,
+      "sha1_short": "5692f2354d",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -15840,9 +15792,9 @@
     {
       "path": "functions/src/api/registerUserHandler.ts",
       "extension": ".ts",
-      "size_bytes": 27774,
-      "line_count": 740,
-      "sha1_short": "b011aae234",
+      "size_bytes": 27912,
+      "line_count": 742,
+      "sha1_short": "873431c719",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -16242,9 +16194,9 @@
     {
       "path": "functions/src/index.ts",
       "extension": ".ts",
-      "size_bytes": 48809,
-      "line_count": 1485,
-      "sha1_short": "9278161267",
+      "size_bytes": 49781,
+      "line_count": 1502,
+      "sha1_short": "9189ccac23",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -17326,9 +17278,9 @@
     {
       "path": "functions/src/modules/equipment/bundle/gear_bundle_service.ts",
       "extension": ".ts",
-      "size_bytes": 33599,
-      "line_count": 889,
-      "sha1_short": "aca10004bb",
+      "size_bytes": 41383,
+      "line_count": 1060,
+      "sha1_short": "e4bc7b3f9e",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -17514,6 +17466,16 @@
           "doc": null
         },
         {
+          "name": "isFreeRentalExempt",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "isSupportedBundleCategory",
           "type": "function",
           "line_start": null,
@@ -17535,6 +17497,26 @@
         },
         {
           "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "parseSchoolYear",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "resolveSchoolYear",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -17808,9 +17790,9 @@
     {
       "path": "functions/src/modules/hours/godzinki_service.ts",
       "extension": ".ts",
-      "size_bytes": 37283,
-      "line_count": 1019,
-      "sha1_short": "67efb6e841",
+      "size_bytes": 38863,
+      "line_count": 1060,
+      "sha1_short": "081b18a856",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -18033,6 +18015,16 @@
           "decorators": [],
           "returns": null,
           "doc": null
+        },
+        {
+          "name": "writeWaivedSpendInTx",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
         }
       ],
       "top_level_symbols": [],
@@ -18091,9 +18083,9 @@
     {
       "path": "functions/src/modules/hours/hours_quote.ts",
       "extension": ".ts",
-      "size_bytes": 586,
-      "line_count": 15,
-      "sha1_short": "7980822a98",
+      "size_bytes": 842,
+      "line_count": 18,
+      "sha1_short": "12590d2f86",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -18470,9 +18462,9 @@
     {
       "path": "functions/src/modules/setup/setup_gear_vars.ts",
       "extension": ".ts",
-      "size_bytes": 2756,
-      "line_count": 80,
-      "sha1_short": "b53f9aeb81",
+      "size_bytes": 3165,
+      "line_count": 88,
+      "sha1_short": "bf1fcaa4ef",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -21176,9 +21168,9 @@
     {
       "path": "functions/src/service/tasks/usersSyncFieldsFromSheet.ts",
       "extension": ".ts",
-      "size_bytes": 9445,
-      "line_count": 260,
-      "sha1_short": "39a08fa5d1",
+      "size_bytes": 10049,
+      "line_count": 270,
+      "sha1_short": "a75cdabc43",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -23156,9 +23148,9 @@
     {
       "path": "public/core/render_shell.js",
       "extension": ".js",
-      "size_bytes": 54400,
-      "line_count": 1286,
-      "sha1_short": "6890f02824",
+      "size_bytes": 56190,
+      "line_count": 1316,
+      "sha1_short": "30096b6c10",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -23289,6 +23281,16 @@
         },
         {
           "name": "formatDatePL",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "formatEntryFeeValidUntil",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -24139,9 +24141,9 @@
     {
       "path": "public/modules/gear_module.js",
       "extension": ".js",
-      "size_bytes": 95809,
-      "line_count": 2274,
-      "sha1_short": "dda9afc967",
+      "size_bytes": 96199,
+      "line_count": 2280,
+      "sha1_short": "2e5a918fe1",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -24809,9 +24811,9 @@
     {
       "path": "public/modules/godzinki_module.js",
       "extension": ".js",
-      "size_bytes": 16248,
-      "line_count": 418,
-      "sha1_short": "c70a5a0e14",
+      "size_bytes": 16704,
+      "line_count": 425,
+      "sha1_short": "69ebcb68f4",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -25171,9 +25173,9 @@
     {
       "path": "public/modules/km_module.js",
       "extension": ".js",
-      "size_bytes": 58027,
-      "line_count": 1480,
-      "sha1_short": "979bcacb1d",
+      "size_bytes": 58526,
+      "line_count": 1486,
+      "sha1_short": "4e83d707b2",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -25673,9 +25675,9 @@
     {
       "path": "public/modules/my_reservations_module.js",
       "extension": ".js",
-      "size_bytes": 23004,
-      "line_count": 603,
-      "sha1_short": "a6ca4e39d6",
+      "size_bytes": 23309,
+      "line_count": 607,
+      "sha1_short": "70795b59cc",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -26120,9 +26122,9 @@
     {
       "path": "public/styles/gear.css",
       "extension": ".css",
-      "size_bytes": 21098,
-      "line_count": 1177,
-      "sha1_short": "6bbe65cb39",
+      "size_bytes": 21257,
+      "line_count": 1184,
+      "sha1_short": "906f05134d",
       "kind": "text",
       "module_aliases": [],
       "imports": [],
@@ -26137,9 +26139,9 @@
     {
       "path": "public/styles/godzinki.css",
       "extension": ".css",
-      "size_bytes": 2704,
-      "line_count": 152,
-      "sha1_short": "139025b8fa",
+      "size_bytes": 2969,
+      "line_count": 164,
+      "sha1_short": "8939f80449",
       "kind": "text",
       "module_aliases": [],
       "imports": [],
@@ -26207,7 +26209,7 @@
       "extension": ".js",
       "size_bytes": 4997,
       "line_count": 147,
-      "sha1_short": "d334efdd68",
+      "sha1_short": "0d8fabc78f",
       "kind": "script",
       "module_aliases": [],
       "imports": [],

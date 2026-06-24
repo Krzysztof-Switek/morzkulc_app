@@ -1,6 +1,6 @@
 import type {Request, Response} from "express";
 import {getGodzinkiVars} from "../modules/hours/godzinki_vars";
-import {getAllRecords, getHistory, computeBalance, computeNextExpiry, GodzinkiRecord} from "../modules/hours/godzinki_service";
+import {getAllRecords, getHistory, computeBalance, computeNextExpiry, computeEarnedTotal, GodzinkiRecord} from "../modules/hours/godzinki_service";
 
 type TokenCheck =
   | {error: string}
@@ -107,6 +107,8 @@ export async function handleGetGodzinki(req: Request, res: Response, deps: GetGo
           balance,
           nextExpiryMonthYear,
           negativeBalanceLimit: vars.negativeBalanceLimit,
+          // Suma wypracowanych godzinek (kumulacyjnie, niezależnie od salda) — progres stażu kandydata.
+          earnedApprovedTotal: computeEarnedTotal(allRecords),
           recentEarnings: recentEarnings.map(serializeRecord),
           history: [],
         });
@@ -146,6 +148,8 @@ export async function handleGetGodzinki(req: Request, res: Response, deps: GetGo
         balance,
         nextExpiryMonthYear,
         negativeBalanceLimit: vars.negativeBalanceLimit,
+        // Suma wypracowanych godzinek (kumulacyjnie, niezależnie od salda) — progres stażu kandydata.
+        earnedApprovedTotal: computeEarnedTotal(allRecords),
         recentEarnings: recentEarnings.map(serializeRecord),
         history: history.map(serializeRecord),
       });

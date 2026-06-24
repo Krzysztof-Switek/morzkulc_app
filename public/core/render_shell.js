@@ -128,12 +128,11 @@ async function renderHomeDashboard({ viewEl, ctx }) {
   const kursGodzinkiRoute = getModuleRouteByType(ctx, "kurs_godzinki");
   const hasKursGodzinkiModule = kursGodzinkiRoute.moduleId !== "home";
 
-  // Komunikat dla ról z ograniczonym dostępem
+  // Komunikat dla ról z ograniczonym dostępem. Kandydat ma pełne prawa członka
+  // (poza limitem sprzętu) — jego informacje są w profilu, nie na dashboardzie.
   const accessInfoMsg = dash.isSympatyk
     ? "Jako Sympatyk możesz przeglądać sprzęt, imprezy i ranking oraz zapisywać się na zajęcia basenowe, gdy są dostępne. Jeśli jesteś zainteresowany członkostwem w SKK Morzkulc, napisz na zarzad@morzkulc.pl."
-    : dash.isKandydat
-      ? "Jako Kandydat możesz zgłaszać godzinki. Rezerwacja sprzętu i zapisy na basen dostępne po przyjęciu w poczet Członków."
-      : "";
+    : "";
 
   // Render struktury natychmiast — rezerwacje ładujemy asynchronicznie
   viewEl.innerHTML = `
@@ -422,7 +421,6 @@ async function renderHomeDashboard({ viewEl, ctx }) {
 
 function renderHomeProfile({ viewEl, ctx }) {
   const name = getHelloName(ctx);
-  const email = String(ctx?.user?.email || "").trim();
   const roleKey = String(ctx?.session?.role_key || "");
   const roleLabel = roleKeyToLabel(roleKey, ctx?.setup?.roleMappings);
   const statusLabel = statusKeyToLabel(String(ctx?.session?.status_key || ""), ctx?.setup?.statusMappings);
@@ -430,23 +428,42 @@ function renderHomeProfile({ viewEl, ctx }) {
   const dash = getDashboardConfig(ctx);
 
   viewEl.innerHTML = `
-    <div class="card center">
+    <div class="card center profileCard">
       <h2>${name ? escapeHtml(name) : "Profil"}</h2>
-      ${email ? `<p class="muted" style="margin-bottom:12px;">${escapeHtml(email)}</p>` : ""}
 
-      <div class="startStatBar" style="margin-bottom:14px;">
-        <div class="startStatChip">
-          <span class="startStatChipKey">Rola</span>
-          <span class="startStatChipVal">${escapeHtml(roleLabel)}</span>
+      <div class="profileChipsWrap">
+        <div class="startStatBar">
+          <div class="startStatChip">
+            <span class="startStatChipKey">Rola</span>
+            <span class="startStatChipVal">${escapeHtml(roleLabel)}${dash.isKandydat ? `<button type="button" class="infoIcon" data-info-toggle="infoKandydat" aria-label="Co oznacza rola kandydata?">i</button>` : ""}</span>
+          </div>
+          <div class="startStatChip">
+            <span class="startStatChipKey">Status</span>
+            <span class="startStatChipVal">${escapeHtml(statusLabel)}</span>
+          </div>
+          ${(!isKursant && !dash.isSympatyk) ? `
+          <div class="startStatChip">
+            ${dash.isKandydat ? `
+            <span class="startStatChipKey">Wpisowe ważne do</span>
+            <span class="startStatChipVal" id="profileContribUntil">${escapeHtml(formatEntryFeeValidUntil(ctx?.session?.entryFeePaidAt) || "—")}</span>
+            ` : `
+            <span class="startStatChipKey">Składki opłacone do</span>
+            <span class="startStatChipVal" id="profileContribUntil">${escapeHtml(formatContribDate(ctx?.session?.contributionsPaidUntil) || "—")}</span>
+            `}
+          </div>
+          <div class="startStatChip" data-profile-action="godzinki" role="link" tabindex="0" style="cursor:pointer;">
+            <span class="startStatChipKey">Saldo godzinek</span>
+            <span class="startStatChipVal" id="profileGodzinkiBalance" style="text-decoration:underline;">…</span>
+          </div>
+          ` : ""}
         </div>
-        <div class="startStatChip">
-          <span class="startStatChipKey">Status</span>
-          <span class="startStatChipVal">${escapeHtml(statusLabel)}</span>
-        </div>
+        ${dash.isKandydat ? `
+        <div class="infoPopover" id="infoKandydat" role="status">Jako kandydat masz te same prawa i obowiązki co członkowie SKK Morzkulc. Jedyna różnica to ilość sprzętu, jaki możesz wypożyczyć — dla kandydata to jeden komplet na maksymalnie 2 tygodnie.</div>
+        ` : ""}
       </div>
 
       ${isKursant ? `
-      <div class="startStatBar" style="margin-bottom:10px;">
+      <div class="startStatBar" style="margin-top:10px;">
         <div class="startStatChip">
           <span class="startStatChipKey">Opłata</span>
           <span class="startStatChipVal" id="profileKursantFee">…</span>
@@ -455,8 +472,6 @@ function renderHomeProfile({ viewEl, ctx }) {
           <span class="startStatChipKey">Cena kursu</span>
           <span class="startStatChipVal" id="profileKursantCena">…</span>
         </div>
-      </div>
-      <div class="startStatBar" style="margin-bottom:16px;">
         <div class="startStatChip">
           <span class="startStatChipKey">Wzrost</span>
           <span class="startStatChipVal" id="profileKursantHeight">…</span>
@@ -474,33 +489,31 @@ function renderHomeProfile({ viewEl, ctx }) {
           <span class="startStatChipVal" id="profileKursantPesel">…</span>
         </div>
       </div>
-      ` : `
-      ${dash.isSympatyk ? "" : `
-      <div class="startStatBar" style="margin-bottom:16px;">
-        <div class="startStatChip">
-          ${dash.isKandydat ? `
-          <span class="startStatChipKey">Wpisowe ważne do</span>
-          <span class="startStatChipVal" id="profileContribUntil">${escapeHtml(formatEntryFeeValidUntil(ctx?.session?.entryFeePaidAt) || "—")}</span>
-          ` : `
-          <span class="startStatChipKey">Składki opłacone do</span>
-          <span class="startStatChipVal" id="profileContribUntil">${escapeHtml(formatContribDate(ctx?.session?.contributionsPaidUntil) || "—")}</span>
-          `}
-        </div>
-        <div class="startStatChip" data-profile-action="godzinki" role="link" tabindex="0" style="cursor:pointer;">
-          <span class="startStatChipKey">Saldo godzinek</span>
-          <span class="startStatChipVal" id="profileGodzinkiBalance" style="text-decoration:underline;">…</span>
-        </div>
-      </div>
-      `}
-      `}
+      ` : ""}
 
-      <div class="actions">
+      ${dash.isKandydat ? `
+      <div class="profileBlock">
+        <h3 class="profileBlockTitle">Staż kandydacki</h3>
+        <div class="stazVal"><strong id="profileStazEarned">…</strong> z ${KANDYDAT_STAZ_TARGET_HOURS} h</div>
+        <div class="stazProgress"><div class="stazBar" id="profileStazBar" style="width:0%"></div></div>
+        <p class="stazRemaining" id="profileStazRemaining">…</p>
+        <p class="muted stazHint">Liczy się suma godzinek wypracowanych w czasie stażu — niezależnie od bieżącego salda (sprzęt możesz wypożyczać na bieżąco).</p>
+      </div>
+
+      <div class="profileBlock">
+        <h3 class="profileBlockTitle">Opiekunowie stażu</h3>
+        <div class="mentorRow"><span class="mentorRole">Szkoleniowiec</span><span class="mentorName">${escapeHtml(ctx?.session?.szkoleniowiec?.name || "—")}</span></div>
+        <div class="mentorRow"><span class="mentorRole">Opiekun stażu</span><span class="mentorName">${escapeHtml(ctx?.session?.mentor || "—")}</span></div>
+      </div>
+      ` : ""}
+
+      <div class="actions" style="margin-top:16px;">
         <button type="button" class="ghost" id="profileBackBtn">← Wróć</button>
       </div>
     </div>
 
     ${dash.canReserveGear ? `
-    <section class="dashCard startSection" style="margin-top:16px;">
+    <section class="card center startSection" style="margin-top:16px;">
       <div class="dashCardHead">
         <h3>Moje rezerwacje</h3>
         <button type="button" class="ghost" data-profile-action="all-reservations">Zobacz wszystkie</button>
@@ -535,18 +548,57 @@ function renderHomeProfile({ viewEl, ctx }) {
     wireHomeReservations(viewEl, ctx);
   }
 
-  // Saldo godzinek (+ data wygaśnięcia) dla nie-kursantów — z /api/godzinki
+  // Popover „i" przy roli (np. wyjaśnienie roli kandydata) — pokazywany tylko po kliknięciu ikonki.
+  viewEl.querySelectorAll("[data-info-toggle]").forEach((btn) => {
+    const pop = viewEl.querySelector("#" + btn.getAttribute("data-info-toggle"));
+    if (!pop) return;
+    btn.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      pop.classList.toggle("show");
+    });
+    pop.addEventListener("click", () => pop.classList.remove("show"));
+  });
+
+  // Saldo godzinek (+ data wygaśnięcia) i — dla kandydata — progres stażu.
+  // Jedno zapytanie /api/godzinki?view=home obsługuje obie wartości.
   if (!isKursant && ctx?.idToken) {
     const balEl = viewEl.querySelector("#profileGodzinkiBalance");
-    if (balEl) {
+    const stazEarnedEl = viewEl.querySelector("#profileStazEarned");
+    if (balEl || stazEarnedEl) {
       apiGetJson({ url: GODZINKI_URL + "?view=home", idToken: ctx.idToken })
         .then((data) => {
-          const balance = Number(data?.balance ?? 0);
-          const sign = balance > 0 ? "+" : "";
-          const expiry = String(data?.nextExpiryMonthYear || "").trim();
-          balEl.textContent = `${sign}${balance} h` + (expiry ? ` (wygasa ${expiry})` : "");
+          if (balEl) {
+            const balance = Number(data?.balance ?? 0);
+            const sign = balance > 0 ? "+" : "";
+            const expiry = String(data?.nextExpiryMonthYear || "").trim();
+            balEl.textContent = `${sign}${balance} h` + (expiry ? ` (wygasa ${expiry})` : "");
+          }
+          if (dash.isKandydat && stazEarnedEl) {
+            const earned = Math.max(0, Number(data?.earnedApprovedTotal ?? 0));
+            const target = KANDYDAT_STAZ_TARGET_HOURS;
+            const barEl = viewEl.querySelector("#profileStazBar");
+            const remEl = viewEl.querySelector("#profileStazRemaining");
+            stazEarnedEl.textContent = String(earned);
+            if (barEl) barEl.style.width = Math.max(0, Math.min(100, Math.round((earned / target) * 100))) + "%";
+            if (remEl) {
+              if (earned >= target) {
+                remEl.textContent = `✓ Staż zaliczony — wypracowano wymagane ${target} h.`;
+                remEl.classList.add("stazDone");
+              } else {
+                remEl.textContent = `Brakuje ${target - earned} h do zaliczenia stażu.`;
+                remEl.classList.remove("stazDone");
+              }
+            }
+          }
         })
-        .catch(() => { balEl.textContent = "—"; });
+        .catch(() => {
+          if (balEl) balEl.textContent = "—";
+          if (stazEarnedEl) {
+            stazEarnedEl.textContent = "—";
+            const remEl = viewEl.querySelector("#profileStazRemaining");
+            if (remEl) remEl.textContent = "Nie udało się pobrać postępu stażu.";
+          }
+        });
     }
   }
 
@@ -1192,6 +1244,10 @@ const POLISH_MONTHS = [
   "styczeń", "luty", "marzec", "kwiecień", "maj", "czerwiec",
   "lipiec", "sierpień", "wrzesień", "październik", "listopad", "grudzień",
 ];
+
+// Kandydat ma w trakcie stażu wypracować tę liczbę godzinek (suma zarobionych,
+// niezależnie od bieżącego salda). Po jej osiągnięciu staż uznajemy za zaliczony.
+const KANDYDAT_STAZ_TARGET_HOURS = 20;
 
 // „Wpisowe ważne do" — wpisowe ważne 12 mc od wpłaty. Wejście: data wpłaty „YYYY-MM"
 // (admin.entryFeePaidAt). Zwraca np. „czerwiec 2027" (ten sam miesiąc, rok+1). Pusto/błąd → "".

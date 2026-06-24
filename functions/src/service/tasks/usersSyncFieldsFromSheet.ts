@@ -124,6 +124,44 @@ export const usersSyncFieldsFromSheetTask: ServiceTask<Payload> = {
     }
     const g = (row: Record<string, string>, normKey: string): string => norm(row[hmap[normKey]] ?? "");
 
+    // ── WYMUSZENIE KOMPLETU DANYCH: każdy kandydat musi mieć opiekuna stażu ──
+    // Walidacja pre-flight (przed jakimkolwiek zapisem). Jeśli choć jeden kandydat
+    // w arkuszu ma puste pole „opiekun stażu" → sync PRZERWANY (zero zapisów),
+    // z czytelną listą braków. Cel: zmusić zarząd do uzupełnienia kompletu informacji.
+    // Działa tylko gdy kolumna „opiekun stażu" istnieje (po jej dodaniu przez zarząd);
+    // jej brak nie blokuje pozostałych synców.
+    if ("opiekun_stazu" in hmap) {
+      const missingMentor: string[] = [];
+      for (const row of table.rows) {
+        if (mapRoleDisplayToKey(g(row, "rola")) !== "rola_kandydat") continue;
+        const memberIdRaw = g(row, "id");
+        if (!memberIdRaw) continue; // wiersz bez ID — pomijany też w głównej pętli
+        if (g(row, "opiekun_stazu")) continue; // ma opiekuna — ok
+        const name = g(row, "ksywa") ||
+          `${g(row, "imie")} ${g(row, "nazwisko")}`.trim() ||
+          g(row, "e_mail") || "(bez nazwy)";
+        missingMentor.push(`#${memberIdRaw} ${name}`);
+      }
+
+      if (missingMentor.length) {
+        const MAX_LIST = 20;
+        const shown = missingMentor.slice(0, MAX_LIST);
+        const extra = missingMentor.length - shown.length;
+        const lines = shown.map((s) => `• ${s}`).join("\n") +
+          (extra > 0 ? `\n• …i ${extra} więcej` : "");
+        const message =
+          "Synchronizacja przerwana — uzupełnij kolumnę „opiekun stażu\".\n" +
+          `Kandydaci bez opiekuna stażu (${missingMentor.length}):\n${lines}\n` +
+          "Wpisz opiekuna stażu dla każdego kandydata i ponów synchronizację.";
+        logger.error("usersSyncFieldsFromSheet: ABORT — kandydaci bez opiekuna stażu", {count: missingMentor.length});
+        return {
+          ok: false,
+          message,
+          details: {validationError: true, missingMentorCount: missingMentor.length, missingMentor},
+        };
+      }
+    }
+
     let found = 0;
     let patched = 0;
     let unchanged = 0;
@@ -200,6 +238,13 @@ export const usersSyncFieldsFromSheetTask: ServiceTask<Payload> = {
         ["admin.contributions", sheetUser.admin.contributions],
         ["admin.hours", sheetUser.admin.hours],
       ];
+
+      // Opiekun stażu — OPCJONALNA kolumna „opiekun stażu" (nagłówek znormalizowany
+      // „opiekun_stazu"). Patchujemy admin.mentor TYLKO gdy kolumna istnieje w arkuszu;
+      // jej brak nie może nadpisać istniejącej wartości pustym stringiem.
+      if ("opiekun_stazu" in hmap) {
+        candidates.push(["admin.mentor", g(row, "opiekun_stazu")]);
+      }
 
       const patch: Record<string, any> = {};
       for (const [path, nextVal] of candidates) {
