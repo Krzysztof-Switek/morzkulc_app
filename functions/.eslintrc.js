@@ -38,6 +38,9 @@ module.exports = {
 
     // Keep code moving; we can tighten later
     "@typescript-eslint/no-explicit-any": "off",
+
+    // Pozwól na celowo nieużywane argumenty z prefiksem _ (spójnie z override dla src/service/**)
+    "@typescript-eslint/no-unused-vars": ["warn", {argsIgnorePattern: "^_"}],
   },
 
   overrides: [

@@ -1377,10 +1377,16 @@ async function renderKursantRankingView(inner, ctx) {
 
 async function renderKmView(viewEl, routeId, ctx, moduleId) {
   const isKursant = ctx?.session?.role_key === "rola_kursant" || ctx?.kursPreviewMode === true;
-  const activeTab = TABS.find(t => t.id === routeId)?.id || "form";
+  const isSympatyk = ctx?.session?.role_key === "rola_sympatyk";
+  // Sympatyk tylko przegląda: ranking, imprezy, mapa (bez dodawania wpisów i własnych statystyk).
   const visibleTabs = isKursant
     ? TABS.filter(t => t.id !== "rankings" && t.id !== "events" && t.id !== "my-stats" && t.id !== "map")
-    : TABS.filter(t => t.id !== "kursant-ranking");
+    : isSympatyk
+      ? TABS.filter(t => t.id === "rankings" || t.id === "events" || t.id === "map")
+      : TABS.filter(t => t.id !== "kursant-ranking");
+  // activeTab musi należeć do widocznych zakładek (sympatyk wchodzi domyślnie na "form" → ranking).
+  const requestedTab = TABS.find(t => t.id === routeId)?.id || "form";
+  const activeTab = visibleTabs.some(t => t.id === requestedTab) ? requestedTab : (visibleTabs[0]?.id || "rankings");
 
   if (!ctx?.idToken) {
     viewEl.innerHTML = `<div class="card center"><p>Brak tokenu sesji. Odśwież stronę.</p></div>`;

@@ -856,7 +856,9 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
       };
 
       const isKursant = ctx?.kursPreviewMode || ctx?.session?.role_key === "rola_kursant";
-      const canUserReserve = isKursant ? ctx?.kursWypozycza === true : true;
+      const isSympatyk = ctx?.session?.role_key === "rola_sympatyk";
+      // Sympatyk przegląda sprzęt, ale nie rezerwuje; kursant tylko w oknie szkoleniówki.
+      const canUserReserve = isKursant ? ctx?.kursWypozycza === true : !isSympatyk;
 
       const render = (items) => {
         if (!items.length) {

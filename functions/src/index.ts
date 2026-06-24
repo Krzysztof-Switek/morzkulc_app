@@ -235,6 +235,10 @@ function computeAllowedActions(roleKey: string): string[] {
   if (memberRoleKeys.includes(roleKey)) {
     actions.push("gear.reserve", "basen.enroll", "events.submit");
   }
+  // Sympatyk: wyłącznie zapis na basen (bez rezerwacji sprzętu / zgłaszania imprez / godzinek).
+  if (roleKey === "rola_sympatyk") {
+    actions.push("basen.enroll");
+  }
   if (godzinkiRoleKeys.includes(roleKey)) {
     actions.push("godzinki.submit");
   }

@@ -47,8 +47,9 @@ export async function handleBasenEnroll(req: Request, res: Response, deps: Deps)
         return;
       }
 
-      if (!deps.memberRoleKeys.includes(roleKey)) {
-        res.status(403).json({error: "Brak uprawnień. Wymagana rola: członek, zarząd lub KR."});
+      // Sympatyk też może zapisać się na basen (mimo że nie jest w memberRoleKeys).
+      if (!deps.memberRoleKeys.includes(roleKey) && roleKey !== "rola_sympatyk") {
+        res.status(403).json({error: "Brak uprawnień do zapisu na basen."});
         return;
       }
 

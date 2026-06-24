@@ -130,7 +130,7 @@ async function renderHomeDashboard({ viewEl, ctx }) {
 
   // Komunikat dla ról z ograniczonym dostępem
   const accessInfoMsg = dash.isSympatyk
-    ? "Jako Sympatyk możesz przeglądać sprzęt i imprezy. Rezerwacja sprzętu i zapisy na basen dostępne dla Członków."
+    ? "Jako Sympatyk możesz przeglądać sprzęt, imprezy i ranking oraz zapisywać się na zajęcia basenowe, gdy są dostępne. Jeśli jesteś zainteresowany członkostwem w SKK Morzkulc, napisz na zarzad@morzkulc.pl."
     : dash.isKandydat
       ? "Jako Kandydat możesz zgłaszać godzinki. Rezerwacja sprzętu i zapisy na basen dostępne po przyjęciu w poczet Członków."
       : "";
@@ -152,7 +152,7 @@ async function renderHomeDashboard({ viewEl, ctx }) {
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
               <span id="homeKursantRankCell">— miejsce</span>
             </span>
-            ` : `
+            ` : dash.isSympatyk ? "" : `
             <span class="startStatInlineItem">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
               <span id="homeKmCell">— km</span>
@@ -175,7 +175,7 @@ async function renderHomeDashboard({ viewEl, ctx }) {
               <span class="startTile2Title">Sprzęt</span>
             </button>
 
-            ${!dash.isKursant ? `
+            ${!dash.isKursant && !dash.isSympatyk ? `
             <button type="button" class="startTile2" data-home-action="add-hours">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               <span class="startTile2Title">Godzinki</span>
@@ -205,6 +205,13 @@ async function renderHomeDashboard({ viewEl, ctx }) {
             <button type="button" class="startTile2" data-home-action="km">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
               <span class="startTile2Title">${dash.isKursant ? "Wywrotolotek" : "Ranking"}</span>
+            </button>
+            ` : ""}
+
+            ${dash.isSympatyk ? `
+            <button type="button" class="startTile2" data-home-action="mapa">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+              <span class="startTile2Title">Gdzie pływamy</span>
             </button>
             ` : ""}
 
@@ -254,7 +261,7 @@ async function renderHomeDashboard({ viewEl, ctx }) {
       <section class="dashCard startSection">
         <div class="dashCardHead">
           <h3>Najbliższe wydarzenia</h3>
-          <button type="button" class="ghost" data-home-action="add-event">Dodaj wydarzenie +</button>
+          ${dash.canSubmitEvents ? `<button type="button" class="ghost" data-home-action="add-event">Dodaj wydarzenie +</button>` : ""}
         </div>
 
         <div class="startList" id="homeEventsList">
@@ -329,7 +336,7 @@ async function renderHomeDashboard({ viewEl, ctx }) {
   }
 
   const kmBtn = viewEl.querySelector("[data-home-action='km']");
-  if (kmBtn) kmBtn.addEventListener("click", () => setHash(kmModuleRoute.moduleId, kmModuleRoute.routeId));
+  if (kmBtn) kmBtn.addEventListener("click", () => setHash(kmModuleRoute.moduleId, dash.isSympatyk ? "rankings" : kmModuleRoute.routeId));
 
   viewEl.querySelectorAll("[data-home-action='kurs']").forEach((btn) => {
     btn.addEventListener("click", () => setHash(kursModuleRoute.moduleId, kursModuleRoute.routeId));
@@ -340,7 +347,7 @@ async function renderHomeDashboard({ viewEl, ctx }) {
     btn.addEventListener("click", () => setHash(kursGodzinkiRoute.moduleId, kursGodzinkiRoute.routeId));
   });
 
-  viewEl.querySelectorAll("[data-home-action='mapa-kursant']").forEach((btn) => {
+  viewEl.querySelectorAll("[data-home-action='mapa-kursant'], [data-home-action='mapa']").forEach((btn) => {
     btn.addEventListener("click", () => {
       const isStandalone = window.matchMedia("(display-mode: standalone)").matches ||
         window.navigator.standalone === true;
@@ -468,6 +475,7 @@ function renderHomeProfile({ viewEl, ctx }) {
         </div>
       </div>
       ` : `
+      ${dash.isSympatyk ? "" : `
       <div class="startStatBar" style="margin-bottom:16px;">
         <div class="startStatChip">
           ${dash.isKandydat ? `
@@ -483,6 +491,7 @@ function renderHomeProfile({ viewEl, ctx }) {
           <span class="startStatChipVal" id="profileGodzinkiBalance" style="text-decoration:underline;">…</span>
         </div>
       </div>
+      `}
       `}
 
       <div class="actions">
