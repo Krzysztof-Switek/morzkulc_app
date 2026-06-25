@@ -206,7 +206,7 @@ export function createMyReservationsModule({ id, type, label, defaultRoute, orde
                       <div class="gearSubtitle">
                         ${escapeHtml(formatShortDate(String(rsv?.blockStartIso || rsv?.startDate || "")))} – ${escapeHtml(formatShortDate(String(rsv?.blockEndIso || rsv?.endDate || "")))} (${escapeHtml(pluralizeDays(countReservationDays(String(rsv?.startDate || ""), String(rsv?.endDate || ""))))})
                         · ${rsv?.waived
-                            ? `<strong><s>${escapeHtml(String(rsv?.costHours ?? 0))} godz.</s></strong> <span class="gearWaivedTag">zwolnienie</span>`
+                            ? `<strong><s>${escapeHtml(String(rsv?.costHours ?? 0))} godz.</s></strong> <span class="gearWaivedTag">zwolnienie${rsv?.schoolYear ? ` kurs ${escapeHtml(String(rsv.schoolYear))}` : ""}</span>`
                             : `<strong>${escapeHtml(String(rsv?.costHours ?? "—"))} godz.</strong>`}
                       </div>
                     </div>

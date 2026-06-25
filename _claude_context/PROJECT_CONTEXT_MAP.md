@@ -1,6 +1,6 @@
 # Project Context Map
 
-Generated at: `2026-06-24T12:21:50`
+Generated at: `2026-06-25T10:42:31`
 Project root: `C:\Users\kswitek\Documents\morzkulc_app`
 
 Purpose: this file is a compact project map for Claude Code. It shows which files exist, what functions/classes they contain, and which internal files depend on which other files.
@@ -3433,8 +3433,8 @@ Excluded sensitive files:
 
 ### `functions/lib/api/getGodzinkiHandler.js`
 
-- Lines: `136`
-- Size: `6922` bytes
+- Lines: `140`
+- Size: `7346` bytes
 - Internal dependencies:
   - `functions/lib/modules/hours/godzinki_service.js`
   - `functions/lib/modules/hours/godzinki_vars.js`
@@ -3602,8 +3602,8 @@ Excluded sensitive files:
 
 ### `functions/lib/api/registerUserHandler.js`
 
-- Lines: `585`
-- Size: `30577` bytes
+- Lines: `642`
+- Size: `34329` bytes
 - Internal dependencies:
   - `functions/lib/modules/hours/godzinki_service.js`
   - `functions/lib/modules/hours/opening_balance_fields.js`
@@ -3626,6 +3626,7 @@ Excluded sensitive files:
   - `normalizePhoneDigits`
   - `normalizeStr`
   - `readProfileInput`
+  - `resolveSzkoleniowiec`
   - `updateObEmail`
   - `validateIncomingProfile`
 
@@ -3951,12 +3952,13 @@ Excluded sensitive files:
 
 ### `functions/lib/modules/hours/godzinki_service.js`
 
-- Lines: `851`
-- Size: `38876` bytes
+- Lines: `876`
+- Size: `39793` bytes
 - Imports:
   - `import/require firebase-admin`
 - Functions:
   - `computeBalance`
+  - `computeEarnedTotal`
   - `computeNextExpiry`
   - `creditApprovedEarn`
   - `creditOpeningBalance`
@@ -4597,8 +4599,8 @@ Excluded sensitive files:
 
 ### `functions/lib/service/tasks/usersSyncFieldsFromSheet.js`
 
-- Lines: `278`
-- Size: `12309` bytes
+- Lines: `322`
+- Size: `15011` bytes
 - Internal dependencies:
   - `functions/lib/service/providers/googleSheetsProvider.js`
   - `functions/lib/service/service_config.js`
@@ -5229,8 +5231,8 @@ Excluded sensitive files:
 
 ### `functions/src/api/getGodzinkiHandler.ts`
 
-- Lines: `157`
-- Size: `5618` bytes
+- Lines: `161`
+- Size: `5978` bytes
 - Internal dependencies:
   - `functions/src/modules/hours/godzinki_service.ts`
   - `functions/src/modules/hours/godzinki_vars.ts`
@@ -5391,8 +5393,8 @@ Excluded sensitive files:
 
 ### `functions/src/api/registerUserHandler.ts`
 
-- Lines: `742`
-- Size: `27912` bytes
+- Lines: `805`
+- Size: `30877` bytes
 - Internal dependencies:
   - `functions/src/modules/hours/godzinki_service.ts`
   - `functions/src/modules/hours/opening_balance_fields.ts`
@@ -5417,6 +5419,7 @@ Excluded sensitive files:
   - `normalizePhoneDigits`
   - `normalizeStr`
   - `readProfileInput`
+  - `resolveSzkoleniowiec`
   - `updateObEmail`
   - `validateIncomingProfile`
 
@@ -5745,8 +5748,8 @@ Excluded sensitive files:
 
 ### `functions/src/modules/hours/godzinki_service.ts`
 
-- Lines: `1060`
-- Size: `38863` bytes
+- Lines: `1081`
+- Size: `39656` bytes
 - Internal dependencies:
   - `functions/src/modules/hours/godzinki_vars.ts`
 - Imports:
@@ -5754,6 +5757,7 @@ Excluded sensitive files:
   - `import/require firebase-admin`
 - Functions:
   - `computeBalance`
+  - `computeEarnedTotal`
   - `computeNextExpiry`
   - `creditApprovedEarn`
   - `creditOpeningBalance`
@@ -6459,8 +6463,8 @@ Excluded sensitive files:
 
 ### `functions/src/service/tasks/usersSyncFieldsFromSheet.ts`
 
-- Lines: `270`
-- Size: `10049` bytes
+- Lines: `315`
+- Size: `12418` bytes
 - Internal dependencies:
   - `functions/src/service/providers/googleSheetsProvider.ts`
   - `functions/src/service/service_config.ts`
@@ -6734,8 +6738,8 @@ Excluded sensitive files:
 
 ### `public/core/render_shell.js`
 
-- Lines: `1316`
-- Size: `56190` bytes
+- Lines: `1372`
+- Size: `59566` bytes
 - Imports:
   - `import/require /core/access_control.js`
   - `import/require /core/api_client.js`
@@ -9200,7 +9204,7 @@ Excluded sensitive files:
 - `public/styles/godzinki.css` — 164 lines, 2969 bytes
 - `public/styles/km.css` — 496 lines, 10234 bytes
 - `public/styles/kurs.css` — 430 lines, 7128 bytes
-- `public/styles/start.css` — 226 lines, 6558 bytes
+- `public/styles/start.css` — 250 lines, 8933 bytes
 - `tests/e2e/.gitignore` — 11 lines, 142 bytes
 - `tests/e2e/reports/events_e2e_run.txt` — 110 lines, 8703 bytes
 - `tests/e2e/reports/godzinki_e2e_run.txt` — 57 lines, 5149 bytes

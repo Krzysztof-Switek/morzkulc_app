@@ -47,6 +47,7 @@ function serializeRecord(r: GodzinkiRecord): Record<string, any> {
     out.overdraft = r.overdraft ?? 0;
     out.reservationId = r.reservationId ?? null;
     out.waived = r.waived === true;
+    out.schoolYear = r.schoolYear ?? null;
   }
 
   return out;

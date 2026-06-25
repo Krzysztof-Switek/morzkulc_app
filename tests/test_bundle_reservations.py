@@ -122,15 +122,15 @@ def find_bundle_conflicts(composite_ids: list, reservations: list,
     return sorted(conflicts)
 
 
-def count_overlapping_items(uid: str, reservations: list,
-                            block_start: str, block_end: str,
-                            exclude_id: str = None) -> int:
+def count_overlapping_items_by_category(uid: str, reservations: list,
+                                        block_start: str, block_end: str,
+                                        exclude_id: str = None) -> dict:
     """
-    Counts total items in all of a user's active, overlapping reservations.
-    Uses items[] length for new bundles, kayakIds[] length for legacy.
-    Mirrors countMyOverlappingBundleItems() in gear_bundle_service.ts.
+    Counts items PER CATEGORY in a user's active, overlapping reservations.
+    Uses items[].category for new bundles, kayakIds[] (as "kayaks") for legacy.
+    Mirrors countMyOverlappingItemsByCategory() in reservation_limits.ts.
     """
-    count = 0
+    counts = {}
 
     for r in reservations:
         if r.get("userUid") != uid:
@@ -147,12 +147,37 @@ def count_overlapping_items(uid: str, reservations: list,
         if not overlaps_iso(r_start, r_end, block_start, block_end):
             continue
 
-        if "items" in r and isinstance(r["items"], list):
-            count += len(r["items"])
+        if "items" in r and isinstance(r["items"], list) and r["items"]:
+            for it in r["items"]:
+                cat = str(it.get("category", "")).strip().lower() or "kayaks"
+                counts[cat] = counts.get(cat, 0) + 1
         elif "kayakIds" in r and isinstance(r["kayakIds"], list):
-            count += len(r["kayakIds"])
+            counts["kayaks"] = counts.get("kayaks", 0) + len(r["kayakIds"])
 
-    return count
+    return counts
+
+
+def count_items_by_category(items: list) -> dict:
+    """Tally requested items per category. Mirrors countItemsByCategory()."""
+    m = {}
+    for it in items:
+        cat = str(it.get("category", "")).strip().lower()
+        if not cat:
+            continue
+        m[cat] = m.get(cat, 0) + 1
+    return m
+
+
+def find_category_over_limit(already: dict, requested: dict, max_items: int):
+    """
+    First requested category exceeding max_items, or None.
+    Mirrors findCategoryOverLimit().
+    """
+    for cat, req in requested.items():
+        have = already.get(cat, 0)
+        if have + req > max_items:
+            return {"category": cat, "already": have, "requested": req}
+    return None
 
 
 def get_reserved_composite_ids_for_period(reservations: list,
@@ -292,13 +317,19 @@ class BackendStub:
                 "conflicts": conflicts,
             }
 
-        # Item count limit
+        # Item count limit — PER KATEGORIA (S2): każdy rodzaj sprzętu osobno.
         max_items = self.ROLE_MAX_ITEMS.get(role_key, 1)
-        current_count = count_overlapping_items(uid, self.reservations, block_start, block_end)
-        if current_count + len(items) > max_items:
+        already = count_overlapping_items_by_category(uid, self.reservations, block_start, block_end)
+        requested = count_items_by_category(items)
+        over = find_category_over_limit(already, requested, max_items)
+        if over:
             return {
                 "ok": False, "code": "too_many_items",
-                "message": f"Przekroczono limit {max_items} pozycji (masz: {current_count}, dodajesz: {len(items)})"
+                "category": over["category"],
+                "message": (
+                    f"Przekroczono limit {max_items} szt. kategorii {over['category']} "
+                    f"(masz: {over['already']}, dodajesz: {over['requested']})"
+                ),
             }
 
         # Cost hours: only for kayak items
@@ -612,72 +643,85 @@ class TestCountOverlappingItems(unittest.TestCase):
 
     def test_no_reservations(self):
         self.assertEqual(
-            count_overlapping_items("U1", [], "2025-05-01", "2025-05-07"),
-            0
+            count_overlapping_items_by_category("U1", [], "2025-05-01", "2025-05-07"),
+            {}
         )
 
-    def test_counts_new_bundle_items(self):
+    def test_counts_new_bundle_items_by_category(self):
         rsv = self._make_reservation(
             "R1", "U1", "2025-05-01", "2025-05-07",
-            items=[{"itemId": "K01"}, {"itemId": "P01"}]
+            items=[{"itemId": "K01", "category": "kayaks"},
+                   {"itemId": "P01", "category": "paddles"}]
         )
         self.assertEqual(
-            count_overlapping_items("U1", [rsv], "2025-05-01", "2025-05-07"),
-            2
+            count_overlapping_items_by_category("U1", [rsv], "2025-05-01", "2025-05-07"),
+            {"kayaks": 1, "paddles": 1}
         )
 
-    def test_counts_legacy_kayak_ids(self):
+    def test_counts_legacy_kayak_ids_as_kayaks(self):
         rsv = self._make_reservation(
             "R1", "U1", "2025-05-01", "2025-05-07",
             kayak_ids=["K01", "K02"]
         )
         self.assertEqual(
-            count_overlapping_items("U1", [rsv], "2025-05-01", "2025-05-07"),
-            2
+            count_overlapping_items_by_category("U1", [rsv], "2025-05-01", "2025-05-07"),
+            {"kayaks": 2}
         )
 
-    def test_ignores_other_users(self):
-        rsv = self._make_reservation(
-            "R1", "U2", "2025-05-01", "2025-05-07",
-            items=[{"itemId": "K01"}]
-        )
-        self.assertEqual(
-            count_overlapping_items("U1", [rsv], "2025-05-01", "2025-05-07"),
-            0
-        )
-
-    def test_ignores_non_overlapping(self):
-        rsv = self._make_reservation(
-            "R1", "U1", "2025-06-01", "2025-06-07",
-            items=[{"itemId": "K01"}]
-        )
-        self.assertEqual(
-            count_overlapping_items("U1", [rsv], "2025-05-01", "2025-05-07"),
-            0
-        )
-
-    def test_excludes_reservation_by_id(self):
+    def test_missing_category_defaults_to_kayaks(self):
         rsv = self._make_reservation(
             "R1", "U1", "2025-05-01", "2025-05-07",
             items=[{"itemId": "K01"}]
         )
         self.assertEqual(
-            count_overlapping_items("U1", [rsv], "2025-05-01", "2025-05-07",
-                                    exclude_id="R1"),
-            0
+            count_overlapping_items_by_category("U1", [rsv], "2025-05-01", "2025-05-07"),
+            {"kayaks": 1}
+        )
+
+    def test_ignores_other_users(self):
+        rsv = self._make_reservation(
+            "R1", "U2", "2025-05-01", "2025-05-07",
+            items=[{"itemId": "K01", "category": "kayaks"}]
+        )
+        self.assertEqual(
+            count_overlapping_items_by_category("U1", [rsv], "2025-05-01", "2025-05-07"),
+            {}
+        )
+
+    def test_ignores_non_overlapping(self):
+        rsv = self._make_reservation(
+            "R1", "U1", "2025-06-01", "2025-06-07",
+            items=[{"itemId": "K01", "category": "kayaks"}]
+        )
+        self.assertEqual(
+            count_overlapping_items_by_category("U1", [rsv], "2025-05-01", "2025-05-07"),
+            {}
+        )
+
+    def test_excludes_reservation_by_id(self):
+        rsv = self._make_reservation(
+            "R1", "U1", "2025-05-01", "2025-05-07",
+            items=[{"itemId": "K01", "category": "kayaks"}]
+        )
+        self.assertEqual(
+            count_overlapping_items_by_category("U1", [rsv], "2025-05-01", "2025-05-07",
+                                                exclude_id="R1"),
+            {}
         )
 
     def test_prefers_items_over_kayak_ids(self):
         # If both items[] and kayakIds[] are present, use items[]
         rsv = self._make_reservation(
             "R1", "U1", "2025-05-01", "2025-05-07",
-            items=[{"itemId": "K01"}, {"itemId": "P01"}, {"itemId": "H01"}],
+            items=[{"itemId": "K01", "category": "kayaks"},
+                   {"itemId": "P01", "category": "paddles"},
+                   {"itemId": "H01", "category": "helmets"}],
             kayak_ids=["K01"]
         )
-        # Should count 3 (from items[]), not 1 (from kayakIds[])
+        # Should count items[] per category, not kayakIds[]
         self.assertEqual(
-            count_overlapping_items("U1", [rsv], "2025-05-01", "2025-05-07"),
-            3
+            count_overlapping_items_by_category("U1", [rsv], "2025-05-01", "2025-05-07"),
+            {"kayaks": 1, "paddles": 1, "helmets": 1}
         )
 
 
@@ -1377,11 +1421,13 @@ class TestCrossFormatConflicts(unittest.TestCase):
 
 class TestMaxItemsBundleEnforcement(unittest.TestCase):
     """
-    Weryfikuje że limit max_items jest liczony łącznie dla wszystkich
-    przedmiotów zestawu (kajak + akcesoria), nie tylko dla kajaków.
-    Odzwierciedla gear_bundle_service.ts:363-369, gear_kayaks_service.ts:90-93.
+    Weryfikuje, że limit max_items jest liczony OSOBNO DLA KAŻDEJ KATEGORII (S2):
+    komplet można złożyć z kilku osobnych rezerwacji, a limit pilnuje, by nie
+    trzymać >N sztuk danego rodzaju sprzętu w nakładającym się terminie.
+    Odzwierciedla reservation_limits.ts (countMyOverlappingItemsByCategory /
+    countItemsByCategory / findCategoryOverLimit).
 
-    Domyślne limity BackendStub:
+    Domyślne limity BackendStub (max sztuk per kategoria):
       rola_czlonek = 3
       rola_kandydat = 1
       rola_zarzad = 100
@@ -1390,8 +1436,12 @@ class TestMaxItemsBundleEnforcement(unittest.TestCase):
     CATALOG = {
         "kayaks/K01": {"active": True, "operational": True, "number": "K01", "label": "Kajak K01"},
         "kayaks/K02": {"active": True, "operational": True, "number": "K02", "label": "Kajak K02"},
+        "kayaks/K03": {"active": True, "operational": True, "number": "K03", "label": "Kajak K03"},
+        "kayaks/K04": {"active": True, "operational": True, "number": "K04", "label": "Kajak K04"},
         "paddles/P01": {"active": True, "number": "P01", "label": "Wiosło P01"},
         "paddles/P02": {"active": True, "number": "P02", "label": "Wiosło P02"},
+        "paddles/P03": {"active": True, "number": "P03", "label": "Wiosło P03"},
+        "paddles/P04": {"active": True, "number": "P04", "label": "Wiosło P04"},
         "helmets/H01": {"active": True, "number": "H01", "label": "Kask H01"},
         "lifejackets/LJ01": {"active": True, "number": "LJ01", "label": "Kamizelka LJ01"},
     }
@@ -1402,10 +1452,8 @@ class TestMaxItemsBundleEnforcement(unittest.TestCase):
             catalog=self.CATALOG,
         )
 
-    def test_member_kayak_paddle_lifejacket_equals_3_ok(self):
-        """
-        Czlonek: kajak + wiosło + kamizelka = 3 przedmioty = max_items → OK.
-        """
+    def test_member_kayak_paddle_lifejacket_one_each_ok(self):
+        """Czlonek: kajak + wiosło + kamizelka = po 1 z każdej kategorii ≤ 3 → OK."""
         backend = self._make_backend("rola_czlonek")
         result = backend.create_bundle_reservation(
             uid="U1",
@@ -1419,9 +1467,10 @@ class TestMaxItemsBundleEnforcement(unittest.TestCase):
         )
         self.assertTrue(result["ok"], result)
 
-    def test_member_kayak_paddle_helmet_lifejacket_equals_4_blocked(self):
+    def test_member_four_categories_one_each_ok(self):
         """
-        Czlonek: kajak + wiosło + kask + kamizelka = 4 przedmioty > max_items=3 → blokada.
+        Czlonek: kajak + wiosło + kask + kamizelka = po 1 z 4 kategorii.
+        Per-kategoria (≤3) → OK (wcześniej blokada przy liczeniu łącznym — S2).
         """
         backend = self._make_backend("rola_czlonek")
         result = backend.create_bundle_reservation(
@@ -1435,8 +1484,25 @@ class TestMaxItemsBundleEnforcement(unittest.TestCase):
                 {"itemId": "LJ01", "category": "lifejackets"},
             ],
         )
+        self.assertTrue(result["ok"], result)
+
+    def test_member_four_paddles_blocked(self):
+        """Czlonek: 4 wiosła w jednej rezerwacji > limit 3 dla kategorii → blokada."""
+        backend = self._make_backend("rola_czlonek")
+        result = backend.create_bundle_reservation(
+            uid="U1",
+            start_date="2025-08-01",
+            end_date="2025-08-03",
+            items=[
+                {"itemId": "P01", "category": "paddles"},
+                {"itemId": "P02", "category": "paddles"},
+                {"itemId": "P03", "category": "paddles"},
+                {"itemId": "P04", "category": "paddles"},
+            ],
+        )
         self.assertFalse(result["ok"], result)
         self.assertEqual(result["code"], "too_many_items")
+        self.assertEqual(result["category"], "paddles")
 
     def test_candidate_1_kayak_ok(self):
         """Kandydat: 1 kajak = max_items=1 → OK."""
@@ -1449,10 +1515,10 @@ class TestMaxItemsBundleEnforcement(unittest.TestCase):
         )
         self.assertTrue(result["ok"], result)
 
-    def test_candidate_kayak_plus_paddle_equals_2_blocked(self):
+    def test_candidate_kayak_plus_paddle_one_each_ok(self):
         """
-        Kandydat: kajak + wiosło = 2 przedmioty > max_items=1 → blokada.
-        Ważna uwaga: nawet 1 akcesorium blokuje kandydata (luka S2).
+        Kandydat: kajak + wiosło w jednym koszyku = po 1 z każdej kategorii ≤ 1 → OK.
+        (Wcześniej blokowane przez luka S2 — liczenie łączne.)
         """
         backend = self._make_backend("rola_kandydat")
         result = backend.create_bundle_reservation(
@@ -1464,11 +1530,74 @@ class TestMaxItemsBundleEnforcement(unittest.TestCase):
                 {"itemId": "P01", "category": "paddles"},
             ],
         )
-        self.assertFalse(result["ok"], result)
-        self.assertEqual(result["code"], "too_many_items")
+        self.assertTrue(result["ok"], result)
 
-    def test_board_100_items_ok(self):
-        """Zarząd: limit = 100, 2 kajaki + 2 akcesoria = 4 → OK."""
+    def test_candidate_kayak_then_paddle_separate_reservations_ok(self):
+        """
+        GŁÓWNY scenariusz zgłoszenia: kandydat rezerwuje kajak osobno, a wiosło
+        w drugiej, nakładającej się rezerwacji → OK (różne kategorie, po 1 ≤ 1).
+        """
+        backend = self._make_backend("rola_kandydat")
+        first = backend.create_bundle_reservation(
+            uid="U1",
+            start_date="2025-08-01",
+            end_date="2025-08-03",
+            items=[{"itemId": "K01", "category": "kayaks"}],
+        )
+        self.assertTrue(first["ok"], first)
+
+        second = backend.create_bundle_reservation(
+            uid="U1",
+            start_date="2025-08-02",
+            end_date="2025-08-04",
+            items=[{"itemId": "P01", "category": "paddles"}],
+        )
+        self.assertTrue(second["ok"], second)
+
+    def test_candidate_second_kayak_blocked(self):
+        """Kandydat: drugi kajak w nakładającym się terminie > 1 → blokada."""
+        backend = self._make_backend("rola_kandydat")
+        first = backend.create_bundle_reservation(
+            uid="U1",
+            start_date="2025-08-01",
+            end_date="2025-08-03",
+            items=[{"itemId": "K01", "category": "kayaks"}],
+        )
+        self.assertTrue(first["ok"], first)
+
+        second = backend.create_bundle_reservation(
+            uid="U1",
+            start_date="2025-08-02",
+            end_date="2025-08-04",
+            items=[{"itemId": "K02", "category": "kayaks"}],
+        )
+        self.assertFalse(second["ok"], second)
+        self.assertEqual(second["code"], "too_many_items")
+        self.assertEqual(second["category"], "kayaks")
+
+    def test_candidate_second_paddle_blocked(self):
+        """Kandydat: drugie wiosło w nakładającym się terminie > 1 → blokada."""
+        backend = self._make_backend("rola_kandydat")
+        first = backend.create_bundle_reservation(
+            uid="U1",
+            start_date="2025-08-01",
+            end_date="2025-08-03",
+            items=[{"itemId": "P01", "category": "paddles"}],
+        )
+        self.assertTrue(first["ok"], first)
+
+        second = backend.create_bundle_reservation(
+            uid="U1",
+            start_date="2025-08-02",
+            end_date="2025-08-04",
+            items=[{"itemId": "P02", "category": "paddles"}],
+        )
+        self.assertFalse(second["ok"], second)
+        self.assertEqual(second["code"], "too_many_items")
+        self.assertEqual(second["category"], "paddles")
+
+    def test_board_many_items_ok(self):
+        """Zarząd: limit = 100, 2 kajaki + 2 akcesoria → OK."""
         backend = self._make_backend("rola_zarzad")
         result = backend.create_bundle_reservation(
             uid="U1",
@@ -1483,15 +1612,13 @@ class TestMaxItemsBundleEnforcement(unittest.TestCase):
         )
         self.assertTrue(result["ok"], result)
 
-    def test_cumulative_count_across_overlapping_reservations(self):
+    def test_cumulative_kayaks_across_overlapping_reservations_ok(self):
         """
         Czlonek ma już 2 kajaki w nakładającej się rezerwacji.
-        Próba dodania kolejnego kajaka → już + 1 = 3 → OK.
-        Próba dodania 2 kolejnych kajaków → już + 2 = 4 > 3 → blokada.
+        Dodanie 3. kajaka w drugiej, nakładającej się rezerwacji → 3 kajaki ≤ 3 → OK.
         """
         backend = self._make_backend("rola_czlonek")
 
-        # Pierwsza rezerwacja: 2 kajaki
         first = backend.create_bundle_reservation(
             uid="U1",
             start_date="2025-09-01",
@@ -1503,18 +1630,18 @@ class TestMaxItemsBundleEnforcement(unittest.TestCase):
         )
         self.assertTrue(first["ok"], first)
 
-        # Nakładające się: 1 kajak → łącznie 3 → OK
         second = backend.create_bundle_reservation(
             uid="U1",
             start_date="2025-09-03",
             end_date="2025-09-07",
-            items=[{"itemId": "P01", "category": "paddles"}],
+            items=[{"itemId": "K03", "category": "kayaks"}],
         )
         self.assertTrue(second["ok"], second)
 
-    def test_cumulative_over_limit_blocked(self):
+    def test_cumulative_kayaks_over_limit_blocked(self):
         """
-        Czlonek ma już 3 kajaki. Dodanie 1 akcesoria → 4 > 3 → blokada.
+        Czlonek ma już 3 kajaki. 4. kajak w nakładającej się rezerwacji → 4 > 3 → blokada.
+        Akcesoria (inna kategoria) nadal przeszłyby — liczenie jest per kategoria.
         """
         backend = self._make_backend("rola_czlonek")
 
@@ -1525,19 +1652,30 @@ class TestMaxItemsBundleEnforcement(unittest.TestCase):
             items=[
                 {"itemId": "K01", "category": "kayaks"},
                 {"itemId": "K02", "category": "kayaks"},
-                {"itemId": "P01", "category": "paddles"},
+                {"itemId": "K03", "category": "kayaks"},
             ],
         )
         self.assertTrue(first["ok"], first)
 
-        second = backend.create_bundle_reservation(
+        # 4. kajak → blokada
+        fourth_kayak = backend.create_bundle_reservation(
+            uid="U1",
+            start_date="2025-09-03",
+            end_date="2025-09-07",
+            items=[{"itemId": "K04", "category": "kayaks"}],
+        )
+        self.assertFalse(fourth_kayak["ok"], fourth_kayak)
+        self.assertEqual(fourth_kayak["code"], "too_many_items")
+        self.assertEqual(fourth_kayak["category"], "kayaks")
+
+        # Akcesorium innej kategorii w tym samym terminie → OK (per kategoria)
+        helmet = backend.create_bundle_reservation(
             uid="U1",
             start_date="2025-09-03",
             end_date="2025-09-07",
             items=[{"itemId": "H01", "category": "helmets"}],
         )
-        self.assertFalse(second["ok"], second)
-        self.assertEqual(second["code"], "too_many_items")
+        self.assertTrue(helmet["ok"], helmet)
 
     def test_gear_only_bundle_no_kayak_cost_zero(self):
         """

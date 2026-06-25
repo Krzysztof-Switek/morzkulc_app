@@ -4,6 +4,7 @@ import {quoteKayaksCostHours} from "../../hours/hours_quote";
 import {deductHoursInTx, refundHoursForReservationInTx, reverseDeductHoursInTx} from "../../hours/godzinki_service";
 import {getGodzinkiVars} from "../../hours/godzinki_vars";
 import {isUserStatusBlocked} from "../../users/userStatusCheck";
+import {countMyOverlappingItemsByCategory, countItemsByCategory, findCategoryOverLimit} from "../shared/reservation_limits";
 
 function norm(s: any): string {
   return String(s || "").trim();
@@ -43,43 +44,6 @@ async function getUserRole(db: FirebaseFirestore.Firestore, uid: string) {
     statusKey: String(data?.status_key || "status_aktywny"),
     email: String(data?.email || ""),
   };
-}
-
-async function countMyOverlappingItems(
-  db: FirebaseFirestore.Firestore,
-  uid: string,
-  blockStartIso: string,
-  blockEndIso: string,
-  excludeReservationId?: string,
-  tx?: FirebaseFirestore.Transaction
-) {
-  const query = db
-    .collection("gear_reservations")
-    .where("userUid", "==", uid)
-    .where("status", "==", "active")
-    .where("blockStartIso", "<=", blockEndIso);
-  const snap = tx ? await tx.get(query) : await query.get();
-
-  let count = 0;
-
-  for (const doc of snap.docs) {
-    const r = doc.data() as any;
-    if (excludeReservationId && String(r?.id) === excludeReservationId) continue;
-
-    const rStart = String(r?.blockStartIso || "");
-    const rEnd = String(r?.blockEndIso || "");
-    if (!rStart || !rEnd) continue;
-
-    if (!overlapsIso(rStart, rEnd, blockStartIso, blockEndIso)) continue;
-
-    // For bundle reservations use items[].length; fall back to kayakIds[] for legacy reservations.
-    const itemCount = Array.isArray(r?.items) && r.items.length > 0 ?
-      r.items.length :
-      (Array.isArray(r?.kayakIds) ? r.kayakIds.length : 0);
-    count += itemCount;
-  }
-
-  return count;
 }
 
 async function findConflicts(
@@ -238,13 +202,16 @@ export async function updateReservationDates(
 
     const {blockStartIso, blockEndIso} = computeBlockIso(args.startDate, args.endDate, vars.offsetDays);
 
-    const already = await countMyOverlappingItems(db, args.uid, blockStartIso, blockEndIso, rid, tx);
-    if (already + kayakIds.length > maxItems) {
+    // Limit PER KATEGORIA (legacy: tylko kajaki) — spójnie ze ścieżką bundle (S2).
+    const already = await countMyOverlappingItemsByCategory(db, args.uid, blockStartIso, blockEndIso, rid, tx);
+    const requested = countItemsByCategory(kayakIds.map(() => ({category: "kayaks"})));
+    const over = findCategoryOverLimit(already, requested, maxItems);
+    if (over) {
       return {
         ok: false,
         code: "max_items_exceeded",
         message: "Max items exceeded",
-        details: {already, requested: kayakIds.length, maxItems},
+        details: {category: over.category, already: over.already, requested: over.requested, maxItems},
       } as const;
     }
 

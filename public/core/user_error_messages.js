@@ -68,11 +68,30 @@ export function mapUserFacingApiError(error, fallbackPrefix = "") {
         "Wybrany kajak nie jest dostępny w tym terminie. Zmień daty albo wybierz inny sprzęt."
       );
 
-    case "max_items_exceeded":
+    case "max_items_exceeded": {
+      const categoryNouns = {
+        kayaks: "kajaków",
+        paddles: "wioseł",
+        lifejackets: "kamizelek",
+        helmets: "kasków",
+        sprayskirts: "fartuchów",
+        throwbags: "rzutek"
+      };
+      const category = String(details?.category || "").toLowerCase();
+      const noun = categoryNouns[category] || "";
+      const maxItems = Number(details?.maxItems || 0);
+      if (noun && maxItems > 0) {
+        return joinPrefix(
+          fallbackPrefix,
+          `Masz już zarezerwowany sprzęt tego rodzaju w tym terminie (limit: ${maxItems} szt. ${noun} naraz). ` +
+          "Aby zmienić termin, edytuj istniejącą rezerwację w zakładce „Moje rezerwacje”."
+        );
+      }
       return joinPrefix(
         fallbackPrefix,
-        "Przekroczono maksymalną liczbę kajaków, które możesz mieć zarezerwowane w tym samym czasie."
+        "Przekroczono maksymalną liczbę sztuk tego rodzaju sprzętu, które możesz mieć zarezerwowane w tym samym czasie."
       );
+    }
 
     case "max_time_exceeded": {
       const maxWeeks = Number(details?.maxWeeks || 0);

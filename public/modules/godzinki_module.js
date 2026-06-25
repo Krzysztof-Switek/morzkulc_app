@@ -96,7 +96,7 @@ function renderRecordTable(records) {
               <td class="godzinkiAmountCell ${amountClass}">${amountHtml}</td>
               <td>
                 <span class="godzinkiReason">${esc(shortenReason(r.reason))}</span>
-                ${isWaived ? `<span class="godzinkiWaivedTag">zwolnienie</span>` : ""}
+                ${isWaived ? `<span class="godzinkiWaivedTag">zwolnienie${r.schoolYear ? ` kurs ${esc(String(r.schoolYear))}` : ""}</span>` : ""}
                 ${isPending ? `<span class="godzinkiPending">oczekuje</span>` : ""}
               </td>
             </tr>

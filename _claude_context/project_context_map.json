@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-24T12:21:50",
+  "generated_at": "2026-06-25T10:42:31",
   "project_root": "C:\\Users\\kswitek\\Documents\\morzkulc_app",
   "settings": {
     "excluded_dirs": [
@@ -6377,9 +6377,9 @@
     {
       "path": "functions/lib/api/getGodzinkiHandler.js",
       "extension": ".js",
-      "size_bytes": 6922,
-      "line_count": 136,
-      "sha1_short": "467229de71",
+      "size_bytes": 7346,
+      "line_count": 140,
+      "sha1_short": "689fb3a792",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -7161,9 +7161,9 @@
     {
       "path": "functions/lib/api/registerUserHandler.js",
       "extension": ".js",
-      "size_bytes": 30577,
-      "line_count": 585,
-      "sha1_short": "752029255d",
+      "size_bytes": 34329,
+      "line_count": 642,
+      "sha1_short": "7448098de4",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -7330,6 +7330,16 @@
         },
         {
           "name": "readProfileInput",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "resolveSzkoleniowiec",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -9127,9 +9137,9 @@
     {
       "path": "functions/lib/modules/hours/godzinki_service.js",
       "extension": ".js",
-      "size_bytes": 38876,
-      "line_count": 851,
-      "sha1_short": "617910037a",
+      "size_bytes": 39793,
+      "line_count": 876,
+      "sha1_short": "378da2e64a",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -9146,6 +9156,16 @@
       "functions": [
         {
           "name": "computeBalance",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "computeEarnedTotal",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -12281,9 +12301,9 @@
     {
       "path": "functions/lib/service/tasks/usersSyncFieldsFromSheet.js",
       "extension": ".js",
-      "size_bytes": 12309,
-      "line_count": 278,
-      "sha1_short": "2d9698036c",
+      "size_bytes": 15011,
+      "line_count": 322,
+      "sha1_short": "9c8291d07a",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -15081,9 +15101,9 @@
     {
       "path": "functions/src/api/getGodzinkiHandler.ts",
       "extension": ".ts",
-      "size_bytes": 5618,
-      "line_count": 157,
-      "sha1_short": "5692f2354d",
+      "size_bytes": 5978,
+      "line_count": 161,
+      "sha1_short": "ef13e760ee",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -15792,9 +15812,9 @@
     {
       "path": "functions/src/api/registerUserHandler.ts",
       "extension": ".ts",
-      "size_bytes": 27912,
-      "line_count": 742,
-      "sha1_short": "873431c719",
+      "size_bytes": 30877,
+      "line_count": 805,
+      "sha1_short": "ab840569e2",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -15975,6 +15995,16 @@
         },
         {
           "name": "readProfileInput",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "resolveSzkoleniowiec",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -17790,9 +17820,9 @@
     {
       "path": "functions/src/modules/hours/godzinki_service.ts",
       "extension": ".ts",
-      "size_bytes": 38863,
-      "line_count": 1060,
-      "sha1_short": "081b18a856",
+      "size_bytes": 39656,
+      "line_count": 1081,
+      "sha1_short": "1abe56bf62",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -17818,6 +17848,16 @@
       "functions": [
         {
           "name": "computeBalance",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "computeEarnedTotal",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -21168,9 +21208,9 @@
     {
       "path": "functions/src/service/tasks/usersSyncFieldsFromSheet.ts",
       "extension": ".ts",
-      "size_bytes": 10049,
-      "line_count": 270,
-      "sha1_short": "a75cdabc43",
+      "size_bytes": 12418,
+      "line_count": 315,
+      "sha1_short": "0381dd5296",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -23148,9 +23188,9 @@
     {
       "path": "public/core/render_shell.js",
       "extension": ".js",
-      "size_bytes": 56190,
-      "line_count": 1316,
-      "sha1_short": "30096b6c10",
+      "size_bytes": 59566,
+      "line_count": 1372,
+      "sha1_short": "6ef68da95c",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -26190,9 +26230,9 @@
     {
       "path": "public/styles/start.css",
       "extension": ".css",
-      "size_bytes": 6558,
-      "line_count": 226,
-      "sha1_short": "0e2c14a917",
+      "size_bytes": 8933,
+      "line_count": 250,
+      "sha1_short": "f001e04f3c",
       "kind": "text",
       "module_aliases": [],
       "imports": [],
@@ -26209,7 +26249,7 @@
       "extension": ".js",
       "size_bytes": 4997,
       "line_count": 147,
-      "sha1_short": "0d8fabc78f",
+      "sha1_short": "4232735601",
       "kind": "script",
       "module_aliases": [],
       "imports": [],

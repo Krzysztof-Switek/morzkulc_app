@@ -5,6 +5,7 @@ import {deductHoursInTx, reverseDeductHoursInTx, writeWaivedSpendInTx, refundHou
 import {getGodzinkiVars} from "../../hours/godzinki_vars";
 import {isUserStatusBlocked} from "../../users/userStatusCheck";
 import {updateReservationDates} from "../kayaks/gear_kayaks_service";
+import {countMyOverlappingItemsByCategory, countItemsByCategory, findCategoryOverLimit} from "../shared/reservation_limits";
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Types
@@ -99,15 +100,35 @@ function uniqBy<T>(arr: T[], key: (t: T) => string): T[] {
   return out;
 }
 
+// Nazwy kategorii w mianowniku l. poj. — do krótkiego opisu pojedynczej pozycji.
+const CATEGORY_NOUN_SINGULAR: Record<string, string> = {
+  kayaks: "kajak",
+  paddles: "wiosło",
+  lifejackets: "kamizelka",
+  helmets: "kask",
+  sprayskirts: "fartuch",
+  throwbags: "rzutka",
+};
+
+// Zakres dat skrócony do formatu "dd-mm do dd-mm rr" (czytelny w wąskiej komórce godzinek).
+function formatShortRange(startIso: string, endIso: string): string {
+  const s = norm(startIso).split("-");
+  const e = norm(endIso).split("-");
+  if (s.length !== 3 || e.length !== 3) return `${startIso}–${endIso}`;
+  const yy = e[0].slice(2);
+  return `${s[2]}-${s[1]} do ${e[2]}-${e[1]} ${yy}`;
+}
+
+// Krótki opis rezerwacji do historii godzinek: "Rezerwacja {typ}" dla pojedynczej
+// pozycji, "Rezerwacja zestaw" dla kompletu. Bez sufiksu o zwolnieniu — informację
+// o szkoleniówce niesie znacznik "zwolnienie kurs RRRR" (pole schoolYear na rekordzie).
 function buildCostReason(items: BundleItemStored[], startDate: string, endDate: string): string {
-  const kayaks = items.filter((i) => i.isKayak);
-  if (kayaks.length === 1) {
-    return `Rezerwacja zestawu z kajakiem (${startDate}–${endDate})`;
+  const range = formatShortRange(startDate, endDate);
+  if (items.length === 1) {
+    const noun = CATEGORY_NOUN_SINGULAR[norm(items[0]?.category).toLowerCase()] || "sprzęt";
+    return `Rezerwacja ${noun} ${range}`;
   }
-  if (kayaks.length > 1) {
-    return `Rezerwacja zestawu z ${kayaks.length} kajakami (${startDate}–${endDate})`;
-  }
-  return `Rezerwacja sprzętu — zestaw (${startDate}–${endDate})`;
+  return `Rezerwacja zestaw ${range}`;
 }
 
 function buildNonKayakMeta(d: any, cat: string): Record<string, any> {
@@ -374,54 +395,6 @@ export async function findBundleConflicts(
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Firestore: overlapping item count
-// ──────────────────────────────────────────────────────────────────────────────
-
-/**
- * Counts total items in all of a user's active, overlapping reservations.
- *
- * Uses items[] length for new bundle reservations,
- * kayakIds[] length for legacy kayak-only reservations.
- *
- * This mirrors count_overlapping_items() in test_bundle_reservations.py.
- */
-export async function countMyOverlappingBundleItems(
-  db: FirebaseFirestore.Firestore,
-  uid: string,
-  blockStartIso: string,
-  blockEndIso: string,
-  excludeReservationId?: string,
-  tx?: FirebaseFirestore.Transaction
-): Promise<number> {
-  const query = db
-    .collection("gear_reservations")
-    .where("userUid", "==", uid)
-    .where("status", "==", "active")
-    .where("blockStartIso", "<=", blockEndIso);
-  const snap = tx ? await tx.get(query) : await query.get();
-
-  let count = 0;
-
-  for (const doc of snap.docs) {
-    const r = doc.data() as any;
-    if (excludeReservationId && norm(r?.id) === excludeReservationId) continue;
-
-    const rStart = norm(r?.blockStartIso);
-    const rEnd = norm(r?.blockEndIso);
-    if (!rStart || !rEnd) continue;
-    if (!overlapsIso(rStart, rEnd, blockStartIso, blockEndIso)) continue;
-
-    if (Array.isArray(r?.items)) {
-      count += (r.items as any[]).length;
-    } else if (Array.isArray(r?.kayakIds)) {
-      count += (r.kayakIds as any[]).length;
-    }
-  }
-
-  return count;
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
 // Firestore: reserved composite ID set for a block period
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -605,6 +578,8 @@ export async function createBundleReservation(
 
     costHours,
     waived: exempt && costHours > 0,
+    // Rok szkoleniówki uzasadniający zwolnienie — znacznik "zwolnienie kurs RRRR" w Moich rezerwacjach.
+    schoolYear: exempt && costHours > 0 ? schoolYear : null,
     createdAt: now,
     updatedAt: now,
   };
@@ -612,14 +587,17 @@ export async function createBundleReservation(
   // Jedna transakcja: kontrola limitów + konfliktów + dedukcja godzinek + zapis
   // rezerwacji (eliminuje double-booking i okno awarii między set a deduct).
   const txResult = await db.runTransaction(async (tx) => {
-    // Check user's total overlapping item count
-    const already = await countMyOverlappingBundleItems(db, args.uid, blockStartIso, blockEndIso, undefined, tx);
-    if (already + items.length > maxItems) {
+    // Limit PER KATEGORIA: dla każdego rodzaju sprzętu osobno suma sztuk w
+    // nakładających się rezerwacjach nie może przekroczyć maxItems (S2).
+    const already = await countMyOverlappingItemsByCategory(db, args.uid, blockStartIso, blockEndIso, undefined, tx);
+    const requested = countItemsByCategory(items);
+    const over = findCategoryOverLimit(already, requested, maxItems);
+    if (over) {
       return {
         ok: false,
         code: "max_items_exceeded",
         message: "Max items exceeded",
-        details: {already, requested: items.length, maxItems},
+        details: {category: over.category, already: over.already, requested: over.requested, maxItems},
       } as const;
     }
 
@@ -640,8 +618,9 @@ export async function createBundleReservation(
       if (exempt) {
         writeWaivedSpendInTx(tx, db, args.uid, {
           amount: costHours,
-          reason: `${buildCostReason(itemDetails, args.startDate, args.endDate)} — zwolnienie (szkoleniówka ${schoolYear})`,
+          reason: buildCostReason(itemDetails, args.startDate, args.endDate),
           reservationId: ref.id,
+          schoolYear,
         });
       } else if (godzinkiVars) {
         const deductResult = await deductHoursInTx(
@@ -805,14 +784,16 @@ async function updateBundleReservationDates(
     const storedItemDetails: BundleItemStored[] = Array.isArray(r?.items) ? r.items : [];
     const compositeIds: string[] = Array.isArray(r?.itemIds) ? r.itemIds.map(String) : [];
 
-    // Item count check (exclude self)
-    const already = await countMyOverlappingBundleItems(db, args.uid, blockStartIso, blockEndIso, rid, tx);
-    if (already + storedItemDetails.length > maxItems) {
+    // Limit PER KATEGORIA (exclude self) — spójnie z tworzeniem rezerwacji (S2).
+    const already = await countMyOverlappingItemsByCategory(db, args.uid, blockStartIso, blockEndIso, rid, tx);
+    const requested = countItemsByCategory(storedItemDetails);
+    const over = findCategoryOverLimit(already, requested, maxItems);
+    if (over) {
       return {
         ok: false,
         code: "max_items_exceeded",
         message: "Max items exceeded",
-        details: {already, requested: storedItemDetails.length, maxItems},
+        details: {category: over.category, already: over.already, requested: over.requested, maxItems},
       } as const;
     }
 
@@ -849,7 +830,7 @@ async function updateBundleReservationDates(
           for (const wd of wsnap.docs) {
             const w = wd.data() as any;
             if (w.waived === true && w.refunded !== true) {
-              tx.update(wd.ref, {amount: newCostHours, updatedAt: now});
+              tx.update(wd.ref, {amount: newCostHours, schoolYear, updatedAt: now});
             }
           }
         }
@@ -867,16 +848,18 @@ async function updateBundleReservationDates(
         if (newCostHours > 0) {
           writeWaivedSpendInTx(tx, db, args.uid, {
             amount: newCostHours,
-            reason: `Korekta rezerwacji ${rid} — zwolnienie (szkoleniówka ${schoolYear})`,
+            reason: "Korekta rezerwacji",
             reservationId: rid,
+            schoolYear,
           });
         }
       } else if (newCostHours > 0) {
         // Wcześniej brak kosztu (np. bez kajaka) → zapisz "waived".
         writeWaivedSpendInTx(tx, db, args.uid, {
           amount: newCostHours,
-          reason: `Korekta rezerwacji ${rid} — zwolnienie (szkoleniówka ${schoolYear})`,
+          reason: "Korekta rezerwacji",
           reservationId: rid,
+          schoolYear,
         });
       }
     } else if (wasWaived && newCostHours > 0) {
@@ -953,6 +936,7 @@ async function updateBundleReservationDates(
         blockEndIso,
         costHours: newCostHours,
         waived: exempt && newCostHours > 0,
+        schoolYear: exempt && newCostHours > 0 ? schoolYear : null,
         updatedAt: now,
         modifiedFrom: {startDate: oldStart, endDate: oldEnd},
       },

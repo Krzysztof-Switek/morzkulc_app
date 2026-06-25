@@ -43,6 +43,8 @@ export type GodzinkiRecord = {
   // widoczny w historii (przekreślony koszt), ale neutralny dla salda:
   // fromEarn=0, overdraft=0 → computeBalance go nie liczy.
   waived?: boolean;
+  // Rok szkoleniówki uzasadniający zwolnienie (waived) — do znacznika "zwolnienie kurs RRRR".
+  schoolYear?: number | null;
   refundedAt?: FirebaseFirestore.Timestamp | null;
   earnDeductions?: {earnId: string; amount: number}[];
 
@@ -531,7 +533,7 @@ export function writeWaivedSpendInTx(
   tx: FirebaseFirestore.Transaction,
   db: FirebaseFirestore.Firestore,
   uid: string,
-  input: {amount: number; reason: string; reservationId?: string}
+  input: {amount: number; reason: string; reservationId?: string; schoolYear?: number | null}
 ): void {
   const amount = Number(input.amount);
   if (!amount || amount <= 0) return;
@@ -545,6 +547,8 @@ export function writeWaivedSpendInTx(
     fromEarn: 0,
     overdraft: 0,
     waived: true,
+    // Rok szkoleniówki, z której wynika zwolnienie — front renderuje "zwolnienie kurs RRRR".
+    schoolYear: input.schoolYear ?? null,
     earnDeductions: [],
     reservationId: input.reservationId ? String(input.reservationId) : null,
     refunded: false,
