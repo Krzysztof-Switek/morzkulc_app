@@ -1,6 +1,7 @@
 import { apiGetJson, apiPostJson } from "/core/api_client.js";
 import { mapUserFacingApiError } from "/core/user_error_messages.js";
 import { setHash } from "/core/router.js";
+import { renderReportsPanel } from "/modules/raporty/reports_panel.js";
 
 const NAV_BACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`;
 const NAV_HOME_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
@@ -41,6 +42,12 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
             </div>
           </div>
 
+          <div class="modTabs" role="tablist">
+            <button type="button" class="modTab active" data-tab="administracja">Administracja</button>
+            <button type="button" class="modTab" data-tab="raporty">Raporty</button>
+          </div>
+
+          <div class="modTabPanel" data-panel="administracja">
           <div class="actions" style="margin-top:12px;display:flex;align-items:center;gap:8px;">
             <button id="adminPendingReloadBtn" type="button" class="moduleNavBtn" title="Odśwież dane"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.79"/></svg></button>
             <button id="adminSyncCalendarBtn" type="button">Synchronizuj zatwierdzenia (arkusze + kalendarz)</button>
@@ -50,6 +57,11 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
 
           <div id="adminPendingErr" class="err hidden" style="margin-top:12px;"></div>
           <div id="adminPendingContent" style="margin-top:16px;"></div>
+          </div>
+
+          <div class="modTabPanel hidden" data-panel="raporty">
+            <div id="reportsPanel"></div>
+          </div>
         </div>
       `;
 
@@ -91,6 +103,7 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
         const failedCharges = data?.failedStorageCharges || { count: 0, items: [] };
         const gearSync = data?.gearSync || { hasWarnings: false, perCategory: [], totals: {}, ranAt: null, error: null, blocked: false, privateKayakErrors: [], duplicateIdErrors: [] };
         const negativeBalances = data?.negativeBalances || { count: 0, items: [], ranAt: null, error: null };
+        const expiredKursants = data?.expiredKursants || { count: 0, items: [], error: null };
         const godzinkiSheetUrl = data?.meta?.godzinkiSheetUrl || null;
 
         let html = "";
@@ -373,6 +386,37 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
           html += `</div>`;
         }
 
+        // Sekcja: kursanci po terminie (utracili dostęp do wypożyczeń po 30.09 roku
+        // szkoleniówki). role_key nie jest zmieniany automatem — zarząd nadaje rolę
+        // docelową ręcznie w arkuszu członków.
+        html += `<h3 style="margin:16px 0 8px;">Kursanci po terminie (${escapeHtml(String(expiredKursants.count || 0))})</h3>`;
+        if (expiredKursants.error) {
+          html += `<p class="err" style="margin-bottom:20px;">${escapeHtml(expiredKursants.error)}</p>`;
+        } else if (!expiredKursants.items?.length) {
+          html += `<p class="hint" style="margin-bottom:20px;">Brak.</p>`;
+        } else {
+          html += `<p class="hint" style="margin:0 0 8px;">Utracili dostęp do wypożyczeń (minął 30 września roku kursu). Nadaj im rolę docelową w arkuszu członków.</p>`;
+          html += `<div style="margin-bottom:20px;">`;
+          for (const item of expiredKursants.items) {
+            html += `
+              <div class="gearCard" style="margin-bottom:8px;border-left:4px solid #c0392b;">
+                <div class="gearCardInner">
+                  <div class="gearHead">
+                    <div class="gearTitleWrap">
+                      <div class="gearTitle">${escapeHtml(item.displayName || item.email || item.uid)}</div>
+                      <div class="gearSubtitle">
+                        ${escapeHtml(item.email || "—")}
+                        · szkoleniówka ${escapeHtml(String(item.schoolYear || "—"))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+          html += `</div>`;
+        }
+
         contentEl.innerHTML = html;
       };
 
@@ -426,6 +470,23 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
       });
 
       reloadBtn.addEventListener("click", load);
+
+      // ── Przełączanie zakładek (Raporty montowane leniwie) ──────────────────
+      const tabs = Array.from(viewEl.querySelectorAll(".modTab"));
+      const panels = Array.from(viewEl.querySelectorAll(".modTabPanel"));
+      let reportsMounted = false;
+      tabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+          const name = tab.getAttribute("data-tab");
+          tabs.forEach((t) => t.classList.toggle("active", t === tab));
+          panels.forEach((p) => p.classList.toggle("hidden", p.getAttribute("data-panel") !== name));
+          if (name === "raporty" && !reportsMounted) {
+            reportsMounted = true;
+            renderReportsPanel({ container: viewEl.querySelector("#reportsPanel"), ctx });
+          }
+        });
+      });
+
       await load();
     }
   };

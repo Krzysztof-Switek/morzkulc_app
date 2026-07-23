@@ -219,6 +219,38 @@ function isFreeRentalExempt(schoolYear: number | null, now: Date = new Date()): 
   return now.toISOString().slice(0, 10) <= `${schoolYear}-09-30`;
 }
 
+/**
+ * Bramka rezerwacji dla kursanta (wspólna dla create i update).
+ *
+ * Kursant rezerwuje na zasadach kandydata (te same limity i bezpłatne wypożyczenie
+ * w oknie szkoleniówki), ale TYLKO gdy:
+ *   - zarząd włączył wypożyczanie kursantów (var_members/kurs_wypożycza),
+ *   - jest w oknie szkoleniówki (zwolnienie obowiązuje — do 30 września roku kursu).
+ *
+ * Okno 30.09 jest mechanizmem wygaśnięcia roli czasowej: po nim kursant traci dostęp
+ * do wypożyczeń. role_key NIE jest zmieniany automatem — docelową rolę nadaje zarząd
+ * ręcznie w arkuszu (panel zarządu listuje kursantów po terminie).
+ *
+ * Zwraca obiekt błędu, gdy rezerwacja niedozwolona, albo null gdy dozwolona.
+ */
+async function assertKursantRentalAllowed(
+  db: FirebaseFirestore.Firestore,
+  exempt: boolean,
+  schoolYear: number | null
+): Promise<{ok: false; code: string; message: string; details?: any} | null> {
+  const flagSnap = await db.collection("var_members").doc("kurs_wypożycza").get();
+  const flagOn = flagSnap.exists && flagSnap.data()?.value === true;
+  if (!flagOn) {
+    return {ok: false, code: "forbidden", message: "Rezerwacje dla kursantów są obecnie wyłączone."};
+  }
+  if (!exempt) {
+    return schoolYear ?
+      {ok: false, code: "kursant_window_closed", message: `Jako kursant możesz wypożyczać sprzęt tylko do 30 września ${schoolYear}. Po tym terminie zarząd nada Ci rolę docelową.`, details: {schoolYear}} :
+      {ok: false, code: "kursant_no_year", message: "Brak roku szkoleniówki na liście kursantów — skontaktuj się z zarządem: zarzad@morzkulc.pl"};
+  }
+  return null;
+}
+
 // ──────────────────────────────────────────────────────────────────────────────
 // Firestore: item detail fetching + validation
 // ──────────────────────────────────────────────────────────────────────────────
@@ -464,18 +496,10 @@ export async function createBundleReservation(
   const schoolYear = await resolveSchoolYear(db, roleKey, args.uid, user.email);
   const exempt = isFreeRentalExempt(schoolYear, now);
 
-  // Kursant rezerwuje WYŁĄCZNIE bezpłatnie w oknie + globalny przełącznik zarządu.
+  // Kursant rezerwuje jak kandydat, ale tylko w oknie szkoleniówki + globalny przełącznik zarządu.
   if (roleKey === "rola_kursant") {
-    const flagSnap = await db.collection("var_members").doc("kurs_wypożycza").get();
-    const flagOn = flagSnap.exists && flagSnap.data()?.value === true;
-    if (!flagOn) {
-      return {ok: false, code: "forbidden", message: "Rezerwacje dla kursantów są obecnie wyłączone."} as const;
-    }
-    if (!exempt) {
-      return schoolYear ?
-        {ok: false, code: "kursant_window_closed", message: `Jako kursant możesz wypożyczać sprzęt bezpłatnie tylko do 30 września ${schoolYear}.`, details: {schoolYear}} as const :
-        {ok: false, code: "kursant_no_year", message: "Brak roku szkoleniówki na liście kursantów — skontaktuj się z zarządem: zarzad@morzkulc.pl"} as const;
-    }
+    const gate = await assertKursantRentalAllowed(db, exempt, schoolYear);
+    if (gate) return gate;
   }
 
   // Normalise and deduplicate items
@@ -719,18 +743,10 @@ async function updateBundleReservationDates(
   const schoolYear = await resolveSchoolYear(db, roleKey, args.uid, user.email);
   const exempt = isFreeRentalExempt(schoolYear, updNow);
 
-  // Kursant: edycja dozwolona tylko bezpłatnie w oknie + przełącznik zarządu.
+  // Kursant: edycja dozwolona na zasadach kandydata, tylko w oknie + przełącznik zarządu.
   if (roleKey === "rola_kursant") {
-    const flagSnap = await db.collection("var_members").doc("kurs_wypożycza").get();
-    const flagOn = flagSnap.exists && flagSnap.data()?.value === true;
-    if (!flagOn) {
-      return {ok: false, code: "forbidden", message: "Rezerwacje dla kursantów są obecnie wyłączone."} as const;
-    }
-    if (!exempt) {
-      return schoolYear ?
-        {ok: false, code: "kursant_window_closed", message: `Jako kursant możesz wypożyczać sprzęt bezpłatnie tylko do 30 września ${schoolYear}.`, details: {schoolYear}} as const :
-        {ok: false, code: "kursant_no_year", message: "Brak roku szkoleniówki na liście kursantów — skontaktuj się z zarządem: zarzad@morzkulc.pl"} as const;
-    }
+    const gate = await assertKursantRentalAllowed(db, exempt, schoolYear);
+    if (gate) return gate;
   }
 
   const ref = db.collection("gear_reservations").doc(rid);

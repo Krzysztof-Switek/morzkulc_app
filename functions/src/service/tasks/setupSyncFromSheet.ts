@@ -100,7 +100,14 @@ function parseSetupValue(raw: string): {type: string; value: any} {
   if (!s) return {type: "string", value: ""};
   const low = s.toLowerCase();
   if (low === "true" || low === "false") return {type: "boolean", value: low === "true"};
-  if (/^-?\d+(\.\d+)?$/.test(s)) return {type: "number", value: Number(s)};
+  if (/^-?\d+(\.\d+)?$/.test(s)) {
+    const n = Number(s);
+    // Konwertuj na number TYLKO gdy nie tracimy precyzji (round-trip String(n) === s).
+    // Długie identyfikatory (numer konta NRB, PESEL, telefon z zerem wiodącym)
+    // przekraczają bezpieczny zakres liczb i muszą zostać stringiem.
+    if (Number.isFinite(n) && String(n) === s) return {type: "number", value: n};
+    return {type: "string", value: s};
+  }
   return {type: "string", value: s};
 }
 

@@ -98,39 +98,6 @@ function toNumberOrNull_(v) {
   return isFinite(n) ? n : null;
 }
 
-function parseSetupValue_(cell) {
-  if (isDateObject_(cell)) {
-    return { type: "string", value: formatTimeHHMM_(cell) };
-  }
-
-  if (typeof cell === "boolean") return { type: "boolean", value: cell };
-  if (typeof cell === "number" && isFinite(cell)) {
-    return { type: "number", value: cell };
-  }
-
-  const s = String(cell == null ? "" : cell).trim();
-  if (!s) return { type: "string", value: "" };
-
-  const sLower = s.toLowerCase();
-  if (sLower === "true" || sLower === "false") {
-    return { type: "boolean", value: sLower === "true" };
-  }
-
-  if (/^-?\d+(\.\d+)?$/.test(s)) {
-    return { type: "number", value: Number(s) };
-  }
-
-  return { type: "string", value: s };
-}
-
-function isDateObject_(v) {
-  return Object.prototype.toString.call(v) === "[object Date]" && !isNaN(v.getTime());
-}
-
-function formatTimeHHMM_(dateObj) {
-  return Utilities.formatDate(dateObj, Session.getScriptTimeZone(), "HH:mm");
-}
-
 function splitList_(s) {
   const raw = String(s || "").trim();
   if (!raw) return [];

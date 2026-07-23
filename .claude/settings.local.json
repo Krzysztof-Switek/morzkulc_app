@@ -10,7 +10,9 @@
       "PowerShell(firebase deploy *)",
       "Bash(awk '/switch \\\\\\(code\\\\\\)/{f=1} f' public/core/user_error_messages.js)",
       "Bash(ls api/)",
-      "Bash(grep -rln \"basen.enroll\\\\|events.submit\\\\|memberRoleKeys\\\\|status_zawieszony\\\\|blocksAccess\" api/ service/)"
+      "Bash(grep -rln \"basen.enroll\\\\|events.submit\\\\|memberRoleKeys\\\\|status_zawieszony\\\\|blocksAccess\" api/ service/)",
+      "Bash(python -m pytest tests/test_bundle_reservations.py -q)",
+      "Bash(firebase use *)"
     ]
   }
 }

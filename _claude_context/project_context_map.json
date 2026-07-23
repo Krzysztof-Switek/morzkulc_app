@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-25T10:42:31",
+  "generated_at": "2026-07-23T10:49:34",
   "project_root": "C:\\Users\\kswitek\\Documents\\morzkulc_app",
   "settings": {
     "excluded_dirs": [
@@ -45,9 +45,9 @@
     {
       "path": ".claude/settings.local.json",
       "extension": ".json",
-      "size_bytes": 862,
-      "line_count": 17,
-      "sha1_short": "254043f09f",
+      "size_bytes": 961,
+      "line_count": 19,
+      "sha1_short": "fef8d9b7f1",
       "kind": "config",
       "module_aliases": [],
       "imports": [],
@@ -698,9 +698,9 @@
     {
       "path": "appscript/członkowie sympatycy SKK/common_helpers.gs",
       "extension": ".gs",
-      "size_bytes": 8543,
-      "line_count": 319,
-      "sha1_short": "c02c18a0f6",
+      "size_bytes": 7625,
+      "line_count": 286,
+      "sha1_short": "9fda27c45c",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -768,26 +768,6 @@
           "doc": null
         },
         {
-          "name": "formatTimeHHMM_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "isDateObject_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
           "name": "isIsoTimestamp_",
           "type": "function",
           "line_start": null,
@@ -799,16 +779,6 @@
         },
         {
           "name": "normalizeHeader_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "parseSetupValue_",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -1097,9 +1067,9 @@
     {
       "path": "appscript/członkowie sympatycy SKK/setup_sync.gs",
       "extension": ".gs",
-      "size_bytes": 7384,
-      "line_count": 218,
-      "sha1_short": "f2f6e2628b",
+      "size_bytes": 3028,
+      "line_count": 72,
+      "sha1_short": "a2f9d29d03",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -1107,37 +1077,7 @@
       "classes": [],
       "functions": [
         {
-          "name": "idx",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
           "name": "initRoleMappings",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "readAppSetupModules_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "readSetupVars_",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -2802,6 +2742,41 @@
       "notes": []
     },
     {
+      "path": "Audyty/10.07_audyt_kursant_błąd.md",
+      "extension": ".md",
+      "size_bytes": 8898,
+      "line_count": 142,
+      "sha1_short": "6488008b49",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# Kursant nie może zarezerwować sprzętu — audyt błędu (10.07.2026)",
+        "## 1. Najważniejsze ustalenie: fix kursanta z 28.06 JEST wdrożony na prod",
+        "## 2. Jak działa bramka rezerwacji kursanta (kod wdrożony = lokalny)",
+        "### 2.1 Frontend",
+        "### 2.2 `GET /api/setup` (`functions/src/index.ts:407-426`)",
+        "### 2.3 Backend rezerwacji",
+        "## 3. ZNALEZIONY BUG: niespójne parsowanie `rokSzkoleniowki`",
+        "## 4. Kandydaci na przyczynę (do rozstrzygnięcia danymi z prod)",
+        "## 5. Blokada diagnostyki: wygasłe ADC",
+        "## 6. Proponowana naprawa (zależnie od wyniku diagnozy)",
+        "### A — format roku (bug §3; warto naprawić NIEZALEŻNIE od wyniku)",
+        "### B — flaga",
+        "### C — dane uczestniczki",
+        "### D — rola/status",
+        "### E — stary backend",
+        "## 7. Weryfikacja po naprawie",
+        "## 8. Pliki potencjalnie do zmiany"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "Audyty/12.06_godzinki_audyt.md",
       "extension": ".md",
       "size_bytes": 18997,
@@ -3471,6 +3446,213 @@
         "## CZĘŚĆ 4 — PLIKI DO ZMIANY",
         "## CZĘŚĆ 5 — WERYFIKACJA",
         "## CZĘŚĆ 6 — POZA ZAKRESEM"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "Audyty/26.06_o_klubie.md",
+      "extension": ".md",
+      "size_bytes": 9809,
+      "line_count": 209,
+      "sha1_short": "696f4d2cf7",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# 26.06 — Box „Klub\" w panelu użytkownika (analiza + plan)",
+        "## Cel",
+        "## Co znalazłem (analiza kodu)",
+        "### 1. Panel profilu — gdzie się renderuje",
+        "### 2. Routing API",
+        "### 3. Model danych klubowych (już istnieje)",
+        "### 4. Gotowy wzorzec do reużycia (email → nazwa)",
+        "### 5. Role / KR",
+        "## Decyzje (uzgodnione z użytkownikiem)",
+        "## Plan implementacji",
+        "### Architektura",
+        "### Backend",
+        "### Frontend",
+        "### Helper",
+        "### Pliki do zmiany / utworzenia",
+        "### Reużycie",
+        "## Weryfikacja",
+        "## Rozszerzalność (statut / regulamin / klucze)"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "Audyty/26.06_raporty_zarzadu_v1.md",
+      "extension": ".md",
+      "size_bytes": 11437,
+      "line_count": 215,
+      "sha1_short": "5e2c843498",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# 26.06 — Zakładki w panelu Zarząd + raport wypożyczonego sprzętu (analiza + plan)",
+        "## Cel",
+        "## Decyzje (uzgodnione z użytkownikiem)",
+        "## Co znalazłem (analiza kodu)",
+        "### 1. Panel Zarząd = `public/modules/admin_pending_module.js`",
+        "### 2. Model danych rezerwacji — kolekcja `gear_reservations`",
+        "### 3. Kategorie sprzętu + etykiety PL",
+        "### 4. Autoryzacja admina (do skopiowania)",
+        "### 5. Routing API",
+        "### 6. Wzorzec zakładek/tabel",
+        "## Plan implementacji",
+        "### Backend — `GET /api/admin/reports/gear-rentals`",
+        "### Frontend — `public/modules/admin_pending_module.js`",
+        "### Style — `public/styles/base.css`",
+        "### Pliki",
+        "### Reużycie",
+        "## Weryfikacja",
+        "## STATUS v1 — ZROBIONE (26.06.2026, NIE wdrożone)",
+        "# v2 — Launcher kafelkowy (~20 raportów) + poprawki raportu sprzętu",
+        "## Cel",
+        "## Architektura — rejestr raportów",
+        "## Poprawki raportu sprzętu (gear_rentals)",
+        "## Pliki (v2)",
+        "## Weryfikacja (v2)"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "Audyty/26.06_rapotry_sessoin_summary.md",
+      "extension": ".md",
+      "size_bytes": 8184,
+      "line_count": 147,
+      "sha1_short": "55c375a07d",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# 26.06 — Podsumowanie sesji (Box „Klub\" + Raporty Zarządu)",
+        "## A. Box „Klub\" w profilu użytkownika",
+        "## B. Panel Zarząd — zakładki + raporty",
+        "### Launcher (kafelki + szukajka → szczegół)",
+        "### Raport 1 — „Wypożyczenia sprzętu\" (`gear_rentals.js`)",
+        "### Raport 2 — „Najbardziej aktywni\" (`member_activity.js`)",
+        "### Raport 3 — „Składki\" (`member_dues.js`)",
+        "### Reguły biznesowe raportów członkowskich (WAŻNE)",
+        "### Eksport PDF (wszystkie raporty)",
+        "### Inne",
+        "## C. Testy regresyjne (read-only, realny handler na prod)",
+        "## D. Stan wdrożenia + checklista",
+        "## E. Otwarte / do decyzji"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "Audyty/27.06_godzinki_poprawki.md",
+      "extension": ".md",
+      "size_bytes": 4685,
+      "line_count": 79,
+      "sha1_short": "b30cac78c0",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# 27.06 — Remediacja bilansu otwarcia godzinek (uzgodnienie ledgera z kolekcją BO)",
+        "## Po co to robimy (problem + diagnoza)",
+        "### Model godzinek (potwierdzony)",
+        "### Przyczyna błędu",
+        "### Skala (diagnostyka prod, 22 zarejestrowanych pełnych członków)",
+        "## Rozwiązanie — istniejący task `opening.reconcile` (BEZ zmiany kodu)",
+        "## Plan wykonania (z obowiązkowym podglądem i akceptacją)",
+        "## Pliki",
+        "## Reuse",
+        "## Ryzyka / uwagi"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "Audyty/27.06_session_summaty_raporty.md",
+      "extension": ".md",
+      "size_bytes": 7369,
+      "line_count": 141,
+      "sha1_short": "5b4923f2aa",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# 27.06 — Podsumowanie: Raporty Zarządu + remediacja godzinek (stan końcowy)",
+        "## A. Panel Zarząd — zakładki + launcher kafelkowy",
+        "## B. Cztery raporty",
+        "### 1. Wypożyczenia sprzętu (`gear_rentals.js`) — kat. Sprzęt",
+        "### 2. Najbardziej aktywni (`member_activity.js`) — kat. Członkowie",
+        "### 3. Składki i uprawnieni do głosowania (`member_dues.js`) — kat. Członkowie",
+        "### 4. Aktywność użytkownika (`user_activity.js`) — kat. Członkowie",
+        "## C. Reguły biznesowe godzinek (ostateczne)",
+        "## D. Remediacja bilansu otwarcia (WYKONANA na prod 27.06)",
+        "## E. Eksport PDF (wszystkie raporty)",
+        "## F. Skrypty / testy (functions/scripts/)",
+        "## G. Stan wdrożenia + checklista",
+        "## H. Pliki (najważniejsze)"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "Audyty/28.06_rola_kursant_TO_DO.md",
+      "extension": ".md",
+      "size_bytes": 18105,
+      "line_count": 230,
+      "sha1_short": "0de92a7fe4",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# Rola kursanta — audyt i plan naprawy (TO-DO)",
+        "## 1. Kontekst — po co to robimy",
+        "### Dlaczego NIE automatyczna zmiana roli (odrzucony wariant)",
+        "## 2. Jak to działa dziś (stan obecny) — z dowodami w kodzie",
+        "### 2.1 Role i uprawnienia (backend)",
+        "### 2.2 Limity sprzętu (OK)",
+        "### 2.3 Tworzenie rezerwacji (backend) — wspólne dla WSZYSTKICH kategorii",
+        "### 2.4 `GET /api/setup` (backend) — flaga i okno",
+        "### 2.5 Frontend — dashboard",
+        "### 2.6 Frontend — moduł sprzętu (źródło różnic między kategoriami)",
+        "### 2.7 Synchronizacja roli z arkusza (źródło prawdy)",
+        "### 2.8 Dane kursanta",
+        "## 3. Zidentyfikowane problemy (podsumowanie przyczyn)",
+        "## 4. Co wdrażamy (zakres docelowy)",
+        "### A. Backend (`functions/src`)",
+        "### B. Frontend (`public`)",
+        "### C. Arkusz członków — formatowanie warunkowe (bez kodu)",
+        "## 5. Przypadki brzegowe i ryzyka",
+        "## 6. Weryfikacja (jak testujemy)",
+        "## 7. Wdrożenie (po akceptacji — NIE teraz)",
+        "## 8. Pliki do zmiany (skrót)"
       ],
       "config_keys": [],
       "notes": []
@@ -4811,9 +4993,9 @@
     {
       "path": "firebase.json",
       "extension": ".json",
-      "size_bytes": 10284,
-      "line_count": 415,
-      "sha1_short": "3c98a06c2d",
+      "size_bytes": 11175,
+      "line_count": 450,
+      "sha1_short": "2a6b443fb6",
       "kind": "config",
       "module_aliases": [],
       "imports": [],
@@ -5887,11 +6069,398 @@
       "notes": []
     },
     {
+      "path": "functions/lib/api/getAdminGearRentalsHandler.js",
+      "extension": ".js",
+      "size_bytes": 8218,
+      "line_count": 196,
+      "sha1_short": "842679da2c",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require firebase-functions/v2",
+          "module": "firebase-functions/v2",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "dateUTCToIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "fullName",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "handleGetAdminGearRentals",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isIsoDate",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isoToDateUTC",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "minusDays",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "minusMonths",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "nickname",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "resolveRange",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "todayWarsawIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/api/getAdminMemberActivityHandler.js",
+      "extension": ".js",
+      "size_bytes": 7631,
+      "line_count": 173,
+      "sha1_short": "580fa07089",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require firebase-functions/v2",
+          "module": "firebase-functions/v2",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "dateUTCToIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "fullName",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "handleGetAdminMemberActivity",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isIsoDate",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isRegistered",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isoToDateUTC",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "minusDays",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "minusMonths",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "nickname",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "resolveRange",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "todayWarsawIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/api/getAdminMemberDuesHandler.js",
+      "extension": ".js",
+      "size_bytes": 6304,
+      "line_count": 130,
+      "sha1_short": "5d9d258852",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/hours/godzinki_service",
+          "module": "../modules/hours/godzinki_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-functions/v2",
+          "module": "firebase-functions/v2",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/hours/godzinki_service.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "fullName",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "handleGetAdminMemberDues",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isRegistered",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "nickname",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "parseContrib",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "todayWarsawIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/lib/api/getAdminPendingHandler.js",
       "extension": ".js",
-      "size_bytes": 23126,
-      "line_count": 373,
-      "sha1_short": "e3cbb420b4",
+      "size_bytes": 25572,
+      "line_count": 406,
+      "sha1_short": "714c61418a",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -5967,6 +6536,181 @@
         },
         {
           "name": "tsToIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/api/getAdminUserActivityHandler.js",
+      "extension": ".js",
+      "size_bytes": 8962,
+      "line_count": 190,
+      "sha1_short": "a453a65811",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/hours/godzinki_service",
+          "module": "../modules/hours/godzinki_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-functions/v2",
+          "module": "firebase-functions/v2",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/hours/godzinki_service.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "dateUTCToIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "fullName",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "handleGetAdminUserActivity",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isIsoDate",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isoToDateUTC",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "matchesQuery",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "minusDays",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "minusMonths",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "nickname",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "resolveRange",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "serialize",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "todayWarsawIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "tsIso",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -6377,9 +7121,9 @@
     {
       "path": "functions/lib/api/getGodzinkiHandler.js",
       "extension": ".js",
-      "size_bytes": 7346,
-      "line_count": 140,
-      "sha1_short": "689fb3a792",
+      "size_bytes": 7434,
+      "line_count": 141,
+      "sha1_short": "2658615bb9",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -6462,6 +7206,72 @@
         },
         {
           "name": "todayIsoUTC",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/api/getKlubInfoHandler.js",
+      "extension": ".js",
+      "size_bytes": 8100,
+      "line_count": 137,
+      "sha1_short": "e7e1bb8f96",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require firebase-functions/v2",
+          "module": "firebase-functions/v2",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "financeAmount",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "fullNameFromUser",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "handleGetKlubInfo",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "singleEmail",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -7538,9 +8348,9 @@
     {
       "path": "functions/lib/index.js",
       "extension": ".js",
-      "size_bytes": 58424,
-      "line_count": 1356,
-      "sha1_short": "6421026f88",
+      "size_bytes": 62362,
+      "line_count": 1450,
+      "sha1_short": "9a9340cb34",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -7657,8 +8467,36 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ./api/getAdminGearRentalsHandler",
+          "module": "./api/getAdminGearRentalsHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/getAdminMemberActivityHandler",
+          "module": "./api/getAdminMemberActivityHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/getAdminMemberDuesHandler",
+          "module": "./api/getAdminMemberDuesHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ./api/getAdminPendingHandler",
           "module": "./api/getAdminPendingHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/getAdminUserActivityHandler",
+          "module": "./api/getAdminUserActivityHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -7729,6 +8567,13 @@
         {
           "raw": "import/require ./api/getKayakReservationsHandler",
           "module": "./api/getKayakReservationsHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/getKlubInfoHandler",
+          "module": "./api/getKlubInfoHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -7933,7 +8778,11 @@
         "functions/lib/api/gearReservationCancelHandler.js",
         "functions/lib/api/gearReservationCreateHandler.js",
         "functions/lib/api/gearReservationUpdateHandler.js",
+        "functions/lib/api/getAdminGearRentalsHandler.js",
+        "functions/lib/api/getAdminMemberActivityHandler.js",
+        "functions/lib/api/getAdminMemberDuesHandler.js",
         "functions/lib/api/getAdminPendingHandler.js",
+        "functions/lib/api/getAdminUserActivityHandler.js",
         "functions/lib/api/getBasenGodzinyHandler.js",
         "functions/lib/api/getBasenKarnetyHandler.js",
         "functions/lib/api/getBasenSessionsHandler.js",
@@ -7944,6 +8793,7 @@
         "functions/lib/api/getGearKayaksHandler.js",
         "functions/lib/api/getGodzinkiHandler.js",
         "functions/lib/api/getKayakReservationsHandler.js",
+        "functions/lib/api/getKlubInfoHandler.js",
         "functions/lib/api/getKursInfoHandler.js",
         "functions/lib/api/getKursantStatsHandler.js",
         "functions/lib/api/godzinkiPurchaseHandler.js",
@@ -8615,9 +9465,9 @@
     {
       "path": "functions/lib/modules/equipment/bundle/gear_bundle_service.js",
       "extension": ".js",
-      "size_bytes": 46371,
-      "line_count": 881,
-      "sha1_short": "7196cd3907",
+      "size_bytes": 46360,
+      "line_count": 886,
+      "sha1_short": "498ce38d3e",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -8669,11 +9519,19 @@
           "names": [],
           "level": 0,
           "type": "script_import"
+        },
+        {
+          "raw": "import/require ../shared/reservation_limits",
+          "module": "../shared/reservation_limits",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
         }
       ],
       "internal_dependencies": [
         "functions/lib/modules/calendar/calendar_utils.js",
         "functions/lib/modules/equipment/kayaks/gear_kayaks_service.js",
+        "functions/lib/modules/equipment/shared/reservation_limits.js",
         "functions/lib/modules/hours/godzinki_service.js",
         "functions/lib/modules/hours/godzinki_vars.js",
         "functions/lib/modules/hours/hours_quote.js",
@@ -8682,6 +9540,16 @@
       ],
       "classes": [],
       "functions": [
+        {
+          "name": "assertKursantRentalAllowed",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
         {
           "name": "buildCostReason",
           "type": "function",
@@ -8733,16 +9601,6 @@
           "doc": null
         },
         {
-          "name": "countMyOverlappingBundleItems",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
           "name": "createBundleReservation",
           "type": "function",
           "line_start": null,
@@ -8764,6 +9622,16 @@
         },
         {
           "name": "findBundleConflicts",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "formatShortRange",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -8901,9 +9769,9 @@
     {
       "path": "functions/lib/modules/equipment/kayaks/gear_kayaks_service.js",
       "extension": ".js",
-      "size_bytes": 13987,
-      "line_count": 261,
-      "sha1_short": "dbb9ac9986",
+      "size_bytes": 13086,
+      "line_count": 239,
+      "sha1_short": "e686a163fe",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -8948,10 +9816,18 @@
           "names": [],
           "level": 0,
           "type": "script_import"
+        },
+        {
+          "raw": "import/require ../shared/reservation_limits",
+          "module": "../shared/reservation_limits",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
         }
       ],
       "internal_dependencies": [
         "functions/lib/modules/calendar/calendar_utils.js",
+        "functions/lib/modules/equipment/shared/reservation_limits.js",
         "functions/lib/modules/hours/godzinki_service.js",
         "functions/lib/modules/hours/godzinki_vars.js",
         "functions/lib/modules/hours/hours_quote.js",
@@ -8962,16 +9838,6 @@
       "functions": [
         {
           "name": "cancelReservation",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "countMyOverlappingItems",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -9135,11 +10001,79 @@
       "notes": []
     },
     {
+      "path": "functions/lib/modules/equipment/shared/reservation_limits.js",
+      "extension": ".js",
+      "size_bytes": 4172,
+      "line_count": 88,
+      "sha1_short": "5a456e397d",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../../calendar/calendar_utils",
+          "module": "../../calendar/calendar_utils",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/calendar/calendar_utils.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "countItemsByCategory",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "countMyOverlappingItemsByCategory",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "findCategoryOverLimit",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/lib/modules/hours/godzinki_service.js",
       "extension": ".js",
-      "size_bytes": 39793,
-      "line_count": 876,
-      "sha1_short": "378da2e64a",
+      "size_bytes": 39990,
+      "line_count": 879,
+      "sha1_short": "b66465832c",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -12148,9 +13082,9 @@
     {
       "path": "functions/lib/service/tasks/setupSyncFromSheet.js",
       "extension": ".js",
-      "size_bytes": 12546,
-      "line_count": 287,
-      "sha1_short": "6814b2e56d",
+      "size_bytes": 12930,
+      "line_count": 294,
+      "sha1_short": "ffd44da5b5",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -13018,6 +13952,151 @@
       "notes": []
     },
     {
+      "path": "functions/scripts/checkGearReport.js",
+      "extension": ".js",
+      "size_bytes": 5325,
+      "line_count": 119,
+      "sha1_short": "16f4dbe949",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../lib/api/getAdminGearRentalsHandler",
+          "module": "../lib/api/getAdminGearRentalsHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/api/getAdminGearRentalsHandler.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "call",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/scripts/checkKlubFinanceLeak.js",
+      "extension": ".js",
+      "size_bytes": 5411,
+      "line_count": 132,
+      "sha1_short": "375cc511b8",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../lib/api/getKlubInfoHandler",
+          "module": "../lib/api/getKlubInfoHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/api/getKlubInfoHandler.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "callKlub",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "hasFinanceFields",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/scripts/checkMemberActivity.js",
+      "extension": ".js",
+      "size_bytes": 5593,
+      "line_count": 125,
+      "sha1_short": "5f0d85a7bf",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../lib/api/getAdminMemberActivityHandler",
+          "module": "../lib/api/getAdminMemberActivityHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/api/getAdminMemberActivityHandler.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "call",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/scripts/deleteGhostGodzinki.js",
       "extension": ".js",
       "size_bytes": 3676,
@@ -13230,6 +14309,89 @@
       "internal_dependencies": [],
       "classes": [],
       "functions": [],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/scripts/previewOpeningBalanceReconcile.js",
+      "extension": ".js",
+      "size_bytes": 4206,
+      "line_count": 74,
+      "sha1_short": "c01813d69c",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require path",
+          "module": "path",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "getObHours",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "lower",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "normObKey",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "obValEx",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
       "top_level_symbols": [],
       "headings": [],
       "config_keys": [],
@@ -13526,6 +14688,40 @@
           "doc": null
         }
       ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/scripts/runReconcileOpeningBalance.js",
+      "extension": ".js",
+      "size_bytes": 1731,
+      "line_count": 38,
+      "sha1_short": "d42ad113d8",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../lib/service/tasks/reconcileOpeningBalance",
+          "module": "../lib/service/tasks/reconcileOpeningBalance",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/service/tasks/reconcileOpeningBalance.js"
+      ],
+      "classes": [],
+      "functions": [],
       "top_level_symbols": [],
       "headings": [],
       "config_keys": [],
@@ -14569,11 +15765,419 @@
       "notes": []
     },
     {
+      "path": "functions/src/api/getAdminGearRentalsHandler.ts",
+      "extension": ".ts",
+      "size_bytes": 7821,
+      "line_count": 238,
+      "sha1_short": "4388c24e61",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require express",
+          "module": "express",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-functions/v2",
+          "module": "firebase-functions/v2",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "dateUTCToIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "fullName",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "handleGetAdminGearRentals",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isIsoDate",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isoToDateUTC",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "minusDays",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "minusMonths",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "nickname",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "resolveRange",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "todayWarsawIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/src/api/getAdminMemberActivityHandler.ts",
+      "extension": ".ts",
+      "size_bytes": 7074,
+      "line_count": 194,
+      "sha1_short": "57582d1e76",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require express",
+          "module": "express",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-functions/v2",
+          "module": "firebase-functions/v2",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "dateUTCToIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "fullName",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "handleGetAdminMemberActivity",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isIsoDate",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isRegistered",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isoToDateUTC",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "minusDays",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "minusMonths",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "nickname",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "resolveRange",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "todayWarsawIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/src/api/getAdminMemberDuesHandler.ts",
+      "extension": ".ts",
+      "size_bytes": 5857,
+      "line_count": 160,
+      "sha1_short": "61a0967218",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/hours/godzinki_service",
+          "module": "../modules/hours/godzinki_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require express",
+          "module": "express",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-functions/v2",
+          "module": "firebase-functions/v2",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/src/modules/hours/godzinki_service.ts"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "fullName",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "handleGetAdminMemberDues",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isRegistered",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "nickname",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "parseContrib",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "todayWarsawIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/src/api/getAdminPendingHandler.ts",
       "extension": ".ts",
-      "size_bytes": 18333,
-      "line_count": 473,
-      "sha1_short": "09edead76f",
+      "size_bytes": 20404,
+      "line_count": 509,
+      "sha1_short": "27cce85b72",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -14636,6 +16240,188 @@
         },
         {
           "name": "tsToIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/src/api/getAdminUserActivityHandler.ts",
+      "extension": ".ts",
+      "size_bytes": 8197,
+      "line_count": 207,
+      "sha1_short": "5b356105a6",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/hours/godzinki_service",
+          "module": "../modules/hours/godzinki_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require express",
+          "module": "express",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-functions/v2",
+          "module": "firebase-functions/v2",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/src/modules/hours/godzinki_service.ts"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "dateUTCToIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "fullName",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "handleGetAdminUserActivity",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isIsoDate",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isoToDateUTC",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "matchesQuery",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "minusDays",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "minusMonths",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "nickname",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "resolveRange",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "serialize",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "todayWarsawIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "tsIso",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -15101,9 +16887,9 @@
     {
       "path": "functions/src/api/getGodzinkiHandler.ts",
       "extension": ".ts",
-      "size_bytes": 5978,
-      "line_count": 161,
-      "sha1_short": "ef13e760ee",
+      "size_bytes": 6021,
+      "line_count": 162,
+      "sha1_short": "4ede81bcf2",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -15200,6 +16986,79 @@
         },
         {
           "name": "todayIsoUTC",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/src/api/getKlubInfoHandler.ts",
+      "extension": ".ts",
+      "size_bytes": 6763,
+      "line_count": 161,
+      "sha1_short": "8d2f81a5ef",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require express",
+          "module": "express",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-functions/v2",
+          "module": "firebase-functions/v2",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "financeAmount",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "fullNameFromUser",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "handleGetKlubInfo",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "singleEmail",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -16224,9 +18083,9 @@
     {
       "path": "functions/src/index.ts",
       "extension": ".ts",
-      "size_bytes": 49781,
-      "line_count": 1502,
-      "sha1_short": "9189ccac23",
+      "size_bytes": 53094,
+      "line_count": 1600,
+      "sha1_short": "6f2772c304",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -16343,8 +18202,36 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ./api/getAdminGearRentalsHandler",
+          "module": "./api/getAdminGearRentalsHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/getAdminMemberActivityHandler",
+          "module": "./api/getAdminMemberActivityHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/getAdminMemberDuesHandler",
+          "module": "./api/getAdminMemberDuesHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ./api/getAdminPendingHandler",
           "module": "./api/getAdminPendingHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/getAdminUserActivityHandler",
+          "module": "./api/getAdminUserActivityHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -16415,6 +18302,13 @@
         {
           "raw": "import/require ./api/getKayakReservationsHandler",
           "module": "./api/getKayakReservationsHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/getKlubInfoHandler",
+          "module": "./api/getKlubInfoHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -16626,7 +18520,11 @@
         "functions/src/api/gearReservationCancelHandler.ts",
         "functions/src/api/gearReservationCreateHandler.ts",
         "functions/src/api/gearReservationUpdateHandler.ts",
+        "functions/src/api/getAdminGearRentalsHandler.ts",
+        "functions/src/api/getAdminMemberActivityHandler.ts",
+        "functions/src/api/getAdminMemberDuesHandler.ts",
         "functions/src/api/getAdminPendingHandler.ts",
+        "functions/src/api/getAdminUserActivityHandler.ts",
         "functions/src/api/getBasenGodzinyHandler.ts",
         "functions/src/api/getBasenKarnetyHandler.ts",
         "functions/src/api/getBasenSessionsHandler.ts",
@@ -16637,6 +18535,7 @@
         "functions/src/api/getGearKayaksHandler.ts",
         "functions/src/api/getGodzinkiHandler.ts",
         "functions/src/api/getKayakReservationsHandler.ts",
+        "functions/src/api/getKlubInfoHandler.ts",
         "functions/src/api/getKursInfoHandler.ts",
         "functions/src/api/getKursantStatsHandler.ts",
         "functions/src/api/godzinkiPurchaseHandler.ts",
@@ -17308,9 +19207,9 @@
     {
       "path": "functions/src/modules/equipment/bundle/gear_bundle_service.ts",
       "extension": ".ts",
-      "size_bytes": 41383,
+      "size_bytes": 41584,
       "line_count": 1060,
-      "sha1_short": "e4bc7b3f9e",
+      "sha1_short": "2c2246afbb",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -17362,11 +19261,19 @@
           "names": [],
           "level": 0,
           "type": "script_import"
+        },
+        {
+          "raw": "import/require ../shared/reservation_limits",
+          "module": "../shared/reservation_limits",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
         }
       ],
       "internal_dependencies": [
         "functions/src/modules/calendar/calendar_utils.ts",
         "functions/src/modules/equipment/kayaks/gear_kayaks_service.ts",
+        "functions/src/modules/equipment/shared/reservation_limits.ts",
         "functions/src/modules/hours/godzinki_service.ts",
         "functions/src/modules/hours/godzinki_vars.ts",
         "functions/src/modules/hours/hours_quote.ts",
@@ -17375,6 +19282,16 @@
       ],
       "classes": [],
       "functions": [
+        {
+          "name": "assertKursantRentalAllowed",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
         {
           "name": "buildCostReason",
           "type": "function",
@@ -17426,16 +19343,6 @@
           "doc": null
         },
         {
-          "name": "countMyOverlappingBundleItems",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
           "name": "createBundleReservation",
           "type": "function",
           "line_start": null,
@@ -17457,6 +19364,16 @@
         },
         {
           "name": "findBundleConflicts",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "formatShortRange",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -17584,9 +19501,9 @@
     {
       "path": "functions/src/modules/equipment/kayaks/gear_kayaks_service.ts",
       "extension": ".ts",
-      "size_bytes": 12050,
-      "line_count": 323,
-      "sha1_short": "2f7d0414c3",
+      "size_bytes": 11313,
+      "line_count": 290,
+      "sha1_short": "9475b3e44c",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -17631,10 +19548,18 @@
           "names": [],
           "level": 0,
           "type": "script_import"
+        },
+        {
+          "raw": "import/require ../shared/reservation_limits",
+          "module": "../shared/reservation_limits",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
         }
       ],
       "internal_dependencies": [
         "functions/src/modules/calendar/calendar_utils.ts",
+        "functions/src/modules/equipment/shared/reservation_limits.ts",
         "functions/src/modules/hours/godzinki_service.ts",
         "functions/src/modules/hours/godzinki_vars.ts",
         "functions/src/modules/hours/hours_quote.ts",
@@ -17645,16 +19570,6 @@
       "functions": [
         {
           "name": "cancelReservation",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "countMyOverlappingItems",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -17818,11 +19733,79 @@
       "notes": []
     },
     {
+      "path": "functions/src/modules/equipment/shared/reservation_limits.ts",
+      "extension": ".ts",
+      "size_bytes": 3588,
+      "line_count": 96,
+      "sha1_short": "b8bf517bf4",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../../calendar/calendar_utils",
+          "module": "../../calendar/calendar_utils",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/src/modules/calendar/calendar_utils.ts"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "countItemsByCategory",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "countMyOverlappingItemsByCategory",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "findCategoryOverLimit",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/src/modules/hours/godzinki_service.ts",
       "extension": ".ts",
-      "size_bytes": 39656,
-      "line_count": 1081,
-      "sha1_short": "1abe56bf62",
+      "size_bytes": 39953,
+      "line_count": 1085,
+      "sha1_short": "8319f5c664",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -21057,9 +23040,9 @@
     {
       "path": "functions/src/service/tasks/setupSyncFromSheet.ts",
       "extension": ".ts",
-      "size_bytes": 10691,
-      "line_count": 287,
-      "sha1_short": "33df8917a7",
+      "size_bytes": 11043,
+      "line_count": 294,
+      "sha1_short": "b272ea2a6c",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -22815,9 +24798,9 @@
     {
       "path": "public/core/app_shell.js",
       "extension": ".js",
-      "size_bytes": 7653,
-      "line_count": 245,
-      "sha1_short": "84be7bb6ef",
+      "size_bytes": 8065,
+      "line_count": 254,
+      "sha1_short": "a320849bf2",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -23188,9 +25171,9 @@
     {
       "path": "public/core/render_shell.js",
       "extension": ".js",
-      "size_bytes": 59566,
-      "line_count": 1372,
-      "sha1_short": "6ef68da95c",
+      "size_bytes": 66075,
+      "line_count": 1509,
+      "sha1_short": "e3c1ebbb06",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -23280,7 +25263,27 @@
           "doc": null
         },
         {
+          "name": "buildKlubBoxHtml",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "countReservationDays",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "escapeAttr",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -23331,6 +25334,16 @@
         },
         {
           "name": "formatEntryFeeValidUntil",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "formatNrb",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -23480,6 +25493,16 @@
           "doc": null
         },
         {
+          "name": "render",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "renderHomeDashboard",
           "type": "function",
           "line_start": null,
@@ -23560,6 +25583,16 @@
           "doc": null
         },
         {
+          "name": "safeUrl",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "set",
           "type": "function",
           "line_start": null,
@@ -23631,6 +25664,16 @@
         },
         {
           "name": "wireHomeReservations",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "wireKlubBox",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -23754,9 +25797,9 @@
     {
       "path": "public/core/user_error_messages.js",
       "extension": ".js",
-      "size_bytes": 4344,
-      "line_count": 143,
-      "sha1_short": "9ab37cdb97",
+      "size_bytes": 5088,
+      "line_count": 162,
+      "sha1_short": "5b0846eb17",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -23865,9 +25908,9 @@
     {
       "path": "public/modules/admin_pending_module.js",
       "extension": ".js",
-      "size_bytes": 24615,
-      "line_count": 449,
-      "sha1_short": "21463c700e",
+      "size_bytes": 27739,
+      "line_count": 510,
+      "sha1_short": "f404dc1984",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -23888,6 +25931,13 @@
         {
           "raw": "import/require /core/user_error_messages.js",
           "module": "/core/user_error_messages.js",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require /modules/raporty/reports_panel.js",
+          "module": "/modules/raporty/reports_panel.js",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -24181,9 +26231,9 @@
     {
       "path": "public/modules/gear_module.js",
       "extension": ".js",
-      "size_bytes": 96199,
-      "line_count": 2280,
-      "sha1_short": "2e5a918fe1",
+      "size_bytes": 96551,
+      "line_count": 2284,
+      "sha1_short": "e5e34faf6b",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -24851,9 +26901,9 @@
     {
       "path": "public/modules/godzinki_module.js",
       "extension": ".js",
-      "size_bytes": 16704,
+      "size_bytes": 16763,
       "line_count": 425,
-      "sha1_short": "69ebcb68f4",
+      "sha1_short": "0737731cac",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -25715,9 +27765,9 @@
     {
       "path": "public/modules/my_reservations_module.js",
       "extension": ".js",
-      "size_bytes": 23309,
+      "size_bytes": 23380,
       "line_count": 607,
-      "sha1_short": "70795b59cc",
+      "sha1_short": "37c97b10d3",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -25973,6 +28023,547 @@
       "notes": []
     },
     {
+      "path": "public/modules/raporty/gear_rentals.js",
+      "extension": ".js",
+      "size_bytes": 8400,
+      "line_count": 190,
+      "sha1_short": "da1f26a9d7",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require /core/api_client.js",
+          "module": "/core/api_client.js",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require /core/user_error_messages.js",
+          "module": "/core/user_error_messages.js",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "escapeAttr",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "escapeHtml",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "formatDatePL",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "loadReport",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "rebuildUserList",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "renderReport",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "selectedCats",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "userMatches",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "public/modules/raporty/member_activity.js",
+      "extension": ".js",
+      "size_bytes": 3908,
+      "line_count": 90,
+      "sha1_short": "18da26e53e",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require /core/api_client.js",
+          "module": "/core/api_client.js",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require /core/user_error_messages.js",
+          "module": "/core/user_error_messages.js",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "escapeHtml",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "load",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "renderRows",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "public/modules/raporty/member_dues.js",
+      "extension": ".js",
+      "size_bytes": 4288,
+      "line_count": 102,
+      "sha1_short": "cbfc376d83",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require /core/api_client.js",
+          "module": "/core/api_client.js",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require /core/user_error_messages.js",
+          "module": "/core/user_error_messages.js",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "escapeHtml",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "formatContribDate",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "load",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "passesView",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "renderTable",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "public/modules/raporty/registry.js",
+      "extension": ".js",
+      "size_bytes": 466,
+      "line_count": 14,
+      "sha1_short": "29e27a1f63",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ./gear_rentals.js",
+          "module": "./gear_rentals.js",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./member_activity.js",
+          "module": "./member_activity.js",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./member_dues.js",
+          "module": "./member_dues.js",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./user_activity.js",
+          "module": "./user_activity.js",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "public/modules/raporty/gear_rentals.js",
+        "public/modules/raporty/member_activity.js",
+        "public/modules/raporty/member_dues.js",
+        "public/modules/raporty/user_activity.js"
+      ],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "public/modules/raporty/reports_panel.js",
+      "extension": ".js",
+      "size_bytes": 5052,
+      "line_count": 117,
+      "sha1_short": "205fd15476",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ./registry.js",
+          "module": "./registry.js",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "public/modules/raporty/registry.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "applySearch",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "catOrder",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "cleanup",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "escapeAttr",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "escapeHtml",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "openReport",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "renderLauncher",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "renderReportsPanel",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "public/modules/raporty/user_activity.js",
+      "extension": ".js",
+      "size_bytes": 7579,
+      "line_count": 135,
+      "sha1_short": "266a6223b8",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require /core/api_client.js",
+          "module": "/core/api_client.js",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require /core/user_error_messages.js",
+          "module": "/core/user_error_messages.js",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "esc",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "formatBalanceSign",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "formatDate",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "infoBarHtml",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "load",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "recordTypeClass",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "render",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "renderRecordTable",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "shortenReason",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "public/skrypt_kurs/chapters/ch01.html",
       "extension": ".html",
       "size_bytes": 547,
@@ -26094,9 +28685,9 @@
     {
       "path": "public/styles/base.css",
       "extension": ".css",
-      "size_bytes": 10295,
-      "line_count": 457,
-      "sha1_short": "908eca5247",
+      "size_bytes": 15587,
+      "line_count": 537,
+      "sha1_short": "b9b6b260af",
       "kind": "text",
       "module_aliases": [],
       "imports": [],
@@ -26230,9 +28821,9 @@
     {
       "path": "public/styles/start.css",
       "extension": ".css",
-      "size_bytes": 8933,
-      "line_count": 250,
-      "sha1_short": "f001e04f3c",
+      "size_bytes": 10205,
+      "line_count": 267,
+      "sha1_short": "172aabfdda",
       "kind": "text",
       "module_aliases": [],
       "imports": [],
@@ -26249,7 +28840,7 @@
       "extension": ".js",
       "size_bytes": 4997,
       "line_count": 147,
-      "sha1_short": "4232735601",
+      "sha1_short": "09907f4b05",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -34098,9 +36689,9 @@
     {
       "path": "tests/test_bundle_reservations.py",
       "extension": ".py",
-      "size_bytes": 63482,
-      "line_count": 1617,
-      "sha1_short": "cdce23f07c",
+      "size_bytes": 76882,
+      "line_count": 1915,
+      "sha1_short": "a597720a6d",
       "kind": "python",
       "module_aliases": [
         "tests.test_bundle_reservations"
@@ -34118,26 +36709,26 @@
       "classes": [
         {
           "name": "BackendStub",
-          "line_start": 192,
-          "line_end": 390,
+          "line_start": 243,
+          "line_end": 461,
           "bases": [],
           "decorators": [],
           "methods": [
             {
               "name": "__init__",
               "type": "function",
-              "line_start": 207,
-              "line_end": 215,
-              "signature": "__init__(self, users: dict, catalog: dict)",
+              "line_start": 258,
+              "line_end": 270,
+              "signature": "__init__(self, users: dict, catalog: dict, kurs_wypozycza: bool, today: str)",
               "decorators": [],
               "returns": null,
-              "doc": "users: {uid: {\"role_key\": ..., \"status_key\": ..., \"email\": ...}}"
+              "doc": "users: {uid: {\"role_key\": ..., \"status_key\": ..., \"email\": ..., \"school_year\": ...}}"
             },
             {
               "name": "_gen_id",
               "type": "function",
-              "line_start": 217,
-              "line_end": 220,
+              "line_start": 272,
+              "line_end": 275,
               "signature": "_gen_id(self)",
               "decorators": [],
               "returns": null,
@@ -34146,8 +36737,8 @@
             {
               "name": "create_bundle_reservation",
               "type": "function",
-              "line_start": 222,
-              "line_end": 358,
+              "line_start": 277,
+              "line_end": 429,
               "signature": "create_bundle_reservation(self, uid: str, start_date: str, end_date: str, items: list, starter_category: str, starter_item_id: str)",
               "decorators": [],
               "returns": "dict",
@@ -34156,8 +36747,8 @@
             {
               "name": "cancel_reservation",
               "type": "function",
-              "line_start": 360,
-              "line_end": 367,
+              "line_start": 431,
+              "line_end": 438,
               "signature": "cancel_reservation(self, uid: str, reservation_id: str)",
               "decorators": [],
               "returns": "dict",
@@ -34166,8 +36757,8 @@
             {
               "name": "get_items_with_availability",
               "type": "function",
-              "line_start": 369,
-              "line_end": 390,
+              "line_start": 440,
+              "line_end": 461,
               "signature": "get_items_with_availability(self, category: str, start_date: str, end_date: str)",
               "decorators": [],
               "returns": "list",
@@ -34178,8 +36769,8 @@
         },
         {
           "name": "TestCompositeId",
-          "line_start": 397,
-          "line_end": 411,
+          "line_start": 468,
+          "line_end": 482,
           "bases": [
             "unittest.TestCase"
           ],
@@ -34188,8 +36779,8 @@
             {
               "name": "test_basic_kayak",
               "type": "function",
-              "line_start": 399,
-              "line_end": 400,
+              "line_start": 470,
+              "line_end": 471,
               "signature": "test_basic_kayak(self)",
               "decorators": [],
               "returns": null,
@@ -34198,8 +36789,8 @@
             {
               "name": "test_basic_paddle",
               "type": "function",
-              "line_start": 402,
-              "line_end": 403,
+              "line_start": 473,
+              "line_end": 474,
               "signature": "test_basic_paddle(self)",
               "decorators": [],
               "returns": null,
@@ -34208,8 +36799,8 @@
             {
               "name": "test_strips_whitespace",
               "type": "function",
-              "line_start": 405,
-              "line_end": 406,
+              "line_start": 476,
+              "line_end": 477,
               "signature": "test_strips_whitespace(self)",
               "decorators": [],
               "returns": null,
@@ -34218,8 +36809,8 @@
             {
               "name": "test_other_categories",
               "type": "function",
-              "line_start": 408,
-              "line_end": 411,
+              "line_start": 479,
+              "line_end": 482,
               "signature": "test_other_categories(self)",
               "decorators": [],
               "returns": null,
@@ -34230,8 +36821,8 @@
         },
         {
           "name": "TestComputeReservationKind",
-          "line_start": 414,
-          "line_end": 439,
+          "line_start": 485,
+          "line_end": 510,
           "bases": [
             "unittest.TestCase"
           ],
@@ -34240,8 +36831,8 @@
             {
               "name": "test_single_kayak_is_kayak_bundle",
               "type": "function",
-              "line_start": 416,
-              "line_end": 418,
+              "line_start": 487,
+              "line_end": 489,
               "signature": "test_single_kayak_is_kayak_bundle(self)",
               "decorators": [],
               "returns": null,
@@ -34250,8 +36841,8 @@
             {
               "name": "test_kayak_plus_paddle_is_kayak_bundle",
               "type": "function",
-              "line_start": 420,
-              "line_end": 425,
+              "line_start": 491,
+              "line_end": 496,
               "signature": "test_kayak_plus_paddle_is_kayak_bundle(self)",
               "decorators": [],
               "returns": null,
@@ -34260,8 +36851,8 @@
             {
               "name": "test_only_non_kayak_is_gear_only",
               "type": "function",
-              "line_start": 427,
-              "line_end": 432,
+              "line_start": 498,
+              "line_end": 503,
               "signature": "test_only_non_kayak_is_gear_only(self)",
               "decorators": [],
               "returns": null,
@@ -34270,8 +36861,8 @@
             {
               "name": "test_empty_list_is_gear_only",
               "type": "function",
-              "line_start": 434,
-              "line_end": 435,
+              "line_start": 505,
+              "line_end": 506,
               "signature": "test_empty_list_is_gear_only(self)",
               "decorators": [],
               "returns": null,
@@ -34280,8 +36871,8 @@
             {
               "name": "test_category_case_insensitive",
               "type": "function",
-              "line_start": 437,
-              "line_end": 439,
+              "line_start": 508,
+              "line_end": 510,
               "signature": "test_category_case_insensitive(self)",
               "decorators": [],
               "returns": null,
@@ -34292,8 +36883,8 @@
         },
         {
           "name": "TestComputePrimaryItemIdx",
-          "line_start": 442,
-          "line_end": 482,
+          "line_start": 513,
+          "line_end": 553,
           "bases": [
             "unittest.TestCase"
           ],
@@ -34302,8 +36893,8 @@
             {
               "name": "test_kayak_wins_over_paddle",
               "type": "function",
-              "line_start": 444,
-              "line_end": 449,
+              "line_start": 515,
+              "line_end": 520,
               "signature": "test_kayak_wins_over_paddle(self)",
               "decorators": [],
               "returns": null,
@@ -34312,8 +36903,8 @@
             {
               "name": "test_first_kayak_is_primary_when_multiple",
               "type": "function",
-              "line_start": 451,
-              "line_end": 456,
+              "line_start": 522,
+              "line_end": 527,
               "signature": "test_first_kayak_is_primary_when_multiple(self)",
               "decorators": [],
               "returns": null,
@@ -34322,8 +36913,8 @@
             {
               "name": "test_paddle_beats_helmet",
               "type": "function",
-              "line_start": 458,
-              "line_end": 463,
+              "line_start": 529,
+              "line_end": 534,
               "signature": "test_paddle_beats_helmet(self)",
               "decorators": [],
               "returns": null,
@@ -34332,8 +36923,8 @@
             {
               "name": "test_single_item_is_primary",
               "type": "function",
-              "line_start": 465,
-              "line_end": 467,
+              "line_start": 536,
+              "line_end": 538,
               "signature": "test_single_item_is_primary(self)",
               "decorators": [],
               "returns": null,
@@ -34342,8 +36933,8 @@
             {
               "name": "test_full_priority_order",
               "type": "function",
-              "line_start": 469,
-              "line_end": 479,
+              "line_start": 540,
+              "line_end": 550,
               "signature": "test_full_priority_order(self)",
               "decorators": [],
               "returns": null,
@@ -34352,8 +36943,8 @@
             {
               "name": "test_empty_returns_zero",
               "type": "function",
-              "line_start": 481,
-              "line_end": 482,
+              "line_start": 552,
+              "line_end": 553,
               "signature": "test_empty_returns_zero(self)",
               "decorators": [],
               "returns": null,
@@ -34364,8 +36955,8 @@
         },
         {
           "name": "TestOverlapsIso",
-          "line_start": 485,
-          "line_end": 515,
+          "line_start": 556,
+          "line_end": 586,
           "bases": [
             "unittest.TestCase"
           ],
@@ -34374,8 +36965,8 @@
             {
               "name": "test_exact_overlap",
               "type": "function",
-              "line_start": 487,
-              "line_end": 489,
+              "line_start": 558,
+              "line_end": 560,
               "signature": "test_exact_overlap(self)",
               "decorators": [],
               "returns": null,
@@ -34384,8 +36975,8 @@
             {
               "name": "test_partial_overlap_start",
               "type": "function",
-              "line_start": 491,
-              "line_end": 493,
+              "line_start": 562,
+              "line_end": 564,
               "signature": "test_partial_overlap_start(self)",
               "decorators": [],
               "returns": null,
@@ -34394,8 +36985,8 @@
             {
               "name": "test_partial_overlap_end",
               "type": "function",
-              "line_start": 495,
-              "line_end": 497,
+              "line_start": 566,
+              "line_end": 568,
               "signature": "test_partial_overlap_end(self)",
               "decorators": [],
               "returns": null,
@@ -34404,8 +36995,8 @@
             {
               "name": "test_no_overlap_before",
               "type": "function",
-              "line_start": 499,
-              "line_end": 501,
+              "line_start": 570,
+              "line_end": 572,
               "signature": "test_no_overlap_before(self)",
               "decorators": [],
               "returns": null,
@@ -34414,8 +37005,8 @@
             {
               "name": "test_no_overlap_after",
               "type": "function",
-              "line_start": 503,
-              "line_end": 505,
+              "line_start": 574,
+              "line_end": 576,
               "signature": "test_no_overlap_after(self)",
               "decorators": [],
               "returns": null,
@@ -34424,8 +37015,8 @@
             {
               "name": "test_adjacent_no_overlap",
               "type": "function",
-              "line_start": 507,
-              "line_end": 510,
+              "line_start": 578,
+              "line_end": 581,
               "signature": "test_adjacent_no_overlap(self)",
               "decorators": [],
               "returns": null,
@@ -34434,8 +37025,8 @@
             {
               "name": "test_adjacent_overlap_on_same_day",
               "type": "function",
-              "line_start": 512,
-              "line_end": 515,
+              "line_start": 583,
+              "line_end": 586,
               "signature": "test_adjacent_overlap_on_same_day(self)",
               "decorators": [],
               "returns": null,
@@ -34446,8 +37037,8 @@
         },
         {
           "name": "TestFindBundleConflicts",
-          "line_start": 518,
-          "line_end": 594,
+          "line_start": 589,
+          "line_end": 665,
           "bases": [
             "unittest.TestCase"
           ],
@@ -34456,8 +37047,8 @@
             {
               "name": "_make_reservation",
               "type": "function",
-              "line_start": 520,
-              "line_end": 528,
+              "line_start": 591,
+              "line_end": 599,
               "signature": "_make_reservation(self, rid, start, end, item_ids, kayak_ids)",
               "decorators": [],
               "returns": null,
@@ -34466,8 +37057,8 @@
             {
               "name": "test_no_conflict_no_reservations",
               "type": "function",
-              "line_start": 530,
-              "line_end": 534,
+              "line_start": 601,
+              "line_end": 605,
               "signature": "test_no_conflict_no_reservations(self)",
               "decorators": [],
               "returns": null,
@@ -34476,8 +37067,8 @@
             {
               "name": "test_conflict_with_new_format",
               "type": "function",
-              "line_start": 536,
-              "line_end": 542,
+              "line_start": 607,
+              "line_end": 613,
               "signature": "test_conflict_with_new_format(self)",
               "decorators": [],
               "returns": null,
@@ -34486,8 +37077,8 @@
             {
               "name": "test_conflict_with_legacy_kayak_ids",
               "type": "function",
-              "line_start": 544,
-              "line_end": 550,
+              "line_start": 615,
+              "line_end": 621,
               "signature": "test_conflict_with_legacy_kayak_ids(self)",
               "decorators": [],
               "returns": null,
@@ -34496,8 +37087,8 @@
             {
               "name": "test_no_conflict_non_kayak_vs_legacy",
               "type": "function",
-              "line_start": 552,
-              "line_end": 559,
+              "line_start": 623,
+              "line_end": 630,
               "signature": "test_no_conflict_non_kayak_vs_legacy(self)",
               "decorators": [],
               "returns": null,
@@ -34506,8 +37097,8 @@
             {
               "name": "test_no_conflict_different_dates",
               "type": "function",
-              "line_start": 561,
-              "line_end": 567,
+              "line_start": 632,
+              "line_end": 638,
               "signature": "test_no_conflict_different_dates(self)",
               "decorators": [],
               "returns": null,
@@ -34516,8 +37107,8 @@
             {
               "name": "test_excluded_reservation_not_counted",
               "type": "function",
-              "line_start": 569,
-              "line_end": 576,
+              "line_start": 640,
+              "line_end": 647,
               "signature": "test_excluded_reservation_not_counted(self)",
               "decorators": [],
               "returns": null,
@@ -34526,8 +37117,8 @@
             {
               "name": "test_cancelled_reservation_not_counted",
               "type": "function",
-              "line_start": 578,
-              "line_end": 585,
+              "line_start": 649,
+              "line_end": 656,
               "signature": "test_cancelled_reservation_not_counted(self)",
               "decorators": [],
               "returns": null,
@@ -34536,8 +37127,8 @@
             {
               "name": "test_multiple_conflicts_returned",
               "type": "function",
-              "line_start": 587,
-              "line_end": 594,
+              "line_start": 658,
+              "line_end": 665,
               "signature": "test_multiple_conflicts_returned(self)",
               "decorators": [],
               "returns": null,
@@ -34548,8 +37139,8 @@
         },
         {
           "name": "TestCountOverlappingItems",
-          "line_start": 597,
-          "line_end": 681,
+          "line_start": 668,
+          "line_end": 765,
           "bases": [
             "unittest.TestCase"
           ],
@@ -34558,8 +37149,8 @@
             {
               "name": "_make_reservation",
               "type": "function",
-              "line_start": 599,
-              "line_end": 611,
+              "line_start": 670,
+              "line_end": 682,
               "signature": "_make_reservation(self, rid, uid, start, end, items, kayak_ids)",
               "decorators": [],
               "returns": null,
@@ -34568,29 +37159,39 @@
             {
               "name": "test_no_reservations",
               "type": "function",
-              "line_start": 613,
-              "line_end": 617,
+              "line_start": 684,
+              "line_end": 688,
               "signature": "test_no_reservations(self)",
               "decorators": [],
               "returns": null,
               "doc": null
             },
             {
-              "name": "test_counts_new_bundle_items",
+              "name": "test_counts_new_bundle_items_by_category",
               "type": "function",
-              "line_start": 619,
-              "line_end": 627,
-              "signature": "test_counts_new_bundle_items(self)",
+              "line_start": 690,
+              "line_end": 699,
+              "signature": "test_counts_new_bundle_items_by_category(self)",
               "decorators": [],
               "returns": null,
               "doc": null
             },
             {
-              "name": "test_counts_legacy_kayak_ids",
+              "name": "test_counts_legacy_kayak_ids_as_kayaks",
               "type": "function",
-              "line_start": 629,
-              "line_end": 637,
-              "signature": "test_counts_legacy_kayak_ids(self)",
+              "line_start": 701,
+              "line_end": 709,
+              "signature": "test_counts_legacy_kayak_ids_as_kayaks(self)",
+              "decorators": [],
+              "returns": null,
+              "doc": null
+            },
+            {
+              "name": "test_missing_category_defaults_to_kayaks",
+              "type": "function",
+              "line_start": 711,
+              "line_end": 719,
+              "signature": "test_missing_category_defaults_to_kayaks(self)",
               "decorators": [],
               "returns": null,
               "doc": null
@@ -34598,8 +37199,8 @@
             {
               "name": "test_ignores_other_users",
               "type": "function",
-              "line_start": 639,
-              "line_end": 647,
+              "line_start": 721,
+              "line_end": 729,
               "signature": "test_ignores_other_users(self)",
               "decorators": [],
               "returns": null,
@@ -34608,8 +37209,8 @@
             {
               "name": "test_ignores_non_overlapping",
               "type": "function",
-              "line_start": 649,
-              "line_end": 657,
+              "line_start": 731,
+              "line_end": 739,
               "signature": "test_ignores_non_overlapping(self)",
               "decorators": [],
               "returns": null,
@@ -34618,8 +37219,8 @@
             {
               "name": "test_excludes_reservation_by_id",
               "type": "function",
-              "line_start": 659,
-              "line_end": 668,
+              "line_start": 741,
+              "line_end": 750,
               "signature": "test_excludes_reservation_by_id(self)",
               "decorators": [],
               "returns": null,
@@ -34628,8 +37229,8 @@
             {
               "name": "test_prefers_items_over_kayak_ids",
               "type": "function",
-              "line_start": 670,
-              "line_end": 681,
+              "line_start": 752,
+              "line_end": 765,
               "signature": "test_prefers_items_over_kayak_ids(self)",
               "decorators": [],
               "returns": null,
@@ -34640,8 +37241,8 @@
         },
         {
           "name": "TestScenario01_SimplePaddleReservation",
-          "line_start": 706,
-          "line_end": 742,
+          "line_start": 790,
+          "line_end": 826,
           "bases": [
             "unittest.TestCase"
           ],
@@ -34650,8 +37251,8 @@
             {
               "name": "setUp",
               "type": "function",
-              "line_start": 709,
-              "line_end": 714,
+              "line_start": 793,
+              "line_end": 798,
               "signature": "setUp(self)",
               "decorators": [],
               "returns": null,
@@ -34660,8 +37261,8 @@
             {
               "name": "test_creates_gear_only_reservation",
               "type": "function",
-              "line_start": 716,
-              "line_end": 725,
+              "line_start": 800,
+              "line_end": 809,
               "signature": "test_creates_gear_only_reservation(self)",
               "decorators": [],
               "returns": null,
@@ -34670,8 +37271,8 @@
             {
               "name": "test_reservation_blocks_paddle",
               "type": "function",
-              "line_start": 727,
-              "line_end": 742,
+              "line_start": 811,
+              "line_end": 826,
               "signature": "test_reservation_blocks_paddle(self)",
               "decorators": [],
               "returns": null,
@@ -34682,8 +37283,8 @@
         },
         {
           "name": "TestScenario02_KayakBundleWithExtras",
-          "line_start": 745,
-          "line_end": 815,
+          "line_start": 829,
+          "line_end": 899,
           "bases": [
             "unittest.TestCase"
           ],
@@ -34692,8 +37293,8 @@
             {
               "name": "setUp",
               "type": "function",
-              "line_start": 748,
-              "line_end": 755,
+              "line_start": 832,
+              "line_end": 839,
               "signature": "setUp(self)",
               "decorators": [],
               "returns": null,
@@ -34702,8 +37303,8 @@
             {
               "name": "test_bundle_kind_is_kayak_bundle",
               "type": "function",
-              "line_start": 757,
-              "line_end": 769,
+              "line_start": 841,
+              "line_end": 853,
               "signature": "test_bundle_kind_is_kayak_bundle(self)",
               "decorators": [],
               "returns": null,
@@ -34712,8 +37313,8 @@
             {
               "name": "test_cost_hours_only_for_kayak",
               "type": "function",
-              "line_start": 771,
-              "line_end": 784,
+              "line_start": 855,
+              "line_end": 868,
               "signature": "test_cost_hours_only_for_kayak(self)",
               "decorators": [],
               "returns": null,
@@ -34722,8 +37323,8 @@
             {
               "name": "test_all_items_blocked_after_reservation",
               "type": "function",
-              "line_start": 786,
-              "line_end": 815,
+              "line_start": 870,
+              "line_end": 899,
               "signature": "test_all_items_blocked_after_reservation(self)",
               "decorators": [],
               "returns": null,
@@ -34734,8 +37335,8 @@
         },
         {
           "name": "TestScenario03_LegacyKayakCompatibility",
-          "line_start": 818,
-          "line_end": 858,
+          "line_start": 902,
+          "line_end": 942,
           "bases": [
             "unittest.TestCase"
           ],
@@ -34744,8 +37345,8 @@
             {
               "name": "setUp",
               "type": "function",
-              "line_start": 821,
-              "line_end": 838,
+              "line_start": 905,
+              "line_end": 922,
               "signature": "setUp(self)",
               "decorators": [],
               "returns": null,
@@ -34754,8 +37355,8 @@
             {
               "name": "test_new_bundle_detects_conflict_with_legacy",
               "type": "function",
-              "line_start": 840,
-              "line_end": 849,
+              "line_start": 924,
+              "line_end": 933,
               "signature": "test_new_bundle_detects_conflict_with_legacy(self)",
               "decorators": [],
               "returns": null,
@@ -34764,8 +37365,8 @@
             {
               "name": "test_non_conflicting_dates_pass",
               "type": "function",
-              "line_start": 851,
-              "line_end": 858,
+              "line_start": 935,
+              "line_end": 942,
               "signature": "test_non_conflicting_dates_pass(self)",
               "decorators": [],
               "returns": null,
@@ -34776,8 +37377,8 @@
         },
         {
           "name": "TestScenario04_RolePermissions",
-          "line_start": 861,
-          "line_end": 917,
+          "line_start": 945,
+          "line_end": 1001,
           "bases": [
             "unittest.TestCase"
           ],
@@ -34786,8 +37387,8 @@
             {
               "name": "setUp",
               "type": "function",
-              "line_start": 864,
-              "line_end": 874,
+              "line_start": 948,
+              "line_end": 958,
               "signature": "setUp(self)",
               "decorators": [],
               "returns": null,
@@ -34796,8 +37397,8 @@
             {
               "name": "test_sympatyk_cannot_reserve",
               "type": "function",
-              "line_start": 876,
-              "line_end": 884,
+              "line_start": 960,
+              "line_end": 968,
               "signature": "test_sympatyk_cannot_reserve(self)",
               "decorators": [],
               "returns": null,
@@ -34806,8 +37407,8 @@
             {
               "name": "test_kandydat_limited_to_1_item",
               "type": "function",
-              "line_start": 886,
-              "line_end": 897,
+              "line_start": 970,
+              "line_end": 981,
               "signature": "test_kandydat_limited_to_1_item(self)",
               "decorators": [],
               "returns": null,
@@ -34816,8 +37417,8 @@
             {
               "name": "test_czlonek_can_reserve_up_to_3",
               "type": "function",
-              "line_start": 899,
-              "line_end": 917,
+              "line_start": 983,
+              "line_end": 1001,
               "signature": "test_czlonek_can_reserve_up_to_3(self)",
               "decorators": [],
               "returns": null,
@@ -34828,8 +37429,8 @@
         },
         {
           "name": "TestScenario05_ItemValidation",
-          "line_start": 920,
-          "line_end": 986,
+          "line_start": 1004,
+          "line_end": 1070,
           "bases": [
             "unittest.TestCase"
           ],
@@ -34838,8 +37439,8 @@
             {
               "name": "setUp",
               "type": "function",
-              "line_start": 923,
-              "line_end": 937,
+              "line_start": 1007,
+              "line_end": 1021,
               "signature": "setUp(self)",
               "decorators": [],
               "returns": null,
@@ -34848,8 +37449,8 @@
             {
               "name": "test_non_operational_kayak_rejected",
               "type": "function",
-              "line_start": 939,
-              "line_end": 947,
+              "line_start": 1023,
+              "line_end": 1031,
               "signature": "test_non_operational_kayak_rejected(self)",
               "decorators": [],
               "returns": null,
@@ -34858,8 +37459,8 @@
             {
               "name": "test_private_non_rentable_kayak_rejected",
               "type": "function",
-              "line_start": 949,
-              "line_end": 957,
+              "line_start": 1033,
+              "line_end": 1041,
               "signature": "test_private_non_rentable_kayak_rejected(self)",
               "decorators": [],
               "returns": null,
@@ -34868,8 +37469,8 @@
             {
               "name": "test_private_rentable_kayak_allowed",
               "type": "function",
-              "line_start": 959,
-              "line_end": 966,
+              "line_start": 1043,
+              "line_end": 1050,
               "signature": "test_private_rentable_kayak_allowed(self)",
               "decorators": [],
               "returns": null,
@@ -34878,8 +37479,8 @@
             {
               "name": "test_inactive_item_rejected",
               "type": "function",
-              "line_start": 968,
-              "line_end": 976,
+              "line_start": 1052,
+              "line_end": 1060,
               "signature": "test_inactive_item_rejected(self)",
               "decorators": [],
               "returns": null,
@@ -34888,8 +37489,8 @@
             {
               "name": "test_unknown_item_rejected",
               "type": "function",
-              "line_start": 978,
-              "line_end": 986,
+              "line_start": 1062,
+              "line_end": 1070,
               "signature": "test_unknown_item_rejected(self)",
               "decorators": [],
               "returns": null,
@@ -34900,8 +37501,8 @@
         },
         {
           "name": "TestScenario06_AvailabilityCheck",
-          "line_start": 989,
-          "line_end": 1030,
+          "line_start": 1073,
+          "line_end": 1114,
           "bases": [
             "unittest.TestCase"
           ],
@@ -34910,8 +37511,8 @@
             {
               "name": "setUp",
               "type": "function",
-              "line_start": 992,
-              "line_end": 999,
+              "line_start": 1076,
+              "line_end": 1083,
               "signature": "setUp(self)",
               "decorators": [],
               "returns": null,
@@ -34920,8 +37521,8 @@
             {
               "name": "test_all_available_when_no_reservations",
               "type": "function",
-              "line_start": 1001,
-              "line_end": 1004,
+              "line_start": 1085,
+              "line_end": 1088,
               "signature": "test_all_available_when_no_reservations(self)",
               "decorators": [],
               "returns": null,
@@ -34930,8 +37531,8 @@
             {
               "name": "test_reserved_paddle_marked_unavailable",
               "type": "function",
-              "line_start": 1006,
-              "line_end": 1017,
+              "line_start": 1090,
+              "line_end": 1101,
               "signature": "test_reserved_paddle_marked_unavailable(self)",
               "decorators": [],
               "returns": null,
@@ -34940,8 +37541,8 @@
             {
               "name": "test_availability_after_reservation_ends",
               "type": "function",
-              "line_start": 1019,
-              "line_end": 1030,
+              "line_start": 1103,
+              "line_end": 1114,
               "signature": "test_availability_after_reservation_ends(self)",
               "decorators": [],
               "returns": null,
@@ -34952,8 +37553,8 @@
         },
         {
           "name": "TestScenario07_MultipleReservations",
-          "line_start": 1033,
-          "line_end": 1078,
+          "line_start": 1117,
+          "line_end": 1162,
           "bases": [
             "unittest.TestCase"
           ],
@@ -34962,8 +37563,8 @@
             {
               "name": "setUp",
               "type": "function",
-              "line_start": 1036,
-              "line_end": 1046,
+              "line_start": 1120,
+              "line_end": 1130,
               "signature": "setUp(self)",
               "decorators": [],
               "returns": null,
@@ -34972,8 +37573,8 @@
             {
               "name": "test_different_items_no_conflict",
               "type": "function",
-              "line_start": 1048,
-              "line_end": 1062,
+              "line_start": 1132,
+              "line_end": 1146,
               "signature": "test_different_items_no_conflict(self)",
               "decorators": [],
               "returns": null,
@@ -34982,8 +37583,8 @@
             {
               "name": "test_same_item_conflict_across_users",
               "type": "function",
-              "line_start": 1064,
-              "line_end": 1078,
+              "line_start": 1148,
+              "line_end": 1162,
               "signature": "test_same_item_conflict_across_users(self)",
               "decorators": [],
               "returns": null,
@@ -34994,8 +37595,8 @@
         },
         {
           "name": "TestScenario08_CancelAndRebook",
-          "line_start": 1081,
-          "line_end": 1120,
+          "line_start": 1165,
+          "line_end": 1204,
           "bases": [
             "unittest.TestCase"
           ],
@@ -35004,8 +37605,8 @@
             {
               "name": "setUp",
               "type": "function",
-              "line_start": 1084,
-              "line_end": 1089,
+              "line_start": 1168,
+              "line_end": 1173,
               "signature": "setUp(self)",
               "decorators": [],
               "returns": null,
@@ -35014,8 +37615,8 @@
             {
               "name": "test_cancel_and_rebook",
               "type": "function",
-              "line_start": 1091,
-              "line_end": 1120,
+              "line_start": 1175,
+              "line_end": 1204,
               "signature": "test_cancel_and_rebook(self)",
               "decorators": [],
               "returns": null,
@@ -35026,8 +37627,8 @@
         },
         {
           "name": "TestScenario09_DeduplicationOfItems",
-          "line_start": 1123,
-          "line_end": 1161,
+          "line_start": 1207,
+          "line_end": 1245,
           "bases": [
             "unittest.TestCase"
           ],
@@ -35036,8 +37637,8 @@
             {
               "name": "setUp",
               "type": "function",
-              "line_start": 1126,
-              "line_end": 1131,
+              "line_start": 1210,
+              "line_end": 1215,
               "signature": "setUp(self)",
               "decorators": [],
               "returns": null,
@@ -35046,8 +37647,8 @@
             {
               "name": "test_dedup_does_not_exceed_limit",
               "type": "function",
-              "line_start": 1133,
-              "line_end": 1146,
+              "line_start": 1217,
+              "line_end": 1230,
               "signature": "test_dedup_does_not_exceed_limit(self)",
               "decorators": [],
               "returns": null,
@@ -35056,8 +37657,8 @@
             {
               "name": "test_dedup_stores_single_item",
               "type": "function",
-              "line_start": 1148,
-              "line_end": 1161,
+              "line_start": 1232,
+              "line_end": 1245,
               "signature": "test_dedup_stores_single_item(self)",
               "decorators": [],
               "returns": null,
@@ -35068,8 +37669,8 @@
         },
         {
           "name": "TestScenario10_PrimaryItemSelection",
-          "line_start": 1164,
-          "line_end": 1223,
+          "line_start": 1248,
+          "line_end": 1307,
           "bases": [
             "unittest.TestCase"
           ],
@@ -35078,8 +37679,8 @@
             {
               "name": "setUp",
               "type": "function",
-              "line_start": 1167,
-              "line_end": 1174,
+              "line_start": 1251,
+              "line_end": 1258,
               "signature": "setUp(self)",
               "decorators": [],
               "returns": null,
@@ -35088,8 +37689,8 @@
             {
               "name": "test_kayak_is_primary_when_included",
               "type": "function",
-              "line_start": 1176,
-              "line_end": 1191,
+              "line_start": 1260,
+              "line_end": 1275,
               "signature": "test_kayak_is_primary_when_included(self)",
               "decorators": [],
               "returns": null,
@@ -35098,8 +37699,8 @@
             {
               "name": "test_paddle_is_primary_when_no_kayak",
               "type": "function",
-              "line_start": 1193,
-              "line_end": 1207,
+              "line_start": 1277,
+              "line_end": 1291,
               "signature": "test_paddle_is_primary_when_no_kayak(self)",
               "decorators": [],
               "returns": null,
@@ -35108,8 +37709,8 @@
             {
               "name": "test_only_one_item_is_primary",
               "type": "function",
-              "line_start": 1209,
-              "line_end": 1223,
+              "line_start": 1293,
+              "line_end": 1307,
               "signature": "test_only_one_item_is_primary(self)",
               "decorators": [],
               "returns": null,
@@ -35120,8 +37721,8 @@
         },
         {
           "name": "TestCrossFormatConflicts",
-          "line_start": 1230,
-          "line_end": 1371,
+          "line_start": 1314,
+          "line_end": 1455,
           "bases": [
             "unittest.TestCase"
           ],
@@ -35130,8 +37731,8 @@
             {
               "name": "_make_legacy_reservation",
               "type": "function",
-              "line_start": 1237,
-              "line_end": 1247,
+              "line_start": 1321,
+              "line_end": 1331,
               "signature": "_make_legacy_reservation(self, kayak_ids: list, block_start: str, block_end: str, status: str, uid: str)",
               "decorators": [],
               "returns": "dict",
@@ -35140,8 +37741,8 @@
             {
               "name": "_make_bundle_reservation",
               "type": "function",
-              "line_start": 1249,
-              "line_end": 1260,
+              "line_start": 1333,
+              "line_end": 1344,
               "signature": "_make_bundle_reservation(self, item_ids: list, block_start: str, block_end: str, status: str, uid: str)",
               "decorators": [],
               "returns": "dict",
@@ -35150,8 +37751,8 @@
             {
               "name": "test_bundle_conflicts_with_legacy_same_kayak",
               "type": "function",
-              "line_start": 1262,
-              "line_end": 1275,
+              "line_start": 1346,
+              "line_end": 1359,
               "signature": "test_bundle_conflicts_with_legacy_same_kayak(self)",
               "decorators": [],
               "returns": null,
@@ -35160,8 +37761,8 @@
             {
               "name": "test_bundle_conflicts_with_legacy_different_kayak",
               "type": "function",
-              "line_start": 1277,
-              "line_end": 1288,
+              "line_start": 1361,
+              "line_end": 1372,
               "signature": "test_bundle_conflicts_with_legacy_different_kayak(self)",
               "decorators": [],
               "returns": null,
@@ -35170,8 +37771,8 @@
             {
               "name": "test_bundle_conflicts_with_new_format_same_item",
               "type": "function",
-              "line_start": 1290,
-              "line_end": 1302,
+              "line_start": 1374,
+              "line_end": 1386,
               "signature": "test_bundle_conflicts_with_new_format_same_item(self)",
               "decorators": [],
               "returns": null,
@@ -35180,8 +37781,8 @@
             {
               "name": "test_bundle_conflicts_with_new_format_accessory",
               "type": "function",
-              "line_start": 1304,
-              "line_end": 1316,
+              "line_start": 1388,
+              "line_end": 1400,
               "signature": "test_bundle_conflicts_with_new_format_accessory(self)",
               "decorators": [],
               "returns": null,
@@ -35190,8 +37791,8 @@
             {
               "name": "test_legacy_cancelled_not_conflicting",
               "type": "function",
-              "line_start": 1318,
-              "line_end": 1327,
+              "line_start": 1402,
+              "line_end": 1411,
               "signature": "test_legacy_cancelled_not_conflicting(self)",
               "decorators": [],
               "returns": null,
@@ -35200,8 +37801,8 @@
             {
               "name": "test_legacy_non_overlapping_not_conflicting",
               "type": "function",
-              "line_start": 1329,
-              "line_end": 1338,
+              "line_start": 1413,
+              "line_end": 1422,
               "signature": "test_legacy_non_overlapping_not_conflicting(self)",
               "decorators": [],
               "returns": null,
@@ -35210,8 +37811,8 @@
             {
               "name": "test_multiple_items_partial_conflict",
               "type": "function",
-              "line_start": 1340,
-              "line_end": 1356,
+              "line_start": 1424,
+              "line_end": 1440,
               "signature": "test_multiple_items_partial_conflict(self)",
               "decorators": [],
               "returns": null,
@@ -35220,8 +37821,8 @@
             {
               "name": "test_exclude_id_skips_own_reservation",
               "type": "function",
-              "line_start": 1358,
-              "line_end": 1371,
+              "line_start": 1442,
+              "line_end": 1455,
               "signature": "test_exclude_id_skips_own_reservation(self)",
               "decorators": [],
               "returns": null,
@@ -35232,8 +37833,8 @@
         },
         {
           "name": "TestMaxItemsBundleEnforcement",
-          "line_start": 1378,
-          "line_end": 1613,
+          "line_start": 1462,
+          "line_end": 1791,
           "bases": [
             "unittest.TestCase"
           ],
@@ -35242,88 +37843,128 @@
             {
               "name": "_make_backend",
               "type": "function",
-              "line_start": 1399,
-              "line_end": 1403,
+              "line_start": 1489,
+              "line_end": 1493,
               "signature": "_make_backend(self, role: str)",
               "decorators": [],
               "returns": "BackendStub",
               "doc": null
             },
             {
-              "name": "test_member_kayak_paddle_lifejacket_equals_3_ok",
+              "name": "test_member_kayak_paddle_lifejacket_one_each_ok",
               "type": "function",
-              "line_start": 1405,
-              "line_end": 1420,
-              "signature": "test_member_kayak_paddle_lifejacket_equals_3_ok(self)",
+              "line_start": 1495,
+              "line_end": 1508,
+              "signature": "test_member_kayak_paddle_lifejacket_one_each_ok(self)",
               "decorators": [],
               "returns": null,
-              "doc": "Czlonek: kajak + wiosło + kamizelka = 3 przedmioty = max_items → OK."
+              "doc": "Czlonek: kajak + wiosło + kamizelka = po 1 z każdej kategorii ≤ 3 → OK."
             },
             {
-              "name": "test_member_kayak_paddle_helmet_lifejacket_equals_4_blocked",
+              "name": "test_member_four_categories_one_each_ok",
               "type": "function",
-              "line_start": 1422,
-              "line_end": 1439,
-              "signature": "test_member_kayak_paddle_helmet_lifejacket_equals_4_blocked(self)",
+              "line_start": 1510,
+              "line_end": 1527,
+              "signature": "test_member_four_categories_one_each_ok(self)",
               "decorators": [],
               "returns": null,
-              "doc": "Czlonek: kajak + wiosło + kask + kamizelka = 4 przedmioty > max_items=3 → blokada."
+              "doc": "Czlonek: kajak + wiosło + kask + kamizelka = po 1 z 4 kategorii."
+            },
+            {
+              "name": "test_member_four_paddles_blocked",
+              "type": "function",
+              "line_start": 1529,
+              "line_end": 1545,
+              "signature": "test_member_four_paddles_blocked(self)",
+              "decorators": [],
+              "returns": null,
+              "doc": "Czlonek: 4 wiosła w jednej rezerwacji > limit 3 dla kategorii → blokada."
             },
             {
               "name": "test_candidate_1_kayak_ok",
               "type": "function",
-              "line_start": 1441,
-              "line_end": 1450,
+              "line_start": 1547,
+              "line_end": 1556,
               "signature": "test_candidate_1_kayak_ok(self)",
               "decorators": [],
               "returns": null,
               "doc": "Kandydat: 1 kajak = max_items=1 → OK."
             },
             {
-              "name": "test_candidate_kayak_plus_paddle_equals_2_blocked",
+              "name": "test_candidate_kayak_plus_paddle_one_each_ok",
               "type": "function",
-              "line_start": 1452,
-              "line_end": 1468,
-              "signature": "test_candidate_kayak_plus_paddle_equals_2_blocked(self)",
+              "line_start": 1558,
+              "line_end": 1573,
+              "signature": "test_candidate_kayak_plus_paddle_one_each_ok(self)",
               "decorators": [],
               "returns": null,
-              "doc": "Kandydat: kajak + wiosło = 2 przedmioty > max_items=1 → blokada."
+              "doc": "Kandydat: kajak + wiosło w jednym koszyku = po 1 z każdej kategorii ≤ 1 → OK."
             },
             {
-              "name": "test_board_100_items_ok",
+              "name": "test_candidate_kayak_then_paddle_separate_reservations_ok",
               "type": "function",
-              "line_start": 1470,
-              "line_end": 1484,
-              "signature": "test_board_100_items_ok(self)",
+              "line_start": 1575,
+              "line_end": 1595,
+              "signature": "test_candidate_kayak_then_paddle_separate_reservations_ok(self)",
               "decorators": [],
               "returns": null,
-              "doc": "Zarząd: limit = 100, 2 kajaki + 2 akcesoria = 4 → OK."
+              "doc": "GŁÓWNY scenariusz zgłoszenia: kandydat rezerwuje kajak osobno, a wiosło"
             },
             {
-              "name": "test_cumulative_count_across_overlapping_reservations",
+              "name": "test_candidate_second_kayak_blocked",
               "type": "function",
-              "line_start": 1486,
-              "line_end": 1513,
-              "signature": "test_cumulative_count_across_overlapping_reservations(self)",
+              "line_start": 1597,
+              "line_end": 1616,
+              "signature": "test_candidate_second_kayak_blocked(self)",
+              "decorators": [],
+              "returns": null,
+              "doc": "Kandydat: drugi kajak w nakładającym się terminie > 1 → blokada."
+            },
+            {
+              "name": "test_candidate_second_paddle_blocked",
+              "type": "function",
+              "line_start": 1618,
+              "line_end": 1637,
+              "signature": "test_candidate_second_paddle_blocked(self)",
+              "decorators": [],
+              "returns": null,
+              "doc": "Kandydat: drugie wiosło w nakładającym się terminie > 1 → blokada."
+            },
+            {
+              "name": "test_board_many_items_ok",
+              "type": "function",
+              "line_start": 1639,
+              "line_end": 1653,
+              "signature": "test_board_many_items_ok(self)",
+              "decorators": [],
+              "returns": null,
+              "doc": "Zarząd: limit = 100, 2 kajaki + 2 akcesoria → OK."
+            },
+            {
+              "name": "test_cumulative_kayaks_across_overlapping_reservations_ok",
+              "type": "function",
+              "line_start": 1655,
+              "line_end": 1679,
+              "signature": "test_cumulative_kayaks_across_overlapping_reservations_ok(self)",
               "decorators": [],
               "returns": null,
               "doc": "Czlonek ma już 2 kajaki w nakładającej się rezerwacji."
             },
             {
-              "name": "test_cumulative_over_limit_blocked",
+              "name": "test_cumulative_kayaks_over_limit_blocked",
               "type": "function",
-              "line_start": 1515,
-              "line_end": 1540,
-              "signature": "test_cumulative_over_limit_blocked(self)",
+              "line_start": 1681,
+              "line_end": 1718,
+              "signature": "test_cumulative_kayaks_over_limit_blocked(self)",
               "decorators": [],
               "returns": null,
-              "doc": "Czlonek ma już 3 kajaki. Dodanie 1 akcesoria → 4 > 3 → blokada."
+              "doc": "Czlonek ma już 3 kajaki. 4. kajak w nakładającej się rezerwacji → 4 > 3 → blokada."
             },
             {
               "name": "test_gear_only_bundle_no_kayak_cost_zero",
               "type": "function",
-              "line_start": 1542,
-              "line_end": 1559,
+              "line_start": 1720,
+              "line_end": 1737,
               "signature": "test_gear_only_bundle_no_kayak_cost_zero(self)",
               "decorators": [],
               "returns": null,
@@ -35332,8 +37973,8 @@
             {
               "name": "test_kayak_bundle_cost_only_from_kayaks",
               "type": "function",
-              "line_start": 1561,
-              "line_end": 1580,
+              "line_start": 1739,
+              "line_end": 1758,
               "signature": "test_kayak_bundle_cost_only_from_kayaks(self)",
               "decorators": [],
               "returns": null,
@@ -35342,15 +37983,209 @@
             {
               "name": "test_accessories_price_gap_k1_documented",
               "type": "function",
-              "line_start": 1582,
-              "line_end": 1613,
+              "line_start": 1760,
+              "line_end": 1791,
               "signature": "test_accessories_price_gap_k1_documented(self)",
               "decorators": [],
               "returns": null,
               "doc": "LUKA K1: Akcesoria (wiosło, kask, fartuch) nie mają cennika."
             }
           ],
-          "doc": "Weryfikuje że limit max_items jest liczony łącznie dla wszystkich"
+          "doc": "Weryfikuje, że limit max_items jest liczony OSOBNO DLA KAŻDEJ KATEGORII (S2):"
+        },
+        {
+          "name": "TestKursantExemptAndGate",
+          "line_start": 1798,
+          "line_end": 1830,
+          "bases": [
+            "unittest.TestCase"
+          ],
+          "decorators": [],
+          "methods": [
+            {
+              "name": "test_exempt_current_year_before_sep30",
+              "type": "function",
+              "line_start": 1801,
+              "line_end": 1802,
+              "signature": "test_exempt_current_year_before_sep30(self)",
+              "decorators": [],
+              "returns": null,
+              "doc": null
+            },
+            {
+              "name": "test_exempt_on_sep30_inclusive",
+              "type": "function",
+              "line_start": 1804,
+              "line_end": 1805,
+              "signature": "test_exempt_on_sep30_inclusive(self)",
+              "decorators": [],
+              "returns": null,
+              "doc": null
+            },
+            {
+              "name": "test_not_exempt_after_sep30",
+              "type": "function",
+              "line_start": 1807,
+              "line_end": 1808,
+              "signature": "test_not_exempt_after_sep30(self)",
+              "decorators": [],
+              "returns": null,
+              "doc": null
+            },
+            {
+              "name": "test_not_exempt_wrong_year",
+              "type": "function",
+              "line_start": 1810,
+              "line_end": 1811,
+              "signature": "test_not_exempt_wrong_year(self)",
+              "decorators": [],
+              "returns": null,
+              "doc": null
+            },
+            {
+              "name": "test_not_exempt_no_year",
+              "type": "function",
+              "line_start": 1813,
+              "line_end": 1814,
+              "signature": "test_not_exempt_no_year(self)",
+              "decorators": [],
+              "returns": null,
+              "doc": null
+            },
+            {
+              "name": "test_gate_flag_off_forbidden",
+              "type": "function",
+              "line_start": 1816,
+              "line_end": 1819,
+              "signature": "test_gate_flag_off_forbidden(self)",
+              "decorators": [],
+              "returns": null,
+              "doc": null
+            },
+            {
+              "name": "test_gate_in_window_allowed",
+              "type": "function",
+              "line_start": 1821,
+              "line_end": 1822,
+              "signature": "test_gate_in_window_allowed(self)",
+              "decorators": [],
+              "returns": null,
+              "doc": null
+            },
+            {
+              "name": "test_gate_window_closed",
+              "type": "function",
+              "line_start": 1824,
+              "line_end": 1826,
+              "signature": "test_gate_window_closed(self)",
+              "decorators": [],
+              "returns": null,
+              "doc": null
+            },
+            {
+              "name": "test_gate_no_year",
+              "type": "function",
+              "line_start": 1828,
+              "line_end": 1830,
+              "signature": "test_gate_no_year(self)",
+              "decorators": [],
+              "returns": null,
+              "doc": null
+            }
+          ],
+          "doc": "Pure-function: zwolnienie z opłaty + bramka rezerwacji kursanta."
+        },
+        {
+          "name": "TestScenarioKursant",
+          "line_start": 1833,
+          "line_end": 1911,
+          "bases": [
+            "unittest.TestCase"
+          ],
+          "decorators": [],
+          "methods": [
+            {
+              "name": "_catalog",
+              "type": "function",
+              "line_start": 1843,
+              "line_end": 1849,
+              "signature": "_catalog(self)",
+              "decorators": [],
+              "returns": null,
+              "doc": null
+            },
+            {
+              "name": "_backend",
+              "type": "function",
+              "line_start": 1851,
+              "line_end": 1853,
+              "signature": "_backend(self, flag, today, school_year)",
+              "decorators": [],
+              "returns": null,
+              "doc": null
+            },
+            {
+              "name": "test_in_window_can_reserve_kayak",
+              "type": "function",
+              "line_start": 1855,
+              "line_end": 1861,
+              "signature": "test_in_window_can_reserve_kayak(self)",
+              "decorators": [],
+              "returns": null,
+              "doc": null
+            },
+            {
+              "name": "test_in_window_can_reserve_non_kayak_categories",
+              "type": "function",
+              "line_start": 1863,
+              "line_end": 1870,
+              "signature": "test_in_window_can_reserve_non_kayak_categories(self)",
+              "decorators": [],
+              "returns": null,
+              "doc": null
+            },
+            {
+              "name": "test_in_window_limit_one_per_category_like_candidate",
+              "type": "function",
+              "line_start": 1872,
+              "line_end": 1884,
+              "signature": "test_in_window_limit_one_per_category_like_candidate(self)",
+              "decorators": [],
+              "returns": null,
+              "doc": null
+            },
+            {
+              "name": "test_flag_off_forbidden",
+              "type": "function",
+              "line_start": 1886,
+              "line_end": 1893,
+              "signature": "test_flag_off_forbidden(self)",
+              "decorators": [],
+              "returns": null,
+              "doc": null
+            },
+            {
+              "name": "test_after_window_blocked",
+              "type": "function",
+              "line_start": 1895,
+              "line_end": 1902,
+              "signature": "test_after_window_blocked(self)",
+              "decorators": [],
+              "returns": null,
+              "doc": null
+            },
+            {
+              "name": "test_no_school_year_blocked",
+              "type": "function",
+              "line_start": 1904,
+              "line_end": 1911,
+              "signature": "test_no_school_year_blocked(self)",
+              "decorators": [],
+              "returns": null,
+              "doc": null
+            }
+          ],
+          "doc": "Kursant == kandydat W OKNIE (flaga ON, do 30.09 roku kursu); po oknie lub przy"
         }
       ],
       "functions": [
@@ -35415,30 +38250,70 @@
           "doc": "Finds conflicting composite IDs."
         },
         {
-          "name": "count_overlapping_items",
+          "name": "count_overlapping_items_by_category",
           "type": "function",
           "line_start": 125,
-          "line_end": 155,
-          "signature": "count_overlapping_items(uid: str, reservations: list, block_start: str, block_end: str, exclude_id: str)",
+          "line_end": 157,
+          "signature": "count_overlapping_items_by_category(uid: str, reservations: list, block_start: str, block_end: str, exclude_id: str)",
           "decorators": [],
-          "returns": "int",
-          "doc": "Counts total items in all of a user's active, overlapping reservations."
+          "returns": "dict",
+          "doc": "Counts items PER CATEGORY in a user's active, overlapping reservations."
+        },
+        {
+          "name": "count_items_by_category",
+          "type": "function",
+          "line_start": 160,
+          "line_end": 168,
+          "signature": "count_items_by_category(items: list)",
+          "decorators": [],
+          "returns": "dict",
+          "doc": "Tally requested items per category. Mirrors countItemsByCategory()."
+        },
+        {
+          "name": "find_category_over_limit",
+          "type": "function",
+          "line_start": 171,
+          "line_end": 180,
+          "signature": "find_category_over_limit(already: dict, requested: dict, max_items: int)",
+          "decorators": [],
+          "returns": null,
+          "doc": "First requested category exceeding max_items, or None."
         },
         {
           "name": "get_reserved_composite_ids_for_period",
           "type": "function",
-          "line_start": 158,
-          "line_end": 185,
+          "line_start": 183,
+          "line_end": 210,
           "signature": "get_reserved_composite_ids_for_period(reservations: list, block_start: str, block_end: str)",
           "decorators": [],
           "returns": "set",
           "doc": "Returns a set of composite IDs that are reserved in the given block period."
         },
         {
+          "name": "is_free_rental_exempt",
+          "type": "function",
+          "line_start": 213,
+          "line_end": 222,
+          "signature": "is_free_rental_exempt(school_year, today_iso: str)",
+          "decorators": [],
+          "returns": "bool",
+          "doc": "Zwolnienie z opłaty: tegoroczna szkoleniówka i rezerwacja składana do 30.09."
+        },
+        {
+          "name": "assert_kursant_rental_allowed",
+          "type": "function",
+          "line_start": 225,
+          "line_end": 236,
+          "signature": "assert_kursant_rental_allowed(flag_on: bool, exempt: bool, school_year)",
+          "decorators": [],
+          "returns": null,
+          "doc": "Bramka rezerwacji kursanta. Zwraca dict błędu albo None gdy dozwolone."
+        },
+        {
           "name": "make_catalog",
           "type": "function",
-          "line_start": 688,
-          "line_end": 703,
+          "line_start": 772,
+          "line_end": 787,
           "signature": "make_catalog(*entries)",
           "decorators": [],
           "returns": null,

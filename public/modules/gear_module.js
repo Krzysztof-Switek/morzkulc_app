@@ -870,12 +870,12 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
         const cards = isKayaksView
           ? items.map((k) => renderKayakCard(k, favSet.has(String(k?.id || "")), canUserReserve)).join("")
           : isPaddlesView
-            ? items.map((item) => renderPaddleCard(item, favSet.has(String(item?.id || "")))).join("")
+            ? items.map((item) => renderPaddleCard(item, favSet.has(String(item?.id || "")), canUserReserve)).join("")
             : isLifejacketsView
-              ? items.map((item) => renderLifejacketCard(item, favSet.has(String(item?.id || "")))).join("")
+              ? items.map((item) => renderLifejacketCard(item, favSet.has(String(item?.id || "")), canUserReserve)).join("")
               : isHelmetsView
-                ? items.map((item) => renderHelmetCard(item, favSet.has(String(item?.id || "")))).join("")
-                : items.map((item) => renderGenericGearCard(item, favSet.has(String(item?.id || "")))).join("");
+                ? items.map((item) => renderHelmetCard(item, favSet.has(String(item?.id || "")), canUserReserve)).join("")
+                : items.map((item) => renderGenericGearCard(item, favSet.has(String(item?.id || "")), canUserReserve)).join("");
 
         listEl.innerHTML = `
           <div class="gearGrid">
@@ -1746,7 +1746,7 @@ function buildHelmetLine3(item) {
   return notes ? `uwagi: ${notes}` : "";
 }
 
-function renderHelmetCard(item, isFav = false) {
+function renderHelmetCard(item, isFav = false, canUserReserve = true) {
   const number = String(item?.number || "").trim();
   const brand = String(item?.brand || "").trim();
   const model = String(item?.model || "").trim();
@@ -1802,6 +1802,7 @@ function renderHelmetCard(item, isFav = false) {
             class="gearMiniReserveBtn gearBundleReserveBtn"
             data-gear-bundle-reserve="${escapeAttr(String(item?.id || ""))}"
             data-gear-bundle-category="helmets"
+            ${canUserReserve ? "" : "disabled"}
           >Rezerwuj</button>
         </div>
 
@@ -1810,7 +1811,7 @@ function renderHelmetCard(item, isFav = false) {
   `;
 }
 
-function renderPaddleCard(item, isFav = false) {
+function renderPaddleCard(item, isFav = false, canUserReserve = true) {
   const number = String(item?.number || "").trim();
   const brand = String(item?.brand || "").trim();
   const model = String(item?.model || "").trim();
@@ -1860,6 +1861,7 @@ function renderPaddleCard(item, isFav = false) {
                 class="gearMiniReserveBtn gearBundleReserveBtn"
                 data-gear-bundle-reserve="${escapeAttr(String(item?.id || ""))}"
                 data-gear-bundle-category="paddles"
+                ${canUserReserve ? "" : "disabled"}
               >Rezerwuj</button>`}
         </div>
 
@@ -1868,7 +1870,7 @@ function renderPaddleCard(item, isFav = false) {
   `;
 }
 
-function renderGenericGearCard(item, isFav = false) {
+function renderGenericGearCard(item, isFav = false, canUserReserve = true) {
   const number = String(item?.number || "").trim();
   const brand = String(item?.brand || "").trim();
   const model = String(item?.model || "").trim();
@@ -1961,6 +1963,7 @@ function renderGenericGearCard(item, isFav = false) {
             class="primary gearBundleReserveBtn"
             data-gear-bundle-reserve="${escapeAttr(String(item?.id || ""))}"
             data-gear-bundle-category="${escapeAttr(String(item?.gearCategory || ""))}"
+            ${canUserReserve ? "" : "disabled"}
           >Rezerwuj</button>
         </div>
 
@@ -2076,7 +2079,7 @@ function buildLifejacketLine3(item) {
   return [typeSizePart, buoyancyPart].filter(Boolean).join(" ");
 }
 
-function renderLifejacketCard(item, isFav = false) {
+function renderLifejacketCard(item, isFav = false, canUserReserve = true) {
   const number = String(item?.number || "").trim();
   const brand = String(item?.brand || "").trim();
   const model = String(item?.model || "").trim();
@@ -2132,6 +2135,7 @@ function renderLifejacketCard(item, isFav = false) {
             class="gearMiniReserveBtn gearBundleReserveBtn"
             data-gear-bundle-reserve="${escapeAttr(String(item?.id || ""))}"
             data-gear-bundle-category="lifejackets"
+            ${canUserReserve ? "" : "disabled"}
           >Rezerwuj</button>
         </div>
 

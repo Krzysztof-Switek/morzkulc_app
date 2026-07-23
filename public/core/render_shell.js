@@ -97,10 +97,15 @@ function getDashboardConfig(ctx) {
   const actions = ctx?.session?.allowed_actions ?? [];
   const roleKey = String(ctx?.session?.role_key || "");
   const isKursant = roleKey === "rola_kursant" || ctx?.kursPreviewMode === true;
+  // Kursant wypożycza sprzęt jak kandydat, ale bramkuje to flaga kurs_wypożycza
+  // (+ okno szkoleniówki liczone w backendzie i odzwierciedlone w ctx.kursWypozycza).
+  // Po 30.09 backend zwraca kursExpired=true → traktujemy go jak sympatyka (bez rezerwacji).
+  const kursExpired = ctx?.kursExpired === true;
   return {
     isKursant,
+    kursExpired,
     isAdmin:           !isKursant && actions.includes("admin.pending"),
-    canReserveGear:    !isKursant && actions.includes("gear.reserve"),
+    canReserveGear:    isKursant ? (ctx?.kursWypozycza === true) : actions.includes("gear.reserve"),
     canEnrollBasen:    actions.includes("basen.enroll"),
     canSubmitGodzinki: !isKursant && actions.includes("godzinki.submit"),
     canSubmitEvents:   !isKursant && actions.includes("events.submit"),
@@ -132,7 +137,9 @@ async function renderHomeDashboard({ viewEl, ctx }) {
   // (poza limitem sprzętu) — jego informacje są w profilu, nie na dashboardzie.
   const accessInfoMsg = dash.isSympatyk
     ? "Jako Sympatyk możesz przeglądać sprzęt, imprezy i ranking oraz zapisywać się na zajęcia basenowe, gdy są dostępne. Jeśli jesteś zainteresowany członkostwem w SKK Morzkulc, napisz na zarzad@morzkulc.pl."
-    : "";
+    : dash.kursExpired
+      ? "Twoje uprawnienia kursanta wygasły z końcem września — możesz przeglądać sprzęt, ale wypożyczanie nie jest już dostępne. Zarząd wkrótce nada Ci rolę docelową. W razie pytań napisz na zarzad@morzkulc.pl."
+      : "";
 
   // Render struktury natychmiast — rezerwacje ładujemy asynchronicznie
   viewEl.innerHTML = `
@@ -507,6 +514,10 @@ function renderHomeProfile({ viewEl, ctx }) {
       </div>
       ` : ""}
 
+      <div id="klubBoxBody" class="profileKlub">
+        ${spinnerHtml("Ładowanie informacji klubowych...")}
+      </div>
+
       <div class="actions" style="margin-top:16px;">
         <button type="button" class="ghost" id="profileBackBtn">← Wróć</button>
       </div>
@@ -547,6 +558,9 @@ function renderHomeProfile({ viewEl, ctx }) {
   if (dash.canReserveGear) {
     wireHomeReservations(viewEl, ctx);
   }
+
+  // Box „Klub" — leniwie ładowane ogólne informacje klubowe (widoczny dla wszystkich).
+  wireKlubBox(viewEl, ctx);
 
   // Popover „i" przy roli (np. wyjaśnienie roli kandydata) — pokazywany tylko po kliknięciu ikonki.
   viewEl.querySelectorAll("[data-info-toggle]").forEach((btn) => {
@@ -622,6 +636,129 @@ function renderHomeProfile({ viewEl, ctx }) {
           .forEach((id) => { const el = viewEl.querySelector(id); if (el) el.textContent = "—"; });
       });
   }
+}
+
+// ── Box „Klub" — ogólne informacje klubowe (zarząd, KR, konto, dokumenty) ──
+// Świadomie BEZ cache: odpowiedź zawiera dane finansowe widoczne tylko dla
+// KR/Zarządu, a cache w sessionStorage groził wyciekiem między użytkownikami
+// w tej samej karcie (logout nie czyści sessionStorage). Pobieramy świeżo.
+
+// escapeHtml nie escape'uje cudzysłowów — do wartości w atrybutach używamy tego.
+function escapeAttr(s) {
+  return escapeHtml(s).replaceAll("\"", "&quot;").replaceAll("'", "&#39;");
+}
+
+// Dopuszczamy tylko http(s) jako href (ochrona przed javascript: itp.).
+function safeUrl(u) {
+  const s = String(u || "").trim();
+  return /^https?:\/\//i.test(s) ? s : "";
+}
+
+// Numer NRB (26 cyfr) → grupy „2 + 6×4"; nieznany format pokazujemy bez zmian.
+function formatNrb(raw) {
+  const digits = String(raw || "").replace(/\s+/g, "");
+  if (!/^\d{26}$/.test(digits)) return String(raw || "");
+  return digits.slice(0, 2) + " " + (digits.slice(2).match(/.{1,4}/g) || []).join(" ");
+}
+
+function buildKlubBoxHtml(data) {
+  const zarzad = Array.isArray(data?.zarzad) ? data.zarzad : [];
+  const kr = Array.isArray(data?.kr) ? data.kr : [];
+  const konto = String(data?.finanse?.konto || "").trim();
+  const bank = String(data?.finanse?.bank || "").trim();
+  // Stany finansowe przychodzą z serwera TYLKO dla KR/Zarządu (inaczej pola brak).
+  const hasFinance = data?.finanse?.stanKonta !== undefined;
+  const linki = data?.linki || {};
+
+  const blocks = [];
+
+  if (zarzad.length) {
+    const rows = zarzad.map((z) => {
+      const mail = String(z?.mailbox || "").trim();
+      const mailLink = mail
+        ? ` <a class="klubMail" href="mailto:${escapeAttr(mail)}" title="Napisz: ${escapeAttr(mail)}" aria-label="Napisz e-mail do: ${escapeAttr(mail)}">✉</a>`
+        : "";
+      return `<div class="mentorRow"><span class="mentorRole">${escapeHtml(z?.funkcja || "")}</span><span class="mentorName">${escapeHtml(z?.name || "—")}${mailLink}</span></div>`;
+    }).join("");
+    blocks.push(`<div class="profileBlock"><h3 class="profileBlockTitle">Zarząd</h3>${rows}</div>`);
+  }
+
+  if (kr.length) {
+    const items = kr.map((k) => `<li>${escapeHtml(k?.name || "—")}</li>`).join("");
+    blocks.push(`<div class="profileBlock"><h3 class="profileBlockTitle">Komisja rewizyjna</h3><ul class="klubList">${items}</ul></div>`);
+  }
+
+  if (konto || bank || hasFinance) {
+    const kontoRaw = konto.replace(/\s+/g, "");
+    const line = `${bank ? `<strong>${escapeHtml(bank)}:</strong> ` : ""}${konto ? `<span class="klubKontoNr" id="klubKontoNr">${escapeHtml(formatNrb(konto))}</span>` : ""}`;
+    const kontoLine = (konto || bank) ? `<div class="klubKonto"><span class="klubKontoLine">${line}</span>${
+      konto ? `<button type="button" class="ghost klubCopyBtn" data-klub-copy="${escapeAttr(kontoRaw)}">Kopiuj</button>` : ""
+    }</div>` : "";
+    const finanse = hasFinance ? `<div class="klubFinanse">
+      <div class="klubFinRow"><span>Stan konta:</span> <strong>${escapeHtml(String(data.finanse.stanKonta || "0"))} zł</strong></div>
+      <div class="klubFinRow"><span>Stan gotówki:</span> <strong>${escapeHtml(String(data.finanse.stanGotowki || "0"))} zł</strong></div>
+    </div>` : "";
+    blocks.push(`<div class="profileBlock"><h3 class="profileBlockTitle">Konto klubowe</h3>${kontoLine}${finanse}</div>`);
+  }
+
+  const statut = safeUrl(linki.statut);
+  const regulamin = safeUrl(linki.regulamin);
+  const klucze = String(linki.klucze || "").trim();
+  const docLinks = [];
+  if (statut) docLinks.push(`<a href="${escapeAttr(statut)}" target="_blank" rel="noopener">Statut</a>`);
+  if (regulamin) docLinks.push(`<a href="${escapeAttr(regulamin)}" target="_blank" rel="noopener">Regulamin</a>`);
+  if (docLinks.length || klucze) {
+    blocks.push(`<div class="profileBlock"><h3 class="profileBlockTitle">Dokumenty i dostęp</h3>${
+      docLinks.length ? `<div class="klubLinks">${docLinks.join("")}</div>` : ""
+    }${
+      klucze ? `<div class="mentorRow"><span class="mentorRole">Klucze</span><span class="mentorName">${escapeHtml(klucze)}</span></div>` : ""
+    }</div>`);
+  }
+
+  if (!blocks.length) return "<p class=\"muted\">Brak informacji klubowych.</p>";
+  return blocks.join("");
+}
+
+function wireKlubBox(viewEl, ctx) {
+  const body = viewEl.querySelector("#klubBoxBody");
+  if (!body) return;
+
+  const render = (data) => {
+    body.innerHTML = buildKlubBoxHtml(data);
+    body.querySelectorAll("[data-klub-copy]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const val = btn.getAttribute("data-klub-copy") || "";
+        try {
+          await navigator.clipboard.writeText(val);
+          const old = btn.textContent;
+          btn.textContent = "Skopiowano ✓";
+          btn.disabled = true;
+          setTimeout(() => { btn.textContent = old; btn.disabled = false; }, 1500);
+        } catch {
+          // Schowek niedostępny — zaznacz numer do ręcznego skopiowania.
+          const nr = body.querySelector("#klubKontoNr");
+          if (nr) {
+            const range = document.createRange();
+            range.selectNodeContents(nr);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+        }
+      });
+    });
+  };
+
+  if (!ctx?.idToken) {
+    body.innerHTML = "<p class=\"muted\">Zaloguj się, aby zobaczyć informacje klubowe.</p>";
+    return;
+  }
+
+  apiGetJson({ url: "/api/klub", idToken: ctx.idToken })
+    .then((data) => render(data))
+    .catch(() => {
+      body.innerHTML = "<p class=\"muted\">Nie udało się pobrać informacji klubowych.</p>";
+    });
 }
 
 const _ADMIN_BADGE_CACHE_KEY = "adminPendingGodzinkiCount";

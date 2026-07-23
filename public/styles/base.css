@@ -454,3 +454,83 @@ textarea {
 
   button { font-size: 13px; }
 }
+
+/* --- Zakładki modułu (np. panel Zarząd: Administracja / Raporty) --- */
+.modTabs { display: flex; gap: 6px; margin: 12px 0 4px; flex-wrap: wrap; }
+.modTab { padding: 8px 18px; border-radius: 10px; border: 1px solid var(--border); background: transparent; color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s, color 0.15s; }
+.modTab.active, .modTab:hover { background: var(--primary); color: #fff; border-color: transparent; }
+
+/* --- Raport (panel Raporty w panelu Zarząd) --- */
+.reportControls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 8px 0; }
+.reportLabel { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.reportControls select, .reportControls input[type="date"] { padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+#reportCustomDates { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.reportCats { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 6px 0 4px; }
+.reportCats label { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: var(--text); cursor: pointer; }
+.reportTable { width: 100%; border-collapse: collapse; font-size: 13px; }
+.reportTable th { background: var(--surface-2); color: var(--text); font-weight: 700; padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+.reportTable td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text); }
+.reportTable tr:last-child td { border-bottom: none; }
+.reportPerson { font-weight: 700; }
+.reportEmail { font-size: 12px; color: var(--text-muted); }
+.reportItem { padding: 1px 0; }
+.reportTerm { white-space: nowrap; }
+
+/* --- Launcher raportów (kafelki pogrupowane + szukajka) --- */
+.reportLauncher { margin-top: 8px; }
+.reportSearch { width: 100%; max-width: 360px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); margin-bottom: 8px; }
+.reportCatHead { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin: 14px 0 8px; }
+.reportGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 380px) { .reportGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.reportTile { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); color: var(--text); cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+:root[data-theme="light"] .reportTile { background: rgba(12,18,32,0.03); }
+.reportTile:hover { border-color: var(--primary); background: rgba(255,255,255,0.07); }
+.reportTileLabel { font-weight: 800; font-size: 14px; }
+.reportTileDesc { font-size: 12px; color: var(--text-muted); line-height: 1.35; }
+.reportDetailHead { display: flex; align-items: center; gap: 12px; margin: 8px 0 12px; flex-wrap: wrap; }
+.reportDetailTitle { margin: 0; font-size: 16px; }
+.duesOk { color: var(--ok); font-weight: 700; }
+.duesBad { color: var(--danger); font-weight: 700; }
+.reportPdfBtn { margin-left: auto; }
+
+/* Nagłówek widoczny tylko na wydruku/PDF (ekran: ukryty). */
+.reportPrintHeader { display: none; }
+.reportPrintTitle { font-size: 16px; font-weight: 800; }
+.reportPrintDate { font-size: 11px; color: var(--text-muted); }
+
+/* --- Druk raportu → „Zapisz jako PDF" (izolujemy sam raport) --- */
+@media print {
+  body.printingReport * { visibility: hidden; }
+  body.printingReport #reportDetailBody,
+  body.printingReport #reportDetailBody * { visibility: visible; }
+  body.printingReport #reportDetailBody {
+    position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0;
+    background: #fff; color: #000;
+  }
+  /* Interaktywne kontrolki nie wchodzą do PDF (zostają dane + wybrany zakres/widok w <select>). */
+  body.printingReport #reportDetailBody button,
+  body.printingReport #reportDetailBody input[type="search"],
+  body.printingReport #reportDetailBody input[type="checkbox"],
+  body.printingReport #reportDetailBody .reportCats { display: none !important; }
+  body.printingReport .reportPrintHeader { display: block !important; margin-bottom: 10px; }
+  /* Czytelne kolory na białym papierze niezależnie od motywu. */
+  body.printingReport #reportDetailBody,
+  body.printingReport .reportTable,
+  body.printingReport .reportTable th,
+  body.printingReport .reportTable td,
+  body.printingReport .reportPerson,
+  body.printingReport .reportItem,
+  body.printingReport .reportTerm,
+  body.printingReport .reportCatHead,
+  body.printingReport .reportPrintTitle,
+  body.printingReport .reportLabel,
+  body.printingReport select,
+  body.printingReport .hint { color: #000 !important; }
+  body.printingReport .reportEmail,
+  body.printingReport .reportPrintDate { color: #555 !important; }
+  body.printingReport .reportTable th {
+    background: #eee !important; -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  body.printingReport .duesOk { color: #0a7a16 !important; }
+  body.printingReport .duesBad { color: #c0271a !important; }
+}

@@ -152,11 +152,13 @@ const SESSION_MAX_MS = 24 * 60 * 60 * 1000; // 24 godziny
       ctx.setup = setupResp?.setup || null;
       ctx.kursPreviewMode = setupResp?.kursPreviewMode === true;
       ctx.kursWypozycza = setupResp?.kursWypozycza === true;
+      ctx.kursExpired = setupResp?.kursExpired === true;
       window.__APP_CTX__ = ctx;
     } catch (_) {
       ctx.setup = null;
       ctx.kursPreviewMode = false;
       ctx.kursWypozycza = false;
+      ctx.kursExpired = false;
       window.__APP_CTX__ = ctx;
     }
 
@@ -233,6 +235,13 @@ function hardResetUi() {
   ctx.modules = [];
 
   sessionStorage.removeItem("morzkulc_session_started");
+  // Wyczyść ewentualne pozostałości cache boxa „Klub" (dane finansowe KR/Zarządu),
+  // żeby nie zostały w sessionStorage po wylogowaniu.
+  try {
+    Object.keys(sessionStorage)
+      .filter((k) => k.startsWith("klubInfoCache"))
+      .forEach((k) => sessionStorage.removeItem(k));
+  } catch (_) { /* ignore */ }
   setApiTokenGetter(null);
 
   const loginErr = document.getElementById("loginAuthError");

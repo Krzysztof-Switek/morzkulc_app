@@ -210,6 +210,32 @@ def get_reserved_composite_ids_for_period(reservations: list,
     return reserved
 
 
+def is_free_rental_exempt(school_year, today_iso: str) -> bool:
+    """
+    Zwolnienie z opłaty: tegoroczna szkoleniówka i rezerwacja składana do 30.09.
+    Mirror isFreeRentalExempt() w gear_bundle_service.ts.
+    """
+    if not school_year:
+        return False
+    if int(str(today_iso)[:4]) != int(school_year):
+        return False
+    return today_iso <= f"{int(school_year)}-09-30"
+
+
+def assert_kursant_rental_allowed(flag_on: bool, exempt: bool, school_year):
+    """
+    Bramka rezerwacji kursanta. Zwraca dict błędu albo None gdy dozwolone.
+    Mirror assertKursantRentalAllowed() w gear_bundle_service.ts.
+    """
+    if not flag_on:
+        return {"ok": False, "code": "forbidden", "message": "Rezerwacje dla kursantów są obecnie wyłączone."}
+    if not exempt:
+        if school_year:
+            return {"ok": False, "code": "kursant_window_closed", "schoolYear": school_year}
+        return {"ok": False, "code": "kursant_no_year"}
+    return None
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Pure-Python backend stub for scenario tests
 # ──────────────────────────────────────────────────────────────────────────────
@@ -229,13 +255,17 @@ class BackendStub:
         "rola_kursant": 1,
     }
 
-    def __init__(self, users: dict, catalog: dict):
+    def __init__(self, users: dict, catalog: dict, kurs_wypozycza: bool = False, today: str = None):
         """
-        users: {uid: {"role_key": ..., "status_key": ..., "email": ...}}
+        users: {uid: {"role_key": ..., "status_key": ..., "email": ..., "school_year": ...}}
         catalog: {composite_id: {"active": True, "operational": True, ...}}
+        kurs_wypozycza: globalny przełącznik zarządu (var_members/kurs_wypożycza).
+        today: data ISO używana w oknie szkoleniówki kursanta (None → realne dziś).
         """
         self.users = users
         self.catalog = catalog
+        self.kurs_wypozycza = kurs_wypozycza
+        self.today = today
         self.reservations = []
         self._next_id = 1
 
@@ -259,6 +289,16 @@ class BackendStub:
         role_key = user.get("role_key", "rola_sympatyk")
         if role_key == "rola_sympatyk":
             return {"ok": False, "code": "forbidden", "message": "Rola nie pozwala na rezerwację"}
+
+        # Kursant rezerwuje jak kandydat, ale tylko w oknie szkoleniówki + flaga zarządu.
+        if role_key == "rola_kursant":
+            from datetime import datetime
+            today_iso = self.today or datetime.utcnow().strftime("%Y-%m-%d")
+            school_year = user.get("school_year")
+            exempt = is_free_rental_exempt(school_year, today_iso)
+            gate = assert_kursant_rental_allowed(self.kurs_wypozycza, exempt, school_year)
+            if gate:
+                return gate
 
         # Input validation
         if not items:
@@ -1749,6 +1789,126 @@ class TestMaxItemsBundleEnforcement(unittest.TestCase):
             result_kayak_with_extras["costHours"],
             "Luka K1: koszt z akcesoriami powinien równać się kosztowi bez akcesoriów (akcesoria bezpłatne)",
         )
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Section E: Kursant rental gating (flaga + okno szkoleniówki)
+# ──────────────────────────────────────────────────────────────────────────────
+
+class TestKursantExemptAndGate(unittest.TestCase):
+    """Pure-function: zwolnienie z opłaty + bramka rezerwacji kursanta."""
+
+    def test_exempt_current_year_before_sep30(self):
+        self.assertTrue(is_free_rental_exempt(2026, "2026-07-01"))
+
+    def test_exempt_on_sep30_inclusive(self):
+        self.assertTrue(is_free_rental_exempt(2026, "2026-09-30"))
+
+    def test_not_exempt_after_sep30(self):
+        self.assertFalse(is_free_rental_exempt(2026, "2026-10-01"))
+
+    def test_not_exempt_wrong_year(self):
+        self.assertFalse(is_free_rental_exempt(2025, "2026-07-01"))
+
+    def test_not_exempt_no_year(self):
+        self.assertFalse(is_free_rental_exempt(None, "2026-07-01"))
+
+    def test_gate_flag_off_forbidden(self):
+        gate = assert_kursant_rental_allowed(False, True, 2026)
+        self.assertIsNotNone(gate)
+        self.assertEqual(gate["code"], "forbidden")
+
+    def test_gate_in_window_allowed(self):
+        self.assertIsNone(assert_kursant_rental_allowed(True, True, 2026))
+
+    def test_gate_window_closed(self):
+        gate = assert_kursant_rental_allowed(True, False, 2026)
+        self.assertEqual(gate["code"], "kursant_window_closed")
+
+    def test_gate_no_year(self):
+        gate = assert_kursant_rental_allowed(True, False, None)
+        self.assertEqual(gate["code"], "kursant_no_year")
+
+
+class TestScenarioKursant(unittest.TestCase):
+    """
+    Kursant == kandydat W OKNIE (flaga ON, do 30.09 roku kursu); po oknie lub przy
+    fladze OFF — zablokowany. Limit jak kandydat: 1 szt. na kategorię.
+    """
+
+    YEAR = 2026
+    IN_WINDOW = "2026-07-01"
+    AFTER_WINDOW = "2026-10-01"
+
+    def _catalog(self):
+        return make_catalog(
+            {"category": "kayaks", "itemId": "K01", "number": "10"},
+            {"category": "kayaks", "itemId": "K02", "number": "11"},
+            {"category": "paddles", "itemId": "P01", "number": "W-01"},
+            {"category": "helmets", "itemId": "H01", "number": "KAS-01"},
+        )
+
+    def _backend(self, flag, today, school_year=YEAR):
+        users = {"U_KURS": {"role_key": "rola_kursant", "school_year": school_year}}
+        return BackendStub(users, self._catalog(), kurs_wypozycza=flag, today=today)
+
+    def test_in_window_can_reserve_kayak(self):
+        backend = self._backend(True, self.IN_WINDOW)
+        r = backend.create_bundle_reservation(
+            uid="U_KURS", start_date="2026-07-10", end_date="2026-07-12",
+            items=[{"itemId": "K01", "category": "kayaks"}],
+        )
+        self.assertTrue(r["ok"], r)
+
+    def test_in_window_can_reserve_non_kayak_categories(self):
+        # Klucz zgłoszenia: kategorie nie-kajakowe też muszą działać dla kursanta.
+        backend = self._backend(True, self.IN_WINDOW)
+        for item in ({"itemId": "P01", "category": "paddles"}, {"itemId": "H01", "category": "helmets"}):
+            r = backend.create_bundle_reservation(
+                uid="U_KURS", start_date="2026-07-10", end_date="2026-07-12", items=[item],
+            )
+            self.assertTrue(r["ok"], r)
+
+    def test_in_window_limit_one_per_category_like_candidate(self):
+        backend = self._backend(True, self.IN_WINDOW)
+        first = backend.create_bundle_reservation(
+            uid="U_KURS", start_date="2026-07-10", end_date="2026-07-12",
+            items=[{"itemId": "K01", "category": "kayaks"}],
+        )
+        self.assertTrue(first["ok"], first)
+        second = backend.create_bundle_reservation(
+            uid="U_KURS", start_date="2026-07-11", end_date="2026-07-13",
+            items=[{"itemId": "K02", "category": "kayaks"}],
+        )
+        self.assertFalse(second["ok"], second)
+        self.assertEqual(second["code"], "too_many_items")
+
+    def test_flag_off_forbidden(self):
+        backend = self._backend(False, self.IN_WINDOW)
+        r = backend.create_bundle_reservation(
+            uid="U_KURS", start_date="2026-07-10", end_date="2026-07-12",
+            items=[{"itemId": "K01", "category": "kayaks"}],
+        )
+        self.assertFalse(r["ok"], r)
+        self.assertEqual(r["code"], "forbidden")
+
+    def test_after_window_blocked(self):
+        backend = self._backend(True, self.AFTER_WINDOW)
+        r = backend.create_bundle_reservation(
+            uid="U_KURS", start_date="2026-10-05", end_date="2026-10-07",
+            items=[{"itemId": "K01", "category": "kayaks"}],
+        )
+        self.assertFalse(r["ok"], r)
+        self.assertEqual(r["code"], "kursant_window_closed")
+
+    def test_no_school_year_blocked(self):
+        backend = self._backend(True, self.IN_WINDOW, school_year=None)
+        r = backend.create_bundle_reservation(
+            uid="U_KURS", start_date="2026-07-10", end_date="2026-07-12",
+            items=[{"itemId": "K01", "category": "kayaks"}],
+        )
+        self.assertFalse(r["ok"], r)
+        self.assertEqual(r["code"], "kursant_no_year")
 
 
 if __name__ == "__main__":

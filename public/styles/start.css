@@ -242,6 +242,23 @@
 .mentorRole { color: var(--text-muted); flex-shrink: 0; }
 .mentorName { color: var(--text); font-weight: 700; text-align: right; }
 
+/* ── Box „Klub" w karcie profilu (zarząd, KR, konto, dokumenty) ── */
+.klubMail { margin-left: 6px; color: var(--accent, #5b9dff); text-decoration: none; font-weight: 700; }
+.klubMail:hover { text-decoration: underline; }
+.klubList { margin: 0; padding-left: 18px; text-align: left; }
+.klubList li { padding: 3px 0; color: var(--text); font-weight: 700; }
+.klubKonto { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-top: 6px; }
+.klubKontoLine { flex: 1 1 200px; min-width: 0; font-size: 13px; line-height: 1.5; color: var(--text); }
+.klubKontoLine strong { font-weight: 800; margin-right: 6px; }
+.klubKontoNr { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight: 700; letter-spacing: 0.02em; overflow-wrap: anywhere; user-select: all; }
+.klubCopyBtn { flex: 0 0 auto; padding: 4px 10px; font-size: 12px; }
+.klubFinanse { margin-top: 8px; display: grid; gap: 4px; }
+.klubFinRow { font-size: 13px; color: var(--text-muted); }
+.klubFinRow strong { color: var(--text); font-weight: 800; }
+.klubLinks { display: flex; flex-wrap: wrap; gap: 10px; padding: 4px 0 2px; }
+.klubLinks a { color: var(--accent, #5b9dff); font-weight: 700; text-decoration: none; }
+.klubLinks a:hover { text-decoration: underline; }
+
 /* Ikonka „i" przy roli + wyskakująca chmurka z wyjaśnieniem (tylko po kliknięciu) */
 .infoIcon { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; margin-left: 6px; padding: 0; border-radius: 50%; border: 1px solid var(--border); background: transparent; color: var(--text-muted); font-size: 11px; font-weight: 800; font-style: italic; line-height: 1; cursor: pointer; vertical-align: middle; }
 .infoIcon:hover { color: var(--text); border-color: var(--text-muted); }

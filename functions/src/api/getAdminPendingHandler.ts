@@ -451,9 +451,45 @@ export async function handleGetAdminPending(req: Request, res: Response, deps: G
         negativeBalances = {ranAt: null, items: [], error: "Sekcja chwilowo niedostępna"};
       }
 
+      // Kursanci po terminie (P6): role_key == rola_kursant, którzy minęli okno
+      // wypożyczeń (30 września roku szkoleniówki). role_key NIE jest zmieniany
+      // automatem — zarząd nadaje rolę docelową ręcznie w arkuszu członków. Ta
+      // sekcja przypomina, kogo trzeba przepisać.
+      type ExpiredKursant = {uid: string; email: string; displayName: string; schoolYear: number};
+      let expiredKursants: {count: number; items: ExpiredKursant[]; error: string | null} = {count: 0, items: [], error: null};
+      try {
+        const kursantsSnap = await db.collection("users_active")
+          .where("role_key", "==", "rola_kursant")
+          .get();
+        const todayIso = new Date().toISOString().slice(0, 10);
+        const items: ExpiredKursant[] = [];
+        for (const d of kursantsSnap.docs) {
+          const data = d.data() as any;
+          const email = norm(data?.email).toLowerCase();
+          if (!email) continue;
+          const uSnap = await db.collection("kurs_uczestnicy").doc(email).get();
+          const rokRaw = uSnap.exists ? (uSnap.data() as any)?.rokSzkoleniowki : null;
+          const rok = Number(String(rokRaw ?? "").match(/(\d{4})/)?.[1] ?? NaN);
+          if (!Number.isFinite(rok)) continue;
+          if (todayIso > `${rok}-09-30`) {
+            const nickname = norm(data?.profile?.nickname);
+            const firstName = norm(data?.profile?.firstName);
+            const lastName = norm(data?.profile?.lastName);
+            const displayName = [firstName, lastName].filter(Boolean).join(" ") || nickname || email;
+            items.push({uid: d.id, email, displayName, schoolYear: rok});
+          }
+        }
+        items.sort((a, b) => a.displayName.localeCompare(b.displayName, "pl"));
+        expiredKursants = {count: items.length, items, error: null};
+      } catch (e: any) {
+        logger.error("getAdminPending: expiredKursants read failed", {message: e?.message});
+        expiredKursants = {count: 0, items: [], error: "Sekcja chwilowo niedostępna"};
+      }
+
       res.status(200).json({
         ok: true,
         meta: {godzinkiSheetUrl},
+        expiredKursants,
         godzinki: {count: godzinkiItems.length, items: godzinkiGrouped, pending: godzinkiPending, error: earnSnap.error || purchaseSnap.error},
         godzinkiRejected: {count: godzinkiRejected.length, items: godzinkiRejected},
         events: {count: eventsItems.length, items: eventsItems, error: eventsSnap.error},

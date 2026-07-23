@@ -24,6 +24,10 @@ import {handleGodzinkiPurchase} from "./api/godzinkiPurchaseHandler";
 import {handleGetKayakReservations} from "./api/getKayakReservationsHandler";
 import {handleGetEvents} from "./api/getEventsHandler";
 import {handleGetAdminPending} from "./api/getAdminPendingHandler";
+import {handleGetAdminGearRentals} from "./api/getAdminGearRentalsHandler";
+import {handleGetAdminMemberActivity} from "./api/getAdminMemberActivityHandler";
+import {handleGetAdminMemberDues} from "./api/getAdminMemberDuesHandler";
+import {handleGetAdminUserActivity} from "./api/getAdminUserActivityHandler";
 import {handleAdminEventsSyncCalendar} from "./api/adminEventsSyncCalendarHandler";
 import {handleAdminApprove, handleAdminReject} from "./api/adminApprovalHandler";
 import {handleSubmitEvent} from "./api/submitEventHandler";
@@ -48,6 +52,7 @@ import {handleKmMapData} from "./api/kmMapDataHandler";
 import {handleKmAdminMergePlaces} from "./api/kmAdminMergePlacesHandler";
 import {handleGetKursInfo} from "./api/getKursInfoHandler";
 import {handleGetKursantStats} from "./api/getKursantStatsHandler";
+import {handleGetKlubInfo} from "./api/getKlubInfoHandler";
 import {handleUserWeight} from "./api/userWeightHandler";
 import {getServiceConfig} from "./service/service_config";
 
@@ -239,6 +244,12 @@ function computeAllowedActions(roleKey: string): string[] {
   if (roleKey === "rola_sympatyk") {
     actions.push("basen.enroll");
   }
+  // Kursant: rezerwuje sprzęt jak kandydat (te same limity). Faktyczne bramkowanie
+  // robi flaga var_members/kurs_wypożycza + okno szkoleniówki (patrz getSetup oraz
+  // gear_bundle_service). Bez zgłaszania imprez / standardowych godzinek.
+  if (roleKey === "rola_kursant") {
+    actions.push("gear.reserve");
+  }
   if (godzinkiRoleKeys.includes(roleKey)) {
     actions.push("godzinki.submit");
   }
@@ -394,18 +405,24 @@ export const getSetup = onRequest({invoker: "private"}, async (req, res) => {
       const filteredSetup = filterSetupForUser(setup, uid, email, effectiveRoleKey, statusKey);
 
       let kursWypozycza = kursWypozyczaSnap.exists && kursWypozyczaSnap.data()?.value === true;
-      // Dla realnych kursantów ogranicz przycisk rezerwacji do okna wypożyczeń
-      // (do końca września roku szkoleniówki). Tryb podglądu (kursPreviewMode)
-      // zostaje na samej fladze — backend i tak egzekwuje eligibility per żądanie.
-      if (kursWypozycza && roleKey === "rola_kursant") {
+      let kursExpired = false;
+      // Dla realnych kursantów policz okno wypożyczeń (do końca września roku
+      // szkoleniówki). W oknie kursant rezerwuje jak kandydat; po oknie traktujemy
+      // go jak sympatyka (kursExpired) — przycisk rezerwacji wyłączony, a aplikacja
+      // pokazuje komunikat o wygaśnięciu. role_key NIE jest zmieniany automatem —
+      // docelową rolę nadaje zarząd ręcznie w arkuszu (patrz panel zarządu: kursanci
+      // po terminie). Tryb podglądu (kursPreviewMode) zostaje na samej fladze.
+      if (roleKey === "rola_kursant") {
         const uSnap = await db.collection("kurs_uczestnicy").doc(email).get();
         const rok = Number(uSnap.exists ? (uSnap.data() as any)?.rokSzkoleniowki : NaN);
         const now = new Date();
         const todayIso = now.toISOString().slice(0, 10);
-        // Zwolnienie/okno: tegoroczna szkoleniówka i przed końcem września.
-        if (!Number.isFinite(rok) || rok !== now.getUTCFullYear() || todayIso > `${rok}-09-30`) {
-          kursWypozycza = false;
-        }
+        const hasRok = Number.isFinite(rok);
+        // Okno otwarte: tegoroczna szkoleniówka i przed końcem września.
+        const windowOpen = hasRok && rok === now.getUTCFullYear() && todayIso <= `${rok}-09-30`;
+        // Wygasł: znamy rok i minął już 30 września tego roku (lub rok przeszły).
+        kursExpired = hasRok && todayIso > `${rok}-09-30`;
+        if (!windowOpen) kursWypozycza = false;
       }
 
       res.status(200).json({
@@ -413,6 +430,7 @@ export const getSetup = onRequest({invoker: "private"}, async (req, res) => {
         setup: filteredSetup,
         setupMissing: false,
         kursWypozycza,
+        kursExpired,
         ...(isKursPreview ? {kursPreviewMode: true} : {}),
       });
     } catch (err) {
@@ -977,6 +995,70 @@ export const getAdminPending = onRequest({invoker: "private"}, async (req, res) 
 });
 
 /**
+ * GET /api/admin/reports/gear-rentals (authenticated, role: zarzad/kr)
+ * Raport wypożyczonego sprzętu w zadanym zakresie czasu.
+ */
+export const getAdminGearRentals = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetAdminGearRentals(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    adminRoleKeys,
+  });
+});
+
+/**
+ * GET /api/admin/reports/member-activity (authenticated, role: zarzad/kr)
+ * Ranking członków wg wypracowanych godzinek w zadanym zakresie czasu.
+ */
+export const getAdminMemberActivity = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetAdminMemberActivity(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    adminRoleKeys,
+  });
+});
+
+/**
+ * GET /api/admin/reports/member-dues (authenticated, role: zarzad/kr)
+ * Składki pełnych członków: zaległości, opłacone, uprawnieni do głosowania.
+ */
+export const getAdminMemberDues = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetAdminMemberDues(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    adminRoleKeys,
+  });
+});
+
+/**
+ * GET /api/admin/reports/user-activity (authenticated, role: zarzad/kr)
+ * Historia godzinek (przyznane + wydane) dowolnego użytkownika po e-mailu, w zakresie czasu.
+ */
+export const getAdminUserActivity = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetAdminUserActivity(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    adminRoleKeys,
+  });
+});
+
+/**
  * POST /api/admin/events/sync-calendar (authenticated, role: zarzad/kr)
  * Kolejkuje job events.syncCalendar — synchronizuje zatwierdzone imprezy z Google Calendar.
  */
@@ -1363,6 +1445,22 @@ export const getKursInfo = onRequest({invoker: "private"}, async (req, res) => {
  */
 export const getKursantStats = onRequest({invoker: "private"}, async (req, res) => {
   return handleGetKursantStats(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    adminRoleKeys,
+  });
+});
+
+/**
+ * GET /api/klub (authenticated: każdy zalogowany)
+ * Zwraca dane klubowe: zarząd (funkcje→nazwy), KR, konto/bank, linki.
+ */
+export const getKlubInfo = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetKlubInfo(req, res, {
     db,
     sendPreflight,
     requireAllowedHost,

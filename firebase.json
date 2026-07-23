@@ -116,6 +116,34 @@
         }
       },
       {
+        "source": "/api/admin/reports/gear-rentals",
+        "function": {
+          "functionId": "getAdminGearRentals",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/admin/reports/member-activity",
+        "function": {
+          "functionId": "getAdminMemberActivity",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/admin/reports/member-dues",
+        "function": {
+          "functionId": "getAdminMemberDues",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/admin/reports/user-activity",
+        "function": {
+          "functionId": "getAdminUserActivity",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "/api/admin/events/sync-calendar",
         "function": {
           "functionId": "adminEventsSyncCalendar",
@@ -406,6 +434,13 @@
         "source": "/api/user/weight",
         "function": {
           "functionId": "userWeight",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/klub",
+        "function": {
+          "functionId": "getKlubInfo",
           "region": "us-central1"
         }
       }
