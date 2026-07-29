@@ -25,6 +25,7 @@ import {handleGetKayakReservations} from "./api/getKayakReservationsHandler";
 import {handleGetEvents} from "./api/getEventsHandler";
 import {handleGetAdminPending} from "./api/getAdminPendingHandler";
 import {handleGetAdminGearRentals} from "./api/getAdminGearRentalsHandler";
+import {handleGetAdminGearTopRentals} from "./api/getAdminGearTopRentalsHandler";
 import {handleGetAdminMemberActivity} from "./api/getAdminMemberActivityHandler";
 import {handleGetAdminMemberDues} from "./api/getAdminMemberDuesHandler";
 import {handleGetAdminUserActivity} from "./api/getAdminUserActivityHandler";
@@ -1011,6 +1012,22 @@ export const getAdminGearRentals = onRequest({invoker: "private"}, async (req, r
 });
 
 /**
+ * GET /api/admin/reports/gear-top-rentals (authenticated, role: zarzad/kr)
+ * Raport „Najczęściej wypożyczane" — suma dni wypożyczenia per sprzęt w zadanym zakresie.
+ */
+export const getAdminGearTopRentals = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetAdminGearTopRentals(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    adminRoleKeys,
+  });
+});
+
+/**
  * GET /api/admin/reports/member-activity (authenticated, role: zarzad/kr)
  * Ranking członków wg wypracowanych godzinek w zadanym zakresie czasu.
  */
@@ -1468,6 +1485,7 @@ export const getKlubInfo = onRequest({invoker: "private"}, async (req, res) => {
     corsHandler,
     requireIdToken,
     adminRoleKeys,
+    memberRoleKeys,
   });
 });
 

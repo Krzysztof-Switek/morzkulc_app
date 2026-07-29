@@ -32,7 +32,7 @@ function shortenReason(reason) {
 }
 function renderRecordTable(records) {
   if (!records.length) return `<p class="godzinkiEmpty">Brak wpisów w wybranym zakresie.</p>`;
-  return `<table class="godzinkiTable"><thead><tr><th>Data</th><th>Ilość</th><th>Za co</th></tr></thead><tbody>${
+  return `<table class="godzinkiTable"><thead><tr><th>Data</th><th class="godzinkiAmountHeader">Ilość</th><th>Za co</th></tr></thead><tbody>${
     records.map((r) => {
       const isSpend = r.type === "spend";
       const isWaived = isSpend && r.waived === true;

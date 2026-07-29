@@ -35,6 +35,7 @@ export function renderNav({ navEl, ctx }) {
     if (m.id === "my_reservations") return false;
     if (ctx.kursPreviewMode && m.type === "admin_pending") return false;
     if (m.type === "kurs_godzinki") return false;
+    if (m.type === "klub") return false; // tylko kafelek na dashboardzie, bez wpisu w górnym menu
     return canSeeModule({ ctx, module: m });
   });
 
@@ -123,6 +124,11 @@ async function renderHomeDashboard({ viewEl, ctx }) {
   const basenEnabledTile = (ctx.modules || []).find((m) =>
     m?.type === "basen"
   )?.enabled === true;
+
+  // Klub tile: dostęp rolowo ograniczony (bez sympatyka/kursanta) — kafelek całkiem
+  // ukryty dla ról bez dostępu, nie tylko wyszarzony (inaczej niż Basen powyżej).
+  const klubModule = (ctx.modules || []).find((m) => m?.type === "klub") || null;
+  const canSeeKlub = klubModule ? canSeeModule({ ctx, module: klubModule }) : false;
 
   const kmModuleRoute = getModuleRouteByType(ctx, "km");
   const hasKmModule = kmModuleRoute.moduleId !== "home";
@@ -243,6 +249,13 @@ async function renderHomeDashboard({ viewEl, ctx }) {
               <span class="tileNotifBadge hidden" id="adminPendingBadge"></span>
             </button>
             ` : ""}
+
+            ${canSeeKlub ? `
+            <button type="button" class="startTile2" data-home-action="klub">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg>
+              <span class="startTile2Title">Klub</span>
+            </button>
+            ` : ""}
           </div>
         </div>
       </section>
@@ -303,6 +316,11 @@ async function renderHomeDashboard({ viewEl, ctx }) {
   if (adminPendingBtn) {
     const adminTarget = getModuleRouteByType(ctx, "admin_pending");
     adminPendingBtn.addEventListener("click", () => setHash(adminTarget.moduleId, "list"));
+  }
+
+  const klubBtn = viewEl.querySelector("[data-home-action='klub']");
+  if (klubBtn && klubModule) {
+    klubBtn.addEventListener("click", () => setHash(klubModule.id, klubModule.defaultRoute || "klucze"));
   }
 
   if (dash.isAdmin && ctx?.idToken) {

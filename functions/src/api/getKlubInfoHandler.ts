@@ -16,6 +16,7 @@ export type GetKlubInfoDeps = {
   corsHandler: any;
   requireIdToken: (req: Request) => Promise<TokenCheck>;
   adminRoleKeys: string[]; // role widzące dane finansowe (rola_zarzad, rola_kr)
+  memberRoleKeys: string[]; // role widzące listę kluczy (kandydat/członek/zarząd/KR — jak moduł Klub)
 };
 
 // Funkcje zarządu w kolejności prezentacji. mailbox = domyślna skrzynka funkcyjna
@@ -51,7 +52,7 @@ function financeAmount(v: any): string {
 }
 
 export async function handleGetKlubInfo(req: Request, res: Response, deps: GetKlubInfoDeps) {
-  const {sendPreflight, requireAllowedHost, setCorsHeaders, corsHandler, requireIdToken, db, adminRoleKeys} = deps;
+  const {sendPreflight, requireAllowedHost, setCorsHeaders, corsHandler, requireIdToken, db, adminRoleKeys, memberRoleKeys} = deps;
 
   if (sendPreflight(req, res)) return;
   if (!requireAllowedHost(req, res)) return;
@@ -83,6 +84,10 @@ export async function handleGetKlubInfo(req: Request, res: Response, deps: GetKl
       // Dane finansowe widzą TYLKO KR i Zarząd — filtrowanie po stronie serwera.
       const roleKey = userSnap.exists ? String((userSnap.data() as any)?.role_key || "") : "";
       const canSeeFinance = adminRoleKeys.includes(roleKey);
+      // Lista kluczy widoczna TYLKO dla ról z dostępem do modułu Klub (kandydat/członek/zarząd/KR) —
+      // /api/klub jest wołane przez box profilu dla WSZYSTKICH zalogowanych, więc bez tej bramki
+      // sympatyk/kursant zobaczyliby listę w samej odpowiedzi sieciowej, mimo że moduł Klub jej nie pokaże.
+      const canSeeKeys = memberRoleKeys.includes(roleKey);
 
       const state = (stateSnap.exists ? (stateSnap.data() as any) : null) || {};
       const vars = (varsSnap.exists ? (varsSnap.data() as any)?.vars : null) || {};
@@ -145,12 +150,53 @@ export async function handleGetKlubInfo(req: Request, res: Response, deps: GetKl
       if (regulamin) linki.regulamin = regulamin;
       if (klucze) linki.klucze = klucze;
 
+      // 6) Osoby z kluczami do siedziby / dostępem do akademika — tylko dla kandydat/członek/zarząd/KR.
+      // Wyświetlanie: ksywka jeśli jest (inaczej imię+nazwisko); telefon zawsze osobną kolumną
+      // (żeby dało się skontaktować w sprawie odbioru kluczy).
+      let kluczeOsoby: Array<{name: string; phone: string | null; hasClubKeys: boolean; hasAkademikAccess: boolean}> | undefined;
+      if (canSeeKeys) {
+        const [withKeysSnap, withAkademikSnap] = await Promise.all([
+          db.collection("users_active").where("admin.hasClubKeys", "==", true).get(),
+          db.collection("users_active").where("admin.hasAkademikAccess", "==", true).get(),
+        ]);
+
+        type Entry = {profile: any; hasClubKeys: boolean; hasAkademikAccess: boolean};
+        const byUid = new Map<string, Entry>();
+        withKeysSnap.forEach((d) => {
+          const u = d.data() as any;
+          byUid.set(d.id, {profile: u?.profile || {}, hasClubKeys: true, hasAkademikAccess: false});
+        });
+        withAkademikSnap.forEach((d) => {
+          const u = d.data() as any;
+          const existing = byUid.get(d.id);
+          if (existing) existing.hasAkademikAccess = true;
+          else byUid.set(d.id, {profile: u?.profile || {}, hasClubKeys: false, hasAkademikAccess: true});
+        });
+
+        kluczeOsoby = Array.from(byUid.values())
+          .map((entry) => {
+            const p = entry.profile;
+            const nickname = String(p?.nickname || "").trim();
+            const fullName = [p?.firstName, p?.lastName].map((s: any) => String(s || "").trim()).filter(Boolean).join(" ").trim();
+            const phone = String(p?.phone || "").trim();
+            const name = nickname || fullName || "(bez nazwy)";
+            return {
+              name,
+              phone: phone || null,
+              hasClubKeys: entry.hasClubKeys,
+              hasAkademikAccess: entry.hasAkademikAccess,
+            };
+          })
+          .sort((a, b) => a.name.localeCompare(b.name, "pl"));
+      }
+
       res.status(200).json({
         ok: true,
         zarzad,
         kr,
         finanse,
         linki,
+        ...(kluczeOsoby ? {kluczeOsoby} : {}),
       });
     } catch (err: any) {
       logger.error("getKlubInfo failed", {message: err?.message, stack: err?.stack});

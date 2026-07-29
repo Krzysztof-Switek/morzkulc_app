@@ -532,6 +532,13 @@ export async function createBundleReservation(
     return {ok: false, code: "forbidden", message: "Role not allowed"} as const;
   }
 
+  // Zwolnienie zarządu/KR z opłaty (niezależne od okna szkoleniówki powyżej) —
+  // łączymy oba zwolnienia w jedną flagę używaną od tego miejsca w dół, żeby
+  // koszt zawsze trafiał do godzinki_ledger jako widoczny "waived", nigdy
+  // niewidoczny 0.
+  const boardFeeExempt = (roleKey === "rola_zarzad" || roleKey === "rola_kr") && vars.boardDoesNotPay;
+  const feeExempt = exempt || boardFeeExempt;
+
   // Horyzont — jak daleko od dziś można ZACZĄĆ rezerwację
   const maxStartIso = maxStartIsoByWeeks(maxWeeks);
   if (args.startDate > maxStartIso) {
@@ -563,7 +570,7 @@ export async function createBundleReservation(
   const costHours = quoteKayaksCostHours(vars, roleKey, args.startDate, args.endDate, kayakIds.length);
   // Zwolnieni nie płacą — koszt zapisujemy jako "waived" (saldo bez zmian), więc
   // pula godzinek potrzebna jest tylko dla normalnej dedukcji.
-  const godzinkiVars = (!exempt && costHours > 0) ? await getGodzinkiVars(db) : null;
+  const godzinkiVars = (!feeExempt && costHours > 0) ? await getGodzinkiVars(db) : null;
 
   const ref = db.collection("gear_reservations").doc();
 
@@ -601,9 +608,10 @@ export async function createBundleReservation(
     kayakCount: kayakIds.length,
 
     costHours,
-    waived: exempt && costHours > 0,
+    waived: feeExempt && costHours > 0,
     // Rok szkoleniówki uzasadniający zwolnienie — znacznik "zwolnienie kurs RRRR" w Moich rezerwacjach.
-    schoolYear: exempt && costHours > 0 ? schoolYear : null,
+    // Dla zwolnienia zarządu/KR schoolYear jest null → front pokazuje samo "zwolnienie".
+    schoolYear: feeExempt && costHours > 0 ? schoolYear : null,
     createdAt: now,
     updatedAt: now,
   };
@@ -639,7 +647,7 @@ export async function createBundleReservation(
     // Godzinki: zwolnieni → neutralny rekord "waived" (przekreślony koszt, saldo bez
     // zmian); pozostali → normalna dedukcja FIFO w tej samej transakcji.
     if (costHours > 0) {
-      if (exempt) {
+      if (feeExempt) {
         writeWaivedSpendInTx(tx, db, args.uid, {
           amount: costHours,
           reason: buildCostReason(itemDetails, args.startDate, args.endDate),
@@ -680,7 +688,7 @@ export async function createBundleReservation(
     ok: true,
     reservationId: ref.id,
     costHours,
-    waived: exempt && costHours > 0,
+    waived: feeExempt && costHours > 0,
     reservationKind,
     blockStartIso,
     blockEndIso,
@@ -742,6 +750,9 @@ async function updateBundleReservationDates(
   const updNow = new Date();
   const schoolYear = await resolveSchoolYear(db, roleKey, args.uid, user.email);
   const exempt = isFreeRentalExempt(schoolYear, updNow);
+  // Zwolnienie zarządu/KR z opłaty — spójnie z tworzeniem rezerwacji (createBundleReservation).
+  const boardFeeExempt = (roleKey === "rola_zarzad" || roleKey === "rola_kr") && vars.boardDoesNotPay;
+  const feeExempt = exempt || boardFeeExempt;
 
   // Kursant: edycja dozwolona na zasadach kandydata, tylko w oknie + przełącznik zarządu.
   if (roleKey === "rola_kursant") {
@@ -831,7 +842,7 @@ async function updateBundleReservationDates(
     const oldCostHours = wasWaived ? 0 : Number(r?.costHours ?? 0);
     const now = new Date();
 
-    if (exempt) {
+    if (feeExempt) {
       // Pozostaje/staje się bezpłatne — saldo nie może zostać obciążone.
       if (wasWaived) {
         // Zwolnione → zwolnione: zaktualizuj kwotę istniejącego rekordu "waived",
@@ -951,15 +962,15 @@ async function updateBundleReservationDates(
         blockStartIso,
         blockEndIso,
         costHours: newCostHours,
-        waived: exempt && newCostHours > 0,
-        schoolYear: exempt && newCostHours > 0 ? schoolYear : null,
+        waived: feeExempt && newCostHours > 0,
+        schoolYear: feeExempt && newCostHours > 0 ? schoolYear : null,
         updatedAt: now,
         modifiedFrom: {startDate: oldStart, endDate: oldEnd},
       },
       {merge: true}
     );
 
-    return {ok: true, costHours: newCostHours, waived: exempt && newCostHours > 0, blockStartIso, blockEndIso} as const;
+    return {ok: true, costHours: newCostHours, waived: feeExempt && newCostHours > 0, blockStartIso, blockEndIso} as const;
   });
 }
 

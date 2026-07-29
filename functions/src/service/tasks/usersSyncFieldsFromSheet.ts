@@ -246,6 +246,12 @@ export const usersSyncFieldsFromSheetTask: ServiceTask<Payload> = {
         candidates.push(["admin.mentor", g(row, "opiekun_stazu")]);
       }
 
+      // Dostęp akademik — OPCJONALNA kolumna (moduł Klub, klucze). Wzorem „opiekun stażu":
+      // patchujemy TYLKO gdy kolumna istnieje w arkuszu; jej brak nie może nadpisać wartości.
+      if ("dostep_akademik" in hmap) {
+        candidates.push(["admin.hasAkademikAccess", normalizeBoolish(g(row, "dostep_akademik"))]);
+      }
+
       const patch: Record<string, any> = {};
       for (const [path, nextVal] of candidates) {
         if (!valuesEqual(nextVal, getPath(data, path))) {
@@ -285,6 +291,29 @@ export const usersSyncFieldsFromSheetTask: ServiceTask<Payload> = {
       await doc.ref.update(patch);
       patched++;
       logger.info("usersSyncFieldsFromSheet: patched", {memberId, changedPaths});
+
+      // Zmiana „Dostęp akademik" (nadanie lub cofnięcie) → e-mail do użytkownika.
+      // Kolejkowane (service_jobs), nie wysyłane inline — błąd wysyłki nie może
+      // przerwać ani spowolnić reszty synchronizacji członków.
+      if ("admin.hasAkademikAccess" in patch) {
+        const granted = Boolean(patch["admin.hasAkademikAccess"]);
+        const name = sheetUser.profile.nickname ||
+          [sheetUser.profile.firstName, sheetUser.profile.lastName].filter(Boolean).join(" ").trim();
+        const targetEmail = sheetUser.email || norm(data?.email);
+        if (targetEmail) {
+          const jobRef = firestore.collection("service_jobs").doc();
+          await jobRef.set({
+            id: jobRef.id,
+            taskId: "users.notifyAkademikAccessChanged",
+            payload: {uid: doc.id, email: targetEmail, name, granted},
+            status: "queued",
+            attempts: 0,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          });
+          logger.info("usersSyncFieldsFromSheet: enqueued akademik access notify", {memberId, granted});
+        }
+      }
     }
 
     // Zmiana roli/statusu → wyzwól sync ról (rekonsyliacja grup itd.)

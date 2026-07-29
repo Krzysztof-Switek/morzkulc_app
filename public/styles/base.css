@@ -475,6 +475,8 @@ textarea {
 .reportEmail { font-size: 12px; color: var(--text-muted); }
 .reportItem { padding: 1px 0; }
 .reportTerm { white-space: nowrap; }
+.kluczeCheck { color: var(--success, #4a4); font-weight: 700; }
+.kluczeDash { color: var(--text-muted); }
 
 /* --- Launcher raportów (kafelki pogrupowane + szukajka) --- */
 .reportLauncher { margin-top: 8px; }

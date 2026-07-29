@@ -219,7 +219,7 @@ async function processKayakChargeForMonth(args: {
         amount: 0,
         fromEarn: 0,
         overdraft: 0,
-        reason: `Opłata za przechowywanie kajaka ${kayak?.number || kayakId} — ${month} (zwolnienie ${roleLabel})`,
+        reason: `opłata za kajak prywatny w klubie (zwolnienie ${roleLabel})`,
         submittedBy: "system",
         reservationId: null,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -256,7 +256,7 @@ async function processKayakChargeForMonth(args: {
       uid,
       {
         amount: costHours,
-        reason: `Opłata za przechowywanie kajaka ${kayak?.number || kayakId} — ${month}`,
+        reason: "opłata za kajak prywatny w klubie",
         force: true,
       },
       godzinkiVars,

@@ -8,6 +8,7 @@ import { createAdminPendingModule } from "/modules/admin_pending_module.js";
 import { createKmModule } from "/modules/km_module.js";
 import { createKursModule } from "/modules/kurs_module.js";
 import { createKursGodzinkiModule } from "/modules/kurs_godzinki_module.js";
+import { createKlubModule } from "/modules/klub_module.js";
 
 /**
  * Resolves the module component type from setup config.
@@ -15,9 +16,9 @@ import { createKursGodzinkiModule } from "/modules/kurs_godzinki_module.js";
  * Priority: explicit `type` field (only if it matches a known type) → derived from PL label.
  * Returns a stable lowercase type string or null for unknown/generic modules.
  *
- * Known types: "gear" | "godzinki" | "imprezy" | "basen" | "km" | "admin_pending" | "kurs"
+ * Known types: "gear" | "godzinki" | "imprezy" | "basen" | "km" | "admin_pending" | "kurs" | "klub"
  */
-const KNOWN_MODULE_TYPES = new Set(["gear", "godzinki", "imprezy", "basen", "km", "admin_pending", "kurs", "kurs_godzinki"]);
+const KNOWN_MODULE_TYPES = new Set(["gear", "godzinki", "imprezy", "basen", "km", "admin_pending", "kurs", "kurs_godzinki", "klub"]);
 
 function resolveModuleType(cfg) {
   const typeField = String(cfg?.type || "").trim().toLowerCase();
@@ -33,6 +34,7 @@ function resolveModuleType(cfg) {
   if (label === "zarząd") return "admin_pending";
   if (label === "kurs") return "kurs";
   if (label === "kurs_godzinki") return "kurs_godzinki";
+  if (label === "klub") return "klub";
 
   return null;
 }
@@ -121,6 +123,13 @@ export function buildModulesFromSetup(setup, allowedActions) {
       return createKursGodzinkiModule({
         ...base,
         defaultRoute: base.defaultRoute === "home" ? "info" : base.defaultRoute
+      });
+    }
+
+    if (moduleType === "klub") {
+      return createKlubModule({
+        ...base,
+        defaultRoute: base.defaultRoute === "home" ? "klucze" : base.defaultRoute
       });
     }
 

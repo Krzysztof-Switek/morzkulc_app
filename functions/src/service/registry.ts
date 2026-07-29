@@ -22,6 +22,7 @@ import { usersSyncFunctionRolesFromSetupTask } from "./tasks/usersSyncFunctionRo
 import { groupsDiagnoseTask } from "./tasks/groupsDiagnose";
 import { setupSyncFromSheetTask } from "./tasks/setupSyncFromSheet";
 import { usersSyncFieldsFromSheetTask } from "./tasks/usersSyncFieldsFromSheet";
+import { usersNotifyAkademikAccessChangedTask } from "./tasks/usersNotifyAkademikAccessChanged";
 import { gearSyncAllFromSheetTask } from "./tasks/gearSyncAllFromSheet";
 import { adminNotifyPendingApprovalsTask } from "./tasks/adminNotifyPendingApprovals";
 import { adminApprovalWriteBackTask } from "./tasks/adminApprovalWriteBack";
@@ -52,6 +53,7 @@ const tasks: ServiceTask[] = [
   groupsDiagnoseTask,
   setupSyncFromSheetTask,
   usersSyncFieldsFromSheetTask,
+  usersNotifyAkademikAccessChangedTask,
   gearSyncAllFromSheetTask,
   adminNotifyPendingApprovalsTask,
   adminApprovalWriteBackTask,

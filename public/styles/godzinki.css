@@ -31,11 +31,19 @@
   background: rgba(0, 0, 0, 0.03);
 }
 
-/* Kolumna kwoty */
+/* Kolumna kwoty — stała szerokość, żeby nie "kurczyła się" do zawartości
+   i nie przywierała do kolumny Data (auto table layout inaczej dopasowuje
+   szerokość kolumny tylko do najdłuższej wartości w niej, np. "0 h"). */
+.godzinkiAmountHeader {
+  text-align: center;
+  width: 80px;
+}
+
 .godzinkiAmountCell {
-  text-align: right;
+  text-align: center;
   white-space: nowrap;
   font-weight: 700;
+  width: 80px;
 }
 
 .godzinkiAmountNeg {

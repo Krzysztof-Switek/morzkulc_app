@@ -70,7 +70,7 @@ function renderRecordTable(records) {
       <thead>
         <tr>
           <th>Data</th>
-          <th>Ilość</th>
+          <th class="godzinkiAmountHeader">Ilość</th>
           <th>Za co</th>
         </tr>
       </thead>

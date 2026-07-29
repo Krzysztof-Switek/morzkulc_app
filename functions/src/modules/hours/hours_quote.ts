@@ -5,11 +5,12 @@ export function quoteKayaksCostHours(vars: GearVars, roleKey: string, startIso: 
   const count = Number(kayakCount || 0);
   if (count <= 0) return 0;
 
-  // Uwaga: koszt liczymy normalnie także dla kursanta i kandydata. Czasowe
-  // zwolnienie z opłaty (tegoroczna szkoleniówka, do końca września) obsługuje
-  // gear_bundle_service — zapisuje koszt jako "waived" (przekreślony), nie zmienia salda.
-  if ((roleKey === "rola_zarzad" || roleKey === "rola_kr") && vars.boardDoesNotPay) return 0;
-
+  // Uwaga: koszt liczymy normalnie dla WSZYSTKICH ról, łącznie z zarządem/KR i
+  // kursantem/kandydatem w oknie szkoleniówki. Zwolnienia z opłaty (zarząd/KR
+  // gdy boardDoesNotPay, tegoroczna szkoleniówka do końca września) obsługuje
+  // gear_bundle_service — zapisuje realny koszt jako "waived" (przekreślony,
+  // widoczny w historii, saldo bez zmian), zamiast zwracać tu 0 i przez to
+  // całkowicie pomijać wpis w godzinki_ledger.
   const days = daysOnWaterInclusive(startIso, endIso);
   const perDay = Number(vars.hoursPerKayakPerDay || 0);
   const out = days * count * perDay;
