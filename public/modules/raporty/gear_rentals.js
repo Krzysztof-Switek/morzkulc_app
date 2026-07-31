@@ -225,7 +225,7 @@ export const gearRentalsReport = {
           lastRows = (lastRows || []).filter((row) => row.id !== rid);
           cancelState = { openId: null, reason: "", error: "" };
           const hoursMsg = res?.costHours > 0 ? ` Zwrócono ${res.costHours} godz. na konto użytkownika.` : "";
-          setActionMsg(`Rezerwacja anulowana.${hoursMsg} Użytkownik dostanie e-mail z informacją.`, "ok");
+          setActionMsg(`Rezerwacja anulowana.${hoursMsg} Użytkownik i Zarząd (zarzad@morzkulc.pl) dostaną e-mail z informacją.`, "ok");
           rebuildUserList();
           renderReport();
         } catch (e) {

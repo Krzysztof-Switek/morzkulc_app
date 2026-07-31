@@ -3,10 +3,14 @@ import {ServiceTask} from "../types";
 /**
  * Task: gear.notifyReservationCancelledByAdmin
  *
- * Wysyła e-mail do właściciela rezerwacji po wymuszonym anulowaniu przez
- * zarząd/KR (panel admina, sekcja "Wypożyczenia sprzętu" — np. sprzęt nie
- * został oddany przez poprzedniego użytkownika). Czyta już zapisany
- * (anulowany) rekord gear_reservations, więc payload niesie tylko jego id.
+ * Wysyła e-mail do właściciela rezerwacji ORAZ na adres zarządu
+ * (ctx.config.adminNotify.email, domyślnie zarzad@morzkulc.pl — żeby cały
+ * zarząd wiedział o takich sytuacjach, nie tylko admin, który je obsłużył)
+ * po wymuszonym anulowaniu rezerwacji przez zarząd/KR (panel admina, sekcja
+ * "Wypożyczenia sprzętu" — np. sprzęt nie został oddany przez poprzedniego
+ * użytkownika). Oba maile zawierają powód anulowania i kto go dokonał.
+ * Czyta już zapisany (anulowany) rekord gear_reservations, więc payload
+ * niesie tylko jego id.
  */
 
 type Payload = {
@@ -31,6 +35,13 @@ function formatDatePL(iso: string): string {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return s || "—";
   const [y, m, d] = s.split("-");
   return `${d}.${m}.${y}`;
+}
+
+function displayNameOf(u: any): string {
+  const firstName = norm(u?.profile?.firstName);
+  const lastName = norm(u?.profile?.lastName);
+  const nickname = norm(u?.profile?.nickname);
+  return [firstName, lastName].filter(Boolean).join(" ") || nickname;
 }
 
 function describeItems(r: any): string {
@@ -68,51 +79,101 @@ export const gearNotifyReservationCancelledByAdminTask: ServiceTask<Payload> = {
 
     const r = rSnap.data() as any;
     const userUid = norm(r?.userUid);
-    let email = norm(r?.userEmail).toLowerCase();
-    let name = "";
+    let userEmail = norm(r?.userEmail).toLowerCase();
+    let userName = "";
 
     if (userUid) {
       const uSnap = await ctx.firestore.collection("users_active").doc(userUid).get();
       const u = uSnap.data() as any;
-      if (!email) email = norm(u?.email).toLowerCase();
-      const firstName = norm(u?.profile?.firstName);
-      const nickname = norm(u?.profile?.nickname);
-      name = firstName || nickname;
+      if (!userEmail) userEmail = norm(u?.email).toLowerCase();
+      userName = displayNameOf(u);
     }
 
-    if (!email || !email.includes("@")) {
+    if (!userEmail || !userEmail.includes("@")) {
       return {ok: false, message: "Missing/invalid recipient email"};
     }
 
-    const greeting = name ? `Cześć ${name},` : "Cześć,";
+    // Kto dokonał anulowania (do audytu w mailu — user i zarząd mają widzieć to samo).
+    const adminUid = norm(r?.cancelledByUid);
+    let adminLabel = "Zarząd";
+    if (adminUid) {
+      const aSnap = await ctx.firestore.collection("users_active").doc(adminUid).get();
+      const a = aSnap.data() as any;
+      const adminName = displayNameOf(a);
+      const adminEmail = norm(a?.email).toLowerCase();
+      adminLabel = [adminName, adminEmail].filter(Boolean).join(" — ") || adminEmail || "Zarząd";
+    }
+
     const term = `${formatDatePL(r?.startDate)} – ${formatDatePL(r?.endDate)}`;
     const itemsDesc = describeItems(r);
     const costHours = Number(r?.costHours || 0);
-    const reason = norm(r?.cancelReason);
+    const reason = norm(r?.cancelReason) || "(nie podano)";
 
-    const bodyLines = [
-      greeting,
-      "",
-      `Twoja rezerwacja sprzętu (${itemsDesc}, ${term}) została anulowana przez Zarząd.`,
+    const detailLines = [
+      `Sprzęt: ${itemsDesc}`,
+      `Termin: ${term}`,
+      `Powód: ${reason}`,
+      `Anulował: ${adminLabel}`,
     ];
-    if (reason) bodyLines.push(`Powód: ${reason}`);
     if (costHours > 0) {
-      bodyLines.push("", `Godzinki za tę rezerwację (${costHours} godz.) zostały zwrócone na Twoje konto.`);
+      detailLines.push(`Zwrócone godzinki: ${costHours} godz.`);
     }
-    bodyLines.push("", "W razie pytań odezwij się do Zarządu: zarzad@morzkulc.pl", "", "SKK Morzkulc");
-    const body = bodyLines.join("\n");
+
+    const userGreeting = userName ? `Cześć ${userName},` : "Cześć,";
+    const userBody = [
+      userGreeting,
+      "",
+      "Twoja rezerwacja sprzętu została anulowana przez Zarząd.",
+      "",
+      ...detailLines,
+      "",
+      "W razie pytań odezwij się do Zarządu: zarzad@morzkulc.pl",
+      "",
+      "SKK Morzkulc",
+    ].join("\n");
+
+    const boardUserLabel = [userName, userEmail].filter(Boolean).join(" — ") || userEmail;
+    const boardBody = [
+      `Rezerwacja sprzętu użytkownika ${boardUserLabel} została anulowana przez Zarząd (panel Zarządu — Wypożyczenia sprzętu).`,
+      "",
+      ...detailLines,
+      "",
+      "SKK Morzkulc — powiadomienie automatyczne",
+    ].join("\n");
+
+    const subject = "Anulowanie rezerwacji sprzętu przez Zarząd";
+    const boardEmail = norm(ctx.config.adminNotify?.email).toLowerCase();
+
+    let sent = 0;
+    let errors = 0;
 
     try {
-      await ctx.workspace.sendGenericEmail(email, "Anulowanie rezerwacji sprzętu przez Zarząd", body);
-      ctx.logger.info("gearNotifyReservationCancelledByAdmin: sent", {reservationId: payload.reservationId, email});
-      return {ok: true, message: `sent to ${email}`};
+      await ctx.workspace.sendGenericEmail(userEmail, subject, userBody);
+      sent++;
     } catch (e: any) {
-      ctx.logger.error("gearNotifyReservationCancelledByAdmin: send failed", {
+      errors++;
+      ctx.logger.error("gearNotifyReservationCancelledByAdmin: send to user failed", {
         reservationId: payload.reservationId,
-        email,
+        email: userEmail,
         message: e?.message,
       });
-      return {ok: false, message: e?.message || "send failed"};
     }
+
+    if (boardEmail && boardEmail.includes("@") && boardEmail !== userEmail) {
+      try {
+        await ctx.workspace.sendGenericEmail(boardEmail, subject, boardBody);
+        sent++;
+      } catch (e: any) {
+        errors++;
+        ctx.logger.error("gearNotifyReservationCancelledByAdmin: send to board failed", {
+          reservationId: payload.reservationId,
+          email: boardEmail,
+          message: e?.message,
+        });
+      }
+    }
+
+    ctx.logger.info("gearNotifyReservationCancelledByAdmin: done", {reservationId: payload.reservationId, sent, errors});
+    return {ok: errors === 0, message: `sent=${sent}, errors=${errors}`, details: {sent, errors}};
   },
 };

@@ -135,13 +135,17 @@ export async function handleGetAdminGearRentals(req: Request, res: Response, dep
       }
       const {from, to, key} = rr;
 
-      // Nakładanie okresu rezerwacji [startDate, endDate] na [from, to]:
-      //   endDate >= from (filtr Firestore, pojedyncze pole → indeks automatyczny)
-      //   startDate <= to (filtr w pamięci)
+      // Nakładanie na [from, to] liczone po OKNIE BLOKADY [blockStartIso, blockEndIso],
+      // nie po [startDate, endDate] — blockStartIso uwzględnia offset (wcześniejszy
+      // możliwy odbiór), więc sprzęt jest już realnie niedostępny zanim nadejdzie
+      // "oficjalna" startDate. To te same pola, których reszta kodu (konflikty,
+      // limity per kategoria) używa do wykrywania "czy sprzęt jest zajęty".
+      //   blockEndIso >= from (filtr Firestore, pojedyncze pole → indeks automatyczny)
+      //   blockStartIso <= to (filtr w pamięci)
       const snap = await db
         .collection("gear_reservations")
-        .where("endDate", ">=", from)
-        .orderBy("endDate")
+        .where("blockEndIso", ">=", from)
+        .orderBy("blockEndIso")
         .limit(1000)
         .get();
 
@@ -163,8 +167,9 @@ export async function handleGetAdminGearRentals(req: Request, res: Response, dep
       for (const doc of snap.docs) {
         const r = doc.data() as any;
         if (norm(r.status) !== "active") continue;
+        const blockStartIso = norm(r.blockStartIso);
+        if (!blockStartIso || blockStartIso > to) continue; // brak nakładania
         const startDate = norm(r.startDate);
-        if (!startDate || startDate > to) continue; // brak nakładania
 
         // Pozycje: nowy format items[]; legacy fallback z kayakIds[].
         let items: Row["items"] = [];
