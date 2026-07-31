@@ -1,6 +1,6 @@
 # Project Context Map
 
-Generated at: `2026-07-23T10:49:34`
+Generated at: `2026-07-29T09:40:51`
 Project root: `C:\Users\kswitek\Documents\morzkulc_app`
 
 Purpose: this file is a compact project map for Claude Code. It shows which files exist, what functions/classes they contain, and which internal files depend on which other files.
@@ -57,12 +57,12 @@ Excluded sensitive files:
 
 ## Summary
 
-- Total scanned files: `461`
+- Total scanned files: `470`
 - Python files: `42`
-- Script files JS/TS/GS/etc.: `299`
+- Script files JS/TS/GS/etc.: `305`
 - Config files: `21`
-- Markdown files: `70`
-- Internal dependency edges: `472`
+- Markdown files: `73`
+- Internal dependency edges: `480`
 
 ## Project tree
 
@@ -102,12 +102,14 @@ Excluded sensitive files:
   - 18.06_rejestracja_problemy_TO_DO.md
   - 18.06_rejestracja_problemy_podsumowaie.md
   - 18.06_rezerwacje_czas_audyt_TO_DO.md
+  - 24.07_klucze.md
   - 26.06_o_klubie.md
   - 26.06_raporty_zarzadu_v1.md
   - 26.06_rapotry_sessoin_summary.md
   - 27.06_godzinki_poprawki.md
   - 27.06_session_summaty_raporty.md
   - 28.06_rola_kursant_TO_DO.md
+  - 28.07_basen_stara_aplikacja.md
   - AUDIT_MAP.md
   - AUDIT_PLAN.md
   - GRUPY_UZYTKOWNICY_PLAN_AND_TO_DO.MD
@@ -121,6 +123,7 @@ Excluded sensitive files:
   - audyt_testow_logowanie_uzytkownicy_v1.md
   - audyt_testow_ranking_kilometrowka_mapa.md
   - audyt_v2.md
+  - basen_TO_DO.md
   - ekran_kursant_podsumowanie_wdrozenia.md
   - kajaki_w_mojej_wadze_plan.md
   - konta testowe.md
@@ -195,6 +198,7 @@ Excluded sensitive files:
       - gearReservationCreateHandler.js
       - gearReservationUpdateHandler.js
       - getAdminGearRentalsHandler.js
+      - getAdminGearTopRentalsHandler.js
       - getAdminMemberActivityHandler.js
       - getAdminMemberDuesHandler.js
       - getAdminPendingHandler.js
@@ -289,6 +293,7 @@ Excluded sensitive files:
         - onUserRegisteredWelcome.js
         - reconcileOpeningBalance.js
         - setupSyncFromSheet.js
+        - usersNotifyAkademikAccessChanged.js
         - usersSyncFieldsFromSheet.js
         - usersSyncFunctionRolesFromSetup.js
         - usersSyncRolesFromSheet.js
@@ -349,6 +354,7 @@ Excluded sensitive files:
       - gearReservationCreateHandler.ts
       - gearReservationUpdateHandler.ts
       - getAdminGearRentalsHandler.ts
+      - getAdminGearTopRentalsHandler.ts
       - getAdminMemberActivityHandler.ts
       - getAdminMemberDuesHandler.ts
       - getAdminPendingHandler.ts
@@ -442,6 +448,7 @@ Excluded sensitive files:
         - onUserRegisteredWelcome.ts
         - reconcileOpeningBalance.ts
         - setupSyncFromSheet.ts
+        - usersNotifyAkademikAccessChanged.ts
         - usersSyncFieldsFromSheet.ts
         - usersSyncFunctionRolesFromSetup.ts
         - usersSyncRolesFromSheet.ts
@@ -489,12 +496,14 @@ Excluded sensitive files:
       - member_dues.js
       - registry.js
       - reports_panel.js
+      - top_rentals.js
       - user_activity.js
     - admin_pending_module.js
     - basen_module.js
     - gear_module.js
     - godzinki_module.js
     - impreza_module.js
+    - klub_module.js
     - km_module.js
     - kurs_godzinki_module.js
     - kurs_module.js
@@ -619,6 +628,7 @@ Excluded sensitive files:
 - `functions/lib/api/gearReservationCreateHandler.js` -> `functions/lib/modules/users/userStatusCheck.js`
 - `functions/lib/api/gearReservationUpdateHandler.js` -> `functions/lib/modules/calendar/calendar_utils.js`
 - `functions/lib/api/gearReservationUpdateHandler.js` -> `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
+- `functions/lib/api/getAdminGearTopRentalsHandler.js` -> `functions/lib/modules/calendar/calendar_utils.js`
 - `functions/lib/api/getAdminMemberDuesHandler.js` -> `functions/lib/modules/hours/godzinki_service.js`
 - `functions/lib/api/getAdminPendingHandler.js` -> `functions/lib/service/service_config.js`
 - `functions/lib/api/getAdminUserActivityHandler.js` -> `functions/lib/modules/hours/godzinki_service.js`
@@ -666,6 +676,7 @@ Excluded sensitive files:
 - `functions/lib/index.js` -> `functions/lib/api/gearReservationCreateHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/gearReservationUpdateHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/getAdminGearRentalsHandler.js`
+- `functions/lib/index.js` -> `functions/lib/api/getAdminGearTopRentalsHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/getAdminMemberActivityHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/getAdminMemberDuesHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/getAdminPendingHandler.js`
@@ -749,6 +760,7 @@ Excluded sensitive files:
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/onUserRegisteredWelcome.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/reconcileOpeningBalance.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/setupSyncFromSheet.js`
+- `functions/lib/service/registry.js` -> `functions/lib/service/tasks/usersNotifyAkademikAccessChanged.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/usersSyncFieldsFromSheet.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/usersSyncFunctionRolesFromSetup.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/usersSyncRolesFromSheet.js`
@@ -834,6 +846,7 @@ Excluded sensitive files:
 - `functions/src/api/gearReservationCreateHandler.ts` -> `functions/src/modules/users/userStatusCheck.ts`
 - `functions/src/api/gearReservationUpdateHandler.ts` -> `functions/src/modules/calendar/calendar_utils.ts`
 - `functions/src/api/gearReservationUpdateHandler.ts` -> `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
+- `functions/src/api/getAdminGearTopRentalsHandler.ts` -> `functions/src/modules/calendar/calendar_utils.ts`
 - `functions/src/api/getAdminMemberDuesHandler.ts` -> `functions/src/modules/hours/godzinki_service.ts`
 - `functions/src/api/getAdminPendingHandler.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/api/getAdminUserActivityHandler.ts` -> `functions/src/modules/hours/godzinki_service.ts`
@@ -880,6 +893,7 @@ Excluded sensitive files:
 - `functions/src/index.ts` -> `functions/src/api/gearReservationCreateHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/gearReservationUpdateHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/getAdminGearRentalsHandler.ts`
+- `functions/src/index.ts` -> `functions/src/api/getAdminGearTopRentalsHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/getAdminMemberActivityHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/getAdminMemberDuesHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/getAdminPendingHandler.ts`
@@ -967,6 +981,7 @@ Excluded sensitive files:
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/onUserRegisteredWelcome.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/reconcileOpeningBalance.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/setupSyncFromSheet.ts`
+- `functions/src/service/registry.ts` -> `functions/src/service/tasks/usersNotifyAkademikAccessChanged.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/usersSyncFieldsFromSheet.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/usersSyncFunctionRolesFromSetup.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/usersSyncRolesFromSheet.ts`
@@ -1041,6 +1056,7 @@ Excluded sensitive files:
 - `functions/src/service/tasks/setupSyncFromSheet.ts` -> `functions/src/service/providers/googleSheetsProvider.ts`
 - `functions/src/service/tasks/setupSyncFromSheet.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/service/tasks/setupSyncFromSheet.ts` -> `functions/src/service/types.ts`
+- `functions/src/service/tasks/usersNotifyAkademikAccessChanged.ts` -> `functions/src/service/types.ts`
 - `functions/src/service/tasks/usersSyncFieldsFromSheet.ts` -> `functions/src/service/providers/googleSheetsProvider.ts`
 - `functions/src/service/tasks/usersSyncFieldsFromSheet.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/service/tasks/usersSyncFieldsFromSheet.ts` -> `functions/src/service/types.ts`
@@ -1068,6 +1084,7 @@ Excluded sensitive files:
 - `public/modules/raporty/registry.js` -> `public/modules/raporty/gear_rentals.js`
 - `public/modules/raporty/registry.js` -> `public/modules/raporty/member_activity.js`
 - `public/modules/raporty/registry.js` -> `public/modules/raporty/member_dues.js`
+- `public/modules/raporty/registry.js` -> `public/modules/raporty/top_rentals.js`
 - `public/modules/raporty/registry.js` -> `public/modules/raporty/user_activity.js`
 - `public/modules/raporty/reports_panel.js` -> `public/modules/raporty/registry.js`
 
@@ -3421,6 +3438,27 @@ Excluded sensitive files:
   - `resolveRange`
   - `todayWarsawIso`
 
+### `functions/lib/api/getAdminGearTopRentalsHandler.js`
+
+- Lines: `231`
+- Size: `10635` bytes
+- Internal dependencies:
+  - `functions/lib/modules/calendar/calendar_utils.js`
+- Imports:
+  - `import/require ../modules/calendar/calendar_utils`
+  - `import/require firebase-functions/v2`
+- Functions:
+  - `dateUTCToIso`
+  - `fullName`
+  - `handleGetAdminGearTopRentals`
+  - `isIsoDate`
+  - `isoToDateUTC`
+  - `minusMonths`
+  - `nickname`
+  - `norm`
+  - `resolveRange`
+  - `todayWarsawIso`
+
 ### `functions/lib/api/getAdminMemberActivityHandler.js`
 
 - Lines: `173`
@@ -3623,8 +3661,8 @@ Excluded sensitive files:
 
 ### `functions/lib/api/getKlubInfoHandler.js`
 
-- Lines: `137`
-- Size: `8100` bytes
+- Lines: `176`
+- Size: `10909` bytes
 - Imports:
   - `import/require firebase-functions/v2`
 - Functions:
@@ -3851,8 +3889,8 @@ Excluded sensitive files:
 
 ### `functions/lib/index.js`
 
-- Lines: `1450`
-- Size: `62362` bytes
+- Lines: `1467`
+- Size: `63049` bytes
 - Internal dependencies:
   - `functions/lib/api/adminApprovalHandler.js`
   - `functions/lib/api/adminEventsSyncCalendarHandler.js`
@@ -3871,6 +3909,7 @@ Excluded sensitive files:
   - `functions/lib/api/gearReservationCreateHandler.js`
   - `functions/lib/api/gearReservationUpdateHandler.js`
   - `functions/lib/api/getAdminGearRentalsHandler.js`
+  - `functions/lib/api/getAdminGearTopRentalsHandler.js`
   - `functions/lib/api/getAdminMemberActivityHandler.js`
   - `functions/lib/api/getAdminMemberDuesHandler.js`
   - `functions/lib/api/getAdminPendingHandler.js`
@@ -3925,6 +3964,7 @@ Excluded sensitive files:
   - `import/require ./api/gearReservationCreateHandler`
   - `import/require ./api/gearReservationUpdateHandler`
   - `import/require ./api/getAdminGearRentalsHandler`
+  - `import/require ./api/getAdminGearTopRentalsHandler`
   - `import/require ./api/getAdminMemberActivityHandler`
   - `import/require ./api/getAdminMemberDuesHandler`
   - `import/require ./api/getAdminPendingHandler`
@@ -4056,8 +4096,8 @@ Excluded sensitive files:
 
 ### `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
 
-- Lines: `886`
-- Size: `46360` bytes
+- Lines: `896`
+- Size: `47172` bytes
 - Internal dependencies:
   - `functions/lib/modules/calendar/calendar_utils.js`
   - `functions/lib/modules/equipment/kayaks/gear_kayaks_service.js`
@@ -4197,8 +4237,8 @@ Excluded sensitive files:
 
 ### `functions/lib/modules/hours/hours_quote.js`
 
-- Lines: `19`
-- Size: `965` bytes
+- Lines: `20`
+- Size: `1068` bytes
 - Internal dependencies:
   - `functions/lib/modules/calendar/calendar_utils.js`
 - Imports:
@@ -4373,8 +4413,8 @@ Excluded sensitive files:
 
 ### `functions/lib/service/registry.js`
 
-- Lines: `69`
-- Size: `3954` bytes
+- Lines: `71`
+- Size: `4127` bytes
 - Internal dependencies:
   - `functions/lib/service/tasks/adminApprovalWriteBack.js`
   - `functions/lib/service/tasks/adminNotifyPendingApprovals.js`
@@ -4399,6 +4439,7 @@ Excluded sensitive files:
   - `functions/lib/service/tasks/onUserRegisteredWelcome.js`
   - `functions/lib/service/tasks/reconcileOpeningBalance.js`
   - `functions/lib/service/tasks/setupSyncFromSheet.js`
+  - `functions/lib/service/tasks/usersNotifyAkademikAccessChanged.js`
   - `functions/lib/service/tasks/usersSyncFieldsFromSheet.js`
   - `functions/lib/service/tasks/usersSyncFunctionRolesFromSetup.js`
   - `functions/lib/service/tasks/usersSyncRolesFromSheet.js`
@@ -4426,6 +4467,7 @@ Excluded sensitive files:
   - `import/require ./tasks/onUserRegisteredWelcome`
   - `import/require ./tasks/reconcileOpeningBalance`
   - `import/require ./tasks/setupSyncFromSheet`
+  - `import/require ./tasks/usersNotifyAkademikAccessChanged`
   - `import/require ./tasks/usersSyncFieldsFromSheet`
   - `import/require ./tasks/usersSyncFunctionRolesFromSetup`
   - `import/require ./tasks/usersSyncRolesFromSheet`
@@ -4536,7 +4578,7 @@ Excluded sensitive files:
 ### `functions/lib/service/tasks/gearPrivateStorage.js`
 
 - Lines: `345`
-- Size: `16274` bytes
+- Size: `16102` bytes
 - Internal dependencies:
   - `functions/lib/modules/hours/godzinki_service.js`
   - `functions/lib/modules/hours/godzinki_vars.js`
@@ -4803,10 +4845,17 @@ Excluded sensitive files:
   - `toBool`
   - `toNumberOrNull`
 
+### `functions/lib/service/tasks/usersNotifyAkademikAccessChanged.js`
+
+- Lines: `54`
+- Size: `3176` bytes
+- Functions:
+  - `norm`
+
 ### `functions/lib/service/tasks/usersSyncFieldsFromSheet.js`
 
-- Lines: `322`
-- Size: `15011` bytes
+- Lines: `349`
+- Size: `16827` bytes
 - Internal dependencies:
   - `functions/lib/service/providers/googleSheetsProvider.js`
   - `functions/lib/service/service_config.js`
@@ -5397,6 +5446,28 @@ Excluded sensitive files:
   - `resolveRange`
   - `todayWarsawIso`
 
+### `functions/src/api/getAdminGearTopRentalsHandler.ts`
+
+- Lines: `277`
+- Size: `9694` bytes
+- Internal dependencies:
+  - `functions/src/modules/calendar/calendar_utils.ts`
+- Imports:
+  - `import/require ../modules/calendar/calendar_utils`
+  - `import/require express`
+  - `import/require firebase-functions/v2`
+- Functions:
+  - `dateUTCToIso`
+  - `fullName`
+  - `handleGetAdminGearTopRentals`
+  - `isIsoDate`
+  - `isoToDateUTC`
+  - `minusMonths`
+  - `nickname`
+  - `norm`
+  - `resolveRange`
+  - `todayWarsawIso`
+
 ### `functions/src/api/getAdminMemberActivityHandler.ts`
 
 - Lines: `194`
@@ -5610,8 +5681,8 @@ Excluded sensitive files:
 
 ### `functions/src/api/getKlubInfoHandler.ts`
 
-- Lines: `161`
-- Size: `6763` bytes
+- Lines: `207`
+- Size: `9344` bytes
 - Imports:
   - `import/require express`
   - `import/require firebase-functions/v2`
@@ -5835,8 +5906,8 @@ Excluded sensitive files:
 
 ### `functions/src/index.ts`
 
-- Lines: `1600`
-- Size: `53094` bytes
+- Lines: `1618`
+- Size: `53660` bytes
 - Internal dependencies:
   - `functions/src/api/adminApprovalHandler.ts`
   - `functions/src/api/adminEventsSyncCalendarHandler.ts`
@@ -5855,6 +5926,7 @@ Excluded sensitive files:
   - `functions/src/api/gearReservationCreateHandler.ts`
   - `functions/src/api/gearReservationUpdateHandler.ts`
   - `functions/src/api/getAdminGearRentalsHandler.ts`
+  - `functions/src/api/getAdminGearTopRentalsHandler.ts`
   - `functions/src/api/getAdminMemberActivityHandler.ts`
   - `functions/src/api/getAdminMemberDuesHandler.ts`
   - `functions/src/api/getAdminPendingHandler.ts`
@@ -5909,6 +5981,7 @@ Excluded sensitive files:
   - `import/require ./api/gearReservationCreateHandler`
   - `import/require ./api/gearReservationUpdateHandler`
   - `import/require ./api/getAdminGearRentalsHandler`
+  - `import/require ./api/getAdminGearTopRentalsHandler`
   - `import/require ./api/getAdminMemberActivityHandler`
   - `import/require ./api/getAdminMemberDuesHandler`
   - `import/require ./api/getAdminPendingHandler`
@@ -6041,8 +6114,8 @@ Excluded sensitive files:
 
 ### `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
 
-- Lines: `1060`
-- Size: `41584` bytes
+- Lines: `1071`
+- Size: `42375` bytes
 - Internal dependencies:
   - `functions/src/modules/calendar/calendar_utils.ts`
   - `functions/src/modules/equipment/kayaks/gear_kayaks_service.ts`
@@ -6184,8 +6257,8 @@ Excluded sensitive files:
 
 ### `functions/src/modules/hours/hours_quote.ts`
 
-- Lines: `18`
-- Size: `842` bytes
+- Lines: `19`
+- Size: `948` bytes
 - Internal dependencies:
   - `functions/src/modules/calendar/calendar_utils.ts`
   - `functions/src/modules/setup/setup_gear_vars.ts`
@@ -6367,8 +6440,8 @@ Excluded sensitive files:
 
 ### `functions/src/service/registry.ts`
 
-- Lines: `68`
-- Size: `3205` bytes
+- Lines: `70`
+- Size: `3342` bytes
 - Internal dependencies:
   - `functions/src/service/tasks/adminApprovalWriteBack.ts`
   - `functions/src/service/tasks/adminNotifyPendingApprovals.ts`
@@ -6393,6 +6466,7 @@ Excluded sensitive files:
   - `functions/src/service/tasks/onUserRegisteredWelcome.ts`
   - `functions/src/service/tasks/reconcileOpeningBalance.ts`
   - `functions/src/service/tasks/setupSyncFromSheet.ts`
+  - `functions/src/service/tasks/usersNotifyAkademikAccessChanged.ts`
   - `functions/src/service/tasks/usersSyncFieldsFromSheet.ts`
   - `functions/src/service/tasks/usersSyncFunctionRolesFromSetup.ts`
   - `functions/src/service/tasks/usersSyncRolesFromSheet.ts`
@@ -6421,6 +6495,7 @@ Excluded sensitive files:
   - `import/require ./tasks/onUserRegisteredWelcome`
   - `import/require ./tasks/reconcileOpeningBalance`
   - `import/require ./tasks/setupSyncFromSheet`
+  - `import/require ./tasks/usersNotifyAkademikAccessChanged`
   - `import/require ./tasks/usersSyncFieldsFromSheet`
   - `import/require ./tasks/usersSyncFunctionRolesFromSetup`
   - `import/require ./tasks/usersSyncRolesFromSheet`
@@ -6544,7 +6619,7 @@ Excluded sensitive files:
 ### `functions/src/service/tasks/gearPrivateStorage.ts`
 
 - Lines: `400`
-- Size: `14746` bytes
+- Size: `14668` bytes
 - Internal dependencies:
   - `functions/src/modules/hours/godzinki_service.ts`
   - `functions/src/modules/hours/godzinki_vars.ts`
@@ -6855,10 +6930,21 @@ Excluded sensitive files:
   - `toBool`
   - `toNumberOrNull`
 
+### `functions/src/service/tasks/usersNotifyAkademikAccessChanged.ts`
+
+- Lines: `71`
+- Size: `2857` bytes
+- Internal dependencies:
+  - `functions/src/service/types.ts`
+- Imports:
+  - `import/require ../types`
+- Functions:
+  - `norm`
+
 ### `functions/src/service/tasks/usersSyncFieldsFromSheet.ts`
 
-- Lines: `315`
-- Size: `12418` bytes
+- Lines: `344`
+- Size: `13953` bytes
 - Internal dependencies:
   - `functions/src/service/providers/googleSheetsProvider.ts`
   - `functions/src/service/service_config.ts`
@@ -7113,8 +7199,8 @@ Excluded sensitive files:
 
 ### `public/core/modules_registry.js`
 
-- Lines: `167`
-- Size: `5505` bytes
+- Lines: `176`
+- Size: `5802` bytes
 - Imports:
   - `import/require /core/module_stub.js`
   - `import/require /modules/admin_pending_module.js`
@@ -7122,6 +7208,7 @@ Excluded sensitive files:
   - `import/require /modules/gear_module.js`
   - `import/require /modules/godzinki_module.js`
   - `import/require /modules/impreza_module.js`
+  - `import/require /modules/klub_module.js`
   - `import/require /modules/km_module.js`
   - `import/require /modules/kurs_godzinki_module.js`
   - `import/require /modules/kurs_module.js`
@@ -7132,8 +7219,8 @@ Excluded sensitive files:
 
 ### `public/core/render_shell.js`
 
-- Lines: `1509`
-- Size: `66075` bytes
+- Lines: `1527`
+- Size: `67235` bytes
 - Imports:
   - `import/require /core/access_control.js`
   - `import/require /core/api_client.js`
@@ -7336,7 +7423,7 @@ Excluded sensitive files:
 ### `public/modules/godzinki_module.js`
 
 - Lines: `425`
-- Size: `16763` bytes
+- Size: `16792` bytes
 - Imports:
   - `import/require /core/api_client.js`
 - Functions:
@@ -7379,6 +7466,20 @@ Excluded sensitive files:
   - `setOk`
   - `spinnerHtml`
   - `todayIso`
+
+### `public/modules/klub_module.js`
+
+- Lines: `77`
+- Size: `3365` bytes
+- Imports:
+  - `import/require /core/api_client.js`
+  - `import/require /core/router.js`
+  - `import/require /core/user_error_messages.js`
+- Functions:
+  - `createKlubModule`
+  - `escapeHtml`
+  - `renderKluczeTable`
+  - `renderKluczeView`
 
 ### `public/modules/km_module.js`
 
@@ -7521,17 +7622,19 @@ Excluded sensitive files:
 
 ### `public/modules/raporty/registry.js`
 
-- Lines: `14`
-- Size: `466` bytes
+- Lines: `16`
+- Size: `539` bytes
 - Internal dependencies:
   - `public/modules/raporty/gear_rentals.js`
   - `public/modules/raporty/member_activity.js`
   - `public/modules/raporty/member_dues.js`
+  - `public/modules/raporty/top_rentals.js`
   - `public/modules/raporty/user_activity.js`
 - Imports:
   - `import/require ./gear_rentals.js`
   - `import/require ./member_activity.js`
   - `import/require ./member_dues.js`
+  - `import/require ./top_rentals.js`
   - `import/require ./user_activity.js`
 
 ### `public/modules/raporty/reports_panel.js`
@@ -7552,10 +7655,23 @@ Excluded sensitive files:
   - `renderLauncher`
   - `renderReportsPanel`
 
+### `public/modules/raporty/top_rentals.js`
+
+- Lines: `138`
+- Size: `6294` bytes
+- Imports:
+  - `import/require /core/api_client.js`
+  - `import/require /core/user_error_messages.js`
+- Functions:
+  - `escapeHtml`
+  - `load`
+  - `renderRows`
+  - `selectedCats`
+
 ### `public/modules/raporty/user_activity.js`
 
 - Lines: `135`
-- Size: `7579` bytes
+- Size: `7608` bytes
 - Imports:
   - `import/require /core/api_client.js`
   - `import/require /core/user_error_messages.js`
@@ -7587,8 +7703,8 @@ Excluded sensitive files:
 
 ### `.claude/settings.local.json`
 
-- Lines: `19`
-- Size: `961` bytes
+- Lines: `55`
+- Size: `10357` bytes
 - Detected top-level keys / sections:
   - `permissions`
 
@@ -7704,8 +7820,8 @@ Excluded sensitive files:
 
 ### `firebase.json`
 
-- Lines: `450`
-- Size: `11175` bytes
+- Lines: `457`
+- Size: `11365` bytes
 - Detected top-level keys / sections:
   - `firestore`
   - `functions`
@@ -8663,6 +8779,29 @@ Excluded sensitive files:
   - `## CZĘŚĆ 5 — WERYFIKACJA`
   - `## CZĘŚĆ 6 — POZA ZAKRESEM`
 
+### `Audyty/24.07_klucze.md`
+
+- Lines: `176`
+- Size: `11719` bytes
+- Headings:
+  - `# Moduł „Klub" — klucze do siedziby: plan wdrożenia`
+  - `## 1. Kluczowe odkrycie — połowa danych już istnieje`
+  - `## 2. Stan modułu „Klub" w APP_SETUP — już częściowo przygotowany`
+  - `## 3. Nowa kolumna w arkuszu — „Dostęp akademik"`
+  - `## 4. Zmiany w kodzie — backend`
+  - `### 4.1 `functions/src/service/tasks/usersSyncFieldsFromSheet.ts``
+  - `### 4.2 `functions/src/api/getKlubInfoHandler.ts``
+  - `### 4.3 `index.ts` / `firebase.json``
+  - `## 5. Zmiany w kodzie — frontend`
+  - `### 5.1 `public/core/modules_registry.js``
+  - `### 5.2 Nowy plik `public/modules/klub_module.js``
+  - `### 5.3 `public/core/render_shell.js` — kafelek na stronie głównej`
+  - `## 6. Kolejność wdrożenia (żeby nic po drodze się nie wysypało)`
+  - `## 7. Model danych — podsumowanie`
+  - `## 8. Decyzje — POTWIERDZONE (2026-07-24)`
+  - `## 9a. Dodatek: powiadomienie e-mail o zmianie „Dostęp akademik" (2026-07-24)`
+  - `## 9. Poza zakresem dziś (na później, gdy dojdziemy do tego etapu)`
+
 ### `Audyty/26.06_o_klubie.md`
 
 - Lines: `209`
@@ -8797,6 +8936,53 @@ Excluded sensitive files:
   - `## 6. Weryfikacja (jak testujemy)`
   - `## 7. Wdrożenie (po akceptacji — NIE teraz)`
   - `## 8. Pliki do zmiany (skrót)`
+
+### `Audyty/28.07_basen_stara_aplikacja.md`
+
+- Lines: `401`
+- Size: `24559` bytes
+- Headings:
+  - `# Prompt dla nowej sesji Claude — moduł „Zapisy na basen (Morzkulc)”`
+  - `## 1. Domena i cel`
+  - `## 2. Model danych (kolekcje)`
+  - `### 2.1 `users/{uid}``
+  - `### 2.2 `pools/{poolId}` — terminy (dni basenowe)`
+  - `### 2.3 `bookings/{bookingId}``
+  - `### 2.4 `kayaks/{kayakId}``
+  - `### 2.5 `allocations/{allocId}` — przydział kajaka na godzinę`
+  - `## 3. Uwierzytelnianie i uprawnienia`
+  - `### 3.1 Logowanie`
+  - `### 3.2 Statusy konta`
+  - `### 3.3 Role i etykieta publiczna`
+  - `### 3.4 Reguły bezpieczeństwa (odzwierciedlenie logiki serwerowej)`
+  - `## 4. Nawigacja i widoki`
+  - `## 5. Widok `/terminy` — logika użytkownika`
+  - `### 5.1 Lista terminów`
+  - `### 5.2 Zapis (`book`) — algorytm dokładny`
+  - `### 5.3 Zapis z instruktorem (`training`)`
+  - `### 5.4 „Dodaj się jako instruktor” — tylko `roles.instructor``
+  - `### 5.5 „Odbierz +1 za szkolenie” (instruktor)`
+  - `### 5.6 Wypisanie się (`cancel`)`
+  - `### 5.7 Kajaki — wybór i zmiana`
+  - `### 5.8 Lista zapisanych (`AttendeesList`) — publiczna sekcja per godzina`
+  - `## 6. Widok `/admin/terminy``
+  - `### 6.1 Lista i sortowanie`
+  - `### 6.2 Formularz dodania terminu`
+  - `### 6.3 Usuwanie terminu`
+  - `## 7. Widok `/admin/uzytkownicy``
+  - `### 7.1 Zakładki`
+  - `### 7.2 Wyszukiwarka (lokalna, po pobraniu)`
+  - `### 7.3 Akcje per użytkownik`
+  - `### 7.4 UI info per użytkownik`
+  - `## 8. Widok `/admin/kajaki``
+  - `## 9. Elementy istniejące w kodzie, lecz **niewpięte** (do rozważenia)`
+  - `### 9.1 `Moje` — „Moje zapisy”`
+  - `### 9.2 `Kup` — informacje o pakietach (płatność przelewem)`
+  - `### 9.3 Cloud Functions (`functions/src/index.ts`)`
+  - `## 10. Reguły biznesowe — podsumowanie do wdrożenia`
+  - `## 11. UX — konwencje komunikatów`
+  - `## 12. Stos technologiczny (obecny; do zaadaptowania w nowym projekcie)`
+  - `## 13. Czego NIE ma w obecnym kodzie (świadomie pomijaj lub uzupełnij od zera)`
 
 ### `Audyty/AUDIT_MAP.md`
 
@@ -9025,6 +9211,27 @@ Excluded sensitive files:
   - `## 5. MIEJSCA RYZYKA`
   - `## 6. PLIKI DO PÓŹNIEJSZEJ POPRAWY`
   - `## 7. WERDYKT KOŃCOWY`
+
+### `Audyty/basen_TO_DO.md`
+
+- Lines: `190`
+- Size: `18576` bytes
+- Headings:
+  - `# Moduł Basen — pełny audyt stanu obecnego (punkt zero)`
+  - `## 0. Executive summary — najważniejsze ustalenia`
+  - `## 1. Gdzie leży kod`
+  - `## 2. Model danych — dokładne pola`
+  - `### `BasenSession` (`basen_sessions/{id}`)`
+  - `### `BasenEnrollment` (`basen_enrollments/{id}`)`
+  - `### `BasenKarnet` (`basen_karnety/{id}`)`
+  - `### `BasenGodzinyRecord` (`basen_godziny_ledger/{id}`) — **martwy kod, patrz sekcja 5**`
+  - `## 3. Przepływ użytkownika (frontend `basen_module.js`)`
+  - `## 4. Model uprawnień`
+  - `## 5. System „godzin basenowych" — w pełni zbudowany, zero integracji`
+  - `## 6. Płatności — co naprawdę się dzieje`
+  - `## 7. Powiadomienia`
+  - `## 8. Znane luki i pytania otwarte do decyzji (surowa lista, do priorytetyzacji)`
+  - `## 9. Co już działa poprawnie i solidnie (żeby nie zgubić w krytyce)`
 
 ### `Audyty/ekran_kursant_podsumowanie_wdrozenia.md`
 
@@ -9849,12 +10056,12 @@ Excluded sensitive files:
 - `public/skrypt_kurs/chapters/ch05.html` — 132 lines, 7205 bytes
 - `public/skrypt_kurs/chapters/ch06.html` — 265 lines, 13264 bytes
 - `public/styles/app.css` — 10 lines, 254 bytes
-- `public/styles/base.css` — 537 lines, 15587 bytes
+- `public/styles/base.css` — 539 lines, 15693 bytes
 - `public/styles/basen.css` — 266 lines, 4666 bytes
 - `public/styles/dashboard.css` — 162 lines, 2708 bytes
 - `public/styles/events.css` — 143 lines, 2366 bytes
 - `public/styles/gear.css` — 1184 lines, 21257 bytes
-- `public/styles/godzinki.css` — 164 lines, 2969 bytes
+- `public/styles/godzinki.css` — 172 lines, 3267 bytes
 - `public/styles/km.css` — 496 lines, 10234 bytes
 - `public/styles/kurs.css` — 430 lines, 7128 bytes
 - `public/styles/start.css` — 267 lines, 10205 bytes

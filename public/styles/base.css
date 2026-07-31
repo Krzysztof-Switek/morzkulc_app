@@ -478,6 +478,14 @@ textarea {
 .kluczeCheck { color: var(--success, #4a4); font-weight: 700; }
 .kluczeDash { color: var(--text-muted); }
 
+/* --- Wymuszone anulowanie rezerwacji (raport Wypożyczenia sprzętu) --- */
+.dangerBtn { border-color: rgba(255, 107, 107, 0.4); color: var(--danger); background: transparent; font-size: 12px; padding: 6px 10px; white-space: nowrap; }
+.dangerBtn:hover { background: var(--danger-2); }
+.cancelForm { display: flex; flex-direction: column; gap: 6px; min-width: 200px; }
+.cancelReasonInput { padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 13px; }
+.cancelFormBtns { display: flex; gap: 6px; }
+.cancelFormBtns button { font-size: 12px; padding: 6px 10px; min-height: auto; }
+
 /* --- Launcher raportów (kafelki pogrupowane + szukajka) --- */
 .reportLauncher { margin-top: 8px; }
 .reportSearch { width: 100%; max-width: 360px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); margin-bottom: 8px; }

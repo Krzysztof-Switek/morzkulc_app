@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-23T10:49:34",
+  "generated_at": "2026-07-29T09:40:51",
   "project_root": "C:\\Users\\kswitek\\Documents\\morzkulc_app",
   "settings": {
     "excluded_dirs": [
@@ -45,9 +45,9 @@
     {
       "path": ".claude/settings.local.json",
       "extension": ".json",
-      "size_bytes": 961,
-      "line_count": 19,
-      "sha1_short": "fef8d9b7f1",
+      "size_bytes": 10357,
+      "line_count": 55,
+      "sha1_short": "a7bd7cb75f",
       "kind": "config",
       "module_aliases": [],
       "imports": [],
@@ -3451,6 +3451,41 @@
       "notes": []
     },
     {
+      "path": "Audyty/24.07_klucze.md",
+      "extension": ".md",
+      "size_bytes": 11719,
+      "line_count": 176,
+      "sha1_short": "2e56f27bf2",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# Moduł „Klub\" — klucze do siedziby: plan wdrożenia",
+        "## 1. Kluczowe odkrycie — połowa danych już istnieje",
+        "## 2. Stan modułu „Klub\" w APP_SETUP — już częściowo przygotowany",
+        "## 3. Nowa kolumna w arkuszu — „Dostęp akademik\"",
+        "## 4. Zmiany w kodzie — backend",
+        "### 4.1 `functions/src/service/tasks/usersSyncFieldsFromSheet.ts`",
+        "### 4.2 `functions/src/api/getKlubInfoHandler.ts`",
+        "### 4.3 `index.ts` / `firebase.json`",
+        "## 5. Zmiany w kodzie — frontend",
+        "### 5.1 `public/core/modules_registry.js`",
+        "### 5.2 Nowy plik `public/modules/klub_module.js`",
+        "### 5.3 `public/core/render_shell.js` — kafelek na stronie głównej",
+        "## 6. Kolejność wdrożenia (żeby nic po drodze się nie wysypało)",
+        "## 7. Model danych — podsumowanie",
+        "## 8. Decyzje — POTWIERDZONE (2026-07-24)",
+        "## 9a. Dodatek: powiadomienie e-mail o zmianie „Dostęp akademik\" (2026-07-24)",
+        "## 9. Poza zakresem dziś (na później, gdy dojdziemy do tego etapu)"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "Audyty/26.06_o_klubie.md",
       "extension": ".md",
       "size_bytes": 9809,
@@ -3653,6 +3688,65 @@
         "## 6. Weryfikacja (jak testujemy)",
         "## 7. Wdrożenie (po akceptacji — NIE teraz)",
         "## 8. Pliki do zmiany (skrót)"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "Audyty/28.07_basen_stara_aplikacja.md",
+      "extension": ".md",
+      "size_bytes": 24559,
+      "line_count": 401,
+      "sha1_short": "7496c3de81",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# Prompt dla nowej sesji Claude — moduł „Zapisy na basen (Morzkulc)”",
+        "## 1. Domena i cel",
+        "## 2. Model danych (kolekcje)",
+        "### 2.1 `users/{uid}`",
+        "### 2.2 `pools/{poolId}` — terminy (dni basenowe)",
+        "### 2.3 `bookings/{bookingId}`",
+        "### 2.4 `kayaks/{kayakId}`",
+        "### 2.5 `allocations/{allocId}` — przydział kajaka na godzinę",
+        "## 3. Uwierzytelnianie i uprawnienia",
+        "### 3.1 Logowanie",
+        "### 3.2 Statusy konta",
+        "### 3.3 Role i etykieta publiczna",
+        "### 3.4 Reguły bezpieczeństwa (odzwierciedlenie logiki serwerowej)",
+        "## 4. Nawigacja i widoki",
+        "## 5. Widok `/terminy` — logika użytkownika",
+        "### 5.1 Lista terminów",
+        "### 5.2 Zapis (`book`) — algorytm dokładny",
+        "### 5.3 Zapis z instruktorem (`training`)",
+        "### 5.4 „Dodaj się jako instruktor” — tylko `roles.instructor`",
+        "### 5.5 „Odbierz +1 za szkolenie” (instruktor)",
+        "### 5.6 Wypisanie się (`cancel`)",
+        "### 5.7 Kajaki — wybór i zmiana",
+        "### 5.8 Lista zapisanych (`AttendeesList`) — publiczna sekcja per godzina",
+        "## 6. Widok `/admin/terminy`",
+        "### 6.1 Lista i sortowanie",
+        "### 6.2 Formularz dodania terminu",
+        "### 6.3 Usuwanie terminu",
+        "## 7. Widok `/admin/uzytkownicy`",
+        "### 7.1 Zakładki",
+        "### 7.2 Wyszukiwarka (lokalna, po pobraniu)",
+        "### 7.3 Akcje per użytkownik",
+        "### 7.4 UI info per użytkownik",
+        "## 8. Widok `/admin/kajaki`",
+        "## 9. Elementy istniejące w kodzie, lecz **niewpięte** (do rozważenia)",
+        "### 9.1 `Moje` — „Moje zapisy”",
+        "### 9.2 `Kup` — informacje o pakietach (płatność przelewem)",
+        "### 9.3 Cloud Functions (`functions/src/index.ts`)",
+        "## 10. Reguły biznesowe — podsumowanie do wdrożenia",
+        "## 11. UX — konwencje komunikatów",
+        "## 12. Stos technologiczny (obecny; do zaadaptowania w nowym projekcie)",
+        "## 13. Czego NIE ma w obecnym kodzie (świadomie pomijaj lub uzupełnij od zera)"
       ],
       "config_keys": [],
       "notes": []
@@ -3977,6 +4071,39 @@
         "## 5. MIEJSCA RYZYKA",
         "## 6. PLIKI DO PÓŹNIEJSZEJ POPRAWY",
         "## 7. WERDYKT KOŃCOWY"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "Audyty/basen_TO_DO.md",
+      "extension": ".md",
+      "size_bytes": 18576,
+      "line_count": 190,
+      "sha1_short": "5abe843f21",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# Moduł Basen — pełny audyt stanu obecnego (punkt zero)",
+        "## 0. Executive summary — najważniejsze ustalenia",
+        "## 1. Gdzie leży kod",
+        "## 2. Model danych — dokładne pola",
+        "### `BasenSession` (`basen_sessions/{id}`)",
+        "### `BasenEnrollment` (`basen_enrollments/{id}`)",
+        "### `BasenKarnet` (`basen_karnety/{id}`)",
+        "### `BasenGodzinyRecord` (`basen_godziny_ledger/{id}`) — **martwy kod, patrz sekcja 5**",
+        "## 3. Przepływ użytkownika (frontend `basen_module.js`)",
+        "## 4. Model uprawnień",
+        "## 5. System „godzin basenowych\" — w pełni zbudowany, zero integracji",
+        "## 6. Płatności — co naprawdę się dzieje",
+        "## 7. Powiadomienia",
+        "## 8. Znane luki i pytania otwarte do decyzji (surowa lista, do priorytetyzacji)",
+        "## 9. Co już działa poprawnie i solidnie (żeby nie zgubić w krytyce)"
       ],
       "config_keys": [],
       "notes": []
@@ -4993,9 +5120,9 @@
     {
       "path": "firebase.json",
       "extension": ".json",
-      "size_bytes": 11175,
-      "line_count": 450,
-      "sha1_short": "2a6b443fb6",
+      "size_bytes": 11365,
+      "line_count": 457,
+      "sha1_short": "f6a5a817f8",
       "kind": "config",
       "module_aliases": [],
       "imports": [],
@@ -6205,6 +6332,141 @@
       "notes": []
     },
     {
+      "path": "functions/lib/api/getAdminGearTopRentalsHandler.js",
+      "extension": ".js",
+      "size_bytes": 10635,
+      "line_count": 231,
+      "sha1_short": "0d34ac712c",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/calendar/calendar_utils",
+          "module": "../modules/calendar/calendar_utils",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-functions/v2",
+          "module": "firebase-functions/v2",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/calendar/calendar_utils.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "dateUTCToIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "fullName",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "handleGetAdminGearTopRentals",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isIsoDate",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isoToDateUTC",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "minusMonths",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "nickname",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "resolveRange",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "todayWarsawIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/lib/api/getAdminMemberActivityHandler.js",
       "extension": ".js",
       "size_bytes": 7631,
@@ -7223,9 +7485,9 @@
     {
       "path": "functions/lib/api/getKlubInfoHandler.js",
       "extension": ".js",
-      "size_bytes": 8100,
-      "line_count": 137,
-      "sha1_short": "e7e1bb8f96",
+      "size_bytes": 10909,
+      "line_count": 176,
+      "sha1_short": "ee5c0b90cc",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -8348,9 +8610,9 @@
     {
       "path": "functions/lib/index.js",
       "extension": ".js",
-      "size_bytes": 62362,
-      "line_count": 1450,
-      "sha1_short": "9a9340cb34",
+      "size_bytes": 63049,
+      "line_count": 1467,
+      "sha1_short": "df6162f252",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -8469,6 +8731,13 @@
         {
           "raw": "import/require ./api/getAdminGearRentalsHandler",
           "module": "./api/getAdminGearRentalsHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/getAdminGearTopRentalsHandler",
+          "module": "./api/getAdminGearTopRentalsHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -8779,6 +9048,7 @@
         "functions/lib/api/gearReservationCreateHandler.js",
         "functions/lib/api/gearReservationUpdateHandler.js",
         "functions/lib/api/getAdminGearRentalsHandler.js",
+        "functions/lib/api/getAdminGearTopRentalsHandler.js",
         "functions/lib/api/getAdminMemberActivityHandler.js",
         "functions/lib/api/getAdminMemberDuesHandler.js",
         "functions/lib/api/getAdminPendingHandler.js",
@@ -9465,9 +9735,9 @@
     {
       "path": "functions/lib/modules/equipment/bundle/gear_bundle_service.js",
       "extension": ".js",
-      "size_bytes": 46360,
-      "line_count": 886,
-      "sha1_short": "498ce38d3e",
+      "size_bytes": 47172,
+      "line_count": 896,
+      "sha1_short": "a5203d7236",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -10365,9 +10635,9 @@
     {
       "path": "functions/lib/modules/hours/hours_quote.js",
       "extension": ".js",
-      "size_bytes": 965,
-      "line_count": 19,
-      "sha1_short": "1e2a12823a",
+      "size_bytes": 1068,
+      "line_count": 20,
+      "sha1_short": "01cb7ddfe4",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -11261,9 +11531,9 @@
     {
       "path": "functions/lib/service/registry.js",
       "extension": ".js",
-      "size_bytes": 3954,
-      "line_count": 69,
-      "sha1_short": "0a41635474",
+      "size_bytes": 4127,
+      "line_count": 71,
+      "sha1_short": "deada7aa44",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -11429,6 +11699,13 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ./tasks/usersNotifyAkademikAccessChanged",
+          "module": "./tasks/usersNotifyAkademikAccessChanged",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ./tasks/usersSyncFieldsFromSheet",
           "module": "./tasks/usersSyncFieldsFromSheet",
           "names": [],
@@ -11474,6 +11751,7 @@
         "functions/lib/service/tasks/onUserRegisteredWelcome.js",
         "functions/lib/service/tasks/reconcileOpeningBalance.js",
         "functions/lib/service/tasks/setupSyncFromSheet.js",
+        "functions/lib/service/tasks/usersNotifyAkademikAccessChanged.js",
         "functions/lib/service/tasks/usersSyncFieldsFromSheet.js",
         "functions/lib/service/tasks/usersSyncFunctionRolesFromSetup.js",
         "functions/lib/service/tasks/usersSyncRolesFromSheet.js"
@@ -11927,9 +12205,9 @@
     {
       "path": "functions/lib/service/tasks/gearPrivateStorage.js",
       "extension": ".js",
-      "size_bytes": 16274,
+      "size_bytes": 16102,
       "line_count": 345,
-      "sha1_short": "cb711ea512",
+      "sha1_short": "616cb9909b",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -13233,11 +13511,39 @@
       "notes": []
     },
     {
+      "path": "functions/lib/service/tasks/usersNotifyAkademikAccessChanged.js",
+      "extension": ".js",
+      "size_bytes": 3176,
+      "line_count": 54,
+      "sha1_short": "42772420cb",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/lib/service/tasks/usersSyncFieldsFromSheet.js",
       "extension": ".js",
-      "size_bytes": 15011,
-      "line_count": 322,
-      "sha1_short": "9c8291d07a",
+      "size_bytes": 16827,
+      "line_count": 349,
+      "sha1_short": "92d093f210",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -15908,6 +16214,148 @@
       "notes": []
     },
     {
+      "path": "functions/src/api/getAdminGearTopRentalsHandler.ts",
+      "extension": ".ts",
+      "size_bytes": 9694,
+      "line_count": 277,
+      "sha1_short": "12f6b27d3c",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/calendar/calendar_utils",
+          "module": "../modules/calendar/calendar_utils",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require express",
+          "module": "express",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-functions/v2",
+          "module": "firebase-functions/v2",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/src/modules/calendar/calendar_utils.ts"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "dateUTCToIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "fullName",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "handleGetAdminGearTopRentals",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isIsoDate",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isoToDateUTC",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "minusMonths",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "nickname",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "resolveRange",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "todayWarsawIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/src/api/getAdminMemberActivityHandler.ts",
       "extension": ".ts",
       "size_bytes": 7074,
@@ -17003,9 +17451,9 @@
     {
       "path": "functions/src/api/getKlubInfoHandler.ts",
       "extension": ".ts",
-      "size_bytes": 6763,
-      "line_count": 161,
-      "sha1_short": "8d2f81a5ef",
+      "size_bytes": 9344,
+      "line_count": 207,
+      "sha1_short": "1e99df965c",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -18083,9 +18531,9 @@
     {
       "path": "functions/src/index.ts",
       "extension": ".ts",
-      "size_bytes": 53094,
-      "line_count": 1600,
-      "sha1_short": "6f2772c304",
+      "size_bytes": 53660,
+      "line_count": 1618,
+      "sha1_short": "9bb0a4021f",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -18204,6 +18652,13 @@
         {
           "raw": "import/require ./api/getAdminGearRentalsHandler",
           "module": "./api/getAdminGearRentalsHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/getAdminGearTopRentalsHandler",
+          "module": "./api/getAdminGearTopRentalsHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -18521,6 +18976,7 @@
         "functions/src/api/gearReservationCreateHandler.ts",
         "functions/src/api/gearReservationUpdateHandler.ts",
         "functions/src/api/getAdminGearRentalsHandler.ts",
+        "functions/src/api/getAdminGearTopRentalsHandler.ts",
         "functions/src/api/getAdminMemberActivityHandler.ts",
         "functions/src/api/getAdminMemberDuesHandler.ts",
         "functions/src/api/getAdminPendingHandler.ts",
@@ -19207,9 +19663,9 @@
     {
       "path": "functions/src/modules/equipment/bundle/gear_bundle_service.ts",
       "extension": ".ts",
-      "size_bytes": 41584,
-      "line_count": 1060,
-      "sha1_short": "2c2246afbb",
+      "size_bytes": 42375,
+      "line_count": 1071,
+      "sha1_short": "9969ce5569",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -20106,9 +20562,9 @@
     {
       "path": "functions/src/modules/hours/hours_quote.ts",
       "extension": ".ts",
-      "size_bytes": 842,
-      "line_count": 18,
-      "sha1_short": "12590d2f86",
+      "size_bytes": 948,
+      "line_count": 19,
+      "sha1_short": "013db0b5c3",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -21018,9 +21474,9 @@
     {
       "path": "functions/src/service/registry.ts",
       "extension": ".ts",
-      "size_bytes": 3205,
-      "line_count": 68,
-      "sha1_short": "091d2f6dd5",
+      "size_bytes": 3342,
+      "line_count": 70,
+      "sha1_short": "fa2facaa17",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -21186,6 +21642,13 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ./tasks/usersNotifyAkademikAccessChanged",
+          "module": "./tasks/usersNotifyAkademikAccessChanged",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ./tasks/usersSyncFieldsFromSheet",
           "module": "./tasks/usersSyncFieldsFromSheet",
           "names": [],
@@ -21238,6 +21701,7 @@
         "functions/src/service/tasks/onUserRegisteredWelcome.ts",
         "functions/src/service/tasks/reconcileOpeningBalance.ts",
         "functions/src/service/tasks/setupSyncFromSheet.ts",
+        "functions/src/service/tasks/usersNotifyAkademikAccessChanged.ts",
         "functions/src/service/tasks/usersSyncFieldsFromSheet.ts",
         "functions/src/service/tasks/usersSyncFunctionRolesFromSetup.ts",
         "functions/src/service/tasks/usersSyncRolesFromSheet.ts",
@@ -21740,9 +22204,9 @@
     {
       "path": "functions/src/service/tasks/gearPrivateStorage.ts",
       "extension": ".ts",
-      "size_bytes": 14746,
+      "size_bytes": 14668,
       "line_count": 400,
-      "sha1_short": "a04c3153d2",
+      "sha1_short": "e4553d9b62",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -23189,11 +23653,49 @@
       "notes": []
     },
     {
+      "path": "functions/src/service/tasks/usersNotifyAkademikAccessChanged.ts",
+      "extension": ".ts",
+      "size_bytes": 2857,
+      "line_count": 71,
+      "sha1_short": "6f1f32b89d",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../types",
+          "module": "../types",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/src/service/types.ts"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/src/service/tasks/usersSyncFieldsFromSheet.ts",
       "extension": ".ts",
-      "size_bytes": 12418,
-      "line_count": 315,
-      "sha1_short": "0381dd5296",
+      "size_bytes": 13953,
+      "line_count": 344,
+      "sha1_short": "f7561389be",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -25062,9 +25564,9 @@
     {
       "path": "public/core/modules_registry.js",
       "extension": ".js",
-      "size_bytes": 5505,
-      "line_count": 167,
-      "sha1_short": "57f8cb18b7",
+      "size_bytes": 5802,
+      "line_count": 176,
+      "sha1_short": "bd622dd282",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -25106,6 +25608,13 @@
         {
           "raw": "import/require /modules/impreza_module.js",
           "module": "/modules/impreza_module.js",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require /modules/klub_module.js",
+          "module": "/modules/klub_module.js",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -25171,9 +25680,9 @@
     {
       "path": "public/core/render_shell.js",
       "extension": ".js",
-      "size_bytes": 66075,
-      "line_count": 1509,
-      "sha1_short": "e3c1ebbb06",
+      "size_bytes": 67235,
+      "line_count": 1527,
+      "sha1_short": "5fdfb191e2",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -26901,9 +27410,9 @@
     {
       "path": "public/modules/godzinki_module.js",
       "extension": ".js",
-      "size_bytes": 16763,
+      "size_bytes": 16792,
       "line_count": 425,
-      "sha1_short": "0737731cac",
+      "sha1_short": "373a1cb78e",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -27246,6 +27755,86 @@
         },
         {
           "name": "todayIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "public/modules/klub_module.js",
+      "extension": ".js",
+      "size_bytes": 3365,
+      "line_count": 77,
+      "sha1_short": "4cc7aa707c",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require /core/api_client.js",
+          "module": "/core/api_client.js",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require /core/router.js",
+          "module": "/core/router.js",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require /core/user_error_messages.js",
+          "module": "/core/user_error_messages.js",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "createKlubModule",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "escapeHtml",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "renderKluczeTable",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "renderKluczeView",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -28284,9 +28873,9 @@
     {
       "path": "public/modules/raporty/registry.js",
       "extension": ".js",
-      "size_bytes": 466,
-      "line_count": 14,
-      "sha1_short": "29e27a1f63",
+      "size_bytes": 539,
+      "line_count": 16,
+      "sha1_short": "8c5d806d95",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -28312,6 +28901,13 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ./top_rentals.js",
+          "module": "./top_rentals.js",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ./user_activity.js",
           "module": "./user_activity.js",
           "names": [],
@@ -28323,6 +28919,7 @@
         "public/modules/raporty/gear_rentals.js",
         "public/modules/raporty/member_activity.js",
         "public/modules/raporty/member_dues.js",
+        "public/modules/raporty/top_rentals.js",
         "public/modules/raporty/user_activity.js"
       ],
       "classes": [],
@@ -28441,11 +29038,84 @@
       "notes": []
     },
     {
+      "path": "public/modules/raporty/top_rentals.js",
+      "extension": ".js",
+      "size_bytes": 6294,
+      "line_count": 138,
+      "sha1_short": "c6d2c0075f",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require /core/api_client.js",
+          "module": "/core/api_client.js",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require /core/user_error_messages.js",
+          "module": "/core/user_error_messages.js",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "escapeHtml",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "load",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "renderRows",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "selectedCats",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "public/modules/raporty/user_activity.js",
       "extension": ".js",
-      "size_bytes": 7579,
+      "size_bytes": 7608,
       "line_count": 135,
-      "sha1_short": "266a6223b8",
+      "sha1_short": "67e48e6518",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -28685,9 +29355,9 @@
     {
       "path": "public/styles/base.css",
       "extension": ".css",
-      "size_bytes": 15587,
-      "line_count": 537,
-      "sha1_short": "b9b6b260af",
+      "size_bytes": 15693,
+      "line_count": 539,
+      "sha1_short": "ff6c7da60b",
       "kind": "text",
       "module_aliases": [],
       "imports": [],
@@ -28770,9 +29440,9 @@
     {
       "path": "public/styles/godzinki.css",
       "extension": ".css",
-      "size_bytes": 2969,
-      "line_count": 164,
-      "sha1_short": "8939f80449",
+      "size_bytes": 3267,
+      "line_count": 172,
+      "sha1_short": "419020daf8",
       "kind": "text",
       "module_aliases": [],
       "imports": [],
@@ -28840,7 +29510,7 @@
       "extension": ".js",
       "size_bytes": 4997,
       "line_count": 147,
-      "sha1_short": "09907f4b05",
+      "sha1_short": "c70a33fbf1",
       "kind": "script",
       "module_aliases": [],
       "imports": [],

@@ -137,6 +137,63 @@ export async function cancelReservation(db: FirebaseFirestore.Firestore, args: {
   });
 }
 
+// Wymuszone anulowanie przez zarząd/KR (panel admina, sekcja "Wypożyczenia sprzętu").
+// Sytuacja: sprzęt nie został oddany przez poprzedniego użytkownika / inny błąd
+// ludzki — rezerwacja już trwa (po blockStartIso) i właściciel nie może jej sam
+// anulować (cancelReservation blokuje to celowo). Admin może anulować DOWOLNĄ
+// aktywną rezerwację niezależnie od dat i zawsze zwraca pełny koszt godzinek
+// właścicielowi. Wymaga podania powodu — zapisywany na rezerwacji do audytu.
+export async function adminCancelReservation(
+  db: FirebaseFirestore.Firestore,
+  args: {reservationId: string; adminUid: string; reason: string}
+) {
+  const rid = norm(args.reservationId);
+  if (!rid) return {ok: false, code: "bad_request", message: "Missing reservationId"} as const;
+
+  const reason = norm(args.reason);
+  if (!reason) return {ok: false, code: "bad_request", message: "Missing reason"} as const;
+
+  const ref = db.collection("gear_reservations").doc(rid);
+
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) return {ok: false, code: "not_found", message: "Not found"} as const;
+
+    const r = snap.data() as any;
+    if (String(r?.status || "") !== "active") return {ok: false, code: "invalid_state", message: "Not active"} as const;
+
+    const userUid = norm(r?.userUid);
+    const costHours = Number(r?.costHours || 0);
+
+    if (costHours > 0 && userUid) {
+      const refundResult = await refundHoursForReservationInTx(tx, db, userUid, rid, costHours, new Date());
+
+      if (!refundResult.ok) {
+        return {
+          ok: false,
+          code: refundResult.code || "refund_failed",
+          message: refundResult.message || "Cannot refund hours for this reservation",
+        } as const;
+      }
+    }
+
+    tx.set(
+      ref,
+      {
+        status: "cancelled",
+        cancelledAt: new Date(),
+        updatedAt: new Date(),
+        cancelledByAdmin: true,
+        cancelledByUid: args.adminUid,
+        cancelReason: reason,
+      },
+      {merge: true}
+    );
+
+    return {ok: true, userUid, costHours} as const;
+  });
+}
+
 export async function updateReservationDates(
   db: FirebaseFirestore.Firestore,
   args: { uid: string; reservationId: string; startDate: string; endDate: string }

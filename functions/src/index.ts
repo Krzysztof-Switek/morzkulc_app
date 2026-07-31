@@ -16,6 +16,7 @@ import {handleGearBundleReservationCreate} from "./api/gearBundleReservationCrea
 import {handleGetGearItemAvailability} from "./api/getGearItemAvailabilityHandler";
 import {handleGearReservationUpdate} from "./api/gearReservationUpdateHandler";
 import {handleGearReservationCancel} from "./api/gearReservationCancelHandler";
+import {handleAdminGearReservationCancel} from "./api/adminGearReservationCancelHandler";
 import {handleGetGearFavorites} from "./api/getGearFavoritesHandler";
 import {handleGearFavoriteToggle} from "./api/gearFavoriteToggleHandler";
 import {handleGetGodzinki} from "./api/getGodzinkiHandler";
@@ -635,6 +636,23 @@ export const cancelGearReservation = onRequest({invoker: "private"}, async (req,
     setCorsHeaders,
     corsHandler,
     requireIdToken,
+  });
+});
+
+/**
+ * POST /api/admin/gear-reservations/cancel (authenticated, role: zarzad/kr)
+ * Wymuszone anulowanie DOWOLNEJ aktywnej rezerwacji sprzętu przez zarząd/KR,
+ * ze zwrotem godzinek właścicielowi. Wymaga podania powodu (audyt).
+ */
+export const adminCancelGearReservation = onRequest({invoker: "private"}, async (req, res) => {
+  return handleAdminGearReservationCancel(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    adminRoleKeys,
   });
 });
 

@@ -180,6 +180,27 @@
 .startStatInlineItem { display: flex; align-items: center; gap: 5px; font-size: 14px; font-weight: 700; color: var(--text); }
 .startStatInlineItem svg { color: var(--text-muted); flex-shrink: 0; }
 
+.startStatInlineBtn {
+  background: none;
+  border: none;
+  margin: 0;
+  padding: 4px 8px 4px 6px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.startStatInlineBtn:hover,
+.startStatInlineBtn:focus-visible {
+  background: color-mix(in srgb, var(--primary) 14%, transparent);
+  color: var(--primary);
+  outline: none;
+}
+.startStatInlineBtn:hover svg,
+.startStatInlineBtn:focus-visible svg {
+  color: var(--primary);
+}
+
 /* ── Odznaka powiadomień na kafelku ── */
 .tileNotifBadge { position: absolute; top: 6px; right: 6px; min-width: 18px; height: 18px; background: #e53535; color: #fff; border-radius: 9px; font-size: 10px; font-weight: 800; line-height: 18px; text-align: center; padding: 0 4px; pointer-events: none; }
 
@@ -204,6 +225,9 @@
 .startTile2 svg { flex-shrink: 0; display: block; }
 .startTile2Title { font-size: 11px; font-weight: 800; color: var(--text); line-height: 1.1; letter-spacing: 0.01em; }
 @media (min-width: 480px) { .startTile2Title { font-size: 12px; } }
+
+.startTile2Subtitle { font-size: 10px; font-weight: 700; color: var(--text-muted); line-height: 1; }
+.startTile2Subtitle .startStatVal { font-size: 10px; }
 
 /* ── Nagłówek sekcji z kilkoma przyciskami ── */
 .dashCardHeadActions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }

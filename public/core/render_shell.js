@@ -16,6 +16,11 @@ const GODZINKI_URL = "/api/godzinki";
 const EVENTS_URL = "/api/events";
 const BASEN_SESSIONS_URL = "/api/basen/sessions";
 const KURS_INFO_URL = "/api/kurs/info";
+const KM_MY_STATS_URL = "/api/km/stats";
+// Klucz sessionStorage do przekazania preferowanego typu rankingu (km|points|hours)
+// z kafelków na stronie głównej do zakładki "rankings" w km_module.js — musi być
+// identyczny w obu plikach (nie ma współdzielonego modułu tylko dla tej stałej).
+const KM_HOME_STAT_PREF_KEY = "kmHomeRankingType";
 
 export function renderNav({ navEl, ctx }) {
   navEl.innerHTML = "";
@@ -165,18 +170,18 @@ async function renderHomeDashboard({ viewEl, ctx }) {
               <span id="homeKursantRankCell">— miejsce</span>
             </span>
             ` : dash.isSympatyk ? "" : `
-            <span class="startStatInlineItem">
+            <button type="button" class="startStatInlineItem startStatInlineBtn" data-home-stat="hours" title="Godziny na wodzie — zobacz pełny ranking">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>
+              <span id="homeWaterHoursCell">…</span>
+            </button>
+            <button type="button" class="startStatInlineItem startStatInlineBtn" data-home-stat="km" title="Ranking kilometrowy — zobacz pełny ranking">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              <span id="homeKmCell">— km</span>
-            </span>
-            <span class="startStatInlineItem">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
-              <span id="homeRankingCell">— miejsce</span>
-            </span>
-            <span class="startStatInlineItem">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              <span id="homeHoursCell"><strong class="startStatVal">${escapeHtml(hoursValue || "…")}</strong></span>
-            </span>
+              <span id="homeKmCell">…</span>
+            </button>
+            <button type="button" class="startStatInlineItem startStatInlineBtn" data-home-stat="points" title="Ranking wywrotolotka — zobacz pełny ranking">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+              <span id="homeCapsizesCell">…</span>
+            </button>
             `}
           </div>
 
@@ -191,6 +196,7 @@ async function renderHomeDashboard({ viewEl, ctx }) {
             <button type="button" class="startTile2" data-home-action="add-hours">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               <span class="startTile2Title">Godzinki</span>
+              <span class="startTile2Subtitle" id="homeGodzinkiTileBalance">${escapeHtml(hoursValue || "…")}</span>
             </button>
             ` : ""}
 
@@ -349,18 +355,29 @@ async function renderHomeDashboard({ viewEl, ctx }) {
     });
   });
 
-  const addHoursBtn = viewEl.querySelector("[data-home-action='add-hours']");
-  if (addHoursBtn) {
-    addHoursBtn.addEventListener("click", () => {
+  viewEl.querySelectorAll("[data-home-action='add-hours']").forEach((btn) => {
+    btn.addEventListener("click", () => {
       const godzinkiTarget = getModuleRouteByType(ctx, "godzinki");
       if (godzinkiTarget.moduleId !== "home") {
         setHash(godzinkiTarget.moduleId, "history");
       }
     });
-  }
+  });
 
   const kmBtn = viewEl.querySelector("[data-home-action='km']");
   if (kmBtn) kmBtn.addEventListener("click", () => setHash(kmModuleRoute.moduleId, dash.isSympatyk ? "rankings" : kmModuleRoute.routeId));
+
+  // Kafelki km/wywrotolotek/godziny na wodzie — kliknięcie przenosi do pełnego
+  // rankingu w module Kilometrówka, z zapamiętanym typem (odczytywane jednorazowo
+  // przez km_module.js pod tym samym kluczem KM_HOME_STAT_PREF_KEY).
+  viewEl.querySelectorAll("[data-home-stat]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      try {
+        sessionStorage.setItem(KM_HOME_STAT_PREF_KEY, btn.getAttribute("data-home-stat") || "km");
+      } catch { /* ignore */ }
+      setHash(kmModuleRoute.moduleId, "rankings");
+    });
+  });
 
   viewEl.querySelectorAll("[data-home-action='kurs']").forEach((btn) => {
     btn.addEventListener("click", () => setHash(kursModuleRoute.moduleId, kursModuleRoute.routeId));
@@ -396,11 +413,23 @@ async function renderHomeDashboard({ viewEl, ctx }) {
         }).catch(() => { /* cicha porażka */ });
     } else {
       buildHomeHoursCell(ctx).then((html) => {
-        const cell = viewEl.querySelector("#homeHoursCell");
+        const cell = viewEl.querySelector("#homeGodzinkiTileBalance");
         if (cell) cell.innerHTML = html;
       }).catch(() => {
         // cicha porażka — komórka zostaje z placeholder "…"
       });
+
+      // Km/wywrotolotek/godziny na wodzie — jedno zapytanie, trzy komórki
+      // (te same pola co zakładka "Moje statystyki" w module Kilometrówka).
+      apiGetJson({ url: KM_MY_STATS_URL, idToken: ctx.idToken }).then((data) => {
+        const stats = data?.stats || {};
+        const kmCell = viewEl.querySelector("#homeKmCell");
+        if (kmCell) kmCell.textContent = `${fmtKmValue(stats.yearKm ?? 0)} km`;
+        const capsizesCell = viewEl.querySelector("#homeCapsizesCell");
+        if (capsizesCell) capsizesCell.textContent = `${fmtKmValue(stats.yearPoints ?? 0)} pkt`;
+        const waterHoursCell = viewEl.querySelector("#homeWaterHoursCell");
+        if (waterHoursCell) waterHoursCell.textContent = `${fmtKmValue(stats.yearHours ?? 0)} h`;
+      }).catch(() => { /* cicha porażka — komórki zostają z placeholder "…" */ });
     }
   }
 
@@ -823,6 +852,11 @@ async function buildHomeHoursCell(ctx) {
   } catch {
     return `<strong class="startStatVal">—</strong>`;
   }
+}
+
+function fmtKmValue(n) {
+  const v = parseFloat(n) || 0;
+  return v % 1 === 0 ? String(v) : parseFloat(v.toFixed(1)).toString();
 }
 
 async function buildHomeEventsSection(ctx) {

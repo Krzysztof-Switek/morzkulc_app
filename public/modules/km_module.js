@@ -22,6 +22,11 @@ const KM_EVENT_STATS_URL = "/api/km/event-stats";
 const KM_MAP_DATA_URL = "/api/km/map-data";
 const EVENTS_URL = "/api/events";
 
+// Klucz sessionStorage, przez który kafelki na stronie głównej (render_shell.js,
+// stała KM_HOME_STAT_PREF_KEY tamże — musi być identyczna) przekazują, który typ
+// rankingu otworzyć od razu po wejściu w zakładkę "rankings". Odczyt jednorazowy.
+const HOME_STAT_PREF_KEY = "kmHomeRankingType";
+
 const NAV_BACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`;
 const NAV_HOME_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
 const INFO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`;
@@ -809,15 +814,26 @@ async function renderRankingsView(inner, ctx) {
     yearOptions.push(`<option value="${y}"${y === currentYear - 1 ? " selected" : ""}>${y}</option>`);
   }
 
+  // Odczyt jednorazowy — kafelek na stronie głównej mógł poprosić o konkretny
+  // typ rankingu (km/wywrotolotek/godziny). Bez wpisu w sessionStorage: domyślnie km.
+  let preferredType = "km";
+  try {
+    const stored = sessionStorage.getItem(HOME_STAT_PREF_KEY);
+    if (stored) {
+      sessionStorage.removeItem(HOME_STAT_PREF_KEY);
+      if (["km", "points", "hours"].includes(stored)) preferredType = stored;
+    }
+  } catch { /* ignore */ }
+
   inner.innerHTML = `
     <div class="kmRankingsSection">
       <div class="kmRankingsControls">
         <div class="kmControlGroup">
           <label>Typ rankingu:</label>
           <div class="kmBtnGroup" id="kmTypeGroup">
-            <button class="kmRankBtn active" data-km-type="km">Kilometry</button>
-            <button class="kmRankBtn" data-km-type="points">Wywrotolotek</button>
-            <button class="kmRankBtn" data-km-type="hours">Godziny</button>
+            <button class="kmRankBtn${preferredType === "km" ? " active" : ""}" data-km-type="km">Kilometry</button>
+            <button class="kmRankBtn${preferredType === "points" ? " active" : ""}" data-km-type="points">Wywrotolotek</button>
+            <button class="kmRankBtn${preferredType === "hours" ? " active" : ""}" data-km-type="hours">Godziny</button>
           </div>
         </div>
         <div class="kmControlGroup">
@@ -837,7 +853,7 @@ async function renderRankingsView(inner, ctx) {
     </div>
   `;
 
-  let activeType = "km";
+  let activeType = preferredType;
   let activePeriod = "year";
 
   const yearGroup = inner.querySelector("#kmYearGroup");

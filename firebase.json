@@ -123,6 +123,13 @@
         }
       },
       {
+        "source": "/api/admin/gear-reservations/cancel",
+        "function": {
+          "functionId": "adminCancelGearReservation",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "/api/admin/reports/gear-top-rentals",
         "function": {
           "functionId": "getAdminGearTopRentals",

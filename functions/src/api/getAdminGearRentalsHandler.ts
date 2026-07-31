@@ -146,6 +146,7 @@ export async function handleGetAdminGearRentals(req: Request, res: Response, dep
         .get();
 
       type Row = {
+        id: string;
         userUid: string;
         userName: string;
         userNick: string;
@@ -190,6 +191,7 @@ export async function handleGetAdminGearRentals(req: Request, res: Response, dep
         if (userUid) uids.add(userUid);
 
         rows.push({
+          id: norm(r.id) || doc.id,
           userUid,
           userName: "",
           userNick: "",
