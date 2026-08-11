@@ -162,6 +162,47 @@ export const usersSyncFieldsFromSheetTask: ServiceTask<Payload> = {
       }
     }
 
+    // ── WYMUSZENIE UNIKALNOŚCI KSYWY: sync przerywany, jeśli arkusz zawiera dwie
+    // osoby z tą samą ksywą (porównanie case-insensitive). Spójne z walidacją
+    // unikalności przy rejestracji w aplikacji (patrz registerUserHandler.ts,
+    // profile.nicknameLower). Puste ksywy są pomijane — pole jest opcjonalne.
+    {
+      const byNicknameLower = new Map<string, string[]>();
+      for (const row of table.rows) {
+        const memberIdRaw = g(row, "id");
+        if (!memberIdRaw) continue;
+        const nicknameRaw = g(row, "ksywa");
+        if (!nicknameRaw) continue;
+        const nicknameLower = nicknameRaw.toLowerCase();
+        const list = byNicknameLower.get(nicknameLower) || [];
+        list.push(`#${memberIdRaw} ${nicknameRaw}`);
+        byNicknameLower.set(nicknameLower, list);
+      }
+
+      const duplicates = [...byNicknameLower.entries()].filter(([, list]) => list.length > 1);
+      if (duplicates.length) {
+        const MAX_LIST = 20;
+        const shown = duplicates.slice(0, MAX_LIST);
+        const extra = duplicates.length - shown.length;
+        const lines = shown.map(([, list]) => `• ${list.join(" ↔ ")}`).join("\n") +
+          (extra > 0 ? `\n• …i ${extra} więcej` : "");
+        const message =
+          "Synchronizacja przerwana — w arkuszu są duplikaty ksywy.\n" +
+          `Zduplikowane ksywy (${duplicates.length}):\n${lines}\n` +
+          "Popraw ksywy tak, aby każda była unikalna, i ponów synchronizację.";
+        logger.error("usersSyncFieldsFromSheet: ABORT — zduplikowane ksywy w arkuszu", {duplicateCount: duplicates.length});
+        return {
+          ok: false,
+          message,
+          details: {
+            validationError: true,
+            duplicateNicknameCount: duplicates.length,
+            duplicateNicknames: duplicates.map(([nicknameLower, list]) => ({nicknameLower, rows: list})),
+          },
+        };
+      }
+    }
+
     let found = 0;
     let patched = 0;
     let unchanged = 0;

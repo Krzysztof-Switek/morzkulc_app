@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-29T09:40:51",
+  "generated_at": "2026-08-11T19:57:02",
   "project_root": "C:\\Users\\kswitek\\Documents\\morzkulc_app",
   "settings": {
     "excluded_dirs": [
@@ -45,9 +45,9 @@
     {
       "path": ".claude/settings.local.json",
       "extension": ".json",
-      "size_bytes": 10357,
-      "line_count": 55,
-      "sha1_short": "a7bd7cb75f",
+      "size_bytes": 14187,
+      "line_count": 72,
+      "sha1_short": "e384c22252",
       "kind": "config",
       "module_aliases": [],
       "imports": [],
@@ -3752,6 +3752,43 @@
       "notes": []
     },
     {
+      "path": "Audyty/29.07_basen_logika_biznesowa.md",
+      "extension": ".md",
+      "size_bytes": 15039,
+      "line_count": 170,
+      "sha1_short": "d29a793a43",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# Moduł Basen — docelowa logika biznesowa (draft do iteracji)",
+        "## 0. Jak czytać ten dokument",
+        "## 1. Domena i kontekst",
+        "## 2. Model terminu i slotów",
+        "## 3. Kajaki — integracja z modułem Sprzęt",
+        "### Co już działa (zweryfikowane w kodzie, audyt z 23.07 tego nie wychwycił)",
+        "### Czego brakuje",
+        "### Operacyjnie (koniec sezonu)",
+        "## 4. Sprzęt drobny na basenie (kaski, wiosła, kamizelki, fartuchy)",
+        "## 5. Płatność i kredyty",
+        "## 6. Instruktorzy",
+        "### Kto może być instruktorem",
+        "### Mechanika zgłaszania i parowania (jak stara apka, §5.3–5.4)",
+        "### Nagroda za prowadzenie — uproszczenie względem starej apki",
+        "## 7. Uprawnienia administracyjne modułu",
+        "### Sprostowanie względem wcześniejszego założenia",
+        "## 8. Anulowanie zapisu",
+        "## 9. Rekomendacje porządkowe (do potwierdzenia, nie blokują tego dokumentu)",
+        "## 10. Otwarte pytania do potwierdzenia"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "Audyty/AUDIT_MAP.md",
       "extension": ".md",
       "size_bytes": 11997,
@@ -5120,9 +5157,9 @@
     {
       "path": "firebase.json",
       "extension": ".json",
-      "size_bytes": 11365,
-      "line_count": 457,
-      "sha1_short": "f6a5a817f8",
+      "size_bytes": 11559,
+      "line_count": 464,
+      "sha1_short": "b740928cf8",
       "kind": "config",
       "module_aliases": [],
       "imports": [],
@@ -5341,6 +5378,71 @@
         },
         {
           "name": "handleAdminEventsSyncCalendar",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/api/adminGearReservationCancelHandler.js",
+      "extension": ".js",
+      "size_bytes": 4241,
+      "line_count": 101,
+      "sha1_short": "e258508e95",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/equipment/kayaks/gear_kayaks_service",
+          "module": "../modules/equipment/kayaks/gear_kayaks_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/equipment/kayaks/gear_kayaks_service.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "enqueueJob",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "handleAdminGearReservationCancel",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -6198,9 +6300,9 @@
     {
       "path": "functions/lib/api/getAdminGearRentalsHandler.js",
       "extension": ".js",
-      "size_bytes": 8218,
-      "line_count": 196,
-      "sha1_short": "842679da2c",
+      "size_bytes": 8728,
+      "line_count": 202,
+      "sha1_short": "06b5a8c877",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -6815,9 +6917,9 @@
     {
       "path": "functions/lib/api/getAdminUserActivityHandler.js",
       "extension": ".js",
-      "size_bytes": 8962,
-      "line_count": 190,
-      "sha1_short": "a453a65811",
+      "size_bytes": 9052,
+      "line_count": 192,
+      "sha1_short": "28cbd60172",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -7383,9 +7485,9 @@
     {
       "path": "functions/lib/api/getGodzinkiHandler.js",
       "extension": ".js",
-      "size_bytes": 7434,
-      "line_count": 141,
-      "sha1_short": "2658615bb9",
+      "size_bytes": 7631,
+      "line_count": 145,
+      "sha1_short": "6a0a662958",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -8233,9 +8335,9 @@
     {
       "path": "functions/lib/api/registerUserHandler.js",
       "extension": ".js",
-      "size_bytes": 34329,
+      "size_bytes": 34333,
       "line_count": 642,
-      "sha1_short": "7448098de4",
+      "sha1_short": "83b1786fe2",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -8610,9 +8712,9 @@
     {
       "path": "functions/lib/index.js",
       "extension": ".js",
-      "size_bytes": 63049,
-      "line_count": 1467,
-      "sha1_short": "df6162f252",
+      "size_bytes": 63788,
+      "line_count": 1484,
+      "sha1_short": "6a227ba00c",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -8626,6 +8728,13 @@
         {
           "raw": "import/require ./api/adminEventsSyncCalendarHandler",
           "module": "./api/adminEventsSyncCalendarHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/adminGearReservationCancelHandler",
+          "module": "./api/adminGearReservationCancelHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -9033,6 +9142,7 @@
       "internal_dependencies": [
         "functions/lib/api/adminApprovalHandler.js",
         "functions/lib/api/adminEventsSyncCalendarHandler.js",
+        "functions/lib/api/adminGearReservationCancelHandler.js",
         "functions/lib/api/basenAdminAddGodzinyHandler.js",
         "functions/lib/api/basenAdminCorrectGodzinyHandler.js",
         "functions/lib/api/basenAdminSearchUsersHandler.js",
@@ -10039,9 +10149,9 @@
     {
       "path": "functions/lib/modules/equipment/kayaks/gear_kayaks_service.js",
       "extension": ".js",
-      "size_bytes": 13086,
-      "line_count": 239,
-      "sha1_short": "e686a163fe",
+      "size_bytes": 15398,
+      "line_count": 284,
+      "sha1_short": "a4d117edeb",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -10106,6 +10216,16 @@
       ],
       "classes": [],
       "functions": [
+        {
+          "name": "adminCancelReservation",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
         {
           "name": "cancelReservation",
           "type": "function",
@@ -10341,9 +10461,9 @@
     {
       "path": "functions/lib/modules/hours/godzinki_service.js",
       "extension": ".js",
-      "size_bytes": 39990,
-      "line_count": 879,
-      "sha1_short": "b66465832c",
+      "size_bytes": 40605,
+      "line_count": 889,
+      "sha1_short": "d469ad2eab",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -11531,9 +11651,9 @@
     {
       "path": "functions/lib/service/registry.js",
       "extension": ".js",
-      "size_bytes": 4127,
-      "line_count": 71,
-      "sha1_short": "deada7aa44",
+      "size_bytes": 4320,
+      "line_count": 73,
+      "sha1_short": "c5ba2b5f65",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -11568,6 +11688,13 @@
         {
           "raw": "import/require ./tasks/eventsSyncFromSheet",
           "module": "./tasks/eventsSyncFromSheet",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./tasks/gearNotifyReservationCancelledByAdmin",
+          "module": "./tasks/gearNotifyReservationCancelledByAdmin",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -11733,6 +11860,7 @@
         "functions/lib/service/tasks/basenNotifySessionCancelled.js",
         "functions/lib/service/tasks/eventsSyncCalendar.js",
         "functions/lib/service/tasks/eventsSyncFromSheet.js",
+        "functions/lib/service/tasks/gearNotifyReservationCancelledByAdmin.js",
         "functions/lib/service/tasks/gearPrivateStorage.js",
         "functions/lib/service/tasks/gearSyncAllFromSheet.js",
         "functions/lib/service/tasks/gearSyncKayaksFromSheet.js",
@@ -12188,6 +12316,64 @@
         },
         {
           "name": "shouldScrapAbsentEvent",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/service/tasks/gearNotifyReservationCancelledByAdmin.js",
+      "extension": ".js",
+      "size_bytes": 7105,
+      "line_count": 151,
+      "sha1_short": "35a342efeb",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "describeItems",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "displayNameOf",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "formatDatePL",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -13297,9 +13483,9 @@
     {
       "path": "functions/lib/service/tasks/reconcileOpeningBalance.js",
       "extension": ".js",
-      "size_bytes": 13306,
+      "size_bytes": 13308,
       "line_count": 254,
-      "sha1_short": "95f8bff625",
+      "sha1_short": "b628d7affc",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -14403,6 +14589,42 @@
       "notes": []
     },
     {
+      "path": "functions/scripts/checkUserGearReservations.js",
+      "extension": ".js",
+      "size_bytes": 2396,
+      "line_count": 71,
+      "sha1_short": "1fb277d4ab",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "tsToIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/scripts/deleteGhostGodzinki.js",
       "extension": ".js",
       "size_bytes": 3676,
@@ -15292,6 +15514,78 @@
       "notes": []
     },
     {
+      "path": "functions/src/api/adminGearReservationCancelHandler.ts",
+      "extension": ".ts",
+      "size_bytes": 2909,
+      "line_count": 89,
+      "sha1_short": "7753c00e7b",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/equipment/kayaks/gear_kayaks_service",
+          "module": "../modules/equipment/kayaks/gear_kayaks_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require express",
+          "module": "express",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/src/modules/equipment/kayaks/gear_kayaks_service.ts"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "enqueueJob",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "handleAdminGearReservationCancel",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/src/api/basenAdminAddGodzinyHandler.ts",
       "extension": ".ts",
       "size_bytes": 2819,
@@ -16073,9 +16367,9 @@
     {
       "path": "functions/src/api/getAdminGearRentalsHandler.ts",
       "extension": ".ts",
-      "size_bytes": 7821,
-      "line_count": 238,
-      "sha1_short": "4388c24e61",
+      "size_bytes": 8309,
+      "line_count": 245,
+      "sha1_short": "2cc19f749a",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -16705,9 +16999,9 @@
     {
       "path": "functions/src/api/getAdminUserActivityHandler.ts",
       "extension": ".ts",
-      "size_bytes": 8197,
-      "line_count": 207,
-      "sha1_short": "5b356105a6",
+      "size_bytes": 8279,
+      "line_count": 209,
+      "sha1_short": "cbd3cec850",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -17335,9 +17629,9 @@
     {
       "path": "functions/src/api/getGodzinkiHandler.ts",
       "extension": ".ts",
-      "size_bytes": 6021,
-      "line_count": 162,
-      "sha1_short": "4ede81bcf2",
+      "size_bytes": 6216,
+      "line_count": 166,
+      "sha1_short": "f62b305498",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -18119,9 +18413,9 @@
     {
       "path": "functions/src/api/registerUserHandler.ts",
       "extension": ".ts",
-      "size_bytes": 30877,
+      "size_bytes": 30881,
       "line_count": 805,
-      "sha1_short": "ab840569e2",
+      "sha1_short": "2a1a5d4753",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -18531,9 +18825,9 @@
     {
       "path": "functions/src/index.ts",
       "extension": ".ts",
-      "size_bytes": 53660,
-      "line_count": 1618,
-      "sha1_short": "9bb0a4021f",
+      "size_bytes": 54274,
+      "line_count": 1636,
+      "sha1_short": "3c643eb731",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -18547,6 +18841,13 @@
         {
           "raw": "import/require ./api/adminEventsSyncCalendarHandler",
           "module": "./api/adminEventsSyncCalendarHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/adminGearReservationCancelHandler",
+          "module": "./api/adminGearReservationCancelHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -18961,6 +19262,7 @@
       "internal_dependencies": [
         "functions/src/api/adminApprovalHandler.ts",
         "functions/src/api/adminEventsSyncCalendarHandler.ts",
+        "functions/src/api/adminGearReservationCancelHandler.ts",
         "functions/src/api/basenAdminAddGodzinyHandler.ts",
         "functions/src/api/basenAdminCorrectGodzinyHandler.ts",
         "functions/src/api/basenAdminSearchUsersHandler.ts",
@@ -19957,9 +20259,9 @@
     {
       "path": "functions/src/modules/equipment/kayaks/gear_kayaks_service.ts",
       "extension": ".ts",
-      "size_bytes": 11313,
-      "line_count": 290,
-      "sha1_short": "9475b3e44c",
+      "size_bytes": 13429,
+      "line_count": 347,
+      "sha1_short": "d2c157aea9",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -20024,6 +20326,16 @@
       ],
       "classes": [],
       "functions": [
+        {
+          "name": "adminCancelReservation",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
         {
           "name": "cancelReservation",
           "type": "function",
@@ -20259,9 +20571,9 @@
     {
       "path": "functions/src/modules/hours/godzinki_service.ts",
       "extension": ".ts",
-      "size_bytes": 39953,
-      "line_count": 1085,
-      "sha1_short": "8319f5c664",
+      "size_bytes": 40532,
+      "line_count": 1096,
+      "sha1_short": "50374bbb55",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -21474,9 +21786,9 @@
     {
       "path": "functions/src/service/registry.ts",
       "extension": ".ts",
-      "size_bytes": 3342,
-      "line_count": 70,
-      "sha1_short": "fa2facaa17",
+      "size_bytes": 3494,
+      "line_count": 72,
+      "sha1_short": "751c74543a",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -21511,6 +21823,13 @@
         {
           "raw": "import/require ./tasks/eventsSyncFromSheet",
           "module": "./tasks/eventsSyncFromSheet",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./tasks/gearNotifyReservationCancelledByAdmin",
+          "module": "./tasks/gearNotifyReservationCancelledByAdmin",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -21683,6 +22002,7 @@
         "functions/src/service/tasks/basenNotifySessionCancelled.ts",
         "functions/src/service/tasks/eventsSyncCalendar.ts",
         "functions/src/service/tasks/eventsSyncFromSheet.ts",
+        "functions/src/service/tasks/gearNotifyReservationCancelledByAdmin.ts",
         "functions/src/service/tasks/gearPrivateStorage.ts",
         "functions/src/service/tasks/gearSyncAllFromSheet.ts",
         "functions/src/service/tasks/gearSyncKayaksFromSheet.ts",
@@ -22187,6 +22507,74 @@
         },
         {
           "name": "shouldScrapAbsentEvent",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/src/service/tasks/gearNotifyReservationCancelledByAdmin.ts",
+      "extension": ".ts",
+      "size_bytes": 6146,
+      "line_count": 180,
+      "sha1_short": "fddd325745",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../types",
+          "module": "../types",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/src/service/types.ts"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "describeItems",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "displayNameOf",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "formatDatePL",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -23433,9 +23821,9 @@
     {
       "path": "functions/src/service/tasks/reconcileOpeningBalance.ts",
       "extension": ".ts",
-      "size_bytes": 10001,
+      "size_bytes": 10003,
       "line_count": 233,
-      "sha1_short": "c59f51e1d3",
+      "sha1_short": "f58b61a52f",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -25680,9 +26068,9 @@
     {
       "path": "public/core/render_shell.js",
       "extension": ".js",
-      "size_bytes": 67235,
-      "line_count": 1527,
-      "sha1_short": "5fdfb191e2",
+      "size_bytes": 69519,
+      "line_count": 1561,
+      "sha1_short": "ebc342509f",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -25813,6 +26201,16 @@
         },
         {
           "name": "fieldErrorToPl",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "fmtKmValue",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -27410,9 +27808,9 @@
     {
       "path": "public/modules/godzinki_module.js",
       "extension": ".js",
-      "size_bytes": 16792,
-      "line_count": 425,
-      "sha1_short": "373a1cb78e",
+      "size_bytes": 17234,
+      "line_count": 429,
+      "sha1_short": "1a4fc61de2",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -27852,9 +28250,9 @@
     {
       "path": "public/modules/km_module.js",
       "extension": ".js",
-      "size_bytes": 58526,
-      "line_count": 1486,
-      "sha1_short": "4e83d707b2",
+      "size_bytes": 59427,
+      "line_count": 1502,
+      "sha1_short": "e79e7bffa5",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -28614,9 +29012,9 @@
     {
       "path": "public/modules/raporty/gear_rentals.js",
       "extension": ".js",
-      "size_bytes": 8400,
-      "line_count": 190,
-      "sha1_short": "da1f26a9d7",
+      "size_bytes": 12608,
+      "line_count": 281,
+      "sha1_short": "0d63ab5671",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -28700,6 +29098,16 @@
         },
         {
           "name": "selectedCats",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "setActionMsg",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -29113,9 +29521,9 @@
     {
       "path": "public/modules/raporty/user_activity.js",
       "extension": ".js",
-      "size_bytes": 7608,
-      "line_count": 135,
-      "sha1_short": "67e48e6518",
+      "size_bytes": 7852,
+      "line_count": 136,
+      "sha1_short": "9bba9ad40d",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -29355,9 +29763,9 @@
     {
       "path": "public/styles/base.css",
       "extension": ".css",
-      "size_bytes": 15693,
-      "line_count": 539,
-      "sha1_short": "ff6c7da60b",
+      "size_bytes": 16349,
+      "line_count": 547,
+      "sha1_short": "c76c9c5491",
       "kind": "text",
       "module_aliases": [],
       "imports": [],
@@ -29440,9 +29848,9 @@
     {
       "path": "public/styles/godzinki.css",
       "extension": ".css",
-      "size_bytes": 3267,
-      "line_count": 172,
-      "sha1_short": "419020daf8",
+      "size_bytes": 3538,
+      "line_count": 184,
+      "sha1_short": "e120239c4b",
       "kind": "text",
       "module_aliases": [],
       "imports": [],
@@ -29491,9 +29899,9 @@
     {
       "path": "public/styles/start.css",
       "extension": ".css",
-      "size_bytes": 10205,
-      "line_count": 267,
-      "sha1_short": "172aabfdda",
+      "size_bytes": 10858,
+      "line_count": 291,
+      "sha1_short": "4dcb944c12",
       "kind": "text",
       "module_aliases": [],
       "imports": [],
@@ -29510,7 +29918,7 @@
       "extension": ".js",
       "size_bytes": 4997,
       "line_count": 147,
-      "sha1_short": "c70a33fbf1",
+      "sha1_short": "1c94cda819",
       "kind": "script",
       "module_aliases": [],
       "imports": [],

@@ -8,6 +8,7 @@ import cors from "cors";
 import type {Request, Response} from "express";
 
 import {handleRegisterUser} from "./api/registerUserHandler";
+import {handleCheckNicknameAvailability} from "./api/checkNicknameAvailabilityHandler";
 import {handleGetGearKayaks} from "./api/getGearKayaksHandler";
 import {handleGetGearItems} from "./api/getGearItemsHandler";
 import {handleGearMyReservations} from "./api/gearMyReservationsHandler";
@@ -519,6 +520,23 @@ export const registerUser = onRequest({invoker: "private"}, async (req, res) => 
     defaultScreenForRoleKey,
     computeAllowedActions,
     enqueueMemberSheetSync,
+  });
+});
+
+/**
+ * GET /api/nickname-availability?nickname=XXX (authenticated)
+ * Sprawdza czy ksywa jest wolna (case-insensitive) — używane przez przycisk
+ * "Sprawdź dostępność" w formularzu rejestracji oraz jako pomocnicze info przed
+ * wysłaniem formularza (ostateczna walidacja unikalności jest w /api/register).
+ */
+export const checkNicknameAvailability = onRequest({invoker: "private"}, async (req, res) => {
+  return handleCheckNicknameAvailability(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
   });
 });
 

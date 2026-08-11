@@ -8,6 +8,7 @@ export function spinnerHtml(text = "Morzkulc myśli") {
 }
 
 const REGISTER_URL = "/api/register";
+const NICKNAME_AVAILABILITY_URL = "/api/nickname-availability";
 const ADMIN_PENDING_URL = "/api/admin/pending";
 const MY_RESERVATIONS_URL = "/api/gear/my-reservations";
 const KAYAKS_URL = "/api/gear/kayaks";
@@ -1151,6 +1152,10 @@ function renderProfileForm({ viewEl, ctx }) {
       <div class="row">
         <label for="nickname">Ksywa</label>
         <input id="nickname" autocomplete="nickname" />
+        <div class="actions">
+          <button id="checkNicknameBtn" class="ghost" type="button">Sprawdź dostępność</button>
+        </div>
+        <div id="nicknameStatus" class="hint hidden"></div>
       </div>
 
       <div class="row">
@@ -1195,6 +1200,52 @@ function renderProfileForm({ viewEl, ctx }) {
     errEl.textContent = String(msg || "");
     errEl.classList.toggle("hidden", !errEl.textContent);
   };
+
+  const nicknameInput = document.getElementById("nickname");
+  const nicknameStatusEl = document.getElementById("nicknameStatus");
+  const checkNicknameBtn = document.getElementById("checkNicknameBtn");
+
+  const setNicknameStatus = (msg, state) => {
+    nicknameStatusEl.textContent = String(msg || "");
+    nicknameStatusEl.classList.toggle("hidden", !msg);
+    nicknameStatusEl.classList.remove("hint", "ok", "err");
+    nicknameStatusEl.classList.add(state === "ok" ? "ok" : state === "err" ? "err" : "hint");
+  };
+
+  // Ksywa mogła się zmienić od ostatniego sprawdzenia — cofnij status.
+  nicknameInput.addEventListener("input", () => setNicknameStatus("", null));
+
+  checkNicknameBtn.addEventListener("click", async () => {
+    const nn = String(nicknameInput.value || "").trim();
+    if (!nn) {
+      setNicknameStatus("Wpisz ksywę, którą chcesz sprawdzić.", "err");
+      return;
+    }
+    if (!ctx.idToken) {
+      setNicknameStatus("Brak tokenu sesji (odśwież stronę).", "err");
+      return;
+    }
+
+    checkNicknameBtn.disabled = true;
+    const prevLabel = checkNicknameBtn.textContent;
+    checkNicknameBtn.textContent = "Sprawdzam...";
+    try {
+      const result = await apiGetJson({
+        url: `${NICKNAME_AVAILABILITY_URL}?nickname=${encodeURIComponent(nn)}`,
+        idToken: ctx.idToken
+      });
+      if (result?.available) {
+        setNicknameStatus(`Ksywa "${nn}" jest wolna.`, "ok");
+      } else {
+        setNicknameStatus(`Ksywa "${nn}" jest już zajęta — wybierz inną.`, "err");
+      }
+    } catch (e) {
+      setNicknameStatus("Nie udało się sprawdzić: " + (e?.message || "spróbuj ponownie."), "err");
+    } finally {
+      checkNicknameBtn.disabled = false;
+      checkNicknameBtn.textContent = prevLabel;
+    }
+  });
 
   btn.addEventListener("click", async () => {
     setErr("");
@@ -1521,6 +1572,7 @@ function fieldErrorToPl(field, code) {
   if (code === "invalid_format") return `${label}: nieprawidłowy format`;
   if (code === "cannot_be_future") return `${label}: nie może być w przyszłości`;
   if (code === "must_be_true") return `${label}: musisz zaakceptować`;
+  if (code === "taken") return `${label}: jest już zajęta, wybierz inną`;
   return `${label}: błąd (${code})`;
 }
 

@@ -58,6 +58,11 @@ function normalizeStr(v: any): string {
   return String(v || "").trim();
 }
 
+// Klucz do porównań ksywy niewrażliwych na wielkość liter (przechowywany w profile.nicknameLower).
+function normalizeNicknameKey(v: any): string {
+  return normalizeStr(v).toLowerCase();
+}
+
 function normalizePhone(v: any): string {
   const s = normalizeStr(v);
   return s.replace(/\s+/g, " ");
@@ -357,6 +362,25 @@ async function enqueueGodzinkiHistMerge(
   });
 }
 
+/**
+ * Zwraca uid właściciela ksywy (profile.nicknameLower), pomijając excludeUid (samego siebie).
+ * Porównanie niewrażliwe na wielkość liter — patrz normalizeNicknameKey.
+ */
+async function findNicknameOwnerUid(
+  db: FirebaseFirestore.Firestore,
+  nicknameLower: string,
+  excludeUid: string
+): Promise<string | null> {
+  if (!nicknameLower) return null;
+  const snap = await db
+    .collection("users_active")
+    .where("profile.nicknameLower", "==", nicknameLower)
+    .limit(5)
+    .get();
+  const owner = snap.docs.find((d) => d.id !== excludeUid);
+  return owner ? owner.id : null;
+}
+
 type Szkoleniowiec = {name: string; email: string};
 
 /**
@@ -469,6 +493,20 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
         return;
       }
 
+      // ✅ ksywa musi być unikalna (case-insensitive) — nie chcemy dwóch osób z tą samą ksywą
+      if (incomingProfile.nickname) {
+        const nicknameLower = normalizeNicknameKey(incomingProfile.nickname);
+        const takenBy = await findNicknameOwnerUid(db, nicknameLower, uid);
+        if (takenBy) {
+          res.status(400).json({
+            ok: false,
+            code: "validation_failed",
+            fields: {nickname: "taken"},
+          });
+          return;
+        }
+      }
+
       const userRef = db.collection("users_active").doc(uid);
       const existing = await userRef.get();
 
@@ -577,6 +615,9 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
               profile: {
                 ...(data as any).profile,
                 ...incomingProfile,
+                ...(incomingProfile.nickname ?
+                  {nicknameLower: normalizeNicknameKey(incomingProfile.nickname)} :
+                  {}),
                 consents: {
                   ...((data as any).profile?.consents || {}),
                   ...consentPatch,
@@ -731,6 +772,9 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
 
         docToCreate.profile = {
           ...incomingProfile,
+          ...(incomingProfile.nickname ?
+            {nicknameLower: normalizeNicknameKey(incomingProfile.nickname)} :
+            {}),
           consents: {
             ...consentPatch,
           },
