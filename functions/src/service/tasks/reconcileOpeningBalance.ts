@@ -171,7 +171,7 @@ export const reconcileOpeningBalanceTask: ServiceTask<Payload> = {
         const obEarns = ledgerSnap.docs.filter((d) => (d.data() as any)?.approvedBy === "opening_balance");
 
         if (obEarns.length === 0) {
-          if (obHours > 0) {
+          if (obHours !== 0) {
             if (!dryRun) {
               await creditOpeningBalance(ctx.firestore, uid, obHours, OB_HOURS_EXPIRES_AT);
               await userDoc.ref.set({"service.openingBalanceHoursCredited": true}, {merge: true});

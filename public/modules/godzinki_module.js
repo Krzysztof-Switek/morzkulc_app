@@ -80,14 +80,17 @@ function renderRecordTable(records) {
           // Zwolnienie z opłaty (tegoroczna szkoleniówka) — koszt pokazujemy przekreślony,
           // bo realnie NIE obciążył salda.
           const isWaived = isSpend && r.waived === true;
+          // Anulowana rezerwacja (self-service lub przez zarząd) — koszt zwrócony,
+          // saldo już nie jest obciążone, ale wpis zostaje w historii przekreślony.
+          const isRefunded = isSpend && r.refunded === true;
           const isZero = Number(r.amount) === 0;
-          const amountClass = isWaived ? "godzinkiAmountWaived" : isZero ? "" : isSpend ? "godzinkiAmountNeg" : "godzinkiAmountPos";
+          const amountClass = isWaived ? "godzinkiAmountWaived" : isRefunded ? "godzinkiAmountRefunded" : isZero ? "" : isSpend ? "godzinkiAmountNeg" : "godzinkiAmountPos";
           const amountSign = isZero ? "" : isSpend ? "-" : "+";
           // Kolor kwoty rozróżnia przyznane/wydane — bez szarej linii meta.
           // Wyjątek: pozycje oczekujące (earn niezatwierdzone) dostają znacznik,
           // bo wizualnie są jak przyznane (zielony +).
           const isPending = r.type === "earn" && !r.approved;
-          const amountHtml = isWaived
+          const amountHtml = (isWaived || isRefunded)
             ? `<s>${amountSign}${esc(String(r.amount))} h</s>`
             : `${amountSign}${esc(String(r.amount))} h`;
           return `
@@ -97,6 +100,7 @@ function renderRecordTable(records) {
               <td>
                 <span class="godzinkiReason">${esc(shortenReason(r.reason))}</span>
                 ${isWaived ? `<span class="godzinkiWaivedTag">zwolnienie${r.schoolYear ? ` kurs ${esc(String(r.schoolYear))}` : ""}</span>` : ""}
+                ${isRefunded ? `<span class="godzinkiRefundedTag">zwrócono${r.refundedAt ? ` ${esc(formatDate(r.refundedAt))}` : ""}</span>` : ""}
                 ${isPending ? `<span class="godzinkiPending">oczekuje</span>` : ""}
               </td>
             </tr>

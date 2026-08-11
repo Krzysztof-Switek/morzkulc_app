@@ -75,6 +75,8 @@ function serialize(r: any): any {
     out.fromEarn = r.fromEarn ?? 0;
     out.waived = r.waived === true;
     out.schoolYear = r.schoolYear ?? null;
+    out.refunded = r.refunded === true;
+    out.refundedAt = tsIso(r.refundedAt);
   }
   return out;
 }

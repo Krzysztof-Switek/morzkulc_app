@@ -529,7 +529,7 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
               );
               // Kredytuj godzinki z bilansu otwarcia (fire-and-forget, idempotentne przez marker)
               const obHours = getObHours(nameFound.obData);
-              if (obHours > 0 && !data.service?.openingBalanceHoursCredited) {
+              if (obHours !== 0 && !data.service?.openingBalanceHoursCredited) {
                 creditOpeningBalance(db, uid, obHours, OB_HOURS_EXPIRES_AT)
                   .then(() => userRef.set({"service.openingBalanceHoursCredited": true}, {merge: true}))
                   .catch((e: any) => console.error("creditOpeningBalance (existing user) failed", {uid, message: e?.message}));
@@ -744,7 +744,7 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
       // Kredytuj godzinki z bilansu otwarcia (fire-and-forget, idempotentne przez marker)
       if (openingMatch && found.obData) {
         const obHours = getObHours(found.obData);
-        if (obHours > 0) {
+        if (obHours !== 0) {
           creditOpeningBalance(db, uid, obHours, OB_HOURS_EXPIRES_AT)
             .then(() => userRef.set({"service.openingBalanceHoursCredited": true}, {merge: true}))
             .catch((e: any) => console.error("creditOpeningBalance (new user) failed", {uid, message: e?.message}));

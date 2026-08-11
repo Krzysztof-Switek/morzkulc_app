@@ -66,6 +66,18 @@
   color: var(--success, #4a4);
 }
 
+/* Anulowana rezerwacja — koszt zwrócony, saldo już nieobciążone */
+.godzinkiAmountRefunded {
+  color: var(--muted, #888);
+}
+.godzinkiRefundedTag {
+  display: inline-block;
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--success, #4a4);
+}
+
 /* Kolumna daty */
 .godzinkiDateCell {
   white-space: nowrap;

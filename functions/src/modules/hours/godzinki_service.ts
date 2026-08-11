@@ -965,11 +965,14 @@ export async function creditApprovedEarn(
   amount: number,
   grantedAt: Date,
   expiresAt: Date,
-  opts?: {reason?: string; approvedBy?: string; submittedBy?: string}
+  opts?: {reason?: string; approvedBy?: string; submittedBy?: string; createdAt?: Date}
 ): Promise<{id: string}> {
   const ref = db.collection(COLLECTION).doc();
   const grantedTs = admin.firestore.Timestamp.fromDate(grantedAt);
   const expiresTs = admin.firestore.Timestamp.fromDate(expiresAt);
+  const createdTs = opts?.createdAt ?
+    admin.firestore.Timestamp.fromDate(opts.createdAt) :
+    admin.firestore.FieldValue.serverTimestamp();
 
   await ref.set({
     id: ref.id,
@@ -984,17 +987,26 @@ export async function creditApprovedEarn(
     approvedBy: opts?.approvedBy ?? "system",
     reason: opts?.reason ?? "",
     submittedBy: opts?.submittedBy ?? "system",
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    createdAt: createdTs,
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 
   return {id: ref.id};
 }
 
+// Data zamknięcia starej (przed-aplikacyjnej) ewidencji godzinek — z nazwy kolumny
+// w arkuszu BO26 „Godzinki Bilans otwarcia01.04.2026". Pula bilansu otwarcia
+// musi nosić TĘ datę (grantedAt + createdAt), nie datę rejestracji/remediacji —
+// inaczej w historii wygląda jak świeży wpis zamiast najstarszej pozycji salda,
+// a w FIFO odliczaniu nie byłaby traktowana jako najstarsza pula.
+const OPENING_BALANCE_DATE = new Date(Date.UTC(2026, 3, 1));
+
 /**
  * Zapisuje godzinki z bilansu otwarcia jako od razu zatwierdzone (approved=true).
- * Używane wyłącznie przy pierwszej rejestracji użytkownika pasującego do bilansu otwarcia.
- * grantedAt = dzisiaj (UTC), expiresAt przekazywane z zewnątrz (wymaganie biznesowe: 30.06.2029).
+ * Używane przy pierwszej rejestracji oraz przy uzgodnieniu (opening.reconcile) użytkownika
+ * pasującego do bilansu otwarcia.
+ * grantedAt = createdAt = OPENING_BALANCE_DATE (01.04.2026), expiresAt przekazywane
+ * z zewnątrz (wymaganie biznesowe: 30.06.2029).
  */
 export async function creditOpeningBalance(
   db: FirebaseFirestore.Firestore,
@@ -1002,11 +1014,10 @@ export async function creditOpeningBalance(
   amount: number,
   expiresAt: Date
 ): Promise<{id: string}> {
-  const today = new Date();
-  const grantedAt = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
-  return creditApprovedEarn(db, uid, amount, grantedAt, expiresAt, {
+  return creditApprovedEarn(db, uid, amount, OPENING_BALANCE_DATE, expiresAt, {
     reason: "Bilans otwarcia",
     approvedBy: "opening_balance",
+    createdAt: OPENING_BALANCE_DATE,
     submittedBy: "system",
   });
 }

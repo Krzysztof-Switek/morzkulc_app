@@ -48,6 +48,10 @@ function serializeRecord(r: GodzinkiRecord): Record<string, any> {
     out.reservationId = r.reservationId ?? null;
     out.waived = r.waived === true;
     out.schoolYear = r.schoolYear ?? null;
+    out.refunded = r.refunded === true;
+    out.refundedAt = r.refundedAt && typeof (r.refundedAt as any).toDate === "function" ?
+      (r.refundedAt as any).toDate().toISOString() :
+      null;
   }
 
   return out;
