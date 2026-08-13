@@ -520,6 +520,7 @@ export const registerUser = onRequest({invoker: "private"}, async (req, res) => 
     defaultScreenForRoleKey,
     computeAllowedActions,
     enqueueMemberSheetSync,
+    enqueueWorkspaceGroupsRoleSync,
   });
 });
 
@@ -977,6 +978,36 @@ async function enqueueMemberSheetSync(uid: string): Promise<void> {
       id: jobId,
       taskId: "members.syncToSheet",
       payload: {uid},
+      status: "queued",
+      attempts: 0,
+      createdAt: existing.exists ? existing.data()?.createdAt : now,
+      updatedAt: now,
+    });
+  });
+}
+
+/**
+ * Kolejkuje rekoncyliację grup Workspace (lista@ i grupy z roleMappings) dla jednego
+ * użytkownika, tuż po tym jak role_key zmienił się poza sheet-syncem (dopasowanie do
+ * bilansu otwarcia / self-declared kursant — patrz registerUserHandler.ts). Deterministyczne
+ * ID joba (`role-groups-sync:{uid}`) — ten sam wzorzec re-enqueue co enqueueMemberSheetSync.
+ * Patrz Audyty/13.08_NAPRAWA_UPRAWNIEŃ_LISTA.MD.
+ */
+async function enqueueWorkspaceGroupsRoleSync(uid: string, email: string): Promise<void> {
+  const jobId = `role-groups-sync:${uid}`;
+  const jobRef = db.collection("service_jobs").doc(jobId);
+  const now = admin.firestore.FieldValue.serverTimestamp();
+
+  await db.runTransaction(async (tx) => {
+    const existing = await tx.get(jobRef);
+    if (existing.exists) {
+      const status = String((existing.data() as any)?.status || "");
+      if (status === "queued" || status === "running") return; // już w kolejce lub działa — pomiń
+    }
+    tx.set(jobRef, {
+      id: jobId,
+      taskId: "users.reconcileWorkspaceGroups",
+      payload: {email},
       status: "queued",
       attempts: 0,
       createdAt: existing.exists ? existing.data()?.createdAt : now,
@@ -1574,6 +1605,22 @@ export const usersSyncRolesDaily = onSchedule(
     logger.info("usersSyncRolesDaily: start");
     const result = await runTaskById("users.syncRolesFromSheet", {});
     logger.info("usersSyncRolesDaily: done", result as unknown as Record<string, unknown>);
+  }
+);
+
+/**
+ * SCHEDULER: Dzienna rekoncyliacja członkostwa w lista@ i grupach z setup/app.roleMappings
+ * wg role_key/status_key każdego aktywnego (i zawieszonego/skreślonego — dostęp odbierany)
+ * użytkownika, porównana z żywym stanem Google Directory API. Zamyka luki niezależnie od tego,
+ * która ścieżka kodu zmieniła rolę (patrz Audyty/13.08_NAPRAWA_UPRAWNIEŃ_LISTA.MD).
+ * Uruchamiany o 04:40 — po usersSyncRolesDaily (04:30), przed eventsSyncSheetDaily (04:45).
+ */
+export const usersReconcileWorkspaceGroupsDaily = onSchedule(
+  {schedule: "40 4 * * *", timeZone: "Europe/Warsaw"},
+  async () => {
+    logger.info("usersReconcileWorkspaceGroupsDaily: start");
+    const result = await runTaskById("users.reconcileWorkspaceGroups", {});
+    logger.info("usersReconcileWorkspaceGroupsDaily: done", result as unknown as Record<string, unknown>);
   }
 );
 

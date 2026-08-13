@@ -3,6 +3,7 @@ import {ServiceTask} from "../types";
 import {GoogleSheetsProvider} from "../providers/googleSheetsProvider";
 import {GoogleWorkspaceProvider} from "../providers/googleWorkspaceProvider";
 import {getServiceConfig} from "../service_config";
+import {listaRoleForUserRole, syncWorkspaceGroupsForUser, syncListaGroupForUser} from "../workspaceGroupSync";
 
 type Payload = {
   dry?: boolean;
@@ -39,99 +40,6 @@ function buildInvertedLabelMap(
     }
   }
   return out;
-}
-
-function listaRoleForUserRole(roleKey: string): "MANAGER" | "MEMBER" | null {
-  if (roleKey === "rola_kursant") return null;
-  if (roleKey === "rola_sympatyk") return "MEMBER";
-  return "MANAGER"; // kandydat, czlonek, zarzad, kr
-}
-
-/**
- * Synchronizes Workspace group membership for a user after their role changes.
- *
- * Logic:
- *   - allManagedGroups = union of groups from all entries in roleMappings
- *   - targetGroups     = groups for the user's new role
- *   - For each managed group: add if in target, remove if not in target
- *
- * lista@ and other groups not listed in any roleMappings are never touched.
- * All operations are idempotent (add is no-op if already member, remove is no-op if not member).
- * Errors are thrown to the caller (caller decides whether to count as fatal).
- */
-async function syncWorkspaceGroupsForUser(
-  workspace: GoogleWorkspaceProvider,
-  userEmail: string,
-  newRoleKey: string,
-  roleMappings: Record<string, RoleMappingEntry>,
-  logger: {info: (...args: any[]) => void; warn: (...args: any[]) => void; error: (...args: any[]) => void},
-  dryRun: boolean
-): Promise<void> {
-  // Zbuduj zestaw wszystkich grup zarządzanych przez ten system
-  const allManagedGroups = new Set<string>();
-  for (const entry of Object.values(roleMappings)) {
-    for (const g of (entry.groups || [])) {
-      const gNorm = norm(g).toLowerCase();
-      if (gNorm && gNorm.includes("@")) {
-        allManagedGroups.add(gNorm);
-      }
-    }
-  }
-
-  if (allManagedGroups.size === 0) {
-    logger.info("syncWorkspaceGroups: no groups configured in roleMappings — skip", {userEmail});
-    return;
-  }
-
-  // Docelowe grupy dla nowej roli
-  const targetGroups = new Set<string>(
-    (roleMappings[newRoleKey]?.groups || [])
-      .map((g) => norm(g).toLowerCase())
-      .filter((g) => g.includes("@"))
-  );
-
-  for (const groupEmail of allManagedGroups) {
-    const shouldBeIn = targetGroups.has(groupEmail);
-
-    if (dryRun) {
-      logger.info("DRYRUN syncWorkspaceGroups", {
-        userEmail,
-        groupEmail,
-        action: shouldBeIn ? "add" : "remove",
-      });
-      continue;
-    }
-
-    if (shouldBeIn) {
-      try {
-        const result = await workspace.addMemberToGroup(groupEmail, userEmail, "MEMBER");
-        logger.info("syncWorkspaceGroups: addMember", {userEmail, groupEmail, result});
-      } catch (e: any) {
-        logger.error("syncWorkspaceGroups: addMember failed", {
-          userEmail,
-          groupEmail,
-          message: e?.message,
-          code: e?.code,
-        });
-        throw e;
-      }
-    } else {
-      try {
-        const result = await workspace.removeMemberFromGroup(groupEmail, userEmail);
-        if (result === "removed") {
-          logger.info("syncWorkspaceGroups: removeMember", {userEmail, groupEmail});
-        }
-      } catch (e: any) {
-        logger.error("syncWorkspaceGroups: removeMember failed", {
-          userEmail,
-          groupEmail,
-          message: e?.message,
-          code: e?.code,
-        });
-        throw e;
-      }
-    }
-  }
 }
 
 // Built-in fallbacks — must match roleLabel() and statusLabel() in index.ts.
@@ -360,23 +268,7 @@ export const usersSyncRolesFromSheetTask: ServiceTask<Payload> = {
 
         // Aktualizuj dostęp do lista@ na podstawie nowej roli (non-fatal)
         if (roleChanged && newRoleKey && !dryRun) {
-          const targetListaRole = listaRoleForUserRole(newRoleKey);
-          try {
-            if (targetListaRole === null) {
-              await workspace.removeMemberFromGroup(cfg.listaGroupEmail, email);
-              ctx.logger.info("syncRoles: removed from lista@", {email, newRoleKey});
-            } else {
-              await workspace.addMemberToGroup(cfg.listaGroupEmail, email, targetListaRole);
-              ctx.logger.info("syncRoles: lista@ updated", {email, newRoleKey, targetListaRole});
-            }
-          } catch (listaErr: any) {
-            ctx.logger.error("syncRoles: lista@ update failed (non-fatal)", {
-              email,
-              newRoleKey,
-              message: listaErr?.message,
-              code: listaErr?.code,
-            });
-          }
+          await syncListaGroupForUser(workspace, cfg.listaGroupEmail, email, newRoleKey, ctx.logger, dryRun);
         }
 
         // Sync grup Workspace jeśli rola się zmieniła i roleMappings jest skonfigurowane

@@ -34,6 +34,10 @@ export type RegisterUserDeps = {
 
   // ✅ sheets sync (via service_job for retry support)
   enqueueMemberSheetSync: (uid: string) => Promise<void>;
+
+  // Rekoncyliacja grup Workspace (lista@ + roleMappings) po zmianie role_key poza sheet-syncem
+  // (dopasowanie do bilansu otwarcia / self-declared kursant) — patrz Audyty/13.08_NAPRAWA_UPRAWNIEŃ_LISTA.MD.
+  enqueueWorkspaceGroupsRoleSync: (uid: string, email: string) => Promise<void>;
 };
 
 type ProfileInput = {
@@ -444,6 +448,7 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
     getSetupApp,
     defaultScreenForRoleKey,
     enqueueMemberSheetSync,
+    enqueueWorkspaceGroupsRoleSync,
   } = deps;
 
   if (sendPreflight(req, res)) return;
@@ -572,6 +577,10 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
                   .then(() => userRef.set({"service.openingBalanceHoursCredited": true}, {merge: true}))
                   .catch((e: any) => console.error("creditOpeningBalance (existing user) failed", {uid, message: e?.message}));
               }
+              // Rola zmieniła się poza sheet-syncem (dopasowanie do bilansu otwarcia) — zsynchronizuj
+              // grupy Workspace (lista@ itd.), inaczej rola w grupie zostaje trwale nieaktualna.
+              enqueueWorkspaceGroupsRoleSync(uid, email)
+                .catch((e: any) => console.error("enqueueWorkspaceGroupsRoleSync (opening balance match) failed", {uid, message: e?.message}));
             }
           }
         }
@@ -597,6 +606,10 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
             },
             {merge: true}
           );
+          // Rola zmieniła się poza sheet-syncem (self-declared kursant) — zsynchronizuj grupy
+          // Workspace (usuwa z lista@, bo kursant nie ma tam dostępu).
+          enqueueWorkspaceGroupsRoleSync(uid, email)
+            .catch((e: any) => console.error("enqueueWorkspaceGroupsRoleSync (self-declared kursant) failed", {uid, message: e?.message}));
         }
 
         let profileComplete = isProfileComplete((data as any).profile);

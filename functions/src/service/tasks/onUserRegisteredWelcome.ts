@@ -1,4 +1,5 @@
 import { ServiceTask } from "../types";
+import { listaRoleForUserRole } from "../workspaceGroupSync";
 
 export interface OnUserRegisteredPayload {
   uid: string;
@@ -20,12 +21,6 @@ const MEMBER_LEVEL_ROLES = new Set([
   "rola_zarzad",
   "rola_kr",
 ]);
-
-function listaRoleForUserRole(roleKey: string): "MANAGER" | "MEMBER" | null {
-  if (roleKey === "rola_kursant") return null;
-  if (roleKey === "rola_sympatyk") return "MEMBER";
-  return "MANAGER"; // kandydat, czlonek, zarzad, kr
-}
 
 export const onUserRegisteredWelcomeTask: ServiceTask<OnUserRegisteredPayload> = {
   id: "onUserRegistered.welcome",

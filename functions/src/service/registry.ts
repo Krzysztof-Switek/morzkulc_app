@@ -27,6 +27,7 @@ import { gearSyncAllFromSheetTask } from "./tasks/gearSyncAllFromSheet";
 import { adminNotifyPendingApprovalsTask } from "./tasks/adminNotifyPendingApprovals";
 import { adminApprovalWriteBackTask } from "./tasks/adminApprovalWriteBack";
 import { gearNotifyReservationCancelledByAdminTask } from "./tasks/gearNotifyReservationCancelledByAdmin";
+import { reconcileWorkspaceGroupsTask } from "./tasks/reconcileWorkspaceGroups";
 
 const tasks: ServiceTask[] = [
   onUserRegisteredWelcomeTask,
@@ -59,6 +60,7 @@ const tasks: ServiceTask[] = [
   adminNotifyPendingApprovalsTask,
   adminApprovalWriteBackTask,
   gearNotifyReservationCancelledByAdminTask,
+  reconcileWorkspaceGroupsTask,
 ];
 
 export function getTaskRegistry(): Map<string, ServiceTask> {
