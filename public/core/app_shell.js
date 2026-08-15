@@ -9,12 +9,16 @@ import {
 import { apiPostJson, apiGetJson, setApiTokenGetter } from "/core/api_client.js";
 import { buildModulesFromSetup } from "/core/modules_registry.js";
 import { renderNav, renderView, spinnerHtml } from "/core/render_shell.js";
+import { setSwUpdatePending, hardReloadApp } from "/core/sw_update.js";
 
 // ── Service Worker registration + nasłuch aktualizacji ───────────────────────
 let swUpdatePending = false;
+let swRegistration = null;
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/sw.js").catch((err) => {
+  navigator.serviceWorker.register("/sw.js").then((reg) => {
+    swRegistration = reg;
+  }).catch((err) => {
     // Rejestracja SW nie jest krytyczna — aplikacja działa bez niego
     console.warn("SW registration failed:", err?.message);
   });
@@ -22,6 +26,16 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.addEventListener("message", (event) => {
     if (event.data?.type === "SW_UPDATED") {
       swUpdatePending = true;
+      setSwUpdatePending(true);
+    }
+  });
+
+  // Appka bywa trzymana otwarta długo (karta w tle, PWA na telefonie) —
+  // przeglądarka nie zawsze w porę sama sprawdza, czy jest nowy sw.js.
+  // Gdy karta wraca na pierwszy plan, wymuszamy sprawdzenie ręcznie.
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      swRegistration?.update().catch(() => { /* brak sieci — nieistotne */ });
     }
   });
 }
@@ -55,8 +69,8 @@ window.__APP_CTX__ = ctx;
 
 loginBtn.addEventListener("click", async () => {
   if (swUpdatePending) {
-    // Jest nowa wersja aplikacji — przeładuj przed logowaniem
-    location.reload();
+    // Jest nowa wersja aplikacji — pełny reset przed logowaniem
+    hardReloadApp();
     return;
   }
   await authLoginPopup();

@@ -28,6 +28,8 @@ import { adminNotifyPendingApprovalsTask } from "./tasks/adminNotifyPendingAppro
 import { adminApprovalWriteBackTask } from "./tasks/adminApprovalWriteBack";
 import { gearNotifyReservationCancelledByAdminTask } from "./tasks/gearNotifyReservationCancelledByAdmin";
 import { reconcileWorkspaceGroupsTask } from "./tasks/reconcileWorkspaceGroups";
+import { eventsNotifyNewTask } from "./tasks/eventsNotifyNew";
+import { eventsNotifyUpcomingTask } from "./tasks/eventsNotifyUpcoming";
 
 const tasks: ServiceTask[] = [
   onUserRegisteredWelcomeTask,
@@ -61,6 +63,8 @@ const tasks: ServiceTask[] = [
   adminApprovalWriteBackTask,
   gearNotifyReservationCancelledByAdminTask,
   reconcileWorkspaceGroupsTask,
+  eventsNotifyNewTask,
+  eventsNotifyUpcomingTask,
 ];
 
 export function getTaskRegistry(): Map<string, ServiceTask> {

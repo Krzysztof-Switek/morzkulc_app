@@ -1,6 +1,6 @@
 # Project Context Map
 
-Generated at: `2026-08-11T19:57:02`
+Generated at: `2026-08-14T11:25:51`
 Project root: `C:\Users\kswitek\Documents\morzkulc_app`
 
 Purpose: this file is a compact project map for Claude Code. It shows which files exist, what functions/classes they contain, and which internal files depend on which other files.
@@ -57,12 +57,12 @@ Excluded sensitive files:
 
 ## Summary
 
-- Total scanned files: `476`
+- Total scanned files: `486`
 - Python files: `42`
-- Script files JS/TS/GS/etc.: `310`
+- Script files JS/TS/GS/etc.: `318`
 - Config files: `21`
-- Markdown files: `74`
-- Internal dependency edges: `487`
+- Markdown files: `76`
+- Internal dependency edges: `501`
 
 ## Project tree
 
@@ -82,6 +82,7 @@ Excluded sensitive files:
 - Audyty/
   - 10.06_session_summary.md
   - 10.07_audyt_kursant_błąd.md
+  - 11.08_blachy_i_brakujące_pola_TO_DO.md
   - 12.06_godzinki_audyt.md
   - 12.06_godzinki_podsumowanie.md
   - 12.06_godzinki_potencjalne_problemy.md
@@ -91,6 +92,7 @@ Excluded sensitive files:
   - 12.06_panel_zarzadu_problemy_i_plan_wdrozenia.md
   - 12.06_podsumowanie_sesji_zarzad.md
   - 13.06_podsumowanie_wdrożenia_sesji_zarząd.md
+  - 13.08_NAPRAWA_UPRAWNIEŃ_LISTA.MD
   - 15.06_audyt_invoker_funkcje.md
   - 15.06_zarząd_TO_DO.md
   - 16.06.bilans_otwarcia_plan.md
@@ -192,6 +194,7 @@ Excluded sensitive files:
       - basenCreateSessionHandler.js
       - basenEnrollHandler.js
       - basenGrantKarnetHandler.js
+      - checkNicknameAvailabilityHandler.js
       - gearBundleReservationCreateHandler.js
       - gearFavoriteToggleHandler.js
       - gearKayaksListHandler.js
@@ -295,6 +298,7 @@ Excluded sensitive files:
         - membersSyncToSheet.js
         - onUserRegisteredWelcome.js
         - reconcileOpeningBalance.js
+        - reconcileWorkspaceGroups.js
         - setupSyncFromSheet.js
         - usersNotifyAkademikAccessChanged.js
         - usersSyncFieldsFromSheet.js
@@ -310,6 +314,7 @@ Excluded sensitive files:
       - runner.js
       - service_config.js
       - types.js
+      - workspaceGroupSync.js
     - index.js
   - scripts/
     - auditInvoker.js
@@ -325,6 +330,7 @@ Excluded sensitive files:
     - enqueueGroupsDiagnose.js
     - enqueueListaPolicy.js
     - enqueueReconcileOpeningBalance.js
+    - enqueueReconcileWorkspaceGroups.js
     - fixGhostApprovals.js
     - previewOpeningBalanceReconcile.js
     - printFnUrls.js
@@ -351,6 +357,7 @@ Excluded sensitive files:
       - basenCreateSessionHandler.ts
       - basenEnrollHandler.ts
       - basenGrantKarnetHandler.ts
+      - checkNicknameAvailabilityHandler.ts
       - gearBundleReservationCreateHandler.ts
       - gearFavoriteToggleHandler.ts
       - gearKayaksListHandler.ts
@@ -453,6 +460,7 @@ Excluded sensitive files:
         - membersSyncToSheet.ts
         - onUserRegisteredWelcome.ts
         - reconcileOpeningBalance.ts
+        - reconcileWorkspaceGroups.ts
         - setupSyncFromSheet.ts
         - usersNotifyAkademikAccessChanged.ts
         - usersSyncFieldsFromSheet.ts
@@ -468,6 +476,7 @@ Excluded sensitive files:
       - runner.ts
       - service_config.ts
       - types.ts
+      - workspaceGroupSync.ts
     - index.ts
   - test/
     - events_core.test.ts
@@ -475,6 +484,7 @@ Excluded sensitive files:
     - gear_core.test.ts
     - godzinki_core.test.ts
     - sync_core.test.ts
+    - workspace_group_sync.test.ts
   - .eslintrc.js
   - .gitignore
   - package-lock.json
@@ -677,6 +687,7 @@ Excluded sensitive files:
 - `functions/lib/index.js` -> `functions/lib/api/basenCreateSessionHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/basenEnrollHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/basenGrantKarnetHandler.js`
+- `functions/lib/index.js` -> `functions/lib/api/checkNicknameAvailabilityHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/gearBundleReservationCreateHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/gearFavoriteToggleHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/gearMyReservationsHandler.js`
@@ -768,6 +779,7 @@ Excluded sensitive files:
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/membersSyncToSheet.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/onUserRegisteredWelcome.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/reconcileOpeningBalance.js`
+- `functions/lib/service/registry.js` -> `functions/lib/service/tasks/reconcileWorkspaceGroups.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/setupSyncFromSheet.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/usersNotifyAkademikAccessChanged.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/usersSyncFieldsFromSheet.js`
@@ -815,8 +827,10 @@ Excluded sensitive files:
 - `functions/lib/service/tasks/kursSyncFromSheet.js` -> `functions/lib/service/service_config.js`
 - `functions/lib/service/tasks/membersSyncToSheet.js` -> `functions/lib/service/providers/googleSheetsProvider.js`
 - `functions/lib/service/tasks/membersSyncToSheet.js` -> `functions/lib/service/service_config.js`
+- `functions/lib/service/tasks/onUserRegisteredWelcome.js` -> `functions/lib/service/workspaceGroupSync.js`
 - `functions/lib/service/tasks/reconcileOpeningBalance.js` -> `functions/lib/modules/hours/godzinki_service.js`
 - `functions/lib/service/tasks/reconcileOpeningBalance.js` -> `functions/lib/modules/hours/opening_balance_fields.js`
+- `functions/lib/service/tasks/reconcileWorkspaceGroups.js` -> `functions/lib/service/workspaceGroupSync.js`
 - `functions/lib/service/tasks/setupSyncFromSheet.js` -> `functions/lib/service/providers/googleSheetsProvider.js`
 - `functions/lib/service/tasks/setupSyncFromSheet.js` -> `functions/lib/service/service_config.js`
 - `functions/lib/service/tasks/usersSyncFieldsFromSheet.js` -> `functions/lib/service/providers/googleSheetsProvider.js`
@@ -824,6 +838,7 @@ Excluded sensitive files:
 - `functions/lib/service/tasks/usersSyncRolesFromSheet.js` -> `functions/lib/service/providers/googleSheetsProvider.js`
 - `functions/lib/service/tasks/usersSyncRolesFromSheet.js` -> `functions/lib/service/providers/googleWorkspaceProvider.js`
 - `functions/lib/service/tasks/usersSyncRolesFromSheet.js` -> `functions/lib/service/service_config.js`
+- `functions/lib/service/tasks/usersSyncRolesFromSheet.js` -> `functions/lib/service/workspaceGroupSync.js`
 - `functions/lib/service/triggers/onUsersActiveCreated.js` -> `functions/lib/service/service_config.js`
 - `functions/lib/service/worker/fallbackDailyWorker.js` -> `functions/lib/service/service_config.js`
 - `functions/lib/service/worker/fallbackDailyWorker.js` -> `functions/lib/service/worker/jobProcessor.js`
@@ -897,6 +912,7 @@ Excluded sensitive files:
 - `functions/src/index.ts` -> `functions/src/api/basenCreateSessionHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/basenEnrollHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/basenGrantKarnetHandler.ts`
+- `functions/src/index.ts` -> `functions/src/api/checkNicknameAvailabilityHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/gearBundleReservationCreateHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/gearFavoriteToggleHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/gearMyReservationsHandler.ts`
@@ -992,6 +1008,7 @@ Excluded sensitive files:
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/membersSyncToSheet.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/onUserRegisteredWelcome.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/reconcileOpeningBalance.ts`
+- `functions/src/service/registry.ts` -> `functions/src/service/tasks/reconcileWorkspaceGroups.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/setupSyncFromSheet.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/usersNotifyAkademikAccessChanged.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/usersSyncFieldsFromSheet.ts`
@@ -1063,9 +1080,13 @@ Excluded sensitive files:
 - `functions/src/service/tasks/membersSyncToSheet.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/service/tasks/membersSyncToSheet.ts` -> `functions/src/service/types.ts`
 - `functions/src/service/tasks/onUserRegisteredWelcome.ts` -> `functions/src/service/types.ts`
+- `functions/src/service/tasks/onUserRegisteredWelcome.ts` -> `functions/src/service/workspaceGroupSync.ts`
 - `functions/src/service/tasks/reconcileOpeningBalance.ts` -> `functions/src/modules/hours/godzinki_service.ts`
 - `functions/src/service/tasks/reconcileOpeningBalance.ts` -> `functions/src/modules/hours/opening_balance_fields.ts`
 - `functions/src/service/tasks/reconcileOpeningBalance.ts` -> `functions/src/service/types.ts`
+- `functions/src/service/tasks/reconcileWorkspaceGroups.ts` -> `functions/src/service/providers/googleWorkspaceProvider.ts`
+- `functions/src/service/tasks/reconcileWorkspaceGroups.ts` -> `functions/src/service/types.ts`
+- `functions/src/service/tasks/reconcileWorkspaceGroups.ts` -> `functions/src/service/workspaceGroupSync.ts`
 - `functions/src/service/tasks/setupSyncFromSheet.ts` -> `functions/src/service/providers/googleSheetsProvider.ts`
 - `functions/src/service/tasks/setupSyncFromSheet.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/service/tasks/setupSyncFromSheet.ts` -> `functions/src/service/types.ts`
@@ -1078,12 +1099,14 @@ Excluded sensitive files:
 - `functions/src/service/tasks/usersSyncRolesFromSheet.ts` -> `functions/src/service/providers/googleWorkspaceProvider.ts`
 - `functions/src/service/tasks/usersSyncRolesFromSheet.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/service/tasks/usersSyncRolesFromSheet.ts` -> `functions/src/service/types.ts`
+- `functions/src/service/tasks/usersSyncRolesFromSheet.ts` -> `functions/src/service/workspaceGroupSync.ts`
 - `functions/src/service/triggers/onUsersActiveCreated.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/service/worker/fallbackDailyWorker.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/service/worker/fallbackDailyWorker.ts` -> `functions/src/service/worker/jobProcessor.ts`
 - `functions/src/service/worker/jobProcessor.ts` -> `functions/src/service/runner.ts`
 - `functions/src/service/worker/jobProcessor.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/service/worker/onJobCreatedWorker.ts` -> `functions/src/service/worker/jobProcessor.ts`
+- `functions/src/service/workspaceGroupSync.ts` -> `functions/src/service/providers/googleWorkspaceProvider.ts`
 - `functions/test/events_core.test.ts` -> `functions/src/service/providers/googleSheetsProvider.ts`
 - `functions/test/events_core.test.ts` -> `functions/src/service/tasks/eventsSyncFromSheet.ts`
 - `functions/test/faza2_core.test.ts` -> `functions/src/service/tasks/adminNotifyPendingApprovals.ts`
@@ -1094,6 +1117,7 @@ Excluded sensitive files:
 - `functions/test/gear_core.test.ts` -> `functions/src/service/tasks/gearSyncAllFromSheet.ts`
 - `functions/test/godzinki_core.test.ts` -> `functions/src/modules/hours/godzinki_service.ts`
 - `functions/test/sync_core.test.ts` -> `functions/src/service/tasks/godzinkiSyncFromSheet.ts`
+- `functions/test/workspace_group_sync.test.ts` -> `functions/src/service/workspaceGroupSync.ts`
 - `public/modules/raporty/registry.js` -> `public/modules/raporty/gear_rentals.js`
 - `public/modules/raporty/registry.js` -> `public/modules/raporty/member_activity.js`
 - `public/modules/raporty/registry.js` -> `public/modules/raporty/member_dues.js`
@@ -3331,6 +3355,16 @@ Excluded sensitive files:
 - Functions:
   - `handleBasenGrantKarnet`
 
+### `functions/lib/api/checkNicknameAvailabilityHandler.js`
+
+- Lines: `55`
+- Size: `2507` bytes
+- Imports:
+  - `import/require firebase-functions/v2`
+- Functions:
+  - `handleCheckNicknameAvailability`
+  - `normalizeNicknameKey`
+
 ### `functions/lib/api/DELETE_getModulesHandler.js`
 
 - Lines: `224`
@@ -3845,8 +3879,8 @@ Excluded sensitive files:
 
 ### `functions/lib/api/registerUserHandler.js`
 
-- Lines: `642`
-- Size: `34333` bytes
+- Lines: `686`
+- Size: `36996` bytes
 - Internal dependencies:
   - `functions/lib/modules/hours/godzinki_service.js`
   - `functions/lib/modules/hours/opening_balance_fields.js`
@@ -3858,6 +3892,7 @@ Excluded sensitive files:
   - `emailExistsInOtherObRow`
   - `enqueueGodzinkiHistMerge`
   - `enqueueKmHistoricalMerge`
+  - `findNicknameOwnerUid`
   - `findOpeningBalance`
   - `handleRegisterUser`
   - `isDateNotInFuture`
@@ -3865,6 +3900,7 @@ Excluded sensitive files:
   - `isPhoneValid`
   - `isProfileComplete`
   - `normalizeBool`
+  - `normalizeNicknameKey`
   - `normalizePhone`
   - `normalizePhoneDigits`
   - `normalizeStr`
@@ -3916,8 +3952,8 @@ Excluded sensitive files:
 
 ### `functions/lib/index.js`
 
-- Lines: `1484`
-- Size: `63788` bytes
+- Lines: `1544`
+- Size: `66935` bytes
 - Internal dependencies:
   - `functions/lib/api/adminApprovalHandler.js`
   - `functions/lib/api/adminEventsSyncCalendarHandler.js`
@@ -3930,6 +3966,7 @@ Excluded sensitive files:
   - `functions/lib/api/basenCreateSessionHandler.js`
   - `functions/lib/api/basenEnrollHandler.js`
   - `functions/lib/api/basenGrantKarnetHandler.js`
+  - `functions/lib/api/checkNicknameAvailabilityHandler.js`
   - `functions/lib/api/gearBundleReservationCreateHandler.js`
   - `functions/lib/api/gearFavoriteToggleHandler.js`
   - `functions/lib/api/gearMyReservationsHandler.js`
@@ -3986,6 +4023,7 @@ Excluded sensitive files:
   - `import/require ./api/basenCreateSessionHandler`
   - `import/require ./api/basenEnrollHandler`
   - `import/require ./api/basenGrantKarnetHandler`
+  - `import/require ./api/checkNicknameAvailabilityHandler`
   - `import/require ./api/gearBundleReservationCreateHandler`
   - `import/require ./api/gearFavoriteToggleHandler`
   - `import/require ./api/gearMyReservationsHandler`
@@ -4044,6 +4082,7 @@ Excluded sensitive files:
   - `enqueueEventSheetWrite`
   - `enqueueGodzinkiSheetWrite`
   - `enqueueMemberSheetSync`
+  - `enqueueWorkspaceGroupsRoleSync`
   - `filterSetupForUser`
   - `flattenEmails`
   - `getRequestHost`
@@ -4443,8 +4482,8 @@ Excluded sensitive files:
 
 ### `functions/lib/service/registry.js`
 
-- Lines: `73`
-- Size: `4320` bytes
+- Lines: `75`
+- Size: `4461` bytes
 - Internal dependencies:
   - `functions/lib/service/tasks/adminApprovalWriteBack.js`
   - `functions/lib/service/tasks/adminNotifyPendingApprovals.js`
@@ -4469,6 +4508,7 @@ Excluded sensitive files:
   - `functions/lib/service/tasks/membersSyncToSheet.js`
   - `functions/lib/service/tasks/onUserRegisteredWelcome.js`
   - `functions/lib/service/tasks/reconcileOpeningBalance.js`
+  - `functions/lib/service/tasks/reconcileWorkspaceGroups.js`
   - `functions/lib/service/tasks/setupSyncFromSheet.js`
   - `functions/lib/service/tasks/usersNotifyAkademikAccessChanged.js`
   - `functions/lib/service/tasks/usersSyncFieldsFromSheet.js`
@@ -4498,6 +4538,7 @@ Excluded sensitive files:
   - `import/require ./tasks/membersSyncToSheet`
   - `import/require ./tasks/onUserRegisteredWelcome`
   - `import/require ./tasks/reconcileOpeningBalance`
+  - `import/require ./tasks/reconcileWorkspaceGroups`
   - `import/require ./tasks/setupSyncFromSheet`
   - `import/require ./tasks/usersNotifyAkademikAccessChanged`
   - `import/require ./tasks/usersSyncFieldsFromSheet`
@@ -4841,12 +4882,15 @@ Excluded sensitive files:
 
 ### `functions/lib/service/tasks/onUserRegisteredWelcome.js`
 
-- Lines: `255`
-- Size: `13250` bytes
+- Lines: `249`
+- Size: `13122` bytes
+- Internal dependencies:
+  - `functions/lib/service/workspaceGroupSync.js`
+- Imports:
+  - `import/require ../workspaceGroupSync`
 - Functions:
   - `asErr`
   - `assertString`
-  - `listaRoleForUserRole`
 
 ### `functions/lib/service/tasks/reconcileOpeningBalance.js`
 
@@ -4862,6 +4906,20 @@ Excluded sensitive files:
 - Functions:
   - `lower`
   - `norm`
+
+### `functions/lib/service/tasks/reconcileWorkspaceGroups.js`
+
+- Lines: `191`
+- Size: `9453` bytes
+- Internal dependencies:
+  - `functions/lib/service/workspaceGroupSync.js`
+- Imports:
+  - `import/require ../workspaceGroupSync`
+- Functions:
+  - `enforceTargetStateForUser`
+  - `norm`
+  - `targetListaRoleFor`
+  - `targetManagedGroupsFor`
 
 ### `functions/lib/service/tasks/setupSyncFromSheet.js`
 
@@ -4896,8 +4954,8 @@ Excluded sensitive files:
 
 ### `functions/lib/service/tasks/usersSyncFieldsFromSheet.js`
 
-- Lines: `349`
-- Size: `16827` bytes
+- Lines: `389`
+- Size: `19070` bytes
 - Internal dependencies:
   - `functions/lib/service/providers/googleSheetsProvider.js`
   - `functions/lib/service/service_config.js`
@@ -4936,22 +4994,22 @@ Excluded sensitive files:
 
 ### `functions/lib/service/tasks/usersSyncRolesFromSheet.js`
 
-- Lines: `390`
-- Size: `19617` bytes
+- Lines: `290`
+- Size: `15403` bytes
 - Internal dependencies:
   - `functions/lib/service/providers/googleSheetsProvider.js`
   - `functions/lib/service/providers/googleWorkspaceProvider.js`
   - `functions/lib/service/service_config.js`
+  - `functions/lib/service/workspaceGroupSync.js`
 - Imports:
   - `import/require ../providers/googleSheetsProvider`
   - `import/require ../providers/googleWorkspaceProvider`
   - `import/require ../service_config`
+  - `import/require ../workspaceGroupSync`
   - `import/require firebase-admin`
 - Functions:
   - `buildInvertedLabelMap`
-  - `listaRoleForUserRole`
   - `norm`
-  - `syncWorkspaceGroupsForUser`
 
 ### `functions/lib/service/triggers/onUsersActiveCreated.js`
 
@@ -5009,6 +5067,17 @@ Excluded sensitive files:
 - Imports:
   - `import/require ./jobProcessor`
   - `import/require firebase-functions/v2/firestore`
+
+### `functions/lib/service/workspaceGroupSync.js`
+
+- Lines: `132`
+- Size: `5721` bytes
+- Functions:
+  - `listaRoleForUserRole`
+  - `norm`
+  - `syncAllWorkspaceGroupsForRoleChange`
+  - `syncListaGroupForUser`
+  - `syncWorkspaceGroupsForUser`
 
 ### `functions/scripts/auditInvoker.js`
 
@@ -5129,6 +5198,20 @@ Excluded sensitive files:
   - `import/require firebase-admin`
 - Functions:
   - `projArg`
+
+### `functions/scripts/enqueueReconcileWorkspaceGroups.js`
+
+- Lines: `172`
+- Size: `7652` bytes
+- Imports:
+  - `import/require firebase-admin`
+  - `import/require googleapis`
+- Functions:
+  - `emailArg`
+  - `exchangeJwtForAccessToken`
+  - `projArg`
+  - `sendNotifyEmails`
+  - `signJwtWithIamCredentials`
 
 ### `functions/scripts/fixGhostApprovals.js`
 
@@ -5392,6 +5475,17 @@ Excluded sensitive files:
   - `import/require express`
 - Functions:
   - `handleBasenGrantKarnet`
+
+### `functions/src/api/checkNicknameAvailabilityHandler.ts`
+
+- Lines: `84`
+- Size: `2482` bytes
+- Imports:
+  - `import/require express`
+  - `import/require firebase-functions/v2`
+- Functions:
+  - `handleCheckNicknameAvailability`
+  - `normalizeNicknameKey`
 
 ### `functions/src/api/gearBundleReservationCreateHandler.ts`
 
@@ -5896,8 +5990,8 @@ Excluded sensitive files:
 
 ### `functions/src/api/registerUserHandler.ts`
 
-- Lines: `805`
-- Size: `30881` bytes
+- Lines: `862`
+- Size: `33576` bytes
 - Internal dependencies:
   - `functions/src/modules/hours/godzinki_service.ts`
   - `functions/src/modules/hours/opening_balance_fields.ts`
@@ -5911,6 +6005,7 @@ Excluded sensitive files:
   - `emailExistsInOtherObRow`
   - `enqueueGodzinkiHistMerge`
   - `enqueueKmHistoricalMerge`
+  - `findNicknameOwnerUid`
   - `findOpeningBalance`
   - `handleRegisterUser`
   - `isDateNotInFuture`
@@ -5918,6 +6013,7 @@ Excluded sensitive files:
   - `isPhoneValid`
   - `isProfileComplete`
   - `normalizeBool`
+  - `normalizeNicknameKey`
   - `normalizePhone`
   - `normalizePhoneDigits`
   - `normalizeStr`
@@ -5972,8 +6068,8 @@ Excluded sensitive files:
 
 ### `functions/src/index.ts`
 
-- Lines: `1636`
-- Size: `54274` bytes
+- Lines: `1701`
+- Size: `57088` bytes
 - Internal dependencies:
   - `functions/src/api/adminApprovalHandler.ts`
   - `functions/src/api/adminEventsSyncCalendarHandler.ts`
@@ -5986,6 +6082,7 @@ Excluded sensitive files:
   - `functions/src/api/basenCreateSessionHandler.ts`
   - `functions/src/api/basenEnrollHandler.ts`
   - `functions/src/api/basenGrantKarnetHandler.ts`
+  - `functions/src/api/checkNicknameAvailabilityHandler.ts`
   - `functions/src/api/gearBundleReservationCreateHandler.ts`
   - `functions/src/api/gearFavoriteToggleHandler.ts`
   - `functions/src/api/gearMyReservationsHandler.ts`
@@ -6042,6 +6139,7 @@ Excluded sensitive files:
   - `import/require ./api/basenCreateSessionHandler`
   - `import/require ./api/basenEnrollHandler`
   - `import/require ./api/basenGrantKarnetHandler`
+  - `import/require ./api/checkNicknameAvailabilityHandler`
   - `import/require ./api/gearBundleReservationCreateHandler`
   - `import/require ./api/gearFavoriteToggleHandler`
   - `import/require ./api/gearMyReservationsHandler`
@@ -6101,6 +6199,7 @@ Excluded sensitive files:
   - `enqueueEventSheetWrite`
   - `enqueueGodzinkiSheetWrite`
   - `enqueueMemberSheetSync`
+  - `enqueueWorkspaceGroupsRoleSync`
   - `filterSetupForUser`
   - `flattenEmails`
   - `getRequestHost`
@@ -6509,8 +6608,8 @@ Excluded sensitive files:
 
 ### `functions/src/service/registry.ts`
 
-- Lines: `72`
-- Size: `3494` bytes
+- Lines: `74`
+- Size: `3607` bytes
 - Internal dependencies:
   - `functions/src/service/tasks/adminApprovalWriteBack.ts`
   - `functions/src/service/tasks/adminNotifyPendingApprovals.ts`
@@ -6535,6 +6634,7 @@ Excluded sensitive files:
   - `functions/src/service/tasks/membersSyncToSheet.ts`
   - `functions/src/service/tasks/onUserRegisteredWelcome.ts`
   - `functions/src/service/tasks/reconcileOpeningBalance.ts`
+  - `functions/src/service/tasks/reconcileWorkspaceGroups.ts`
   - `functions/src/service/tasks/setupSyncFromSheet.ts`
   - `functions/src/service/tasks/usersNotifyAkademikAccessChanged.ts`
   - `functions/src/service/tasks/usersSyncFieldsFromSheet.ts`
@@ -6565,6 +6665,7 @@ Excluded sensitive files:
   - `import/require ./tasks/membersSyncToSheet`
   - `import/require ./tasks/onUserRegisteredWelcome`
   - `import/require ./tasks/reconcileOpeningBalance`
+  - `import/require ./tasks/reconcileWorkspaceGroups`
   - `import/require ./tasks/setupSyncFromSheet`
   - `import/require ./tasks/usersNotifyAkademikAccessChanged`
   - `import/require ./tasks/usersSyncFieldsFromSheet`
@@ -6962,16 +7063,17 @@ Excluded sensitive files:
 
 ### `functions/src/service/tasks/onUserRegisteredWelcome.ts`
 
-- Lines: `279`
-- Size: `10470` bytes
+- Lines: `274`
+- Size: `10299` bytes
 - Internal dependencies:
   - `functions/src/service/types.ts`
+  - `functions/src/service/workspaceGroupSync.ts`
 - Imports:
   - `import/require ../types`
+  - `import/require ../workspaceGroupSync`
 - Functions:
   - `asErr`
   - `assertString`
-  - `listaRoleForUserRole`
 
 ### `functions/src/service/tasks/reconcileOpeningBalance.ts`
 
@@ -6989,6 +7091,24 @@ Excluded sensitive files:
 - Functions:
   - `lower`
   - `norm`
+
+### `functions/src/service/tasks/reconcileWorkspaceGroups.ts`
+
+- Lines: `247`
+- Size: `9192` bytes
+- Internal dependencies:
+  - `functions/src/service/providers/googleWorkspaceProvider.ts`
+  - `functions/src/service/types.ts`
+  - `functions/src/service/workspaceGroupSync.ts`
+- Imports:
+  - `import/require ../providers/googleWorkspaceProvider`
+  - `import/require ../types`
+  - `import/require ../workspaceGroupSync`
+- Functions:
+  - `enforceTargetStateForUser`
+  - `norm`
+  - `targetListaRoleFor`
+  - `targetManagedGroupsFor`
 
 ### `functions/src/service/tasks/setupSyncFromSheet.ts`
 
@@ -7028,8 +7148,8 @@ Excluded sensitive files:
 
 ### `functions/src/service/tasks/usersSyncFieldsFromSheet.ts`
 
-- Lines: `344`
-- Size: `13953` bytes
+- Lines: `385`
+- Size: `15888` bytes
 - Internal dependencies:
   - `functions/src/service/providers/googleSheetsProvider.ts`
   - `functions/src/service/service_config.ts`
@@ -7072,24 +7192,24 @@ Excluded sensitive files:
 
 ### `functions/src/service/tasks/usersSyncRolesFromSheet.ts`
 
-- Lines: `425`
-- Size: `15320` bytes
+- Lines: `317`
+- Size: `11721` bytes
 - Internal dependencies:
   - `functions/src/service/providers/googleSheetsProvider.ts`
   - `functions/src/service/providers/googleWorkspaceProvider.ts`
   - `functions/src/service/service_config.ts`
   - `functions/src/service/types.ts`
+  - `functions/src/service/workspaceGroupSync.ts`
 - Imports:
   - `import/require ../providers/googleSheetsProvider`
   - `import/require ../providers/googleWorkspaceProvider`
   - `import/require ../service_config`
   - `import/require ../types`
+  - `import/require ../workspaceGroupSync`
   - `import/require firebase-admin`
 - Functions:
   - `buildInvertedLabelMap`
-  - `listaRoleForUserRole`
   - `norm`
-  - `syncWorkspaceGroupsForUser`
 
 ### `functions/src/service/triggers/onUsersActiveCreated.ts`
 
@@ -7147,6 +7267,21 @@ Excluded sensitive files:
 - Imports:
   - `import/require ./jobProcessor`
   - `import/require firebase-functions/v2/firestore`
+
+### `functions/src/service/workspaceGroupSync.ts`
+
+- Lines: `172`
+- Size: `5607` bytes
+- Internal dependencies:
+  - `functions/src/service/providers/googleWorkspaceProvider.ts`
+- Imports:
+  - `import/require ./providers/googleWorkspaceProvider`
+- Functions:
+  - `listaRoleForUserRole`
+  - `norm`
+  - `syncAllWorkspaceGroupsForRoleChange`
+  - `syncListaGroupForUser`
+  - `syncWorkspaceGroupsForUser`
 
 ### `functions/test/events_core.test.ts`
 
@@ -7222,6 +7357,16 @@ Excluded sensitive files:
 - Functions:
   - `earnData`
   - `ts`
+
+### `functions/test/workspace_group_sync.test.ts`
+
+- Lines: `40`
+- Size: `1382` bytes
+- Internal dependencies:
+  - `functions/src/service/workspaceGroupSync.ts`
+- Imports:
+  - `import/require ../src/service/workspaceGroupSync`
+  - `import/require vitest`
 
 ### `public/core/access_control.js`
 
@@ -7304,8 +7449,8 @@ Excluded sensitive files:
 
 ### `public/core/render_shell.js`
 
-- Lines: `1561`
-- Size: `69519` bytes
+- Lines: `1613`
+- Size: `71639` bytes
 - Imports:
   - `import/require /core/access_control.js`
   - `import/require /core/api_client.js`
@@ -7353,6 +7498,7 @@ Excluded sensitive files:
   - `safeUrl`
   - `set`
   - `setErr`
+  - `setNicknameStatus`
   - `spinnerHtml`
   - `statusKeyToLabel`
   - `submitRegistration`
@@ -8432,6 +8578,19 @@ Excluded sensitive files:
   - `## 7. Weryfikacja po naprawie`
   - `## 8. Pliki potencjalnie do zmiany`
 
+### `Audyty/11.08_blachy_i_brakujące_pola_TO_DO.md`
+
+- Lines: `95`
+- Size: `7073` bytes
+- Headings:
+  - `# Audyt: pola z bilansu otwarcia gubione między Firestore a arkuszem „aktywni użytkownicy"`
+  - `## Context`
+  - `## Ustalenie 1 — blacha: potwierdzone, i to jest gorsze niż „nieprzeniesione" (realne kasowanie danych)`
+  - `## Ustalenie 2 — inne pola z bilansu otwarcia: ten sam problem, dwa warianty`
+  - `## Ustalenie 3 — aplikacja (profil użytkownika): zero wystąpień`
+  - `## Pliki kluczowe (do przyszłej naprawy)`
+  - `## Otwarte pytania (do decyzji przed naprawą)`
+
 ### `Audyty/12.06_godzinki_audyt.md`
 
 - Lines: `241`
@@ -8633,6 +8792,30 @@ Excluded sensitive files:
   - `### 5c. FAZA 3 — testy i raport (uruchamia użytkownik)`
   - `## 6. Stan rejestru Z1–Z17 po wdrożeniu`
   - `## 7. Środowisko sesji (na przyszłość)`
+
+### `Audyty/13.08_NAPRAWA_UPRAWNIEŃ_LISTA.MD`
+
+- Lines: `183`
+- Size: `20232` bytes
+- Headings:
+  - `# Naprawa: rozjazd ról w lista@morzkulc.pl (i innych grupach Workspace) + zapobieganie na przyszłość`
+  - `## 0. Wynik wdrożenia (13.08.2026)`
+  - `## Context`
+  - `## 1. Diagnoza (w pełni potwierdzona)`
+  - `### 1.1 Mechanizm — trzy niezależne miejsca zmieniają `role_key`, tylko dwa synchronizują grupy, i to niepełnie`
+  - `### 1.2 Żywe dowody (Directory API + Firestore, sprawdzone bezpośrednio)`
+  - `### 1.3 sprzetowiec@morzkulc.pl — osobny wątek, w większości rozstrzygnięty`
+  - `## 2. Naprawa`
+  - `### 2.1 Wspólny moduł synchronizacji grup`
+  - `### 2.2 `registerUserHandler.ts` — natychmiastowa reakcja na zmianę roli`
+  - `### 2.3 Ścieżka (a) — refaktor bez zmiany zachowania`
+  - `### 2.4 Nowy task `users.reconcileWorkspaceGroups` — rekoncyliacja okresowa (główny mechanizm zamykający lukę na stałe)`
+  - `### 2.5 Skrypt jednorazowy do uruchomienia naprawy produkcyjnej`
+  - `## 3. Zestawienie plików`
+  - `## 4. Weryfikacja end-to-end`
+  - `## 5. Powiadomienie e-mail dla osób, które ODZYSKAŁY możliwość pisania na listę`
+  - `## 6. Pamięć projektu`
+  - `## 7. Wdrożenie na produkcję`
 
 ### `Audyty/15.06_audyt_invoker_funkcje.md`
 

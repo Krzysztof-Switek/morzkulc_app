@@ -243,6 +243,8 @@
 .startEventItem .startEventSummary::-webkit-details-marker { display: none; }
 .startEventChevron { color: var(--text-muted); flex-shrink: 0; align-self: center; transition: transform 0.18s ease; }
 .startEventItem[open] .startEventChevron { transform: rotate(180deg); }
+.startEventSide { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.startEventSide .imprezaInterest { margin-left: 0; }
 .startEventDetail { padding: 0 12px 12px; display: grid; gap: 6px; }
 .startEventDetailRow { font-size: 13px; color: var(--text); line-height: 1.4; }
 .startEventDetailRow strong { color: var(--text-muted); font-weight: 700; }
@@ -250,6 +252,22 @@
 .startEventDetailRow a:hover { text-decoration: underline; }
 
 /* ── Profil: jedna spójna karta (staż, opiekunowie, popover roli) ── */
+.swUpdateBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--accent, #5b9dff);
+  background: rgba(91, 157, 255, 0.12);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  text-align: left;
+}
 .profileChipsWrap { position: relative; }
 .profileBlock { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); text-align: left; }
 .profileBlockTitle { margin: 0 0 8px; font-size: 14px; font-weight: 800; color: var(--text); }

@@ -277,6 +277,20 @@
         }
       },
       {
+        "source": "/api/events/interests",
+        "function": {
+          "functionId": "getEventInterests",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/events/interest/toggle",
+        "function": {
+          "functionId": "eventInterestToggle",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "/api/godzinki",
         "function": {
           "functionId": "getGodzinki",
@@ -448,6 +462,13 @@
         "source": "/api/user/weight",
         "function": {
           "functionId": "userWeight",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/profile/notifications",
+        "function": {
+          "functionId": "notificationPrefs",
           "region": "us-central1"
         }
       },

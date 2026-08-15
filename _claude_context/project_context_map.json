@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-11T19:57:02",
+  "generated_at": "2026-08-14T11:25:50",
   "project_root": "C:\\Users\\kswitek\\Documents\\morzkulc_app",
   "settings": {
     "excluded_dirs": [
@@ -2777,6 +2777,31 @@
       "notes": []
     },
     {
+      "path": "Audyty/11.08_blachy_i_brakujące_pola_TO_DO.md",
+      "extension": ".md",
+      "size_bytes": 7073,
+      "line_count": 95,
+      "sha1_short": "1f9018f689",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# Audyt: pola z bilansu otwarcia gubione między Firestore a arkuszem „aktywni użytkownicy\"",
+        "## Context",
+        "## Ustalenie 1 — blacha: potwierdzone, i to jest gorsze niż „nieprzeniesione\" (realne kasowanie danych)",
+        "## Ustalenie 2 — inne pola z bilansu otwarcia: ten sam problem, dwa warianty",
+        "## Ustalenie 3 — aplikacja (profil użytkownika): zero wystąpień",
+        "## Pliki kluczowe (do przyszłej naprawy)",
+        "## Otwarte pytania (do decyzji przed naprawą)"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "Audyty/12.06_godzinki_audyt.md",
       "extension": ".md",
       "size_bytes": 18997,
@@ -3082,6 +3107,42 @@
         "### 5c. FAZA 3 — testy i raport (uruchamia użytkownik)",
         "## 6. Stan rejestru Z1–Z17 po wdrożeniu",
         "## 7. Środowisko sesji (na przyszłość)"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "Audyty/13.08_NAPRAWA_UPRAWNIEŃ_LISTA.MD",
+      "extension": ".md",
+      "size_bytes": 20232,
+      "line_count": 183,
+      "sha1_short": "6af82e2b7e",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# Naprawa: rozjazd ról w lista@morzkulc.pl (i innych grupach Workspace) + zapobieganie na przyszłość",
+        "## 0. Wynik wdrożenia (13.08.2026)",
+        "## Context",
+        "## 1. Diagnoza (w pełni potwierdzona)",
+        "### 1.1 Mechanizm — trzy niezależne miejsca zmieniają `role_key`, tylko dwa synchronizują grupy, i to niepełnie",
+        "### 1.2 Żywe dowody (Directory API + Firestore, sprawdzone bezpośrednio)",
+        "### 1.3 sprzetowiec@morzkulc.pl — osobny wątek, w większości rozstrzygnięty",
+        "## 2. Naprawa",
+        "### 2.1 Wspólny moduł synchronizacji grup",
+        "### 2.2 `registerUserHandler.ts` — natychmiastowa reakcja na zmianę roli",
+        "### 2.3 Ścieżka (a) — refaktor bez zmiany zachowania",
+        "### 2.4 Nowy task `users.reconcileWorkspaceGroups` — rekoncyliacja okresowa (główny mechanizm zamykający lukę na stałe)",
+        "### 2.5 Skrypt jednorazowy do uruchomienia naprawy produkcyjnej",
+        "## 3. Zestawienie plików",
+        "## 4. Weryfikacja end-to-end",
+        "## 5. Powiadomienie e-mail dla osób, które ODZYSKAŁY możliwość pisania na listę",
+        "## 6. Pamięć projektu",
+        "## 7. Wdrożenie na produkcję"
       ],
       "config_keys": [],
       "notes": []
@@ -5760,6 +5821,52 @@
       "notes": []
     },
     {
+      "path": "functions/lib/api/checkNicknameAvailabilityHandler.js",
+      "extension": ".js",
+      "size_bytes": 2507,
+      "line_count": 55,
+      "sha1_short": "6080eeac29",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require firebase-functions/v2",
+          "module": "firebase-functions/v2",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "handleCheckNicknameAvailability",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "normalizeNicknameKey",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/lib/api/DELETE_getModulesHandler.js",
       "extension": ".js",
       "size_bytes": 8305,
@@ -8335,9 +8442,9 @@
     {
       "path": "functions/lib/api/registerUserHandler.js",
       "extension": ".js",
-      "size_bytes": 34333,
-      "line_count": 642,
-      "sha1_short": "83b1786fe2",
+      "size_bytes": 36996,
+      "line_count": 686,
+      "sha1_short": "4703a2cf40",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -8394,6 +8501,16 @@
         },
         {
           "name": "enqueueKmHistoricalMerge",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "findNicknameOwnerUid",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -8464,6 +8581,16 @@
         },
         {
           "name": "normalizeBool",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "normalizeNicknameKey",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -8712,9 +8839,9 @@
     {
       "path": "functions/lib/index.js",
       "extension": ".js",
-      "size_bytes": 63788,
-      "line_count": 1484,
-      "sha1_short": "6a227ba00c",
+      "size_bytes": 66935,
+      "line_count": 1544,
+      "sha1_short": "72332a2d86",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -8791,6 +8918,13 @@
         {
           "raw": "import/require ./api/basenGrantKarnetHandler",
           "module": "./api/basenGrantKarnetHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/checkNicknameAvailabilityHandler",
+          "module": "./api/checkNicknameAvailabilityHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -9151,6 +9285,7 @@
         "functions/lib/api/basenCreateSessionHandler.js",
         "functions/lib/api/basenEnrollHandler.js",
         "functions/lib/api/basenGrantKarnetHandler.js",
+        "functions/lib/api/checkNicknameAvailabilityHandler.js",
         "functions/lib/api/gearBundleReservationCreateHandler.js",
         "functions/lib/api/gearFavoriteToggleHandler.js",
         "functions/lib/api/gearMyReservationsHandler.js",
@@ -9270,6 +9405,16 @@
         },
         {
           "name": "enqueueMemberSheetSync",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "enqueueWorkspaceGroupsRoleSync",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -11651,9 +11796,9 @@
     {
       "path": "functions/lib/service/registry.js",
       "extension": ".js",
-      "size_bytes": 4320,
-      "line_count": 73,
-      "sha1_short": "c5ba2b5f65",
+      "size_bytes": 4461,
+      "line_count": 75,
+      "sha1_short": "49d23b1eeb",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -11819,6 +11964,13 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ./tasks/reconcileWorkspaceGroups",
+          "module": "./tasks/reconcileWorkspaceGroups",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ./tasks/setupSyncFromSheet",
           "module": "./tasks/setupSyncFromSheet",
           "names": [],
@@ -11878,6 +12030,7 @@
         "functions/lib/service/tasks/membersSyncToSheet.js",
         "functions/lib/service/tasks/onUserRegisteredWelcome.js",
         "functions/lib/service/tasks/reconcileOpeningBalance.js",
+        "functions/lib/service/tasks/reconcileWorkspaceGroups.js",
         "functions/lib/service/tasks/setupSyncFromSheet.js",
         "functions/lib/service/tasks/usersNotifyAkademikAccessChanged.js",
         "functions/lib/service/tasks/usersSyncFieldsFromSheet.js",
@@ -13435,13 +13588,23 @@
     {
       "path": "functions/lib/service/tasks/onUserRegisteredWelcome.js",
       "extension": ".js",
-      "size_bytes": 13250,
-      "line_count": 255,
-      "sha1_short": "a4cfa29859",
+      "size_bytes": 13122,
+      "line_count": 249,
+      "sha1_short": "d2cd254060",
       "kind": "script",
       "module_aliases": [],
-      "imports": [],
-      "internal_dependencies": [],
+      "imports": [
+        {
+          "raw": "import/require ../workspaceGroupSync",
+          "module": "../workspaceGroupSync",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/service/workspaceGroupSync.js"
+      ],
       "classes": [],
       "functions": [
         {
@@ -13456,16 +13619,6 @@
         },
         {
           "name": "assertString",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "listaRoleForUserRole",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -13529,6 +13682,74 @@
         },
         {
           "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/service/tasks/reconcileWorkspaceGroups.js",
+      "extension": ".js",
+      "size_bytes": 9453,
+      "line_count": 191,
+      "sha1_short": "aa2719c872",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../workspaceGroupSync",
+          "module": "../workspaceGroupSync",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/service/workspaceGroupSync.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "enforceTargetStateForUser",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "targetListaRoleFor",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "targetManagedGroupsFor",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -13727,9 +13948,9 @@
     {
       "path": "functions/lib/service/tasks/usersSyncFieldsFromSheet.js",
       "extension": ".js",
-      "size_bytes": 16827,
-      "line_count": 349,
-      "sha1_short": "92d093f210",
+      "size_bytes": 19070,
+      "line_count": 389,
+      "sha1_short": "466863fc72",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -13986,9 +14207,9 @@
     {
       "path": "functions/lib/service/tasks/usersSyncRolesFromSheet.js",
       "extension": ".js",
-      "size_bytes": 19617,
-      "line_count": 390,
-      "sha1_short": "b8b21f0b1c",
+      "size_bytes": 15403,
+      "line_count": 290,
+      "sha1_short": "c084101579",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -14014,6 +14235,13 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ../workspaceGroupSync",
+          "module": "../workspaceGroupSync",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require firebase-admin",
           "module": "firebase-admin",
           "names": [],
@@ -14024,7 +14252,8 @@
       "internal_dependencies": [
         "functions/lib/service/providers/googleSheetsProvider.js",
         "functions/lib/service/providers/googleWorkspaceProvider.js",
-        "functions/lib/service/service_config.js"
+        "functions/lib/service/service_config.js",
+        "functions/lib/service/workspaceGroupSync.js"
       ],
       "classes": [],
       "functions": [
@@ -14039,27 +14268,7 @@
           "doc": null
         },
         {
-          "name": "listaRoleForUserRole",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
           "name": "norm",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "syncWorkspaceGroupsForUser",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -14294,6 +14503,74 @@
       ],
       "classes": [],
       "functions": [],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/service/workspaceGroupSync.js",
+      "extension": ".js",
+      "size_bytes": 5721,
+      "line_count": 132,
+      "sha1_short": "3e5ca50976",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "listaRoleForUserRole",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "syncAllWorkspaceGroupsForRoleChange",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "syncListaGroupForUser",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "syncWorkspaceGroupsForUser",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
       "top_level_symbols": [],
       "headings": [],
       "config_keys": [],
@@ -14803,6 +15080,89 @@
       "functions": [
         {
           "name": "projArg",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/scripts/enqueueReconcileWorkspaceGroups.js",
+      "extension": ".js",
+      "size_bytes": 7652,
+      "line_count": 172,
+      "sha1_short": "1bef2816d1",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require googleapis",
+          "module": "googleapis",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "emailArg",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "exchangeJwtForAccessToken",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "projArg",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "sendNotifyEmails",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "signJwtWithIamCredentials",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -15930,6 +16290,59 @@
       "functions": [
         {
           "name": "handleBasenGrantKarnet",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/src/api/checkNicknameAvailabilityHandler.ts",
+      "extension": ".ts",
+      "size_bytes": 2482,
+      "line_count": 84,
+      "sha1_short": "12b22763e3",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require express",
+          "module": "express",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-functions/v2",
+          "module": "firebase-functions/v2",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "handleCheckNicknameAvailability",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "normalizeNicknameKey",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -18413,9 +18826,9 @@
     {
       "path": "functions/src/api/registerUserHandler.ts",
       "extension": ".ts",
-      "size_bytes": 30881,
-      "line_count": 805,
-      "sha1_short": "2a1a5d4753",
+      "size_bytes": 33576,
+      "line_count": 862,
+      "sha1_short": "9d7d7a5054",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -18495,6 +18908,16 @@
           "doc": null
         },
         {
+          "name": "findNicknameOwnerUid",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "findOpeningBalance",
           "type": "function",
           "line_start": null,
@@ -18556,6 +18979,16 @@
         },
         {
           "name": "normalizeBool",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "normalizeNicknameKey",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -18825,9 +19258,9 @@
     {
       "path": "functions/src/index.ts",
       "extension": ".ts",
-      "size_bytes": 54274,
-      "line_count": 1636,
-      "sha1_short": "3c643eb731",
+      "size_bytes": 57088,
+      "line_count": 1701,
+      "sha1_short": "828dcf54f5",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -18904,6 +19337,13 @@
         {
           "raw": "import/require ./api/basenGrantKarnetHandler",
           "module": "./api/basenGrantKarnetHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/checkNicknameAvailabilityHandler",
+          "module": "./api/checkNicknameAvailabilityHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -19271,6 +19711,7 @@
         "functions/src/api/basenCreateSessionHandler.ts",
         "functions/src/api/basenEnrollHandler.ts",
         "functions/src/api/basenGrantKarnetHandler.ts",
+        "functions/src/api/checkNicknameAvailabilityHandler.ts",
         "functions/src/api/gearBundleReservationCreateHandler.ts",
         "functions/src/api/gearFavoriteToggleHandler.ts",
         "functions/src/api/gearMyReservationsHandler.ts",
@@ -19390,6 +19831,16 @@
         },
         {
           "name": "enqueueMemberSheetSync",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "enqueueWorkspaceGroupsRoleSync",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -21786,9 +22237,9 @@
     {
       "path": "functions/src/service/registry.ts",
       "extension": ".ts",
-      "size_bytes": 3494,
-      "line_count": 72,
-      "sha1_short": "751c74543a",
+      "size_bytes": 3607,
+      "line_count": 74,
+      "sha1_short": "c4f4adc6e3",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -21954,6 +22405,13 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ./tasks/reconcileWorkspaceGroups",
+          "module": "./tasks/reconcileWorkspaceGroups",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ./tasks/setupSyncFromSheet",
           "module": "./tasks/setupSyncFromSheet",
           "names": [],
@@ -22020,6 +22478,7 @@
         "functions/src/service/tasks/membersSyncToSheet.ts",
         "functions/src/service/tasks/onUserRegisteredWelcome.ts",
         "functions/src/service/tasks/reconcileOpeningBalance.ts",
+        "functions/src/service/tasks/reconcileWorkspaceGroups.ts",
         "functions/src/service/tasks/setupSyncFromSheet.ts",
         "functions/src/service/tasks/usersNotifyAkademikAccessChanged.ts",
         "functions/src/service/tasks/usersSyncFieldsFromSheet.ts",
@@ -23763,9 +24222,9 @@
     {
       "path": "functions/src/service/tasks/onUserRegisteredWelcome.ts",
       "extension": ".ts",
-      "size_bytes": 10470,
-      "line_count": 279,
-      "sha1_short": "0bddc00a87",
+      "size_bytes": 10299,
+      "line_count": 274,
+      "sha1_short": "ecaa9c8afe",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -23775,10 +24234,18 @@
           "names": [],
           "level": 0,
           "type": "script_import"
+        },
+        {
+          "raw": "import/require ../workspaceGroupSync",
+          "module": "../workspaceGroupSync",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
         }
       ],
       "internal_dependencies": [
-        "functions/src/service/types.ts"
+        "functions/src/service/types.ts",
+        "functions/src/service/workspaceGroupSync.ts"
       ],
       "classes": [],
       "functions": [
@@ -23794,16 +24261,6 @@
         },
         {
           "name": "assertString",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "listaRoleForUserRole",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -23875,6 +24332,90 @@
         },
         {
           "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/src/service/tasks/reconcileWorkspaceGroups.ts",
+      "extension": ".ts",
+      "size_bytes": 9192,
+      "line_count": 247,
+      "sha1_short": "58268fc1b7",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../providers/googleWorkspaceProvider",
+          "module": "../providers/googleWorkspaceProvider",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../types",
+          "module": "../types",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../workspaceGroupSync",
+          "module": "../workspaceGroupSync",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/src/service/providers/googleWorkspaceProvider.ts",
+        "functions/src/service/types.ts",
+        "functions/src/service/workspaceGroupSync.ts"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "enforceTargetStateForUser",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "targetListaRoleFor",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "targetManagedGroupsFor",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -24081,9 +24622,9 @@
     {
       "path": "functions/src/service/tasks/usersSyncFieldsFromSheet.ts",
       "extension": ".ts",
-      "size_bytes": 13953,
-      "line_count": 344,
-      "sha1_short": "f7561389be",
+      "size_bytes": 15888,
+      "line_count": 385,
+      "sha1_short": "ec5fc98506",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -24347,9 +24888,9 @@
     {
       "path": "functions/src/service/tasks/usersSyncRolesFromSheet.ts",
       "extension": ".ts",
-      "size_bytes": 15320,
-      "line_count": 425,
-      "sha1_short": "0757f1cacf",
+      "size_bytes": 11721,
+      "line_count": 317,
+      "sha1_short": "c790821195",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -24382,6 +24923,13 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ../workspaceGroupSync",
+          "module": "../workspaceGroupSync",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require firebase-admin",
           "module": "firebase-admin",
           "names": [],
@@ -24393,7 +24941,8 @@
         "functions/src/service/providers/googleSheetsProvider.ts",
         "functions/src/service/providers/googleWorkspaceProvider.ts",
         "functions/src/service/service_config.ts",
-        "functions/src/service/types.ts"
+        "functions/src/service/types.ts",
+        "functions/src/service/workspaceGroupSync.ts"
       ],
       "classes": [],
       "functions": [
@@ -24408,27 +24957,7 @@
           "doc": null
         },
         {
-          "name": "listaRoleForUserRole",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
           "name": "norm",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "syncWorkspaceGroupsForUser",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -24663,6 +25192,84 @@
       ],
       "classes": [],
       "functions": [],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/src/service/workspaceGroupSync.ts",
+      "extension": ".ts",
+      "size_bytes": 5607,
+      "line_count": 172,
+      "sha1_short": "0597dd251a",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ./providers/googleWorkspaceProvider",
+          "module": "./providers/googleWorkspaceProvider",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/src/service/providers/googleWorkspaceProvider.ts"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "listaRoleForUserRole",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "syncAllWorkspaceGroupsForRoleChange",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "syncListaGroupForUser",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "syncWorkspaceGroupsForUser",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
       "top_level_symbols": [],
       "headings": [],
       "config_keys": [],
@@ -24987,6 +25594,40 @@
           "doc": null
         }
       ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/test/workspace_group_sync.test.ts",
+      "extension": ".ts",
+      "size_bytes": 1382,
+      "line_count": 40,
+      "sha1_short": "f6e8a522df",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../src/service/workspaceGroupSync",
+          "module": "../src/service/workspaceGroupSync",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require vitest",
+          "module": "vitest",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/src/service/workspaceGroupSync.ts"
+      ],
+      "classes": [],
+      "functions": [],
       "top_level_symbols": [],
       "headings": [],
       "config_keys": [],
@@ -26068,9 +26709,9 @@
     {
       "path": "public/core/render_shell.js",
       "extension": ".js",
-      "size_bytes": 69519,
-      "line_count": 1561,
-      "sha1_short": "ebc342509f",
+      "size_bytes": 71639,
+      "line_count": 1613,
+      "sha1_short": "5e7b8c00ee",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -26511,6 +27152,16 @@
         },
         {
           "name": "setErr",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "setNicknameStatus",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -29918,7 +30569,7 @@
       "extension": ".js",
       "size_bytes": 4997,
       "line_count": 147,
-      "sha1_short": "1c94cda819",
+      "sha1_short": "c35d92b956",
       "kind": "script",
       "module_aliases": [],
       "imports": [],

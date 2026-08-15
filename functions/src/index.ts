@@ -57,6 +57,9 @@ import {handleGetKursInfo} from "./api/getKursInfoHandler";
 import {handleGetKursantStats} from "./api/getKursantStatsHandler";
 import {handleGetKlubInfo} from "./api/getKlubInfoHandler";
 import {handleUserWeight} from "./api/userWeightHandler";
+import {handleNotificationPrefs} from "./api/notificationPrefsHandler";
+import {handleEventInterestToggle} from "./api/eventInterestToggleHandler";
+import {handleGetEventInterests} from "./api/getEventInterestsHandler";
 import {getServiceConfig} from "./service/service_config";
 
 setGlobalOptions({region: "us-central1"});
@@ -1568,9 +1571,52 @@ export const userWeight = onRequest({invoker: "private"}, async (req, res) => {
 });
 
 /**
+ * GET/POST /api/profile/notifications (authenticated)
+ */
+export const notificationPrefs = onRequest({invoker: "private"}, async (req, res) => {
+  return handleNotificationPrefs(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * GET /api/events/interests (authenticated)
+ */
+export const getEventInterests = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetEventInterests(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * POST /api/events/interest/toggle (authenticated)
+ */
+export const eventInterestToggle = onRequest({invoker: "private"}, async (req, res) => {
+  return handleEventInterestToggle(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
  * SERVICE MODULE EXPORTS
  */
 export {onUsersActiveCreated} from "./service/triggers/onUsersActiveCreated";
+export {onEventApproved} from "./service/triggers/onEventApproved";
 export {onServiceJobCreated} from "./service/worker/onJobCreatedWorker";
 export {serviceFallbackDaily} from "./service/worker/fallbackDailyWorker";
 export {adminRunServiceTask} from "./service/admin/adminRunTask";
@@ -1653,6 +1699,22 @@ export const eventsSyncCalendarDaily = onSchedule(
     logger.info("eventsSyncCalendarDaily: start");
     const result = await runTaskById("events.syncCalendar", {});
     logger.info("eventsSyncCalendarDaily: done", result as unknown as Record<string, unknown>);
+  }
+);
+
+/**
+ * SCHEDULER: Dzienne przypomnienia e-mail o zbliżających się imprezach.
+ * Uruchamiany codziennie o 05:10 czasu warszawskiego (po eventsSyncCalendarDaily
+ * o 05:00, żeby świeżo zsynchronizowane imprezy były już uwzględnione).
+ * Liczba dni przed startem imprezy jest parametrem z arkusza SETUP
+ * (setup/vars_members.vars.powiadomienie_imprezy) — patrz events_vars.ts.
+ */
+export const eventsNotifyUpcomingDaily = onSchedule(
+  {schedule: "10 5 * * *", timeZone: "Europe/Warsaw"},
+  async () => {
+    logger.info("eventsNotifyUpcomingDaily: start");
+    const result = await runTaskById("events.notifyUpcoming", {});
+    logger.info("eventsNotifyUpcomingDaily: done", result as unknown as Record<string, unknown>);
   }
 );
 

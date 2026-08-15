@@ -2,6 +2,8 @@ import { apiGetJson, apiPostJson } from "/core/api_client.js";
 
 const EVENTS_URL = "/api/events";
 const SUBMIT_URL = "/api/events/submit";
+const INTERESTS_URL = "/api/events/interests";
+const INTEREST_TOGGLE_URL = "/api/events/interest/toggle";
 
 const NAV_BACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`;
 const NAV_HOME_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
@@ -47,7 +49,12 @@ function renderTabsHtml(activeTab, canSubmit) {
   </div>`;
 }
 
-function renderEventCard(ev) {
+function heartSvg(filled) {
+  const fill = filled ? "currentColor" : "none";
+  return `<svg viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+}
+
+function renderEventCard(ev, isInterested) {
   const start = formatDate(ev.startDate);
   const end = formatDate(ev.endDate);
   const dateRange = ev.startDate === ev.endDate
@@ -59,6 +66,15 @@ function renderEventCard(ev) {
       <div class="imprezaCardHead">
         <div class="imprezaName">${esc(ev.name)}</div>
         <div class="imprezaDates">${esc(dateRange)}</div>
+        <div class="imprezaInterest">
+          <button type="button"
+            class="imprezaFavBtn${isInterested ? " active" : ""}"
+            data-event-interest="${esc(ev.id)}"
+            aria-pressed="${isInterested ? "true" : "false"}"
+            aria-label="${isInterested ? "Usuń z interesujących" : "Oznacz jako interesującą"}"
+          >${heartSvg(isInterested)}</button>
+          <span class="imprezaInterestLabel">Interesuje mnie</span>
+        </div>
       </div>
       ${ev.location ? `<div class="imprezaMeta"><strong>Miejsce:</strong> ${esc(ev.location)}</div>` : ""}
       ${ev.description ? `<div class="imprezaDesc">${esc(ev.description)}</div>` : ""}
@@ -74,7 +90,12 @@ async function renderListView(innerEl, ctx) {
   innerEl.innerHTML = spinnerHtml("Ładowanie imprez…");
 
   try {
-    const data = await apiGetJson({ url: EVENTS_URL, idToken: ctx.idToken });
+    const [data, interestedIds] = await Promise.all([
+      apiGetJson({ url: EVENTS_URL, idToken: ctx.idToken }),
+      apiGetJson({ url: INTERESTS_URL, idToken: ctx.idToken })
+        .then((r) => (Array.isArray(r?.interestedEventIds) ? r.interestedEventIds : []))
+        .catch(() => []),
+    ]);
     const events = Array.isArray(data?.events) ? data.events : [];
 
     if (!events.length) {
@@ -82,10 +103,40 @@ async function renderListView(innerEl, ctx) {
       return;
     }
 
-    innerEl.innerHTML = `<div class="imprezaList">${events.map(renderEventCard).join("")}</div>`;
+    const interestedSet = new Set(interestedIds);
+    innerEl.innerHTML = `<div class="imprezaList">${events.map((ev) => renderEventCard(ev, interestedSet.has(ev.id))).join("")}</div>`;
+
+    bindInterestButtons(innerEl, ctx);
   } catch (e) {
     innerEl.innerHTML = `<div class="err">${esc(e?.message || "Nie udało się załadować imprez.")}</div>`;
   }
+}
+
+function bindInterestButtons(innerEl, ctx) {
+  innerEl.querySelectorAll("[data-event-interest]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const eventId = btn.getAttribute("data-event-interest");
+      const wasActive = btn.classList.contains("active");
+      const nextActive = !wasActive;
+
+      btn.disabled = true;
+      btn.classList.toggle("active", nextActive);
+      btn.setAttribute("aria-pressed", nextActive ? "true" : "false");
+      btn.setAttribute("aria-label", nextActive ? "Usuń z interesujących" : "Oznacz jako interesującą");
+      btn.innerHTML = heartSvg(nextActive);
+
+      try {
+        await apiPostJson({ url: INTEREST_TOGGLE_URL, idToken: ctx.idToken, body: { eventId } });
+      } catch {
+        btn.classList.toggle("active", wasActive);
+        btn.setAttribute("aria-pressed", wasActive ? "true" : "false");
+        btn.setAttribute("aria-label", wasActive ? "Usuń z interesujących" : "Oznacz jako interesującą");
+        btn.innerHTML = heartSvg(wasActive);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  });
 }
 
 function renderSubmitFormHtml() {

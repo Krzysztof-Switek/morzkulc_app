@@ -14,7 +14,7 @@
  * Stary cache jest automatycznie czyszczony w activate.
  */
 
-const CACHE_VERSION = "msp0cs8w";
+const CACHE_VERSION = "mssxnims";
 const STATIC_CACHE  = `morzkulc-static-${CACHE_VERSION}`;
 
 // Pliki precachowane przy instalacji SW
@@ -31,6 +31,7 @@ const PRECACHE_URLS = [
   "/core/firebase_client.js",
   "/core/api_client.js",
   "/core/access_control.js",
+  "/core/sw_update.js",
   "/core/router.js",
   "/core/theme.js",
   "/core/module_stub.js",

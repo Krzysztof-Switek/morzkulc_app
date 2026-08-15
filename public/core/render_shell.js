@@ -2,6 +2,7 @@
 import { canSeeModule } from "/core/access_control.js";
 import { setHash, parseHash } from "/core/router.js";
 import { apiPostJson, apiGetJson } from "/core/api_client.js";
+import { isSwUpdatePending, hardReloadApp } from "/core/sw_update.js";
 
 export function spinnerHtml(text = "Morzkulc myśli") {
   return `<div class="thinking">${escapeHtml(text)}<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></div>`;
@@ -18,6 +19,9 @@ const EVENTS_URL = "/api/events";
 const BASEN_SESSIONS_URL = "/api/basen/sessions";
 const KURS_INFO_URL = "/api/kurs/info";
 const KM_MY_STATS_URL = "/api/km/stats";
+const NOTIFICATION_PREFS_URL = "/api/profile/notifications";
+const EVENT_INTERESTS_URL = "/api/events/interests";
+const EVENT_INTEREST_TOGGLE_URL = "/api/events/interest/toggle";
 // Klucz sessionStorage do przekazania preferowanego typu rankingu (km|points|hours)
 // z kafelków na stronie głównej do zakładki "rankings" w km_module.js — musi być
 // identyczny w obu plikach (nie ma współdzielonego modułu tylko dla tej stałej).
@@ -438,7 +442,10 @@ async function renderHomeDashboard({ viewEl, ctx }) {
   if (!dash.isKursant) {
     buildHomeEventsSection(ctx).then((html) => {
       const listEl = viewEl.querySelector("#homeEventsList");
-      if (listEl) listEl.innerHTML = html;
+      if (listEl) {
+        listEl.innerHTML = html;
+        bindHomeEventInterestButtons(listEl, ctx);
+      }
     }).catch(() => {
       const listEl = viewEl.querySelector("#homeEventsList");
       if (listEl) listEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać imprez.</div></div></div>`;
@@ -484,6 +491,12 @@ function renderHomeProfile({ viewEl, ctx }) {
 
   viewEl.innerHTML = `
     <div class="card center profileCard">
+      ${isSwUpdatePending() ? `
+      <div class="swUpdateBanner">
+        <span>Dostępna nowa wersja aplikacji.</span>
+        <button type="button" class="primary" id="swUpdateReloadBtn">Odśwież teraz</button>
+      </div>
+      ` : ""}
       <h2>${name ? escapeHtml(name) : "Profil"}</h2>
 
       <div class="profileChipsWrap">
@@ -562,6 +575,24 @@ function renderHomeProfile({ viewEl, ctx }) {
       </div>
       ` : ""}
 
+      <div class="profileBlock">
+        <h3 class="profileBlockTitle">Powiadomienia e-mail</h3>
+        <p class="muted">Domyślnie wyłączone — wybierz, o czym chcesz dostawać maile na adres z rejestracji.</p>
+        <div class="checkRow">
+          <input id="notifyEventsNew" type="checkbox" />
+          <label for="notifyEventsNew">Nowa impreza</label>
+        </div>
+        <div class="checkRow">
+          <input id="notifyEventsUpcoming" type="checkbox" />
+          <label for="notifyEventsUpcoming">Zbliżająca się impreza</label>
+        </div>
+        <div class="checkRow">
+          <input id="notifyEventsUpcomingInteresting" type="checkbox" />
+          <label for="notifyEventsUpcomingInteresting">Zbliżająca się impreza, która mnie interesuje</label>
+        </div>
+        <p class="hint" id="notifyPrefsErr"></p>
+      </div>
+
       <div id="klubBoxBody" class="profileKlub">
         ${spinnerHtml("Ładowanie informacji klubowych...")}
       </div>
@@ -587,6 +618,8 @@ function renderHomeProfile({ viewEl, ctx }) {
   const backBtn = viewEl.querySelector("#profileBackBtn");
   if (backBtn) backBtn.addEventListener("click", () => setHash("home", "home"));
 
+  viewEl.querySelector("#swUpdateReloadBtn")?.addEventListener("click", () => hardReloadApp());
+
   viewEl.querySelectorAll("[data-profile-action='all-reservations']").forEach((btn) => {
     btn.addEventListener("click", () => setHash("my_reservations", "list"));
   });
@@ -609,6 +642,9 @@ function renderHomeProfile({ viewEl, ctx }) {
 
   // Box „Klub" — leniwie ładowane ogólne informacje klubowe (widoczny dla wszystkich).
   wireKlubBox(viewEl, ctx);
+
+  // Powiadomienia e-mail — domyślnie wyłączone, użytkownik sam włącza w profilu.
+  wireNotificationPrefs(viewEl, ctx);
 
   // Popover „i" przy roli (np. wyjaśnienie roli kandydata) — pokazywany tylko po kliknięciu ikonki.
   viewEl.querySelectorAll("[data-info-toggle]").forEach((btn) => {
@@ -767,6 +803,44 @@ function buildKlubBoxHtml(data) {
   return blocks.join("");
 }
 
+function wireNotificationPrefs(viewEl, ctx) {
+  const errEl = viewEl.querySelector("#notifyPrefsErr");
+  const checkboxes = {
+    eventsNew: viewEl.querySelector("#notifyEventsNew"),
+    eventsUpcoming: viewEl.querySelector("#notifyEventsUpcoming"),
+    eventsUpcomingInteresting: viewEl.querySelector("#notifyEventsUpcomingInteresting"),
+  };
+  if (!checkboxes.eventsNew && !checkboxes.eventsUpcoming && !checkboxes.eventsUpcomingInteresting) return;
+
+  const setErr = (msg) => { if (errEl) errEl.textContent = msg || ""; };
+
+  apiGetJson({ url: NOTIFICATION_PREFS_URL, idToken: ctx.idToken })
+    .then((data) => {
+      const prefs = data?.prefs || {};
+      Object.entries(checkboxes).forEach(([key, el]) => {
+        if (el) el.checked = prefs[key] === true;
+      });
+    })
+    .catch(() => setErr("Nie udało się wczytać ustawień powiadomień."));
+
+  Object.entries(checkboxes).forEach(([key, el]) => {
+    if (!el) return;
+    el.addEventListener("change", async () => {
+      const nextValue = el.checked;
+      el.disabled = true;
+      setErr("");
+      try {
+        await apiPostJson({ url: NOTIFICATION_PREFS_URL, idToken: ctx.idToken, body: { [key]: nextValue } });
+      } catch {
+        el.checked = !nextValue;
+        setErr("Nie udało się zapisać. Spróbuj ponownie.");
+      } finally {
+        el.disabled = false;
+      }
+    });
+  });
+}
+
 function wireKlubBox(viewEl, ctx) {
   const body = viewEl.querySelector("#klubBoxBody");
   if (!body) return;
@@ -860,15 +934,52 @@ function fmtKmValue(n) {
   return v % 1 === 0 ? String(v) : parseFloat(v.toFixed(1)).toString();
 }
 
+function bindHomeEventInterestButtons(listEl, ctx) {
+  listEl.querySelectorAll("[data-event-interest]").forEach((btn) => {
+    btn.addEventListener("click", async (ev) => {
+      // Przycisk siedzi wewnątrz <summary> — bez tego klik otwierałby/zamykał <details>.
+      ev.preventDefault();
+      ev.stopPropagation();
+
+      const eventId = btn.getAttribute("data-event-interest");
+      const wasActive = btn.classList.contains("active");
+      const nextActive = !wasActive;
+
+      btn.disabled = true;
+      btn.classList.toggle("active", nextActive);
+      btn.setAttribute("aria-pressed", nextActive ? "true" : "false");
+      btn.setAttribute("aria-label", nextActive ? "Usuń z interesujących" : "Oznacz jako interesującą");
+      btn.innerHTML = heartSvg(nextActive);
+
+      try {
+        await apiPostJson({ url: EVENT_INTEREST_TOGGLE_URL, idToken: ctx.idToken, body: { eventId } });
+      } catch {
+        btn.classList.toggle("active", wasActive);
+        btn.setAttribute("aria-pressed", wasActive ? "true" : "false");
+        btn.setAttribute("aria-label", wasActive ? "Usuń z interesujących" : "Oznacz jako interesującą");
+        btn.innerHTML = heartSvg(wasActive);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  });
+}
+
 async function buildHomeEventsSection(ctx) {
   if (!ctx?.idToken) {
     return `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Brak sesji.</div></div></div>`;
   }
 
   try {
-    const data = await apiGetJson({ url: EVENTS_URL, idToken: ctx.idToken });
+    const [data, interestedIds] = await Promise.all([
+      apiGetJson({ url: EVENTS_URL, idToken: ctx.idToken }),
+      apiGetJson({ url: EVENT_INTERESTS_URL, idToken: ctx.idToken })
+        .then((r) => (Array.isArray(r?.interestedEventIds) ? r.interestedEventIds : []))
+        .catch(() => []),
+    ]);
     const events = Array.isArray(data?.events) ? data.events : [];
     const upcoming = events.slice(0, 3);
+    const interestedSet = new Set(interestedIds);
 
     if (!upcoming.length) {
       return `
@@ -890,6 +1001,8 @@ async function buildHomeEventsSection(ctx) {
       const desc = String(ev?.description || "");
       const contact = String(ev?.contact || "");
       const link = String(ev?.link || "");
+      const eventId = String(ev?.id || "");
+      const isInterested = interestedSet.has(eventId);
 
       const detailRows = [
         loc ? `<div class="startEventDetailRow"><strong>Miejsce:</strong> ${escapeHtml(loc)}</div>` : "",
@@ -905,7 +1018,18 @@ async function buildHomeEventsSection(ctx) {
               <div class="startListTitle">${escapeHtml(String(ev?.name || "Impreza"))}</div>
               <div class="startListMeta">${escapeHtml(loc)}${loc ? " · " : ""}${escapeHtml(dateRange)}</div>
             </div>
-            ${chevron}
+            <div class="startEventSide">
+              <div class="imprezaInterest">
+                <button type="button"
+                  class="imprezaFavBtn${isInterested ? " active" : ""}"
+                  data-event-interest="${escapeHtml(eventId)}"
+                  aria-pressed="${isInterested ? "true" : "false"}"
+                  aria-label="${isInterested ? "Usuń z interesujących" : "Oznacz jako interesującą"}"
+                >${heartSvg(isInterested)}</button>
+                <span class="imprezaInterestLabel">Interesuje mnie</span>
+              </div>
+              ${chevron}
+            </div>
           </summary>
           <div class="startEventDetail">${detailRows || `<div class="startEventDetailRow">Brak dodatkowych informacji.</div>`}</div>
         </details>
@@ -1609,4 +1733,9 @@ function escapeHtml(s) {
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;");
+}
+
+function heartSvg(filled) {
+  const fill = filled ? "currentColor" : "none";
+  return `<svg viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
 }
