@@ -4,6 +4,7 @@
 import type {Request, Response} from "express";
 import {logger} from "firebase-functions/v2";
 import {getServiceConfig} from "../service/service_config";
+import {parseSchoolYear, getKursWindowEndSuffix} from "../modules/equipment/bundle/gear_bundle_service";
 
 type TokenCheck =
   | {error: string}
@@ -462,16 +463,15 @@ export async function handleGetAdminPending(req: Request, res: Response, deps: G
           .where("role_key", "==", "rola_kursant")
           .get();
         const todayIso = new Date().toISOString().slice(0, 10);
+        const windowEndSuffix = await getKursWindowEndSuffix(db);
         const items: ExpiredKursant[] = [];
         for (const d of kursantsSnap.docs) {
           const data = d.data() as any;
           const email = norm(data?.email).toLowerCase();
           if (!email) continue;
-          const uSnap = await db.collection("kurs_uczestnicy").doc(email).get();
-          const rokRaw = uSnap.exists ? (uSnap.data() as any)?.rokSzkoleniowki : null;
-          const rok = Number(String(rokRaw ?? "").match(/(\d{4})/)?.[1] ?? NaN);
-          if (!Number.isFinite(rok)) continue;
-          if (todayIso > `${rok}-09-30`) {
+          const rok = parseSchoolYear(data?.admin?.schoolYear ?? null);
+          if (rok === null) continue;
+          if (todayIso > `${rok}-${windowEndSuffix}`) {
             const nickname = norm(data?.profile?.nickname);
             const firstName = norm(data?.profile?.firstName);
             const lastName = norm(data?.profile?.lastName);

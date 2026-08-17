@@ -174,7 +174,7 @@ async function getUserRole(db: FirebaseFirestore.Firestore, uid: string) {
  * Wyciąga 4-cyfrowy rok ze stringa "rok szkoleniówki"/daty.
  * "2026" / "15.02.2026" / "2026-02-15" → 2026; "wpisowe" / puste / inne → null.
  */
-function parseSchoolYear(raw: any): number | null {
+export function parseSchoolYear(raw: any): number | null {
   const m = String(raw ?? "").trim().match(/(\d{4})/);
   if (!m) return null;
   const y = Number(m[1]);
@@ -182,24 +182,56 @@ function parseSchoolYear(raw: any): number | null {
 }
 
 /**
- * Rok rozpoczęcia kursu (szkoleniówki) użytkownika:
- *   - kursant  → kurs_uczestnicy/{email}.rokSzkoleniowki,
- *   - kandydat → users_active/{uid}.admin.schoolYear (kolumna arkusza "rok_szkoleniowki"),
- *   - inne role → null.
+ * Master-przełącznik zarządu "kursant wypożycza sprzęt" — zmienna `kurs_wypożycza`
+ * w zakładce "setup" arkusza członków, zsynchronizowana zadaniem setup.syncFromSheet
+ * do Firestore `setup/vars_members.vars.kurs_wypożycza` (NIE do osobnej kolekcji
+ * `var_members` — ta nigdy nie jest zasilana żadnym syncem).
+ */
+export async function getKursWypozyczaFlag(db: FirebaseFirestore.Firestore): Promise<boolean> {
+  const snap = await db.collection("setup").doc("vars_members").get();
+  const value = snap.exists ? (snap.data() as any)?.vars?.["kurs_wypożycza"]?.value : undefined;
+  return value === true;
+}
+
+/**
+ * Dzień końca okna szkoleniówki (zawsze wrzesień — nikt w projekcie nie przewiduje
+ * kursu kończącego się w innym miesiącu; kod historycznie miał zaszyte na sztywno
+ * "-09-30" w 4 miejscach zamiast czytać tę wartość). Źródło:
+ * setup/vars_members.vars.koniec_kursu.value — zakładka "setup" arkusza "członkowie
+ * sympatycy SKK" (tam samo, gdzie kurs_wypożycza; arkusz "Szkoleniówka" wygaszony,
+ * patrz Audyty/17.08_*) — liczba 1-30. Tolerancyjne wobec błędów wpisu (np. "30.09"
+ * wpisane jako dzień.miesiąc i odczytane jako liczba dziesiętna 30.09 → floor → 30);
+ * poza zakresem lub nieodczytywalne → domyślne 30.
+ */
+export async function getKursWindowEndDay(db: FirebaseFirestore.Firestore): Promise<number> {
+  const DEFAULT_DAY = 30;
+  const snap = await db.collection("setup").doc("vars_members").get();
+  const raw = snap.exists ? (snap.data() as any)?.vars?.koniec_kursu?.value : undefined;
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return DEFAULT_DAY;
+  const day = Math.floor(n);
+  return day >= 1 && day <= 30 ? day : DEFAULT_DAY;
+}
+
+/** Sufiks "MM-DD" końca okna szkoleniówki, do doklejenia po roku: `${rok}-${suffix}`. */
+export async function getKursWindowEndSuffix(db: FirebaseFirestore.Firestore): Promise<string> {
+  const day = await getKursWindowEndDay(db);
+  return `09-${String(day).padStart(2, "0")}`;
+}
+
+/**
+ * Rok rozpoczęcia kursu (szkoleniówki) użytkownika — kursant i kandydat czytają to
+ * samo pole: users_active/{uid}.admin.schoolYear (kolumna arkusza "rok_szkoleniowki",
+ * arkusz "członkowie sympatycy SKK" — jedyne źródło od Wariantu C, patrz
+ * Audyty/17.08_*; dawna kolekcja kurs_uczestnicy jest wygaszona). Inne role → null.
  */
 async function resolveSchoolYear(
   db: FirebaseFirestore.Firestore,
   roleKey: string,
   uid: string,
-  email: string
+  _email: string
 ): Promise<number | null> {
-  if (roleKey === "rola_kursant") {
-    const docId = norm(email).toLowerCase();
-    if (!docId) return null;
-    const snap = await db.collection("kurs_uczestnicy").doc(docId).get();
-    return parseSchoolYear(snap.exists ? (snap.data() as any)?.rokSzkoleniowki : null);
-  }
-  if (roleKey === "rola_kandydat") {
+  if (roleKey === "rola_kursant" || roleKey === "rola_kandydat") {
     const snap = await db.collection("users_active").doc(uid).get();
     return parseSchoolYear(snap.exists ? (snap.data() as any)?.admin?.schoolYear : null);
   }
@@ -213,10 +245,15 @@ async function resolveSchoolYear(
  * i rezerwacja składana do końca września tego roku — liczone po DACIE ZŁOŻENIA
  * rezerwacji (now), nie po terminie rezerwacji. Zwolnienie obejmuje kursanta i kandydata.
  */
-function isFreeRentalExempt(schoolYear: number | null, now: Date = new Date()): boolean {
+async function isFreeRentalExempt(
+  db: FirebaseFirestore.Firestore,
+  schoolYear: number | null,
+  now: Date = new Date()
+): Promise<boolean> {
   if (!schoolYear) return false;
   if (schoolYear !== now.getUTCFullYear()) return false;
-  return now.toISOString().slice(0, 10) <= `${schoolYear}-09-30`;
+  const endSuffix = await getKursWindowEndSuffix(db);
+  return now.toISOString().slice(0, 10) <= `${schoolYear}-${endSuffix}`;
 }
 
 /**
@@ -224,7 +261,8 @@ function isFreeRentalExempt(schoolYear: number | null, now: Date = new Date()): 
  *
  * Kursant rezerwuje na zasadach kandydata (te same limity i bezpłatne wypożyczenie
  * w oknie szkoleniówki), ale TYLKO gdy:
- *   - zarząd włączył wypożyczanie kursantów (var_members/kurs_wypożycza),
+ *   - zarząd włączył wypożyczanie kursantów (setup/vars_members.vars.kurs_wypożycza,
+ *     patrz getKursWypozyczaFlag),
  *   - jest w oknie szkoleniówki (zwolnienie obowiązuje — do 30 września roku kursu).
  *
  * Okno 30.09 jest mechanizmem wygaśnięcia roli czasowej: po nim kursant traci dostęp
@@ -238,15 +276,21 @@ async function assertKursantRentalAllowed(
   exempt: boolean,
   schoolYear: number | null
 ): Promise<{ok: false; code: string; message: string; details?: any} | null> {
-  const flagSnap = await db.collection("var_members").doc("kurs_wypożycza").get();
-  const flagOn = flagSnap.exists && flagSnap.data()?.value === true;
+  const flagOn = await getKursWypozyczaFlag(db);
   if (!flagOn) {
     return {ok: false, code: "forbidden", message: "Rezerwacje dla kursantów są obecnie wyłączone."};
   }
   if (!exempt) {
-    return schoolYear ?
-      {ok: false, code: "kursant_window_closed", message: `Jako kursant możesz wypożyczać sprzęt tylko do 30 września ${schoolYear}. Po tym terminie zarząd nada Ci rolę docelową.`, details: {schoolYear}} :
-      {ok: false, code: "kursant_no_year", message: "Brak roku szkoleniówki na liście kursantów — skontaktuj się z zarządem: zarzad@morzkulc.pl"};
+    if (!schoolYear) {
+      return {ok: false, code: "kursant_no_year", message: "Brak roku szkoleniówki na liście kursantów — skontaktuj się z zarządem: zarzad@morzkulc.pl"};
+    }
+    const endDay = await getKursWindowEndDay(db);
+    return {
+      ok: false,
+      code: "kursant_window_closed",
+      message: `Jako kursant możesz wypożyczać sprzęt tylko do ${endDay} września ${schoolYear}. Po tym terminie zarząd nada Ci rolę docelową.`,
+      details: {schoolYear},
+    };
   }
   return null;
 }
@@ -494,7 +538,7 @@ export async function createBundleReservation(
   // Zwolnienie z opłaty: tegoroczna szkoleniówka, rezerwacja składana do końca września.
   const now = new Date();
   const schoolYear = await resolveSchoolYear(db, roleKey, args.uid, user.email);
-  const exempt = isFreeRentalExempt(schoolYear, now);
+  const exempt = await isFreeRentalExempt(db, schoolYear, now);
 
   // Kursant rezerwuje jak kandydat, ale tylko w oknie szkoleniówki + globalny przełącznik zarządu.
   if (roleKey === "rola_kursant") {
@@ -749,7 +793,7 @@ async function updateBundleReservationDates(
   // Zwolnienie z opłaty liczone po dacie tej edycji — spójnie z tworzeniem.
   const updNow = new Date();
   const schoolYear = await resolveSchoolYear(db, roleKey, args.uid, user.email);
-  const exempt = isFreeRentalExempt(schoolYear, updNow);
+  const exempt = await isFreeRentalExempt(db, schoolYear, updNow);
   // Zwolnienie zarządu/KR z opłaty — spójnie z tworzeniem rezerwacji (createBundleReservation).
   const boardFeeExempt = (roleKey === "rola_zarzad" || roleKey === "rola_kr") && vars.boardDoesNotPay;
   const feeExempt = exempt || boardFeeExempt;

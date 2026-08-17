@@ -1,6 +1,6 @@
 # Project Context Map
 
-Generated at: `2026-08-14T11:25:51`
+Generated at: `2026-08-17T09:32:20`
 Project root: `C:\Users\kswitek\Documents\morzkulc_app`
 
 Purpose: this file is a compact project map for Claude Code. It shows which files exist, what functions/classes they contain, and which internal files depend on which other files.
@@ -57,12 +57,12 @@ Excluded sensitive files:
 
 ## Summary
 
-- Total scanned files: `486`
+- Total scanned files: `502`
 - Python files: `42`
-- Script files JS/TS/GS/etc.: `318`
+- Script files JS/TS/GS/etc.: `334`
 - Config files: `21`
 - Markdown files: `76`
-- Internal dependency edges: `501`
+- Internal dependency edges: `525`
 
 ## Project tree
 
@@ -195,6 +195,7 @@ Excluded sensitive files:
       - basenEnrollHandler.js
       - basenGrantKarnetHandler.js
       - checkNicknameAvailabilityHandler.js
+      - eventInterestToggleHandler.js
       - gearBundleReservationCreateHandler.js
       - gearFavoriteToggleHandler.js
       - gearKayaksListHandler.js
@@ -211,6 +212,7 @@ Excluded sensitive files:
       - getBasenGodzinyHandler.js
       - getBasenKarnetyHandler.js
       - getBasenSessionsHandler.js
+      - getEventInterestsHandler.js
       - getEventsHandler.js
       - getGearFavoritesHandler.js
       - getGearItemAvailabilityHandler.js
@@ -231,6 +233,7 @@ Excluded sensitive files:
       - kmMyStatsHandler.js
       - kmPlacesHandler.js
       - kmRankingsHandler.js
+      - notificationPrefsHandler.js
       - registerUserHandler.js
       - submitEventHandler.js
       - submitGodzinkiHandler.js
@@ -261,6 +264,7 @@ Excluded sensitive files:
         - km_scoring.js
         - km_vars.js
       - setup/
+        - events_vars.js
         - setup_gear_vars.js
       - shared/
         - text_utils.js
@@ -278,6 +282,8 @@ Excluded sensitive files:
         - adminApprovalWriteBack.js
         - adminNotifyPendingApprovals.js
         - basenNotifySessionCancelled.js
+        - eventsNotifyNew.js
+        - eventsNotifyUpcoming.js
         - eventsSyncCalendar.js
         - eventsSyncFromSheet.js
         - gearNotifyReservationCancelledByAdmin.js
@@ -305,6 +311,7 @@ Excluded sensitive files:
         - usersSyncFunctionRolesFromSetup.js
         - usersSyncRolesFromSheet.js
       - triggers/
+        - onEventApproved.js
         - onUsersActiveCreated.js
       - worker/
         - fallbackDailyWorker.js
@@ -324,6 +331,7 @@ Excluded sensitive files:
     - checkKlubFinanceLeak.js
     - checkMemberActivity.js
     - checkUserGearReservations.js
+    - checkUserGodzinkiHome.js
     - deleteGhostGodzinki.js
     - deleteStuckJob.js
     - enqueueGodzinkiTransitionImport.js
@@ -358,6 +366,7 @@ Excluded sensitive files:
       - basenEnrollHandler.ts
       - basenGrantKarnetHandler.ts
       - checkNicknameAvailabilityHandler.ts
+      - eventInterestToggleHandler.ts
       - gearBundleReservationCreateHandler.ts
       - gearFavoriteToggleHandler.ts
       - gearKayaksListHandler.ts
@@ -374,6 +383,7 @@ Excluded sensitive files:
       - getBasenGodzinyHandler.ts
       - getBasenKarnetyHandler.ts
       - getBasenSessionsHandler.ts
+      - getEventInterestsHandler.ts
       - getEventsHandler.ts
       - getGearFavoritesHandler.ts
       - getGearItemAvailabilityHandler.ts
@@ -393,6 +403,7 @@ Excluded sensitive files:
       - kmMyStatsHandler.ts
       - kmPlacesHandler.ts
       - kmRankingsHandler.ts
+      - notificationPrefsHandler.ts
       - registerUserHandler.ts
       - submitEventHandler.ts
       - submitGodzinkiHandler.ts
@@ -423,6 +434,7 @@ Excluded sensitive files:
         - km_scoring.ts
         - km_vars.ts
       - setup/
+        - events_vars.ts
         - setup_gear_vars.ts
       - shared/
         - text_utils.ts
@@ -440,6 +452,8 @@ Excluded sensitive files:
         - adminApprovalWriteBack.ts
         - adminNotifyPendingApprovals.ts
         - basenNotifySessionCancelled.ts
+        - eventsNotifyNew.ts
+        - eventsNotifyUpcoming.ts
         - eventsSyncCalendar.ts
         - eventsSyncFromSheet.ts
         - gearNotifyReservationCancelledByAdmin.ts
@@ -467,6 +481,7 @@ Excluded sensitive files:
         - usersSyncFunctionRolesFromSetup.ts
         - usersSyncRolesFromSheet.ts
       - triggers/
+        - onEventApproved.ts
         - onUsersActiveCreated.ts
       - worker/
         - fallbackDailyWorker.ts
@@ -503,6 +518,7 @@ Excluded sensitive files:
     - modules_registry.js
     - render_shell.js
     - router.js
+    - sw_update.js
     - theme.js
     - user_error_messages.js
   - modules/
@@ -688,6 +704,7 @@ Excluded sensitive files:
 - `functions/lib/index.js` -> `functions/lib/api/basenEnrollHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/basenGrantKarnetHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/checkNicknameAvailabilityHandler.js`
+- `functions/lib/index.js` -> `functions/lib/api/eventInterestToggleHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/gearBundleReservationCreateHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/gearFavoriteToggleHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/gearMyReservationsHandler.js`
@@ -703,6 +720,7 @@ Excluded sensitive files:
 - `functions/lib/index.js` -> `functions/lib/api/getBasenGodzinyHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/getBasenKarnetyHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/getBasenSessionsHandler.js`
+- `functions/lib/index.js` -> `functions/lib/api/getEventInterestsHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/getEventsHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/getGearFavoritesHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/getGearItemAvailabilityHandler.js`
@@ -722,6 +740,7 @@ Excluded sensitive files:
 - `functions/lib/index.js` -> `functions/lib/api/kmMyStatsHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/kmPlacesHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/kmRankingsHandler.js`
+- `functions/lib/index.js` -> `functions/lib/api/notificationPrefsHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/registerUserHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/submitEventHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/submitGodzinkiHandler.js`
@@ -729,6 +748,7 @@ Excluded sensitive files:
 - `functions/lib/index.js` -> `functions/lib/service/admin/adminRunTask.js`
 - `functions/lib/index.js` -> `functions/lib/service/runner.js`
 - `functions/lib/index.js` -> `functions/lib/service/service_config.js`
+- `functions/lib/index.js` -> `functions/lib/service/triggers/onEventApproved.js`
 - `functions/lib/index.js` -> `functions/lib/service/triggers/onUsersActiveCreated.js`
 - `functions/lib/index.js` -> `functions/lib/service/worker/fallbackDailyWorker.js`
 - `functions/lib/index.js` -> `functions/lib/service/worker/onJobCreatedWorker.js`
@@ -759,6 +779,8 @@ Excluded sensitive files:
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/adminApprovalWriteBack.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/adminNotifyPendingApprovals.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/basenNotifySessionCancelled.js`
+- `functions/lib/service/registry.js` -> `functions/lib/service/tasks/eventsNotifyNew.js`
+- `functions/lib/service/registry.js` -> `functions/lib/service/tasks/eventsNotifyUpcoming.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/eventsSyncCalendar.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/eventsSyncFromSheet.js`
 - `functions/lib/service/registry.js` -> `functions/lib/service/tasks/gearNotifyReservationCancelledByAdmin.js`
@@ -793,6 +815,10 @@ Excluded sensitive files:
 - `functions/lib/service/tasks/adminNotifyPendingApprovals.js` -> `functions/lib/modules/shared/text_utils.js`
 - `functions/lib/service/tasks/adminNotifyPendingApprovals.js` -> `functions/lib/service/service_config.js`
 - `functions/lib/service/tasks/basenNotifySessionCancelled.js` -> `functions/lib/modules/basen/basen_service.js`
+- `functions/lib/service/tasks/eventsNotifyNew.js` -> `functions/lib/modules/shared/text_utils.js`
+- `functions/lib/service/tasks/eventsNotifyUpcoming.js` -> `functions/lib/modules/calendar/calendar_utils.js`
+- `functions/lib/service/tasks/eventsNotifyUpcoming.js` -> `functions/lib/modules/setup/events_vars.js`
+- `functions/lib/service/tasks/eventsNotifyUpcoming.js` -> `functions/lib/modules/shared/text_utils.js`
 - `functions/lib/service/tasks/eventsSyncCalendar.js` -> `functions/lib/service/providers/googleCalendarProvider.js`
 - `functions/lib/service/tasks/eventsSyncCalendar.js` -> `functions/lib/service/service_config.js`
 - `functions/lib/service/tasks/eventsSyncFromSheet.js` -> `functions/lib/modules/shared/text_utils.js`
@@ -839,6 +865,7 @@ Excluded sensitive files:
 - `functions/lib/service/tasks/usersSyncRolesFromSheet.js` -> `functions/lib/service/providers/googleWorkspaceProvider.js`
 - `functions/lib/service/tasks/usersSyncRolesFromSheet.js` -> `functions/lib/service/service_config.js`
 - `functions/lib/service/tasks/usersSyncRolesFromSheet.js` -> `functions/lib/service/workspaceGroupSync.js`
+- `functions/lib/service/triggers/onEventApproved.js` -> `functions/lib/service/service_config.js`
 - `functions/lib/service/triggers/onUsersActiveCreated.js` -> `functions/lib/service/service_config.js`
 - `functions/lib/service/worker/fallbackDailyWorker.js` -> `functions/lib/service/service_config.js`
 - `functions/lib/service/worker/fallbackDailyWorker.js` -> `functions/lib/service/worker/jobProcessor.js`
@@ -913,6 +940,7 @@ Excluded sensitive files:
 - `functions/src/index.ts` -> `functions/src/api/basenEnrollHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/basenGrantKarnetHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/checkNicknameAvailabilityHandler.ts`
+- `functions/src/index.ts` -> `functions/src/api/eventInterestToggleHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/gearBundleReservationCreateHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/gearFavoriteToggleHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/gearMyReservationsHandler.ts`
@@ -928,6 +956,7 @@ Excluded sensitive files:
 - `functions/src/index.ts` -> `functions/src/api/getBasenGodzinyHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/getBasenKarnetyHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/getBasenSessionsHandler.ts`
+- `functions/src/index.ts` -> `functions/src/api/getEventInterestsHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/getEventsHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/getGearFavoritesHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/getGearItemAvailabilityHandler.ts`
@@ -947,6 +976,7 @@ Excluded sensitive files:
 - `functions/src/index.ts` -> `functions/src/api/kmMyStatsHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/kmPlacesHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/kmRankingsHandler.ts`
+- `functions/src/index.ts` -> `functions/src/api/notificationPrefsHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/registerUserHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/submitEventHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/submitGodzinkiHandler.ts`
@@ -954,6 +984,7 @@ Excluded sensitive files:
 - `functions/src/index.ts` -> `functions/src/service/admin/adminRunTask.ts`
 - `functions/src/index.ts` -> `functions/src/service/runner.ts`
 - `functions/src/index.ts` -> `functions/src/service/service_config.ts`
+- `functions/src/index.ts` -> `functions/src/service/triggers/onEventApproved.ts`
 - `functions/src/index.ts` -> `functions/src/service/triggers/onUsersActiveCreated.ts`
 - `functions/src/index.ts` -> `functions/src/service/worker/fallbackDailyWorker.ts`
 - `functions/src/index.ts` -> `functions/src/service/worker/onJobCreatedWorker.ts`
@@ -988,6 +1019,8 @@ Excluded sensitive files:
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/adminApprovalWriteBack.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/adminNotifyPendingApprovals.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/basenNotifySessionCancelled.ts`
+- `functions/src/service/registry.ts` -> `functions/src/service/tasks/eventsNotifyNew.ts`
+- `functions/src/service/registry.ts` -> `functions/src/service/tasks/eventsNotifyUpcoming.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/eventsSyncCalendar.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/eventsSyncFromSheet.ts`
 - `functions/src/service/registry.ts` -> `functions/src/service/tasks/gearNotifyReservationCancelledByAdmin.ts`
@@ -1027,6 +1060,12 @@ Excluded sensitive files:
 - `functions/src/service/tasks/adminNotifyPendingApprovals.ts` -> `functions/src/service/types.ts`
 - `functions/src/service/tasks/basenNotifySessionCancelled.ts` -> `functions/src/modules/basen/basen_service.ts`
 - `functions/src/service/tasks/basenNotifySessionCancelled.ts` -> `functions/src/service/types.ts`
+- `functions/src/service/tasks/eventsNotifyNew.ts` -> `functions/src/modules/shared/text_utils.ts`
+- `functions/src/service/tasks/eventsNotifyNew.ts` -> `functions/src/service/types.ts`
+- `functions/src/service/tasks/eventsNotifyUpcoming.ts` -> `functions/src/modules/calendar/calendar_utils.ts`
+- `functions/src/service/tasks/eventsNotifyUpcoming.ts` -> `functions/src/modules/setup/events_vars.ts`
+- `functions/src/service/tasks/eventsNotifyUpcoming.ts` -> `functions/src/modules/shared/text_utils.ts`
+- `functions/src/service/tasks/eventsNotifyUpcoming.ts` -> `functions/src/service/types.ts`
 - `functions/src/service/tasks/eventsSyncCalendar.ts` -> `functions/src/service/providers/googleCalendarProvider.ts`
 - `functions/src/service/tasks/eventsSyncCalendar.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/service/tasks/eventsSyncCalendar.ts` -> `functions/src/service/types.ts`
@@ -1100,6 +1139,7 @@ Excluded sensitive files:
 - `functions/src/service/tasks/usersSyncRolesFromSheet.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/service/tasks/usersSyncRolesFromSheet.ts` -> `functions/src/service/types.ts`
 - `functions/src/service/tasks/usersSyncRolesFromSheet.ts` -> `functions/src/service/workspaceGroupSync.ts`
+- `functions/src/service/triggers/onEventApproved.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/service/triggers/onUsersActiveCreated.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/service/worker/fallbackDailyWorker.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/service/worker/fallbackDailyWorker.ts` -> `functions/src/service/worker/jobProcessor.ts`
@@ -3388,6 +3428,15 @@ Excluded sensitive files:
   - `sendPreflight`
   - `setCorsHeaders`
 
+### `functions/lib/api/eventInterestToggleHandler.js`
+
+- Lines: `87`
+- Size: `3596` bytes
+- Imports:
+  - `import/require firebase-admin`
+- Functions:
+  - `handleEventInterestToggle`
+
 ### `functions/lib/api/gearBundleReservationCreateHandler.js`
 
 - Lines: `96`
@@ -3633,6 +3682,13 @@ Excluded sensitive files:
 - Functions:
   - `handleGetBasenSessions`
 
+### `functions/lib/api/getEventInterestsHandler.js`
+
+- Lines: `36`
+- Size: `1576` bytes
+- Functions:
+  - `handleGetEventInterests`
+
 ### `functions/lib/api/getEventsHandler.js`
 
 - Lines: `45`
@@ -3877,6 +3933,15 @@ Excluded sensitive files:
   - `handleKmRankings`
   - `resolveOrderField`
 
+### `functions/lib/api/notificationPrefsHandler.js`
+
+- Lines: `63`
+- Size: `2923` bytes
+- Imports:
+  - `import/require firebase-functions/v2`
+- Functions:
+  - `handleNotificationPrefs`
+
 ### `functions/lib/api/registerUserHandler.js`
 
 - Lines: `686`
@@ -3952,8 +4017,8 @@ Excluded sensitive files:
 
 ### `functions/lib/index.js`
 
-- Lines: `1544`
-- Size: `66935` bytes
+- Lines: `1600`
+- Size: `69402` bytes
 - Internal dependencies:
   - `functions/lib/api/adminApprovalHandler.js`
   - `functions/lib/api/adminEventsSyncCalendarHandler.js`
@@ -3967,6 +4032,7 @@ Excluded sensitive files:
   - `functions/lib/api/basenEnrollHandler.js`
   - `functions/lib/api/basenGrantKarnetHandler.js`
   - `functions/lib/api/checkNicknameAvailabilityHandler.js`
+  - `functions/lib/api/eventInterestToggleHandler.js`
   - `functions/lib/api/gearBundleReservationCreateHandler.js`
   - `functions/lib/api/gearFavoriteToggleHandler.js`
   - `functions/lib/api/gearMyReservationsHandler.js`
@@ -3982,6 +4048,7 @@ Excluded sensitive files:
   - `functions/lib/api/getBasenGodzinyHandler.js`
   - `functions/lib/api/getBasenKarnetyHandler.js`
   - `functions/lib/api/getBasenSessionsHandler.js`
+  - `functions/lib/api/getEventInterestsHandler.js`
   - `functions/lib/api/getEventsHandler.js`
   - `functions/lib/api/getGearFavoritesHandler.js`
   - `functions/lib/api/getGearItemAvailabilityHandler.js`
@@ -4001,6 +4068,7 @@ Excluded sensitive files:
   - `functions/lib/api/kmMyStatsHandler.js`
   - `functions/lib/api/kmPlacesHandler.js`
   - `functions/lib/api/kmRankingsHandler.js`
+  - `functions/lib/api/notificationPrefsHandler.js`
   - `functions/lib/api/registerUserHandler.js`
   - `functions/lib/api/submitEventHandler.js`
   - `functions/lib/api/submitGodzinkiHandler.js`
@@ -4008,6 +4076,7 @@ Excluded sensitive files:
   - `functions/lib/service/admin/adminRunTask.js`
   - `functions/lib/service/runner.js`
   - `functions/lib/service/service_config.js`
+  - `functions/lib/service/triggers/onEventApproved.js`
   - `functions/lib/service/triggers/onUsersActiveCreated.js`
   - `functions/lib/service/worker/fallbackDailyWorker.js`
   - `functions/lib/service/worker/onJobCreatedWorker.js`
@@ -4024,6 +4093,7 @@ Excluded sensitive files:
   - `import/require ./api/basenEnrollHandler`
   - `import/require ./api/basenGrantKarnetHandler`
   - `import/require ./api/checkNicknameAvailabilityHandler`
+  - `import/require ./api/eventInterestToggleHandler`
   - `import/require ./api/gearBundleReservationCreateHandler`
   - `import/require ./api/gearFavoriteToggleHandler`
   - `import/require ./api/gearMyReservationsHandler`
@@ -4039,6 +4109,7 @@ Excluded sensitive files:
   - `import/require ./api/getBasenGodzinyHandler`
   - `import/require ./api/getBasenKarnetyHandler`
   - `import/require ./api/getBasenSessionsHandler`
+  - `import/require ./api/getEventInterestsHandler`
   - `import/require ./api/getEventsHandler`
   - `import/require ./api/getGearFavoritesHandler`
   - `import/require ./api/getGearItemAvailabilityHandler`
@@ -4058,6 +4129,7 @@ Excluded sensitive files:
   - `import/require ./api/kmMyStatsHandler`
   - `import/require ./api/kmPlacesHandler`
   - `import/require ./api/kmRankingsHandler`
+  - `import/require ./api/notificationPrefsHandler`
   - `import/require ./api/registerUserHandler`
   - `import/require ./api/submitEventHandler`
   - `import/require ./api/submitGodzinkiHandler`
@@ -4065,6 +4137,7 @@ Excluded sensitive files:
   - `import/require ./service/admin/adminRunTask`
   - `import/require ./service/runner`
   - `import/require ./service/service_config`
+  - `import/require ./service/triggers/onEventApproved`
   - `import/require ./service/triggers/onUsersActiveCreated`
   - `import/require ./service/worker/fallbackDailyWorker`
   - `import/require ./service/worker/onJobCreatedWorker`
@@ -4372,6 +4445,15 @@ Excluded sensitive files:
   - `getVar`
   - `toNumber`
 
+### `functions/lib/modules/setup/events_vars.js`
+
+- Lines: `18`
+- Size: `750` bytes
+- Functions:
+  - `getEventsVars`
+  - `getVar`
+  - `toNumber`
+
 ### `functions/lib/modules/setup/setup_gear_vars.js`
 
 - Lines: `66`
@@ -4482,12 +4564,14 @@ Excluded sensitive files:
 
 ### `functions/lib/service/registry.js`
 
-- Lines: `75`
-- Size: `4461` bytes
+- Lines: `79`
+- Size: `4691` bytes
 - Internal dependencies:
   - `functions/lib/service/tasks/adminApprovalWriteBack.js`
   - `functions/lib/service/tasks/adminNotifyPendingApprovals.js`
   - `functions/lib/service/tasks/basenNotifySessionCancelled.js`
+  - `functions/lib/service/tasks/eventsNotifyNew.js`
+  - `functions/lib/service/tasks/eventsNotifyUpcoming.js`
   - `functions/lib/service/tasks/eventsSyncCalendar.js`
   - `functions/lib/service/tasks/eventsSyncFromSheet.js`
   - `functions/lib/service/tasks/gearNotifyReservationCancelledByAdmin.js`
@@ -4518,6 +4602,8 @@ Excluded sensitive files:
   - `import/require ./tasks/adminApprovalWriteBack`
   - `import/require ./tasks/adminNotifyPendingApprovals`
   - `import/require ./tasks/basenNotifySessionCancelled`
+  - `import/require ./tasks/eventsNotifyNew`
+  - `import/require ./tasks/eventsNotifyUpcoming`
   - `import/require ./tasks/eventsSyncCalendar`
   - `import/require ./tasks/eventsSyncFromSheet`
   - `import/require ./tasks/gearNotifyReservationCancelledByAdmin`
@@ -4611,6 +4697,35 @@ Excluded sensitive files:
   - `import/require ../../modules/basen/basen_service`
 - Functions:
   - `norm`
+
+### `functions/lib/service/tasks/eventsNotifyNew.js`
+
+- Lines: `84`
+- Size: `4198` bytes
+- Internal dependencies:
+  - `functions/lib/modules/shared/text_utils.js`
+- Imports:
+  - `import/require ../../modules/shared/text_utils`
+- Functions:
+  - `buildNewEventEmail`
+  - `dateRange`
+
+### `functions/lib/service/tasks/eventsNotifyUpcoming.js`
+
+- Lines: `147`
+- Size: `7674` bytes
+- Internal dependencies:
+  - `functions/lib/modules/calendar/calendar_utils.js`
+  - `functions/lib/modules/setup/events_vars.js`
+  - `functions/lib/modules/shared/text_utils.js`
+- Imports:
+  - `import/require ../../modules/calendar/calendar_utils`
+  - `import/require ../../modules/setup/events_vars`
+  - `import/require ../../modules/shared/text_utils`
+  - `import/require firebase-admin`
+- Functions:
+  - `buildUpcomingEventEmail`
+  - `dateRange`
 
 ### `functions/lib/service/tasks/eventsSyncCalendar.js`
 
@@ -5011,6 +5126,19 @@ Excluded sensitive files:
   - `buildInvertedLabelMap`
   - `norm`
 
+### `functions/lib/service/triggers/onEventApproved.js`
+
+- Lines: `86`
+- Size: `3973` bytes
+- Internal dependencies:
+  - `functions/lib/service/service_config.js`
+- Imports:
+  - `import/require ../service_config`
+  - `import/require firebase-admin`
+  - `import/require firebase-functions/v2/firestore`
+- Functions:
+  - `jobIdForNotifyNew`
+
 ### `functions/lib/service/triggers/onUsersActiveCreated.js`
 
 - Lines: `79`
@@ -5148,6 +5276,16 @@ Excluded sensitive files:
 - Imports:
   - `import/require firebase-admin`
 - Functions:
+  - `tsToIso`
+
+### `functions/scripts/checkUserGodzinkiHome.js`
+
+- Lines: `88`
+- Size: `3538` bytes
+- Imports:
+  - `import/require firebase-admin`
+- Functions:
+  - `computeBalance`
   - `tsToIso`
 
 ### `functions/scripts/deleteGhostGodzinki.js`
@@ -5487,6 +5625,16 @@ Excluded sensitive files:
   - `handleCheckNicknameAvailability`
   - `normalizeNicknameKey`
 
+### `functions/src/api/eventInterestToggleHandler.ts`
+
+- Lines: `73`
+- Size: `2202` bytes
+- Imports:
+  - `import/require express`
+  - `import/require firebase-admin`
+- Functions:
+  - `handleEventInterestToggle`
+
 ### `functions/src/api/gearBundleReservationCreateHandler.ts`
 
 - Lines: `120`
@@ -5746,6 +5894,15 @@ Excluded sensitive files:
 - Functions:
   - `handleGetBasenSessions`
 
+### `functions/src/api/getEventInterestsHandler.ts`
+
+- Lines: `55`
+- Size: `1660` bytes
+- Imports:
+  - `import/require express`
+- Functions:
+  - `handleGetEventInterests`
+
 ### `functions/src/api/getEventsHandler.ts`
 
 - Lines: `59`
@@ -5988,6 +6145,16 @@ Excluded sensitive files:
   - `handleKmRankings`
   - `resolveOrderField`
 
+### `functions/src/api/notificationPrefsHandler.ts`
+
+- Lines: `89`
+- Size: `2848` bytes
+- Imports:
+  - `import/require express`
+  - `import/require firebase-functions/v2`
+- Functions:
+  - `handleNotificationPrefs`
+
 ### `functions/src/api/registerUserHandler.ts`
 
 - Lines: `862`
@@ -6068,8 +6235,8 @@ Excluded sensitive files:
 
 ### `functions/src/index.ts`
 
-- Lines: `1701`
-- Size: `57088` bytes
+- Lines: `1763`
+- Size: `59049` bytes
 - Internal dependencies:
   - `functions/src/api/adminApprovalHandler.ts`
   - `functions/src/api/adminEventsSyncCalendarHandler.ts`
@@ -6083,6 +6250,7 @@ Excluded sensitive files:
   - `functions/src/api/basenEnrollHandler.ts`
   - `functions/src/api/basenGrantKarnetHandler.ts`
   - `functions/src/api/checkNicknameAvailabilityHandler.ts`
+  - `functions/src/api/eventInterestToggleHandler.ts`
   - `functions/src/api/gearBundleReservationCreateHandler.ts`
   - `functions/src/api/gearFavoriteToggleHandler.ts`
   - `functions/src/api/gearMyReservationsHandler.ts`
@@ -6098,6 +6266,7 @@ Excluded sensitive files:
   - `functions/src/api/getBasenGodzinyHandler.ts`
   - `functions/src/api/getBasenKarnetyHandler.ts`
   - `functions/src/api/getBasenSessionsHandler.ts`
+  - `functions/src/api/getEventInterestsHandler.ts`
   - `functions/src/api/getEventsHandler.ts`
   - `functions/src/api/getGearFavoritesHandler.ts`
   - `functions/src/api/getGearItemAvailabilityHandler.ts`
@@ -6117,6 +6286,7 @@ Excluded sensitive files:
   - `functions/src/api/kmMyStatsHandler.ts`
   - `functions/src/api/kmPlacesHandler.ts`
   - `functions/src/api/kmRankingsHandler.ts`
+  - `functions/src/api/notificationPrefsHandler.ts`
   - `functions/src/api/registerUserHandler.ts`
   - `functions/src/api/submitEventHandler.ts`
   - `functions/src/api/submitGodzinkiHandler.ts`
@@ -6124,6 +6294,7 @@ Excluded sensitive files:
   - `functions/src/service/admin/adminRunTask.ts`
   - `functions/src/service/runner.ts`
   - `functions/src/service/service_config.ts`
+  - `functions/src/service/triggers/onEventApproved.ts`
   - `functions/src/service/triggers/onUsersActiveCreated.ts`
   - `functions/src/service/worker/fallbackDailyWorker.ts`
   - `functions/src/service/worker/onJobCreatedWorker.ts`
@@ -6140,6 +6311,7 @@ Excluded sensitive files:
   - `import/require ./api/basenEnrollHandler`
   - `import/require ./api/basenGrantKarnetHandler`
   - `import/require ./api/checkNicknameAvailabilityHandler`
+  - `import/require ./api/eventInterestToggleHandler`
   - `import/require ./api/gearBundleReservationCreateHandler`
   - `import/require ./api/gearFavoriteToggleHandler`
   - `import/require ./api/gearMyReservationsHandler`
@@ -6155,6 +6327,7 @@ Excluded sensitive files:
   - `import/require ./api/getBasenGodzinyHandler`
   - `import/require ./api/getBasenKarnetyHandler`
   - `import/require ./api/getBasenSessionsHandler`
+  - `import/require ./api/getEventInterestsHandler`
   - `import/require ./api/getEventsHandler`
   - `import/require ./api/getGearFavoritesHandler`
   - `import/require ./api/getGearItemAvailabilityHandler`
@@ -6174,6 +6347,7 @@ Excluded sensitive files:
   - `import/require ./api/kmMyStatsHandler`
   - `import/require ./api/kmPlacesHandler`
   - `import/require ./api/kmRankingsHandler`
+  - `import/require ./api/notificationPrefsHandler`
   - `import/require ./api/registerUserHandler`
   - `import/require ./api/submitEventHandler`
   - `import/require ./api/submitGodzinkiHandler`
@@ -6181,6 +6355,7 @@ Excluded sensitive files:
   - `import/require ./service/admin/adminRunTask`
   - `import/require ./service/runner`
   - `import/require ./service/service_config`
+  - `import/require ./service/triggers/onEventApproved`
   - `import/require ./service/triggers/onUsersActiveCreated`
   - `import/require ./service/worker/fallbackDailyWorker`
   - `import/require ./service/worker/onJobCreatedWorker`
@@ -6499,6 +6674,15 @@ Excluded sensitive files:
   - `getVar`
   - `toNumber`
 
+### `functions/src/modules/setup/events_vars.ts`
+
+- Lines: `28`
+- Size: `860` bytes
+- Functions:
+  - `getEventsVars`
+  - `getVar`
+  - `toNumber`
+
 ### `functions/src/modules/setup/setup_gear_vars.ts`
 
 - Lines: `88`
@@ -6608,12 +6792,14 @@ Excluded sensitive files:
 
 ### `functions/src/service/registry.ts`
 
-- Lines: `74`
-- Size: `3607` bytes
+- Lines: `78`
+- Size: `3794` bytes
 - Internal dependencies:
   - `functions/src/service/tasks/adminApprovalWriteBack.ts`
   - `functions/src/service/tasks/adminNotifyPendingApprovals.ts`
   - `functions/src/service/tasks/basenNotifySessionCancelled.ts`
+  - `functions/src/service/tasks/eventsNotifyNew.ts`
+  - `functions/src/service/tasks/eventsNotifyUpcoming.ts`
   - `functions/src/service/tasks/eventsSyncCalendar.ts`
   - `functions/src/service/tasks/eventsSyncFromSheet.ts`
   - `functions/src/service/tasks/gearNotifyReservationCancelledByAdmin.ts`
@@ -6645,6 +6831,8 @@ Excluded sensitive files:
   - `import/require ./tasks/adminApprovalWriteBack`
   - `import/require ./tasks/adminNotifyPendingApprovals`
   - `import/require ./tasks/basenNotifySessionCancelled`
+  - `import/require ./tasks/eventsNotifyNew`
+  - `import/require ./tasks/eventsNotifyUpcoming`
   - `import/require ./tasks/eventsSyncCalendar`
   - `import/require ./tasks/eventsSyncFromSheet`
   - `import/require ./tasks/gearNotifyReservationCancelledByAdmin`
@@ -6747,6 +6935,39 @@ Excluded sensitive files:
   - `import/require ../types`
 - Functions:
   - `norm`
+
+### `functions/src/service/tasks/eventsNotifyNew.ts`
+
+- Lines: `108`
+- Size: `3731` bytes
+- Internal dependencies:
+  - `functions/src/modules/shared/text_utils.ts`
+  - `functions/src/service/types.ts`
+- Imports:
+  - `import/require ../../modules/shared/text_utils`
+  - `import/require ../types`
+- Functions:
+  - `buildNewEventEmail`
+  - `dateRange`
+
+### `functions/src/service/tasks/eventsNotifyUpcoming.ts`
+
+- Lines: `148`
+- Size: `5770` bytes
+- Internal dependencies:
+  - `functions/src/modules/calendar/calendar_utils.ts`
+  - `functions/src/modules/setup/events_vars.ts`
+  - `functions/src/modules/shared/text_utils.ts`
+  - `functions/src/service/types.ts`
+- Imports:
+  - `import/require ../../modules/calendar/calendar_utils`
+  - `import/require ../../modules/setup/events_vars`
+  - `import/require ../../modules/shared/text_utils`
+  - `import/require ../types`
+  - `import/require firebase-admin`
+- Functions:
+  - `buildUpcomingEventEmail`
+  - `dateRange`
 
 ### `functions/src/service/tasks/eventsSyncCalendar.ts`
 
@@ -7211,6 +7432,19 @@ Excluded sensitive files:
   - `buildInvertedLabelMap`
   - `norm`
 
+### `functions/src/service/triggers/onEventApproved.ts`
+
+- Lines: `58`
+- Size: `2036` bytes
+- Internal dependencies:
+  - `functions/src/service/service_config.ts`
+- Imports:
+  - `import/require ../service_config`
+  - `import/require firebase-admin`
+  - `import/require firebase-functions/v2/firestore`
+- Functions:
+  - `jobIdForNotifyNew`
+
 ### `functions/src/service/triggers/onUsersActiveCreated.ts`
 
 - Lines: `51`
@@ -7387,12 +7621,13 @@ Excluded sensitive files:
 
 ### `public/core/app_shell.js`
 
-- Lines: `254`
-- Size: `8065` bytes
+- Lines: `268`
+- Size: `8664` bytes
 - Imports:
   - `import/require /core/api_client.js`
   - `import/require /core/modules_registry.js`
   - `import/require /core/render_shell.js`
+  - `import/require /core/sw_update.js`
 - Functions:
   - `hardResetUi`
   - `showAuthError`
@@ -7449,13 +7684,15 @@ Excluded sensitive files:
 
 ### `public/core/render_shell.js`
 
-- Lines: `1613`
-- Size: `71639` bytes
+- Lines: `1742`
+- Size: `77294` bytes
 - Imports:
   - `import/require /core/access_control.js`
   - `import/require /core/api_client.js`
   - `import/require /core/router.js`
+  - `import/require /core/sw_update.js`
 - Functions:
+  - `bindHomeEventInterestButtons`
   - `buildHomeBasenSection`
   - `buildHomeEventsSection`
   - `buildHomeHoursCell`
@@ -7481,6 +7718,7 @@ Excluded sensitive files:
   - `getModuleRouteByType`
   - `getReservationKayakTitles`
   - `goToGodzinki`
+  - `heartSvg`
   - `isIsoDateYYYYMMDD`
   - `isPhoneValid`
   - `loadAdminPendingBadge`
@@ -7506,6 +7744,7 @@ Excluded sensitive files:
   - `updateBadge`
   - `wireHomeReservations`
   - `wireKlubBox`
+  - `wireNotificationPrefs`
 
 ### `public/core/router.js`
 
@@ -7514,6 +7753,15 @@ Excluded sensitive files:
 - Functions:
   - `parseHash`
   - `setHash`
+
+### `public/core/sw_update.js`
+
+- Lines: `37`
+- Size: `1307` bytes
+- Functions:
+  - `hardReloadApp`
+  - `isSwUpdatePending`
+  - `setSwUpdatePending`
 
 ### `public/core/theme.js`
 
@@ -7680,16 +7928,18 @@ Excluded sensitive files:
 
 ### `public/modules/impreza_module.js`
 
-- Lines: `284`
-- Size: `10132` bytes
+- Lines: `335`
+- Size: `12572` bytes
 - Imports:
   - `import/require /core/api_client.js`
 - Functions:
+  - `bindInterestButtons`
   - `bindSubmitForm`
   - `createImprezaModule`
   - `esc`
   - `formatDate`
   - `getVal`
+  - `heartSvg`
   - `renderEventCard`
   - `renderListView`
   - `renderSubmitFormHtml`
@@ -7921,8 +8171,8 @@ Excluded sensitive files:
 
 ### `public/sw.js`
 
-- Lines: `147`
-- Size: `4997` bytes
+- Lines: `148`
+- Size: `5021` bytes
 
 ### `scripts/bump-sw-cache.js`
 
@@ -8053,8 +8303,8 @@ Excluded sensitive files:
 
 ### `firebase.json`
 
-- Lines: `464`
-- Size: `11559` bytes
+- Lines: `485`
+- Size: `12085` bytes
 - Detected top-level keys / sections:
   - `firestore`
   - `functions`
@@ -10354,12 +10604,12 @@ Excluded sensitive files:
 - `public/styles/base.css` — 547 lines, 16349 bytes
 - `public/styles/basen.css` — 266 lines, 4666 bytes
 - `public/styles/dashboard.css` — 162 lines, 2708 bytes
-- `public/styles/events.css` — 143 lines, 2366 bytes
+- `public/styles/events.css` — 196 lines, 3233 bytes
 - `public/styles/gear.css` — 1184 lines, 21257 bytes
 - `public/styles/godzinki.css` — 184 lines, 3538 bytes
 - `public/styles/km.css` — 496 lines, 10234 bytes
 - `public/styles/kurs.css` — 430 lines, 7128 bytes
-- `public/styles/start.css` — 291 lines, 10858 bytes
+- `public/styles/start.css` — 309 lines, 11352 bytes
 - `tests/e2e/.gitignore` — 11 lines, 142 bytes
 - `tests/e2e/reports/events_e2e_run.txt` — 110 lines, 8703 bytes
 - `tests/e2e/reports/godzinki_e2e_run.txt` — 57 lines, 5149 bytes

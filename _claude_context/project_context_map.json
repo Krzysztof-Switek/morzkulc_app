@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-14T11:25:50",
+  "generated_at": "2026-08-17T09:32:20",
   "project_root": "C:\\Users\\kswitek\\Documents\\morzkulc_app",
   "settings": {
     "excluded_dirs": [
@@ -5218,9 +5218,9 @@
     {
       "path": "firebase.json",
       "extension": ".json",
-      "size_bytes": 11559,
-      "line_count": 464,
-      "sha1_short": "b740928cf8",
+      "size_bytes": 12085,
+      "line_count": 485,
+      "sha1_short": "682b519c44",
       "kind": "config",
       "module_aliases": [],
       "imports": [],
@@ -6019,6 +6019,42 @@
         },
         {
           "name": "setCorsHeaders",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/api/eventInterestToggleHandler.js",
+      "extension": ".js",
+      "size_bytes": 3596,
+      "line_count": 87,
+      "sha1_short": "b304d0bd25",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "handleEventInterestToggle",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -7311,6 +7347,34 @@
       "notes": []
     },
     {
+      "path": "functions/lib/api/getEventInterestsHandler.js",
+      "extension": ".js",
+      "size_bytes": 1576,
+      "line_count": 36,
+      "sha1_short": "68462c2fa4",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "handleGetEventInterests",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/lib/api/getEventsHandler.js",
       "extension": ".js",
       "size_bytes": 1922,
@@ -8440,6 +8504,42 @@
       "notes": []
     },
     {
+      "path": "functions/lib/api/notificationPrefsHandler.js",
+      "extension": ".js",
+      "size_bytes": 2923,
+      "line_count": 63,
+      "sha1_short": "b61113293e",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require firebase-functions/v2",
+          "module": "firebase-functions/v2",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "handleNotificationPrefs",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/lib/api/registerUserHandler.js",
       "extension": ".js",
       "size_bytes": 36996,
@@ -8839,9 +8939,9 @@
     {
       "path": "functions/lib/index.js",
       "extension": ".js",
-      "size_bytes": 66935,
-      "line_count": 1544,
-      "sha1_short": "72332a2d86",
+      "size_bytes": 69402,
+      "line_count": 1600,
+      "sha1_short": "00db74b6a1",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -8925,6 +9025,13 @@
         {
           "raw": "import/require ./api/checkNicknameAvailabilityHandler",
           "module": "./api/checkNicknameAvailabilityHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/eventInterestToggleHandler",
+          "module": "./api/eventInterestToggleHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -9030,6 +9137,13 @@
         {
           "raw": "import/require ./api/getBasenSessionsHandler",
           "module": "./api/getBasenSessionsHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/getEventInterestsHandler",
+          "module": "./api/getEventInterestsHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -9168,6 +9282,13 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ./api/notificationPrefsHandler",
+          "module": "./api/notificationPrefsHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ./api/registerUserHandler",
           "module": "./api/registerUserHandler",
           "names": [],
@@ -9212,6 +9333,13 @@
         {
           "raw": "import/require ./service/service_config",
           "module": "./service/service_config",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./service/triggers/onEventApproved",
+          "module": "./service/triggers/onEventApproved",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -9286,6 +9414,7 @@
         "functions/lib/api/basenEnrollHandler.js",
         "functions/lib/api/basenGrantKarnetHandler.js",
         "functions/lib/api/checkNicknameAvailabilityHandler.js",
+        "functions/lib/api/eventInterestToggleHandler.js",
         "functions/lib/api/gearBundleReservationCreateHandler.js",
         "functions/lib/api/gearFavoriteToggleHandler.js",
         "functions/lib/api/gearMyReservationsHandler.js",
@@ -9301,6 +9430,7 @@
         "functions/lib/api/getBasenGodzinyHandler.js",
         "functions/lib/api/getBasenKarnetyHandler.js",
         "functions/lib/api/getBasenSessionsHandler.js",
+        "functions/lib/api/getEventInterestsHandler.js",
         "functions/lib/api/getEventsHandler.js",
         "functions/lib/api/getGearFavoritesHandler.js",
         "functions/lib/api/getGearItemAvailabilityHandler.js",
@@ -9320,6 +9450,7 @@
         "functions/lib/api/kmMyStatsHandler.js",
         "functions/lib/api/kmPlacesHandler.js",
         "functions/lib/api/kmRankingsHandler.js",
+        "functions/lib/api/notificationPrefsHandler.js",
         "functions/lib/api/registerUserHandler.js",
         "functions/lib/api/submitEventHandler.js",
         "functions/lib/api/submitGodzinkiHandler.js",
@@ -9327,6 +9458,7 @@
         "functions/lib/service/admin/adminRunTask.js",
         "functions/lib/service/runner.js",
         "functions/lib/service/service_config.js",
+        "functions/lib/service/triggers/onEventApproved.js",
         "functions/lib/service/triggers/onUsersActiveCreated.js",
         "functions/lib/service/worker/fallbackDailyWorker.js",
         "functions/lib/service/worker/onJobCreatedWorker.js"
@@ -11251,6 +11383,54 @@
       "notes": []
     },
     {
+      "path": "functions/lib/modules/setup/events_vars.js",
+      "extension": ".js",
+      "size_bytes": 750,
+      "line_count": 18,
+      "sha1_short": "06a802b7e3",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "getEventsVars",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getVar",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "toNumber",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/lib/modules/setup/setup_gear_vars.js",
       "extension": ".js",
       "size_bytes": 2821,
@@ -11796,9 +11976,9 @@
     {
       "path": "functions/lib/service/registry.js",
       "extension": ".js",
-      "size_bytes": 4461,
-      "line_count": 75,
-      "sha1_short": "49d23b1eeb",
+      "size_bytes": 4691,
+      "line_count": 79,
+      "sha1_short": "c57f6a4040",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -11819,6 +11999,20 @@
         {
           "raw": "import/require ./tasks/basenNotifySessionCancelled",
           "module": "./tasks/basenNotifySessionCancelled",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./tasks/eventsNotifyNew",
+          "module": "./tasks/eventsNotifyNew",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./tasks/eventsNotifyUpcoming",
+          "module": "./tasks/eventsNotifyUpcoming",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -12010,6 +12204,8 @@
         "functions/lib/service/tasks/adminApprovalWriteBack.js",
         "functions/lib/service/tasks/adminNotifyPendingApprovals.js",
         "functions/lib/service/tasks/basenNotifySessionCancelled.js",
+        "functions/lib/service/tasks/eventsNotifyNew.js",
+        "functions/lib/service/tasks/eventsNotifyUpcoming.js",
         "functions/lib/service/tasks/eventsSyncCalendar.js",
         "functions/lib/service/tasks/eventsSyncFromSheet.js",
         "functions/lib/service/tasks/gearNotifyReservationCancelledByAdmin.js",
@@ -12307,6 +12503,125 @@
       "functions": [
         {
           "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/service/tasks/eventsNotifyNew.js",
+      "extension": ".js",
+      "size_bytes": 4198,
+      "line_count": 84,
+      "sha1_short": "d83339f757",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../../modules/shared/text_utils",
+          "module": "../../modules/shared/text_utils",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/shared/text_utils.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "buildNewEventEmail",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "dateRange",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/service/tasks/eventsNotifyUpcoming.js",
+      "extension": ".js",
+      "size_bytes": 7674,
+      "line_count": 147,
+      "sha1_short": "7bca9bb7f8",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../../modules/calendar/calendar_utils",
+          "module": "../../modules/calendar/calendar_utils",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../../modules/setup/events_vars",
+          "module": "../../modules/setup/events_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../../modules/shared/text_utils",
+          "module": "../../modules/shared/text_utils",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/calendar/calendar_utils.js",
+        "functions/lib/modules/setup/events_vars.js",
+        "functions/lib/modules/shared/text_utils.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "buildUpcomingEventEmail",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "dateRange",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -14284,6 +14599,58 @@
       "notes": []
     },
     {
+      "path": "functions/lib/service/triggers/onEventApproved.js",
+      "extension": ".js",
+      "size_bytes": 3973,
+      "line_count": 86,
+      "sha1_short": "27616d7f03",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../service_config",
+          "module": "../service_config",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-functions/v2/firestore",
+          "module": "firebase-functions/v2/firestore",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/service/service_config.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "jobIdForNotifyNew",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/lib/service/triggers/onUsersActiveCreated.js",
       "extension": ".js",
       "size_bytes": 3426,
@@ -14885,6 +15252,52 @@
       "internal_dependencies": [],
       "classes": [],
       "functions": [
+        {
+          "name": "tsToIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/scripts/checkUserGodzinkiHome.js",
+      "extension": ".js",
+      "size_bytes": 3538,
+      "line_count": 88,
+      "sha1_short": "97acdee817",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "computeBalance",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
         {
           "name": "tsToIso",
           "type": "function",
@@ -16358,6 +16771,49 @@
       "notes": []
     },
     {
+      "path": "functions/src/api/eventInterestToggleHandler.ts",
+      "extension": ".ts",
+      "size_bytes": 2202,
+      "line_count": 73,
+      "sha1_short": "8e6875532f",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require express",
+          "module": "express",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "handleEventInterestToggle",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/src/api/gearBundleReservationCreateHandler.ts",
       "extension": ".ts",
       "size_bytes": 4212,
@@ -17727,6 +18183,42 @@
       "notes": []
     },
     {
+      "path": "functions/src/api/getEventInterestsHandler.ts",
+      "extension": ".ts",
+      "size_bytes": 1660,
+      "line_count": 55,
+      "sha1_short": "2114dcdd83",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require express",
+          "module": "express",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "handleGetEventInterests",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/src/api/getEventsHandler.ts",
       "extension": ".ts",
       "size_bytes": 1897,
@@ -18824,6 +19316,49 @@
       "notes": []
     },
     {
+      "path": "functions/src/api/notificationPrefsHandler.ts",
+      "extension": ".ts",
+      "size_bytes": 2848,
+      "line_count": 89,
+      "sha1_short": "4e46b57e8c",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require express",
+          "module": "express",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-functions/v2",
+          "module": "firebase-functions/v2",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "handleNotificationPrefs",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/src/api/registerUserHandler.ts",
       "extension": ".ts",
       "size_bytes": 33576,
@@ -19258,9 +19793,9 @@
     {
       "path": "functions/src/index.ts",
       "extension": ".ts",
-      "size_bytes": 57088,
-      "line_count": 1701,
-      "sha1_short": "828dcf54f5",
+      "size_bytes": 59049,
+      "line_count": 1763,
+      "sha1_short": "c3c4e6c8fa",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -19344,6 +19879,13 @@
         {
           "raw": "import/require ./api/checkNicknameAvailabilityHandler",
           "module": "./api/checkNicknameAvailabilityHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/eventInterestToggleHandler",
+          "module": "./api/eventInterestToggleHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -19449,6 +19991,13 @@
         {
           "raw": "import/require ./api/getBasenSessionsHandler",
           "module": "./api/getBasenSessionsHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/getEventInterestsHandler",
+          "module": "./api/getEventInterestsHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -19587,6 +20136,13 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ./api/notificationPrefsHandler",
+          "module": "./api/notificationPrefsHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ./api/registerUserHandler",
           "module": "./api/registerUserHandler",
           "names": [],
@@ -19631,6 +20187,13 @@
         {
           "raw": "import/require ./service/service_config",
           "module": "./service/service_config",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./service/triggers/onEventApproved",
+          "module": "./service/triggers/onEventApproved",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -19712,6 +20275,7 @@
         "functions/src/api/basenEnrollHandler.ts",
         "functions/src/api/basenGrantKarnetHandler.ts",
         "functions/src/api/checkNicknameAvailabilityHandler.ts",
+        "functions/src/api/eventInterestToggleHandler.ts",
         "functions/src/api/gearBundleReservationCreateHandler.ts",
         "functions/src/api/gearFavoriteToggleHandler.ts",
         "functions/src/api/gearMyReservationsHandler.ts",
@@ -19727,6 +20291,7 @@
         "functions/src/api/getBasenGodzinyHandler.ts",
         "functions/src/api/getBasenKarnetyHandler.ts",
         "functions/src/api/getBasenSessionsHandler.ts",
+        "functions/src/api/getEventInterestsHandler.ts",
         "functions/src/api/getEventsHandler.ts",
         "functions/src/api/getGearFavoritesHandler.ts",
         "functions/src/api/getGearItemAvailabilityHandler.ts",
@@ -19746,6 +20311,7 @@
         "functions/src/api/kmMyStatsHandler.ts",
         "functions/src/api/kmPlacesHandler.ts",
         "functions/src/api/kmRankingsHandler.ts",
+        "functions/src/api/notificationPrefsHandler.ts",
         "functions/src/api/registerUserHandler.ts",
         "functions/src/api/submitEventHandler.ts",
         "functions/src/api/submitGodzinkiHandler.ts",
@@ -19753,6 +20319,7 @@
         "functions/src/service/admin/adminRunTask.ts",
         "functions/src/service/runner.ts",
         "functions/src/service/service_config.ts",
+        "functions/src/service/triggers/onEventApproved.ts",
         "functions/src/service/triggers/onUsersActiveCreated.ts",
         "functions/src/service/worker/fallbackDailyWorker.ts",
         "functions/src/service/worker/onJobCreatedWorker.ts"
@@ -21702,6 +22269,54 @@
       "notes": []
     },
     {
+      "path": "functions/src/modules/setup/events_vars.ts",
+      "extension": ".ts",
+      "size_bytes": 860,
+      "line_count": 28,
+      "sha1_short": "b0d01b9f31",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "getEventsVars",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getVar",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "toNumber",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/src/modules/setup/setup_gear_vars.ts",
       "extension": ".ts",
       "size_bytes": 3165,
@@ -22237,9 +22852,9 @@
     {
       "path": "functions/src/service/registry.ts",
       "extension": ".ts",
-      "size_bytes": 3607,
-      "line_count": 74,
-      "sha1_short": "c4f4adc6e3",
+      "size_bytes": 3794,
+      "line_count": 78,
+      "sha1_short": "4dc8b58dea",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -22260,6 +22875,20 @@
         {
           "raw": "import/require ./tasks/basenNotifySessionCancelled",
           "module": "./tasks/basenNotifySessionCancelled",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./tasks/eventsNotifyNew",
+          "module": "./tasks/eventsNotifyNew",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./tasks/eventsNotifyUpcoming",
+          "module": "./tasks/eventsNotifyUpcoming",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -22458,6 +23087,8 @@
         "functions/src/service/tasks/adminApprovalWriteBack.ts",
         "functions/src/service/tasks/adminNotifyPendingApprovals.ts",
         "functions/src/service/tasks/basenNotifySessionCancelled.ts",
+        "functions/src/service/tasks/eventsNotifyNew.ts",
+        "functions/src/service/tasks/eventsNotifyUpcoming.ts",
         "functions/src/service/tasks/eventsSyncCalendar.ts",
         "functions/src/service/tasks/eventsSyncFromSheet.ts",
         "functions/src/service/tasks/gearNotifyReservationCancelledByAdmin.ts",
@@ -22788,6 +23419,141 @@
       "functions": [
         {
           "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/src/service/tasks/eventsNotifyNew.ts",
+      "extension": ".ts",
+      "size_bytes": 3731,
+      "line_count": 108,
+      "sha1_short": "6c0402d563",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../../modules/shared/text_utils",
+          "module": "../../modules/shared/text_utils",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../types",
+          "module": "../types",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/src/modules/shared/text_utils.ts",
+        "functions/src/service/types.ts"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "buildNewEventEmail",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "dateRange",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/src/service/tasks/eventsNotifyUpcoming.ts",
+      "extension": ".ts",
+      "size_bytes": 5770,
+      "line_count": 148,
+      "sha1_short": "819bfb940a",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../../modules/calendar/calendar_utils",
+          "module": "../../modules/calendar/calendar_utils",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../../modules/setup/events_vars",
+          "module": "../../modules/setup/events_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../../modules/shared/text_utils",
+          "module": "../../modules/shared/text_utils",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../types",
+          "module": "../types",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/src/modules/calendar/calendar_utils.ts",
+        "functions/src/modules/setup/events_vars.ts",
+        "functions/src/modules/shared/text_utils.ts",
+        "functions/src/service/types.ts"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "buildUpcomingEventEmail",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "dateRange",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -24973,6 +25739,58 @@
       "notes": []
     },
     {
+      "path": "functions/src/service/triggers/onEventApproved.ts",
+      "extension": ".ts",
+      "size_bytes": 2036,
+      "line_count": 58,
+      "sha1_short": "4032fb32b2",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../service_config",
+          "module": "../service_config",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-functions/v2/firestore",
+          "module": "firebase-functions/v2/firestore",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/src/service/service_config.ts"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "jobIdForNotifyNew",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/src/service/triggers/onUsersActiveCreated.ts",
       "extension": ".ts",
       "size_bytes": 1555,
@@ -26329,9 +27147,9 @@
     {
       "path": "public/core/app_shell.js",
       "extension": ".js",
-      "size_bytes": 8065,
-      "line_count": 254,
-      "sha1_short": "a320849bf2",
+      "size_bytes": 8664,
+      "line_count": 268,
+      "sha1_short": "fe6df0e712",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -26352,6 +27170,13 @@
         {
           "raw": "import/require /core/render_shell.js",
           "module": "/core/render_shell.js",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require /core/sw_update.js",
+          "module": "/core/sw_update.js",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -26709,9 +27534,9 @@
     {
       "path": "public/core/render_shell.js",
       "extension": ".js",
-      "size_bytes": 71639,
-      "line_count": 1613,
-      "sha1_short": "5e7b8c00ee",
+      "size_bytes": 77294,
+      "line_count": 1742,
+      "sha1_short": "7378970d4f",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -26735,11 +27560,28 @@
           "names": [],
           "level": 0,
           "type": "script_import"
+        },
+        {
+          "raw": "import/require /core/sw_update.js",
+          "module": "/core/sw_update.js",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
         }
       ],
       "internal_dependencies": [],
       "classes": [],
       "functions": [
+        {
+          "name": "bindHomeEventInterestButtons",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
         {
           "name": "buildHomeBasenSection",
           "type": "function",
@@ -26982,6 +27824,16 @@
         },
         {
           "name": "goToGodzinki",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "heartSvg",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -27239,6 +28091,16 @@
           "decorators": [],
           "returns": null,
           "doc": null
+        },
+        {
+          "name": "wireNotificationPrefs",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
         }
       ],
       "top_level_symbols": [],
@@ -27270,6 +28132,54 @@
         },
         {
           "name": "setHash",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "public/core/sw_update.js",
+      "extension": ".js",
+      "size_bytes": 1307,
+      "line_count": 37,
+      "sha1_short": "e749a5938c",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "hardReloadApp",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isSwUpdatePending",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "setSwUpdatePending",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -28665,9 +29575,9 @@
     {
       "path": "public/modules/impreza_module.js",
       "extension": ".js",
-      "size_bytes": 10132,
-      "line_count": 284,
-      "sha1_short": "ad37bb8e69",
+      "size_bytes": 12572,
+      "line_count": 335,
+      "sha1_short": "21d9ae5341",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -28682,6 +29592,16 @@
       "internal_dependencies": [],
       "classes": [],
       "functions": [
+        {
+          "name": "bindInterestButtons",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
         {
           "name": "bindSubmitForm",
           "type": "function",
@@ -28724,6 +29644,16 @@
         },
         {
           "name": "getVal",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "heartSvg",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -30465,9 +31395,9 @@
     {
       "path": "public/styles/events.css",
       "extension": ".css",
-      "size_bytes": 2366,
-      "line_count": 143,
-      "sha1_short": "ddc46005c0",
+      "size_bytes": 3233,
+      "line_count": 196,
+      "sha1_short": "bca6778880",
       "kind": "text",
       "module_aliases": [],
       "imports": [],
@@ -30550,9 +31480,9 @@
     {
       "path": "public/styles/start.css",
       "extension": ".css",
-      "size_bytes": 10858,
-      "line_count": 291,
-      "sha1_short": "4dcb944c12",
+      "size_bytes": 11352,
+      "line_count": 309,
+      "sha1_short": "94a41cd61d",
       "kind": "text",
       "module_aliases": [],
       "imports": [],
@@ -30567,9 +31497,9 @@
     {
       "path": "public/sw.js",
       "extension": ".js",
-      "size_bytes": 4997,
-      "line_count": 147,
-      "sha1_short": "c35d92b956",
+      "size_bytes": 5021,
+      "line_count": 148,
+      "sha1_short": "d40c9eee9a",
       "kind": "script",
       "module_aliases": [],
       "imports": [],

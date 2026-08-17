@@ -61,6 +61,7 @@ import {handleNotificationPrefs} from "./api/notificationPrefsHandler";
 import {handleEventInterestToggle} from "./api/eventInterestToggleHandler";
 import {handleGetEventInterests} from "./api/getEventInterestsHandler";
 import {getServiceConfig} from "./service/service_config";
+import {parseSchoolYear, getKursWypozyczaFlag, getKursWindowEndSuffix} from "./modules/equipment/bundle/gear_bundle_service";
 
 setGlobalOptions({region: "us-central1"});
 
@@ -251,8 +252,9 @@ function computeAllowedActions(roleKey: string): string[] {
     actions.push("basen.enroll");
   }
   // Kursant: rezerwuje sprzęt jak kandydat (te same limity). Faktyczne bramkowanie
-  // robi flaga var_members/kurs_wypożycza + okno szkoleniówki (patrz getSetup oraz
-  // gear_bundle_service). Bez zgłaszania imprez / standardowych godzinek.
+  // robi flaga setup/vars_members.vars.kurs_wypożycza (getKursWypozyczaFlag) + okno
+  // szkoleniówki (patrz getSetup oraz gear_bundle_service). Bez zgłaszania imprez /
+  // standardowych godzinek.
   if (roleKey === "rola_kursant") {
     actions.push("gear.reserve");
   }
@@ -385,10 +387,10 @@ export const getSetup = onRequest({invoker: "private"}, async (req, res) => {
       const uid = tokenCheck.decoded.uid;
       const email = String(tokenCheck.decoded.email || "").trim().toLowerCase();
 
-      const [setup, userSnap, kursWypozyczaSnap] = await Promise.all([
+      const [setup, userSnap, kursWypozyczaFlag] = await Promise.all([
         getSetupApp(),
         db.collection("users_active").doc(uid).get(),
-        db.collection("var_members").doc("kurs_wypożycza").get(),
+        getKursWypozyczaFlag(db),
       ]);
 
       if (!setup) {
@@ -410,7 +412,7 @@ export const getSetup = onRequest({invoker: "private"}, async (req, res) => {
 
       const filteredSetup = filterSetupForUser(setup, uid, email, effectiveRoleKey, statusKey);
 
-      let kursWypozycza = kursWypozyczaSnap.exists && kursWypozyczaSnap.data()?.value === true;
+      let kursWypozycza = kursWypozyczaFlag;
       let kursExpired = false;
       // Dla realnych kursantów policz okno wypożyczeń (do końca września roku
       // szkoleniówki). W oknie kursant rezerwuje jak kandydat; po oknie traktujemy
@@ -419,15 +421,15 @@ export const getSetup = onRequest({invoker: "private"}, async (req, res) => {
       // docelową rolę nadaje zarząd ręcznie w arkuszu (patrz panel zarządu: kursanci
       // po terminie). Tryb podglądu (kursPreviewMode) zostaje na samej fladze.
       if (roleKey === "rola_kursant") {
-        const uSnap = await db.collection("kurs_uczestnicy").doc(email).get();
-        const rok = Number(uSnap.exists ? (uSnap.data() as any)?.rokSzkoleniowki : NaN);
+        const rok = parseSchoolYear(userData?.admin?.schoolYear ?? null);
         const now = new Date();
         const todayIso = now.toISOString().slice(0, 10);
-        const hasRok = Number.isFinite(rok);
-        // Okno otwarte: tegoroczna szkoleniówka i przed końcem września.
-        const windowOpen = hasRok && rok === now.getUTCFullYear() && todayIso <= `${rok}-09-30`;
-        // Wygasł: znamy rok i minął już 30 września tego roku (lub rok przeszły).
-        kursExpired = hasRok && todayIso > `${rok}-09-30`;
+        const hasRok = rok !== null;
+        const windowEnd = hasRok ? `${rok}-${await getKursWindowEndSuffix(db)}` : "";
+        // Okno otwarte: tegoroczna szkoleniówka i przed końcem szkoleniówki (setup/vars_members.koniec_kursu).
+        const windowOpen = hasRok && rok === now.getUTCFullYear() && todayIso <= windowEnd;
+        // Wygasł: znamy rok i minął już koniec szkoleniówki tego roku (lub rok przeszły).
+        kursExpired = hasRok && todayIso > windowEnd;
         if (!windowOpen) kursWypozycza = false;
       }
 

@@ -5,6 +5,7 @@ import type {Request, Response} from "express";
 import type * as admin from "firebase-admin";
 import {creditOpeningBalance} from "../modules/hours/godzinki_service";
 import {getObHours, buildOpeningBalanceAdminPatch, obValueExact, obEmailKey} from "../modules/hours/opening_balance_fields";
+import {getKursWindowEndSuffix} from "../modules/equipment/bundle/gear_bundle_service";
 
 type TokenCheck =
   | {error: string}
@@ -385,6 +386,52 @@ async function findNicknameOwnerUid(
   return owner ? owner.id : null;
 }
 
+type KursantEligibility =
+  | {ok: true}
+  | {ok: false; code: "kursant_not_found" | "kursant_window_closed"; message: string};
+
+/**
+ * Sprawdza, czy dany e-mail może samodzielnie zadeklarować się jako kursant przy
+ * rejestracji. Źródło: members_roster/{email} — mirror arkusza "członkowie sympatycy
+ * SKK" zasilany przez users.syncFieldsFromSheet (zastępuje dawną kolekcję
+ * kurs_uczestnicy, arkusz "Szkoleniówka", wygaszony — patrz Audyty/17.08_*).
+ * Wymaga rola=Kursant ORAZ okna szkoleniówki (rok == bieżący rok kalendarzowy, do dnia
+ * z setup/vars_members.vars.koniec_kursu — getKursWindowEndSuffix) — ta sama reguła co
+ * bramka rezerwacji sprzętu (gear_bundle_service.isFreeRentalExempt), żeby kursant
+ * z zeszłego rocznika nie mógł się już zadeklarować po wygaśnięciu okna.
+ */
+async function resolveKursantEligibility(
+  db: FirebaseFirestore.Firestore,
+  email: string
+): Promise<KursantEligibility> {
+  const NOT_FOUND: KursantEligibility = {
+    ok: false,
+    code: "kursant_not_found",
+    message: "Twój adres e-mail nie figuruje na liście kursantów. Jeśli to błąd, skontaktuj się z zarządem: zarzad@morzkulc.pl",
+  };
+
+  const rosterSnap = await db.collection("members_roster").doc(email).get();
+  if (!rosterSnap.exists) return NOT_FOUND;
+
+  const roster = rosterSnap.data() as any;
+  if (String(roster?.rola || "") !== "rola_kursant") return NOT_FOUND;
+
+  const rok = roster?.rokSzkoleniowki;
+  const now = new Date();
+  const todayIso = now.toISOString().slice(0, 10);
+  const windowEndSuffix = await getKursWindowEndSuffix(db);
+  const windowOpen = typeof rok === "number" && rok === now.getUTCFullYear() && todayIso <= `${rok}-${windowEndSuffix}`;
+  if (!windowOpen) {
+    return {
+      ok: false,
+      code: "kursant_window_closed",
+      message: "Twoje uprawnienia kursanta wygasły z końcem września. Skontaktuj się z zarządem: zarzad@morzkulc.pl",
+    };
+  }
+
+  return {ok: true};
+}
+
 type Szkoleniowiec = {name: string; email: string};
 
 /**
@@ -587,13 +634,9 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
 
         // Jeśli użytkownik zaznaczył "jestem kursantem" i nie ma jeszcze wyższej roli
         if (incomingProfile.iAmKursant === true && roleKey === newUserRoleCode) {
-          const kursantSnap = await db.collection("kurs_uczestnicy").doc(email).get();
-          if (!kursantSnap.exists) {
-            res.status(403).json({
-              ok: false,
-              code: "kursant_not_found",
-              message: "Twój adres e-mail nie figuruje na liście kursantów. Jeśli to błąd, skontaktuj się z zarządem: zarzad@morzkulc.pl",
-            });
+          const eligibility = await resolveKursantEligibility(db, email);
+          if (!eligibility.ok) {
+            res.status(403).json({ok: false, code: eligibility.code, message: eligibility.message});
             return;
           }
           roleKey = "rola_kursant";
@@ -718,13 +761,9 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
       let roleKey: string = newUserRoleCode;
       let applyOpeningMatch = false;
       if (incomingProfile.iAmKursant === true) {
-        const kursantSnap = await db.collection("kurs_uczestnicy").doc(email).get();
-        if (!kursantSnap.exists) {
-          res.status(403).json({
-            ok: false,
-            code: "kursant_not_found",
-            message: "Twój adres e-mail nie figuruje na liście kursantów. Jeśli to błąd, skontaktuj się z zarządem: zarzad@morzkulc.pl",
-          });
+        const eligibility = await resolveKursantEligibility(db, email);
+        if (!eligibility.ok) {
+          res.status(403).json({ok: false, code: eligibility.code, message: eligibility.message});
           return;
         }
         roleKey = "rola_kursant";

@@ -259,7 +259,7 @@ class BackendStub:
         """
         users: {uid: {"role_key": ..., "status_key": ..., "email": ..., "school_year": ...}}
         catalog: {composite_id: {"active": True, "operational": True, ...}}
-        kurs_wypozycza: globalny przełącznik zarządu (var_members/kurs_wypożycza).
+        kurs_wypozycza: globalny przełącznik zarządu (setup/vars_members.vars.kurs_wypożycza).
         today: data ISO używana w oknie szkoleniówki kursanta (None → realne dziś).
         """
         self.users = users

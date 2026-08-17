@@ -7,8 +7,6 @@
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu("Morzkulc")
-    .addItem("sync konfiguracja kursu", "syncKursConfigToFirestore")
-    .addItem("sync uczestnicy", "syncUczestnicyToFirestore")
     .addItem("sync co po kursie", "syncPoKursieToFirestore")
     .addToUi();
 }

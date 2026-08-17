@@ -33,7 +33,6 @@ export async function handleUserWeight(req: Request, res: Response, deps: UserWe
       }
 
       const uid = tokenCheck.decoded.uid;
-      const email = String(tokenCheck.decoded.email || "").trim().toLowerCase();
 
       if (req.method === "GET") {
         const userSnap = await db.collection("users_active").doc(uid).get();
@@ -43,10 +42,8 @@ export async function handleUserWeight(req: Request, res: Response, deps: UserWe
 
         let weight: number | null = null;
 
-        if (isKursant && email) {
-          const kursSnap = await db.collection("kurs_uczestnicy").doc(email).get();
-          const kursData = kursSnap.exists ? (kursSnap.data() as any) : null;
-          const kursWeight = kursData?.weight;
+        if (isKursant) {
+          const kursWeight = userData?.admin?.weight;
           if (typeof kursWeight === "number" && Number.isFinite(kursWeight)) {
             weight = kursWeight;
           }

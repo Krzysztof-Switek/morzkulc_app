@@ -2,6 +2,7 @@ import * as admin from "firebase-admin";
 import {ServiceTask} from "../types";
 import {GoogleSheetsProvider} from "../providers/googleSheetsProvider";
 import {getServiceConfig} from "../service_config";
+import {parseSchoolYear} from "../../modules/equipment/bundle/gear_bundle_service";
 
 /**
  * Task: users.syncFieldsFromSheet
@@ -10,6 +11,12 @@ import {getServiceConfig} from "../service_config";
  * Czyta zakładkę members, znajduje users_active po memberId (== kolumna ID),
  * patchuje TYLKO zmienione pola: email, profile.*, admin.*.
  * Jeśli wykryje zmianę roli/statusu (po stronie arkusza) → kolejkuje users.syncRolesFromSheet.
+ *
+ * Dodatkowo, dla KAŻDEGO wiersza (niezależnie od tego, czy users_active już istnieje),
+ * mirroruje rolę/status/rok szkoleniówki do members_roster/{email} — jedyne miejsce
+ * po którym registerUserHandler.ts sprawdza uprawnienie do samodzielnej deklaracji
+ * "jestem kursantem" PRZED pierwszym zalogowaniem. Zastępuje dawną kolekcję
+ * kurs_uczestnicy (arkusz "Szkoleniówka", wygaszony — patrz Audyty/17.08_*).
  */
 
 type Payload = {
@@ -35,6 +42,29 @@ function normalizeBoolish(v: any): boolean {
   if (!s) return false;
   if (s === "true" || s === "tak" || s === "yes" || s === "1") return true;
   return false;
+}
+
+/**
+ * Tolerancyjne parsowanie liczby z komórki arkusza. Sheets API (`values.get` bez
+ * `valueRenderOption`) zwraca domyślnie FORMATTED_VALUE — czyli DOKŁADNIE to, co
+ * widać w komórce, nie surową liczbę. Komórka z formatowaniem walutowym (np. opłata
+ * za kurs wpisana jako 2300 z formatem PLN) przychodzi więc jako string typu
+ * "2 300,00 zł", nie "2300". Usuwamy wszystko poza cyframi/przecinkiem/kropką/minusem
+ * (waluta, spacje tysięcy — zwykłe i twarde), a przecinek dziesiętny (notacja PL)
+ * zamieniamy na kropkę.
+ */
+function toNumberOrNull(v: any): number | null {
+  const raw = norm(v);
+  if (!raw) return null;
+  let s = raw.replace(/[^\d,.-]/g, "");
+  if (!s) return null;
+  if (s.includes(",") && s.includes(".")) {
+    s = s.replace(/\./g, "").replace(",", ".");
+  } else if (s.includes(",")) {
+    s = s.replace(",", ".");
+  }
+  const n = Number(s);
+  return isFinite(n) ? n : null;
 }
 
 function normalizeDateString(v: any): string {
@@ -162,6 +192,87 @@ export const usersSyncFieldsFromSheetTask: ServiceTask<Payload> = {
       }
     }
 
+    // ── WYMUSZENIE KOMPLETU DANYCH KURSANTA: rok szkoleniówki, PESEL, waga, wzrost,
+    // opłata za kurs muszą być wypełnione i poprawne dla KAŻDEGO wiersza z rolą
+    // "Kursant". Walidacja pre-flight (przed jakimkolwiek zapisem) — sync PRZERWANY
+    // (zero zapisów), jeśli choć jeden kursant ma brakujące/błędne dane, z czytelną
+    // listą KTÓRE kolumny są błędne dla KTÓREJ osoby. Kolumny pesel/waga/wzrost/
+    // oplata_za_kurs są sprawdzane TYLKO gdy istnieją w arkuszu (opcjonalne, wzorem
+    // „opiekun stażu" powyżej); rok_szkoleniowki jest zawsze wymagana kolumna
+    // (patrz `required` powyżej), więc sprawdzamy tu tylko czy WARTOŚĆ w komórce jest
+    // poprawna dla kursanta.
+    {
+      const kursantIssues: string[] = [];
+      for (const row of table.rows) {
+        if (mapRoleDisplayToKey(g(row, "rola")) !== "rola_kursant") continue;
+        const memberIdRaw = g(row, "id");
+        if (!memberIdRaw) continue; // wiersz bez ID — pomijany też w głównej pętli
+
+        const problems: string[] = [];
+
+        if (parseSchoolYear(g(row, "rok_szkoleniowki")) === null) {
+          problems.push("rok szkoleniówki (puste albo nie da się rozpoznać roku)");
+        }
+
+        if ("pesel" in hmap) {
+          const pesel = g(row, "pesel");
+          if (!/^\d{11}$/.test(pesel)) {
+            problems.push(
+              pesel ?
+                "PESEL (musi mieć dokładnie 11 cyfr — sprawdź, czy komórka nie jest sformatowana jako liczba, bo traci wiodące zero)" :
+                "PESEL (puste)"
+            );
+          }
+        }
+
+        if ("waga" in hmap) {
+          const waga = toNumberOrNull(g(row, "waga"));
+          if (waga === null || waga < 30 || waga > 250) {
+            problems.push("waga (puste albo poza zakresem 30–250 kg)");
+          }
+        }
+
+        if ("wzrost" in hmap) {
+          const wzrost = toNumberOrNull(g(row, "wzrost"));
+          if (wzrost === null || wzrost < 100 || wzrost > 230) {
+            problems.push("wzrost (puste albo poza zakresem 100–230 cm)");
+          }
+        }
+
+        if ("oplata_za_kurs" in hmap) {
+          const oplata = toNumberOrNull(g(row, "oplata_za_kurs"));
+          if (oplata === null || oplata <= 0) {
+            problems.push("opłata za kurs (puste albo niedodatnie)");
+          }
+        }
+
+        if (problems.length) {
+          const name = g(row, "ksywa") ||
+            `${g(row, "imie")} ${g(row, "nazwisko")}`.trim() ||
+            g(row, "e_mail") || "(bez nazwy)";
+          kursantIssues.push(`#${memberIdRaw} ${name}: ${problems.join("; ")}`);
+        }
+      }
+
+      if (kursantIssues.length) {
+        const MAX_LIST = 20;
+        const shown = kursantIssues.slice(0, MAX_LIST);
+        const extra = kursantIssues.length - shown.length;
+        const lines = shown.map((s) => `• ${s}`).join("\n") +
+          (extra > 0 ? `\n• …i ${extra} więcej` : "");
+        const message =
+          "Synchronizacja przerwana — kursanci z brakującymi lub błędnymi danymi.\n" +
+          `Wiersze z problemami (${kursantIssues.length}):\n${lines}\n` +
+          "Popraw wskazane kolumny dla każdej osoby i ponów synchronizację.";
+        logger.error("usersSyncFieldsFromSheet: ABORT — kursanci z niekompletnymi/błędnymi danymi", {count: kursantIssues.length});
+        return {
+          ok: false,
+          message,
+          details: {validationError: true, kursantIssuesCount: kursantIssues.length, kursantIssues},
+        };
+      }
+    }
+
     // ── WYMUSZENIE UNIKALNOŚCI KSYWY: sync przerywany, jeśli arkusz zawiera dwie
     // osoby z tą samą ksywą (porównanie case-insensitive). Spójne z walidacją
     // unikalności przy rejestracji w aplikacji (patrz registerUserHandler.ts,
@@ -209,6 +320,7 @@ export const usersSyncFieldsFromSheetTask: ServiceTask<Payload> = {
     let notFound = 0;
     let skipped = 0;
     let roleStatusChanged = 0;
+    let rosterUpserted = 0;
     const now = new Date().toISOString();
 
     for (const row of table.rows) {
@@ -232,8 +344,27 @@ export const usersSyncFieldsFromSheetTask: ServiceTask<Payload> = {
         continue;
       }
 
+      const rowEmail = g(row, "e_mail").toLowerCase();
+
+      // Mirror KAŻDEGO wiersza (niezależnie od tego, czy users_active już istnieje) do
+      // members_roster/{email} — jedyne źródło, po którym registerUserHandler.ts sprawdza
+      // uprawnienie do samodzielnej deklaracji "jestem kursantem" PRZED pierwszym
+      // zalogowaniem (gdy users_active jeszcze nie istnieje, więc dopasowanie po memberId
+      // poniżej by tego wiersza nie objęło). Zastępuje dawną kolekcję kurs_uczestnicy.
+      if (rowEmail && !dryRun) {
+        await firestore.collection("members_roster").doc(rowEmail).set({
+          email: rowEmail,
+          rola: roleKey,
+          status: statusKey,
+          rokSzkoleniowki: parseSchoolYear(g(row, "rok_szkoleniowki")),
+          memberId,
+          updatedAt: now,
+        });
+        rosterUpserted++;
+      }
+
       const sheetUser = {
-        email: g(row, "e_mail").toLowerCase(),
+        email: rowEmail,
         profile: {
           nickname: g(row, "ksywa"),
           firstName: g(row, "imie"),
@@ -291,6 +422,22 @@ export const usersSyncFieldsFromSheetTask: ServiceTask<Payload> = {
       // patchujemy TYLKO gdy kolumna istnieje w arkuszu; jej brak nie może nadpisać wartości.
       if ("dostep_akademik" in hmap) {
         candidates.push(["admin.hasAkademikAccess", normalizeBoolish(g(row, "dostep_akademik"))]);
+      }
+
+      // Dane kursowe (PESEL/waga/wzrost/opłata) — OPCJONALNE kolumny przejęte z dawnego
+      // arkusza "Szkoleniówka" (kolekcja kurs_uczestnicy, wygaszona). Wzorem powyższych:
+      // patchujemy TYLKO gdy kolumna istnieje w arkuszu.
+      if ("pesel" in hmap) {
+        candidates.push(["admin.pesel", g(row, "pesel")]);
+      }
+      if ("waga" in hmap) {
+        candidates.push(["admin.weight", toNumberOrNull(g(row, "waga"))]);
+      }
+      if ("wzrost" in hmap) {
+        candidates.push(["admin.height", toNumberOrNull(g(row, "wzrost"))]);
+      }
+      if ("oplata_za_kurs" in hmap) {
+        candidates.push(["admin.courseFee", toNumberOrNull(g(row, "oplata_za_kurs"))]);
       }
 
       const patch: Record<string, any> = {};
@@ -372,12 +519,12 @@ export const usersSyncFieldsFromSheetTask: ServiceTask<Payload> = {
       logger.info("usersSyncFieldsFromSheet: enqueued users.syncRolesFromSheet", {roleStatusChanged});
     }
 
-    const details = {found, patched, unchanged, notFound, skipped, roleStatusChanged, dryRun};
+    const details = {found, patched, unchanged, notFound, skipped, roleStatusChanged, rosterUpserted, dryRun};
     logger.info("usersSyncFieldsFromSheet: done", details);
 
     return {
       ok: true,
-      message: `Users fields synced: found=${found}, patched=${patched}, unchanged=${unchanged}, notFound=${notFound}, skipped=${skipped}, roleStatusChanged=${roleStatusChanged}`,
+      message: `Users fields synced: found=${found}, patched=${patched}, unchanged=${unchanged}, notFound=${notFound}, skipped=${skipped}, roleStatusChanged=${roleStatusChanged}, rosterUpserted=${rosterUpserted}`,
       details,
     };
   },

@@ -43,7 +43,6 @@ export async function handleGetKursantStats(req: Request, res: Response, deps: G
       const userSnap = await db.collection("users_active").doc(uid).get();
       const userData = userSnap.data() as any;
       const roleKey = String(userData?.role_key || "");
-      const userEmail = String(userData?.email || "").trim().toLowerCase();
 
       const isKursant = roleKey === "rola_kursant";
       const isAdmin = adminRoleKeys.includes(roleKey);
@@ -105,18 +104,14 @@ export async function handleGetKursantStats(req: Request, res: Response, deps: G
         total: s.points,
       }));
 
-      const [kursantDocSnap, varsKursSnap] = await Promise.all([
-        userEmail ? db.collection("kurs_uczestnicy").doc(userEmail).get() : Promise.resolve(null),
-        db.collection("setup").doc("vars_kurs").get(),
-      ]);
+      const varsMembersSnap = await db.collection("setup").doc("vars_members").get();
 
-      const kursantData = kursantDocSnap?.exists ? (kursantDocSnap.data() as any) : null;
-      const fee = kursantData?.fee ?? null;
-      const weight = kursantData?.weight ?? null;
-      const height = kursantData?.height ?? null;
-      const phone = kursantData?.phone ?? null;
-      const pesel = kursantData?.pesel ?? null;
-      const cenaKursu = (varsKursSnap.data() as any)?.vars?.cena_kursu?.value ?? null;
+      const fee = userData?.admin?.courseFee ?? null;
+      const weight = userData?.admin?.weight ?? null;
+      const height = userData?.admin?.height ?? null;
+      const phone = userData?.profile?.phone ?? null;
+      const pesel = userData?.admin?.pesel ?? null;
+      const cenaKursu = (varsMembersSnap.data() as any)?.vars?.cena_kursu?.value ?? null;
 
       res.status(200).json({ok: true, myCapsizes, myRank, totalKursants, fee, weight, height, phone, pesel, cena_kursu: cenaKursu, leaderboard});
     } catch (err: any) {
