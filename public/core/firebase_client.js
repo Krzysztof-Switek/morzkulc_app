@@ -15,55 +15,56 @@ import {
   getDownloadURL
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
-const DEV_CONFIG = {
+// authDomain NIE jest tu wpisany na sztywno — patrz getFirebaseConfig(). Musi być
+// RÓWNY aktualnej domenie, z której otwarto apkę (host), inaczej signInWithRedirect
+// przeskakuje w trakcie logowania na INNĄ domenę i z powrotem — na iOS Safari to
+// psuje powrót z logowania Google ("mruga i wraca" do ekranu logowania). Firebase
+// Hosting serwuje /__/auth/handler natywnie pod KAŻDĄ podłączoną domeną (zweryfikowane
+// dla app.morzkulc.pl), więc każda domena może być swoim własnym authDomain — dzięki
+// temu logowanie działa niezależnie zarówno ze starego (*.web.app), jak i nowego
+// (app.morzkulc.pl) adresu.
+const DEV_BASE = {
   apiKey: "AIzaSyCzWcAgskiyp1AyibbiPLeAfCUfr7e3gtg",
-  authDomain: "sprzet-skk-morzkulc.web.app",
   projectId: "sprzet-skk-morzkulc",
   storageBucket: "sprzet-skk-morzkulc.firebasestorage.app",
   messagingSenderId: "867472588411",
   appId: "1:867472588411:web:2f92f3dfe7b34a76e2d5d1"
 };
 
-const PROD_CONFIG = {
+const PROD_BASE = {
   apiKey: "AIzaSyDp8Gyd45RkSS6cdJ32oczHGe6Fb9RrWeo",
-  // Własna domena, nie morzkulc-e9df7.web.app — signInWithRedirect na iOS Safari
-  // bounce'ował przez inny origin (morzkulc-e9df7.web.app), co widać było w pasku
-  // adresu i psuło powrót z logowania Google ("mruga i wraca" do ekranu logowania).
-  // Firebase Hosting serwuje /__/auth/handler natywnie też pod app.morzkulc.pl
-  // (zweryfikowane), więc cały redirect zostaje na jednej domenie.
-  authDomain: "app.morzkulc.pl",
   projectId: "morzkulc-e9df7",
   storageBucket: "morzkulc-e9df7.firebasestorage.app",
   messagingSenderId: "137214816080",
   appId: "1:137214816080:web:e4a1a6a1e25a0c694ac655"
 };
 
+// localhost/127.0.0.1 nie serwują /__/auth/handler same z siebie — dla lokalnego
+// dev serwera authDomain musi zostać wskazany na realną domenę hostingu dev.
+const DEV_HOSTS = ["sprzet-skk-morzkulc.web.app", "sprzet-skk-morzkulc.firebaseapp.com"];
+const PROD_HOSTS = ["morzkulc-e9df7.web.app", "morzkulc-e9df7.firebaseapp.com", "app.morzkulc.pl"];
+
 function getFirebaseConfig() {
   const host = String(window.location.hostname || "").trim().toLowerCase();
 
-  if (
-    host === "localhost" ||
-    host === "127.0.0.1" ||
-    host === "sprzet-skk-morzkulc.web.app" ||
-    host === "sprzet-skk-morzkulc.firebaseapp.com"
-  ) {
-    return DEV_CONFIG;
+  if (host === "localhost" || host === "127.0.0.1") {
+    return {...DEV_BASE, authDomain: "sprzet-skk-morzkulc.web.app"};
   }
 
-  if (
-    host === "morzkulc-e9df7.web.app" ||
-    host === "morzkulc-e9df7.firebaseapp.com" ||
-    host === "app.morzkulc.pl"
-  ) {
-    return PROD_CONFIG;
+  if (DEV_HOSTS.includes(host)) {
+    return {...DEV_BASE, authDomain: host};
+  }
+
+  if (PROD_HOSTS.includes(host)) {
+    return {...PROD_BASE, authDomain: host};
   }
 
   console.warn("Unknown host for Firebase config, fallback to DEV:", host);
-  return DEV_CONFIG;
+  return {...DEV_BASE, authDomain: "sprzet-skk-morzkulc.web.app"};
 }
 
 const firebaseConfig = getFirebaseConfig();
-export const isDev = firebaseConfig === DEV_CONFIG;
+export const isDev = firebaseConfig.projectId === DEV_BASE.projectId;
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
