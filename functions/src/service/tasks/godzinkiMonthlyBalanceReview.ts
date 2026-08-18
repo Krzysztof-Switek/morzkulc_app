@@ -1,14 +1,18 @@
 import * as admin from "firebase-admin";
 import {ServiceTask} from "../types";
-import {getServiceConfig} from "../service_config";
-import {computeBalance, GodzinkiRecord} from "../../modules/hours/godzinki_service";
+import {computeBalance, creditApprovedEarn, GodzinkiRecord} from "../../modules/hours/godzinki_service";
 import {getGodzinkiVars} from "../../modules/hours/godzinki_vars";
+import {getAppVars} from "../../modules/setup/app_vars";
 
 /**
  * Task: godzinki.monthlyBalanceReview
  *
  * Uruchamiany RAZ W MIESIĄCU (po gear.chargePrivateStorage) przez ten sam scheduler.
  *
+ * 0. Kredytuje automatyczny bonus miesięczny (setup/vars_godzinki.bonus_miesieczny_zarzad)
+ *    dla ról zarząd/KR — PRZED liczeniem sald, żeby bonus tego miesiąca wliczał się do
+ *    przeglądu poniżej. Idempotentnie: pomija uid, jeśli w bieżącym miesiącu (wg grantedAt)
+ *    już istnieje wpis z tym samym powodem (ponowne/ręczne odpalenie taska nie dubluje bonusu).
  * 1. Liczy saldo każdego użytkownika (skan godzinki_ledger grupowany po uid, computeBalance).
  *    Pomija uid "hist_*" (właściciele/osoby jeszcze niezarejestrowane).
  * 2. WS4: zapisuje snapshot service_reports/negativeBalances (salda < 0) — panel zarządu go czyta.
@@ -19,8 +23,61 @@ type Payload = {
   dry?: boolean;
 };
 
+const BOARD_ROLE_KEYS = ["rola_zarzad", "rola_kr"];
+const BOARD_BONUS_REASON = "Bonus miesięczny za pełnioną funkcję";
+
 function fmtBalance(b: number): string {
   return (b > 0 ? "+" : "") + b;
+}
+
+function monthKeyOf(d: Date): string {
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+/**
+ * Kredytuje bonus miesięczny zarządowi/KR (idempotentnie per uid/miesiąc).
+ * Eksportowane dla testów jednostkowych (vitest).
+ */
+export async function creditBoardMonthlyBonus(
+  db: FirebaseFirestore.Firestore,
+  now: Date,
+  bonusHours: number,
+  expiryMonths: number,
+  dryRun: boolean
+): Promise<number> {
+  if (bonusHours <= 0) return 0;
+
+  const boardSnap = await db.collection("users_active").where("role_key", "in", BOARD_ROLE_KEYS).get();
+  const monthKey = monthKeyOf(now);
+  let credited = 0;
+
+  for (const doc of boardSnap.docs) {
+    const uid = doc.id;
+    const existing = await db.collection("godzinki_ledger")
+      .where("uid", "==", uid)
+      .where("reason", "==", BOARD_BONUS_REASON)
+      .get();
+
+    const alreadyThisMonth = existing.docs.some((d) => {
+      const grantedAt = (d.data() as any)?.grantedAt;
+      const date = typeof grantedAt?.toDate === "function" ? grantedAt.toDate() : null;
+      return date ? monthKeyOf(date) === monthKey : false;
+    });
+    if (alreadyThisMonth) continue;
+
+    if (!dryRun) {
+      const expiresAt = new Date(now);
+      expiresAt.setMonth(expiresAt.getMonth() + expiryMonths);
+      await creditApprovedEarn(db, uid, bonusHours, now, expiresAt, {
+        reason: BOARD_BONUS_REASON,
+        approvedBy: "system",
+        submittedBy: "system",
+      });
+    }
+    credited++;
+  }
+
+  return credited;
 }
 
 export const godzinkiMonthlyBalanceReviewTask: ServiceTask<Payload> = {
@@ -33,12 +90,18 @@ export const godzinkiMonthlyBalanceReviewTask: ServiceTask<Payload> = {
 
   run: async (payload, ctx) => {
     const dryRun = ctx.dryRun || Boolean(payload?.dry);
-    const cfg = getServiceConfig();
+    const appVars = await getAppVars(ctx.firestore);
     const vars = await getGodzinkiVars(ctx.firestore);
     const limit = vars.negativeBalanceLimit;
     const now = ctx.now;
 
     ctx.logger.info("godzinki.monthlyBalanceReview: start", {dryRun, limit});
+
+    // 0. Bonus miesięczny zarząd/KR (patrz creditBoardMonthlyBonus) — przed liczeniem sald.
+    const bonusCredited = await creditBoardMonthlyBonus(
+      ctx.firestore, now, vars.boardMonthlyBonusHours, vars.expiryMonths, dryRun
+    );
+    ctx.logger.info("godzinki.monthlyBalanceReview: board bonus", {bonusCredited, dryRun});
 
     // 1. Grupuj rekordy ledgera po uid (pomijając hist_*)
     const snap = await ctx.firestore.collection("godzinki_ledger").get();
@@ -125,7 +188,7 @@ export const godzinkiMonthlyBalanceReviewTask: ServiceTask<Payload> = {
         try {
           const lines = overLimit.map((i) => `- ${i.displayName} (${i.email || "brak e-mail"}): ${fmtBalance(i.balance)} h`);
           await ctx.workspace.sendGenericEmail(
-            cfg.adminNotify.email,
+            appVars.adminNotifyEmail,
             `SKK Morzkulc — ${overLimit.length} os. z przekroczonym limitem ujemnego salda`,
             [
               `Limit ujemnego salda: -${limit} h.`,
@@ -142,8 +205,8 @@ export const godzinkiMonthlyBalanceReviewTask: ServiceTask<Payload> = {
       }
     }
 
-    const message = `negatives=${items.length}, overLimit=${overLimit.length}, userMails=${dryRun ? 0 : userMails}, dryRun=${dryRun}`;
-    ctx.logger.info("godzinki.monthlyBalanceReview: done", {negatives: items.length, overLimit: overLimit.length, userMails, dryRun});
-    return {ok: true, message, details: {negatives: items.length, overLimit: overLimit.length, dryRun}};
+    const message = `bonusCredited=${bonusCredited}, negatives=${items.length}, overLimit=${overLimit.length}, userMails=${dryRun ? 0 : userMails}, dryRun=${dryRun}`;
+    ctx.logger.info("godzinki.monthlyBalanceReview: done", {bonusCredited, negatives: items.length, overLimit: overLimit.length, userMails, dryRun});
+    return {ok: true, message, details: {bonusCredited, negatives: items.length, overLimit: overLimit.length, dryRun}};
   },
 };

@@ -7,7 +7,6 @@
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
   ui.createMenu("Morzkulc")
-    .addItem("sync setup", "syncSetupToFirestore")
     .addItem("sync członkowie", "syncUsersToFirestore")
     .addItem("sync imprezy", "syncEventsToFirestore")
     .addItem("sync godzinki", "syncHoursToFirestore")

@@ -77,4 +77,18 @@ describe("buildPendingDigest — treść", () => {
     }));
     expect(d.bodyText).not.toContain("„”");
   });
+
+  it("wykup z pricePlnEstimate pokazuje kwotę PLN w linii digestu", () => {
+    const d = mustDigest(baseInput({
+      godzinki: [{displayName: "Ola", type: "purchase", amount: 5, reason: "", ageDays: 10, pricePlnEstimate: 125}],
+    }));
+    expect(d.bodyText).toContain("≈ 125 zł");
+  });
+
+  it("earn (nie purchase) nie pokazuje kwoty PLN nawet jeśli pole ustawione", () => {
+    const d = mustDigest(baseInput({
+      godzinki: [{displayName: "Ala", type: "earn", amount: 8, reason: "x", ageDays: 5, pricePlnEstimate: 200}],
+    }));
+    expect(d.bodyText).not.toContain("zł");
+  });
 });

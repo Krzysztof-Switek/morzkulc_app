@@ -4,6 +4,7 @@
 import type {Request, Response} from "express";
 import type * as admin from "firebase-admin";
 import {creditOpeningBalance} from "../modules/hours/godzinki_service";
+import {getGodzinkiVars} from "../modules/hours/godzinki_vars";
 import {getObHours, buildOpeningBalanceAdminPatch, obValueExact, obEmailKey} from "../modules/hours/opening_balance_fields";
 import {getKursWindowEndSuffix} from "../modules/equipment/bundle/gear_bundle_service";
 
@@ -517,8 +518,9 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
       const newUserStatusCode = normalizeStr(setupDefaults.newUserStatusCode) || "status_aktywny";
       const obMemberField = normalizeStr(setupDefaults.openingBalanceMemberField) || "członek stowarzyszenia";
       const obMemberRoleCode = normalizeStr(setupDefaults.openingBalanceMemberRoleCode) || "rola_czlonek";
-      // Godzinki z bilansu otwarcia wygasają 30.06.2029 (wymóg biznesowy)
-      const OB_HOURS_EXPIRES_AT = new Date(Date.UTC(2029, 5, 30));
+      // Godzinki z bilansu otwarcia wygasają wg setup/vars_godzinki.data_wygasniecia_bilansu_otwarcia
+      // (wymóg biznesowy, domyślnie 30.06.2029)
+      const OB_HOURS_EXPIRES_AT = (await getGodzinkiVars(db)).obHoursExpiresAt;
 
       const decoded = tokenCheck.decoded;
       const uid = decoded.uid;

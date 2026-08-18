@@ -1,5 +1,6 @@
 import type {Request, Response} from "express";
 import {submitPurchaseRequest} from "../modules/hours/godzinki_service";
+import {getGodzinkiVars} from "../modules/hours/godzinki_vars";
 import {isUserStatusBlocked} from "../modules/users/userStatusCheck";
 
 type TokenCheck =
@@ -88,7 +89,12 @@ export async function handleGodzinkiPurchase(req: Request, res: Response, deps: 
         });
       }
 
-      res.status(200).json({ok: true, recordId: result.id});
+      // Informacyjny przelicznik PLN (setup/vars_godzinki.cena_wykupu_godzinki) — sam wykup
+      // rozlicza się w godzinach, kwota jest tylko orientacyjna dla użytkownika/zarządu.
+      const godzinkiVars = await getGodzinkiVars(db);
+      const pricePlnEstimate = amount * godzinkiVars.buybackPricePln;
+
+      res.status(200).json({ok: true, recordId: result.id, pricePlnEstimate});
     } catch (err: any) {
       res.status(500).json({error: "Server error", message: err?.message || String(err)});
     }

@@ -183,6 +183,56 @@ export class GoogleSheetsProvider {
     return headers;
   }
 
+  /** Odczytuje sheetId (gid) zakładki po nazwie — wymagany przez deleteDimension. */
+  private async getSheetGid(spreadsheetId: string, tabName: string): Promise<number> {
+    const sheets = await this.getSheetsClient();
+    const resp = await sheets.spreadsheets.get({
+      spreadsheetId,
+      fields: "sheets.properties",
+    });
+    const match = (resp.data.sheets || []).find((s) => s.properties?.title === tabName);
+    if (!match || match.properties?.sheetId == null) {
+      throw new Error(`Sheet "${tabName}" not found in spreadsheet ${spreadsheetId}`);
+    }
+    return match.properties.sheetId;
+  }
+
+  /**
+   * Usuwa całe wiersze z zakładki (numery 1-based, wg numeracji arkusza — wiersz 1 to
+   * nagłówek). Usuwane w JEDNYM batchUpdate, od NAJWYŻSZEGO numeru do najniższego —
+   * kolejność krytyczna: deleteDimension operuje na indeksach siatki, więc usunięcie
+   * wiersza o wyższym indeksie nie przesuwa (i nie unieważnia) indeksów wierszy poniżej,
+   * które batch ma usunąć w kolejnych krokach tego samego wywołania.
+   */
+  async deleteRows(cfg: SheetTableConfig, rowNumbers1based: number[]): Promise<void> {
+    const spreadsheetId = normalizeStr(cfg.spreadsheetId);
+    const tabName = normalizeStr(cfg.tabName);
+    assertNonEmpty("spreadsheetId", spreadsheetId);
+    assertNonEmpty("tabName", tabName);
+
+    const uniqueSorted = Array.from(new Set(rowNumbers1based)).sort((a, b) => b - a);
+    if (!uniqueSorted.length) return;
+
+    const sheetId = await this.getSheetGid(spreadsheetId, tabName);
+    const sheets = await this.getSheetsClient();
+
+    const requests = uniqueSorted.map((row1based) => ({
+      deleteDimension: {
+        range: {
+          sheetId,
+          dimension: "ROWS",
+          startIndex: row1based - 1, // 0-based, inclusive
+          endIndex: row1based, // 0-based, exclusive
+        },
+      },
+    }));
+
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      requestBody: {requests},
+    });
+  }
+
   /**
    * Zapisuje wiele komórek JEDNEGO wiersza w pojedynczym batchUpdate (po nazwach nagłówków).
    * Nagłówki czytane raz i cache'owane — koszt nie rośnie z liczbą zapisów.

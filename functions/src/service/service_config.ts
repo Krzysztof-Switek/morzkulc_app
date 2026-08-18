@@ -38,6 +38,12 @@ export interface ServiceConfig {
     membersTabName: string;
   };
 
+  // ✅ NEW: arkusz "App_SETUP" — jedyne źródło modułów, wszystkich zmiennych Vars_*
+  // i mapowania ról→grup Workspace (setup.syncFromSheet).
+  setup: {
+    spreadsheetId: string;
+  };
+
   // ✅ NEW: Gear sheets config (manual sync for now)
   gear: {
     kayaksSpreadsheetId: string;
@@ -87,15 +93,6 @@ export interface ServiceConfig {
     skarbnik: { mailbox: string; label: { nominative: string; genitive: string; display: string } };
     prezes: { mailbox: string; label: { nominative: string; genitive: string; display: string } };
   };
-
-  // Adres na który task wysyła powiadomienia AKCJA dla admina (utwórz/usuń app password).
-  adminActionEmail: string;
-
-  // Digest zaległych zatwierdzeń panelu zarządu (task admin.notifyPendingApprovals).
-  adminNotify: {
-    email: string; // adresat digestu (domyślnie zarzad@morzkulc.pl)
-    ageDays: number; // próg wieku zgłoszenia w dniach (domyślnie 3)
-  };
 }
 
 export function getServiceConfig(): ServiceConfig {
@@ -120,6 +117,10 @@ export function getServiceConfig(): ServiceConfig {
     process.env.SVC_MEMBERS_SHEET_ID || "1lF5eDF9B6ip4G497qG1QGePXqrXdLPS8kt-3pX-ZBsM";
   const membersTabName = process.env.SVC_MEMBERS_SHEET_TAB || "CZŁONKOWIE I SYMPATYCY";
 
+  // ✅ setup — arkusz "App_SETUP" (jedyne źródło konfiguracji, patrz setupSyncFromSheet.ts)
+  const setupSpreadsheetId =
+    process.env.SVC_SETUP_SHEET_ID || "17hQBG_BBwzFf-tbhuKPzaAjEeP9d3pMIivQX_K-LnBA";
+
   // ✅ gear defaults (you can override by env later)
   const kayaksSpreadsheetId =
     process.env.SVC_GEAR_KAYAKS_SHEET_ID || "1eUjW_hyhHBlv4lRTNYS3wcltUarV5G6FiH_b5kujgRI";
@@ -140,13 +141,6 @@ export function getServiceConfig(): ServiceConfig {
   const szkoleniowiecMailbox = process.env.SVC_SZKOLENIOWIEC_MAILBOX_EMAIL || "szkoleniowiec@morzkulc.pl";
   const skarbnikMailbox = process.env.SVC_SKARBNIK_MAILBOX_EMAIL || "skarbnik@morzkulc.pl";
   const prezesMailbox = process.env.SVC_PREZES_MAILBOX_EMAIL || "prezes@morzkulc.pl";
-  const adminActionEmail = process.env.SVC_ADMIN_ACTION_EMAIL || "zarzad@morzkulc.pl";
-
-  const adminNotifyEmail = process.env.SVC_ADMIN_NOTIFY_EMAIL || "zarzad@morzkulc.pl";
-  const adminNotifyAgeDays = (() => {
-    const n = Number(process.env.SVC_ADMIN_NOTIFY_AGE_DAYS);
-    return Number.isFinite(n) && n >= 0 ? n : 3;
-  })();
 
   const cfg: ServiceConfig = {
     envName,
@@ -265,6 +259,10 @@ export function getServiceConfig(): ServiceConfig {
       membersTabName,
     },
 
+    setup: {
+      spreadsheetId: setupSpreadsheetId,
+    },
+
     gear: {
       kayaksSpreadsheetId,
       kayaksTabName,
@@ -316,13 +314,6 @@ export function getServiceConfig(): ServiceConfig {
         label: {nominative: "prezes", genitive: "prezesa", display: "Zarząd SKK"},
       },
     },
-
-    adminActionEmail,
-
-    adminNotify: {
-      email: adminNotifyEmail,
-      ageDays: adminNotifyAgeDays,
-    },
   };
 
   if (!cfg.listaGroupEmail.includes("@")) {
@@ -345,6 +336,10 @@ export function getServiceConfig(): ServiceConfig {
     throw new functions.https.HttpsError("failed-precondition", "Invalid members sheet tab");
   }
 
+  if (!cfg.setup.spreadsheetId) {
+    throw new functions.https.HttpsError("failed-precondition", "Invalid setup sheet id (SVC_SETUP_SHEET_ID)");
+  }
+
   if (!cfg.gear.kayaksSpreadsheetId) {
     throw new functions.https.HttpsError("failed-precondition", "Invalid gear kayaks sheet id");
   }
@@ -363,12 +358,6 @@ export function getServiceConfig(): ServiceConfig {
   }
   if (!cfg.functionRoles.prezes.mailbox.includes("@")) {
     throw new functions.https.HttpsError("failed-precondition", "Invalid prezes mailbox email");
-  }
-  if (!cfg.adminActionEmail.includes("@")) {
-    throw new functions.https.HttpsError("failed-precondition", "Invalid adminActionEmail");
-  }
-  if (!cfg.adminNotify.email.includes("@")) {
-    throw new functions.https.HttpsError("failed-precondition", "Invalid adminNotify email");
   }
 
   return cfg;

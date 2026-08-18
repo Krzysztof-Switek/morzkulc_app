@@ -223,14 +223,17 @@ export const usersSyncFunctionRolesFromSetupTask: ServiceTask<Payload> = {
     const {firestore, config, workspace, logger} = ctx;
     const dryRun = ctx.dryRun || Boolean(payload?.dry);
 
-    logger.info("syncFunctionRoles: start", {
-      dryRun,
-      adminActionEmail: config.adminActionEmail,
-    });
-
     // 1) Wczytaj setup vars
     const varsSnap = await firestore.collection("setup").doc("vars_members").get();
     const vars = (varsSnap.exists ? (varsSnap.data() as any)?.vars : null) || {};
+
+    // setup/vars_members.admin_action_email — adresat maili AKCJA (utwórz/usuń app password).
+    const adminActionEmail = String(vars?.admin_action_email?.value || "").trim() || "zarzad@morzkulc.pl";
+
+    logger.info("syncFunctionRoles: start", {
+      dryRun,
+      adminActionEmail,
+    });
 
     // 2) Parsuj wartości per rola
     const targets: Record<FunctionRoleKey, string> = {
@@ -289,7 +292,7 @@ export const usersSyncFunctionRolesFromSetupTask: ServiceTask<Payload> = {
       if (!dryRun) {
         try {
           await workspace.sendGenericEmail(
-            config.adminActionEmail,
+            adminActionEmail,
             "[Morzkulc][BŁĄD] Konflikt w setup — funkcje nie są rozłączne",
             buildAdminAlertBody(allReasons)
           );
@@ -355,7 +358,7 @@ export const usersSyncFunctionRolesFromSetupTask: ServiceTask<Payload> = {
           if (!dryRun) {
             try {
               await workspace.sendGenericEmail(
-                config.adminActionEmail,
+                adminActionEmail,
                 `[Morzkulc][AKCJA] Nowy ${label.nominative} — utwórz app password`,
                 buildAdminOnboardingBody(label.nominative, mailbox, target, handleStr, opTemplate)
               );
@@ -393,7 +396,7 @@ export const usersSyncFunctionRolesFromSetupTask: ServiceTask<Payload> = {
           if (!dryRun) {
             try {
               await workspace.sendGenericEmail(
-                config.adminActionEmail,
+                adminActionEmail,
                 `[Morzkulc][AKCJA] Cofnięcie funkcji ${label.genitive} — usuń app password`,
                 buildAdminOffboardingBody(label.genitive, mailbox, prev, handleStr, forwardingDesc)
               );
@@ -449,7 +452,7 @@ export const usersSyncFunctionRolesFromSetupTask: ServiceTask<Payload> = {
             // Najpierw offboard staremu
             try {
               await workspace.sendGenericEmail(
-                config.adminActionEmail,
+                adminActionEmail,
                 `[Morzkulc][AKCJA] Cofnięcie funkcji ${label.genitive} — usuń app password`,
                 buildAdminOffboardingBody(label.genitive, mailbox, prev, oldHandle, forwardingDescOff)
               );
@@ -473,7 +476,7 @@ export const usersSyncFunctionRolesFromSetupTask: ServiceTask<Payload> = {
             // Potem onboard nowemu
             try {
               await workspace.sendGenericEmail(
-                config.adminActionEmail,
+                adminActionEmail,
                 `[Morzkulc][AKCJA] Nowy ${label.nominative} — utwórz app password`,
                 buildAdminOnboardingBody(label.nominative, mailbox, target, newHandle, opTemplate)
               );

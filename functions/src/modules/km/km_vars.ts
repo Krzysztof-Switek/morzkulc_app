@@ -1,10 +1,10 @@
 /**
  * km_vars.ts
  *
- * Czyta konfigurację punktacji modułu Kilometrówka z Firestore (setup/vars_members).
- * Zmienne punktacji wywrotolotek są już w vars_members — nie duplikujemy ich.
+ * Czyta konfigurację punktacji modułu Kilometrówka z Firestore (setup/vars_kurs,
+ * zakładka "Vars_KURS" arkusza "App_SETUP").
  *
- * Używane pola z vars_members:
+ * Używane pola z vars_kurs:
  *   kabina_punkty    — punkty za kabinę
  *   eskimoska_punkty — punkty za eskimoskę (rolkę)
  *   dziubek_punkty   — punkty za dziubka
@@ -31,7 +31,7 @@ function toNumber(v: any, fallback: number): number {
 }
 
 export async function getKmVars(db: FirebaseFirestore.Firestore): Promise<KmVars> {
-  const snap = await db.collection("setup").doc("vars_members").get();
+  const snap = await db.collection("setup").doc("vars_kurs").get();
   const raw = (snap.exists ? (snap.data() as KmVarsDoc) : null) || null;
 
   return {

@@ -65,7 +65,10 @@
       "PowerShell(node --use-system-ca \"C:\\\\Users\\\\kswitek\\\\Documents\\\\morzkulc_app\\\\functions\\\\scripts\\\\runReconcileOpeningBalance.js\" apply \"basia.duda97@gmail.com\")",
       "PowerShell(node --use-system-ca \"C:\\\\Users\\\\kswitek\\\\Documents\\\\morzkulc_app\\\\functions\\\\scripts\\\\runReconcileOpeningBalance.js\" apply \"wicio122@gmail.com\")",
       "PowerShell(node --use-system-ca \"C:\\\\Users\\\\kswitek\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-kswitek-Documents-morzkulc-app\\\\168df484-8dc3-4b1a-b69c-c4c472a65d3d\\\\scratchpad\\\\backfillObDate.js\")",
-      "PowerShell(node --use-system-ca \"C:\\\\Users\\\\kswitek\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-kswitek-Documents-morzkulc-app\\\\168df484-8dc3-4b1a-b69c-c4c472a65d3d\\\\scratchpad\\\\backfillObDate.js\" apply)"
+      "PowerShell(node --use-system-ca \"C:\\\\Users\\\\kswitek\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-kswitek-Documents-morzkulc-app\\\\168df484-8dc3-4b1a-b69c-c4c472a65d3d\\\\scratchpad\\\\backfillObDate.js\" apply)",
+      "Bash(NODE_PATH=\"C:\\\\Users\\\\kswitek\\\\Documents\\\\morzkulc_app\\\\functions\\\\node_modules\" node --use-system-ca listAppSetupTabs.js)",
+      "Bash(NODE_PATH=\"C:\\\\Users\\\\kswitek\\\\Documents\\\\morzkulc_app\\\\functions\\\\node_modules\" node --use-system-ca readAppSetupSheet.js)",
+      "Bash(echo \"EXIT:$?\")"
     ]
   }
 }

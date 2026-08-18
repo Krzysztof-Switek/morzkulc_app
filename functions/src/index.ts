@@ -75,6 +75,7 @@ const {adminRoleKeys, memberRoleKeys} = svcCfg;
 const ALLOWED_HOSTS = new Set<string>([
   "morzkulc-e9df7.web.app",
   "morzkulc-e9df7.firebaseapp.com",
+  "app.morzkulc.pl",
   "sprzet-skk-morzkulc.web.app",
   "sprzet-skk-morzkulc.firebaseapp.com",
   "localhost",
@@ -84,6 +85,7 @@ const ALLOWED_HOSTS = new Set<string>([
 const ALLOWED_ORIGINS = new Set<string>([
   "https://morzkulc-e9df7.web.app",
   "https://morzkulc-e9df7.firebaseapp.com",
+  "https://app.morzkulc.pl",
   "https://sprzet-skk-morzkulc.web.app",
   "https://sprzet-skk-morzkulc.firebaseapp.com",
   "http://localhost:5000",
@@ -252,7 +254,7 @@ function computeAllowedActions(roleKey: string): string[] {
     actions.push("basen.enroll");
   }
   // Kursant: rezerwuje sprzęt jak kandydat (te same limity). Faktyczne bramkowanie
-  // robi flaga setup/vars_members.vars.kurs_wypożycza (getKursWypozyczaFlag) + okno
+  // robi flaga setup/vars_kurs.vars.kurs_wypożycza (getKursWypozyczaFlag) + okno
   // szkoleniówki (patrz getSetup oraz gear_bundle_service). Bez zgłaszania imprez /
   // standardowych godzinek.
   if (roleKey === "rola_kursant") {
@@ -426,7 +428,7 @@ export const getSetup = onRequest({invoker: "private"}, async (req, res) => {
         const todayIso = now.toISOString().slice(0, 10);
         const hasRok = rok !== null;
         const windowEnd = hasRok ? `${rok}-${await getKursWindowEndSuffix(db)}` : "";
-        // Okno otwarte: tegoroczna szkoleniówka i przed końcem szkoleniówki (setup/vars_members.koniec_kursu).
+        // Okno otwarte: tegoroczna szkoleniówka i przed końcem szkoleniówki (setup/vars_kurs.koniec_kursu).
         const windowOpen = hasRok && rok === now.getUTCFullYear() && todayIso <= windowEnd;
         // Wygasł: znamy rok i minął już koniec szkoleniówki tego roku (lub rok przeszły).
         kursExpired = hasRok && todayIso > windowEnd;
@@ -1745,6 +1747,21 @@ export const godzinkiSyncDaily = onSchedule(
     logger.info("godzinkiSyncDaily: start");
     const result = await runTaskById("godzinki.syncFromSheet", {});
     logger.info("godzinkiSyncDaily: done", result as unknown as Record<string, unknown>);
+  }
+);
+
+/**
+ * SCHEDULER: Dzienne czyszczenie arkusza Google "Godzinki" (usuwa wiersze starsze
+ * niż setup/vars_godzinki.okres_do_archiwizacji_godzinek_dni — Firestore nietknięty).
+ * Uruchamiany codziennie o 05:20 czasu warszawskiego, PO godzinkiSyncDaily (05:15),
+ * żeby nie skasować wiersza w tym samym dniu, w którym sync mógłby go jeszcze korygować.
+ */
+export const godzinkiArchiveSheetDaily = onSchedule(
+  {schedule: "20 5 * * *", timeZone: "Europe/Warsaw"},
+  async () => {
+    logger.info("godzinkiArchiveSheetDaily: start");
+    const result = await runTaskById("godzinki.archiveSheetRows", {});
+    logger.info("godzinkiArchiveSheetDaily: done", result as unknown as Record<string, unknown>);
   }
 );
 

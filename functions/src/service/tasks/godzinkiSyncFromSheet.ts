@@ -311,7 +311,7 @@ export const godzinkiSyncFromSheetTask: ServiceTask<Payload> = {
           ctx.firestore,
           recordId,
           "sync",
-          godzinkiVars.expiryYears
+          godzinkiVars.expiryMonths
         );
 
         if (result.ok) {

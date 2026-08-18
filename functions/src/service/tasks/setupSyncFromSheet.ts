@@ -6,32 +6,41 @@ import {getServiceConfig} from "../service_config";
 /**
  * Task: setup.syncFromSheet
  *
- * Port appscriptowego syncSetupToFirestore(). Czyta:
- *   - zakładkę APP_SETUP (arkusz members) → modules
- *   - zakładkę SETUP (arkusz members)     → setup/vars_members
- *   - zakładkę SETUP (arkusz gear)        → setup/vars_gear
+ * Jedyne źródło: arkusz "App_SETUP" (jeden spreadsheetId, `cfg.setup.spreadsheetId`).
+ * Czyta 6 zakładek tego JEDNEGO arkusza:
+ *   - App_SETUP       → modules + roleMappings (role→grupy Workspace, kolumna Grupy_workspace)
+ *   - Vars_CZLONKOWIE → setup/vars_members
+ *   - Vars_SPRZET     → setup/vars_gear
+ *   - Vars_BASEN      → setup/vars_basen
+ *   - Vars_GODZINKI   → setup/vars_godzinki
+ *   - Vars_KURS       → setup/vars_kurs
  * i zapisuje:
  *   - setup/app: { modules, roleMappings, statusMappings, updatedAt, updatedBy } — przez UPDATE,
  *     żeby NIE skasować innych pól (np. defaults używanych przy rejestracji).
- *   - setup/vars_members, setup/vars_gear: { vars, updatedAt, updatedBy }
- * Na koniec kolejkuje users.syncFunctionRolesFromSetup (jak appscript).
+ *   - setup/vars_members, vars_gear, vars_basen, vars_godzinki, vars_kurs — przez SET.
+ * Na koniec kolejkuje users.syncFunctionRolesFromSetup (jak dawniej).
  *
- * ROLE_MAPPINGS / STATUS_MAPPINGS są od teraz utrzymywane TUTAJ (przeniesione z Apps Script).
+ * roleMappings pochodzi TERAZ z arkusza (wiersze Typ_elementu="rola", kolumna
+ * Grupy_workspace) — nie jest już hardkodowany w kodzie (patrz plan
+ * "Pełne przełączenie na arkusz App_SETUP", Faza 1/5).
+ *
+ * statusMappings ZOSTAJE hardkodowany w kodzie (świadoma decyzja): wiersze
+ * Typ_elementu="status" w arkuszu dziś nie odpowiadają kanonicznym kluczom statusu
+ * używanym w całym projekcie (`status_zawieszony`, `status_pending` — arkusz miał m.in.
+ * `status_skreslony`, którego nigdzie indziej nie ma) — status_key jest zapisywany w
+ * dokumencie KAŻDEGO użytkownika i czytany w dziesiątkach plików, więc migracja tego
+ * konkretnego mapowania na arkusz wymaga osobnego uporządkowania, nie tej zmiany.
  */
 
-const TAB_APP_SETUP = "APP_SETUP";
-const TAB_SETUP = "SETUP";
+const TAB_APP = "App_SETUP";
+const TAB_VARS_CZLONKOWIE = "Vars_CZLONKOWIE";
+const TAB_VARS_SPRZET = "Vars_SPRZET";
+const TAB_VARS_BASEN = "Vars_BASEN";
+const TAB_VARS_GODZINKI = "Vars_GODZINKI";
+const TAB_VARS_KURS = "Vars_KURS";
 
-// Mapowanie ról na grupy Google Workspace (źródło prawdy przeniesione z Apps Script).
-const ROLE_MAPPINGS: Record<string, {label: string; groups: string[]}> = {
-  rola_czlonek: {label: "Członek", groups: ["czlonkowie@morzkulc.pl"]},
-  rola_zarzad: {label: "Zarząd", groups: ["zarzad_skk@morzkulc.pl", "zarzad@morzkulc.pl", "czlonkowie@morzkulc.pl"]},
-  rola_kr: {label: "KR", groups: ["kr@morzkulc.pl", "zarzad@morzkulc.pl", "czlonkowie@morzkulc.pl"]},
-  rola_kandydat: {label: "Kandydat", groups: ["kandydaci@morzkulc.pl"]},
-  rola_sympatyk: {label: "Sympatyk", groups: ["sympatycy@morzkulc.pl"]},
-  rola_kursant: {label: "Kursant", groups: []},
-};
-
+// Mapowanie statusów kont — blocksAccess: true blokuje dostęp (np. konto zawieszone).
+// Zostaje w kodzie — patrz uzasadnienie w komentarzu nagłówkowym pliku.
 const STATUS_MAPPINGS: Record<string, {label: string; blocksAccess: boolean}> = {
   status_aktywny: {label: "Aktywny", blocksAccess: false},
   status_zawieszony: {label: "Zawieszony", blocksAccess: true},
@@ -122,7 +131,7 @@ async function readAppSetupModules(
   sheets: GoogleSheetsProvider,
   spreadsheetId: string
 ): Promise<Record<string, any>> {
-  const table = await sheets.readTableAsObjects({spreadsheetId, tabName: TAB_APP_SETUP});
+  const table = await sheets.readTableAsObjects({spreadsheetId, tabName: TAB_APP});
   const hmap = headerMap(table.headers);
 
   const required = [
@@ -132,7 +141,7 @@ async function readAppSetupModules(
   ];
   const missing = required.filter((h) => !(h in hmap));
   if (missing.length) {
-    throw new Error(`APP_SETUP headers mismatch. Missing: ${JSON.stringify(missing)} Found: ${JSON.stringify(Object.keys(hmap))}`);
+    throw new Error(`App_SETUP headers mismatch. Missing: ${JSON.stringify(missing)} Found: ${JSON.stringify(Object.keys(hmap))}`);
   }
 
   const g = (row: Record<string, string>, normKey: string): string => norm(row[hmap[normKey]] ?? "");
@@ -179,17 +188,55 @@ async function readAppSetupModules(
   return modules;
 }
 
-async function readSetupVars(
+/**
+ * Czyta wiersze Typ_elementu="rola" z App_SETUP i buduje mapowanie ról→grupy Workspace
+ * z kolumny "Grupy_workspace" (lista rozdzielona przecinkiem/średnikiem).
+ * Zastępuje dawny hardkodowany ROLE_MAPPINGS.
+ */
+async function readAppSetupRoles(
   sheets: GoogleSheetsProvider,
   spreadsheetId: string
+): Promise<Record<string, {label: string; groups: string[]}>> {
+  const table = await sheets.readTableAsObjects({spreadsheetId, tabName: TAB_APP});
+  const hmap = headerMap(table.headers);
+
+  const required = ["typ_elementu", "id_elementu", "nazwa_wyswietlana", "grupy_workspace"];
+  const missing = required.filter((h) => !(h in hmap));
+  if (missing.length) {
+    throw new Error(`App_SETUP (role) headers mismatch. Missing: ${JSON.stringify(missing)} Found: ${JSON.stringify(Object.keys(hmap))}`);
+  }
+
+  const g = (row: Record<string, string>, normKey: string): string => norm(row[hmap[normKey]] ?? "");
+
+  const roles: Record<string, {label: string; groups: string[]}> = {};
+  for (const row of table.rows) {
+    const typ = g(row, "typ_elementu").toLowerCase();
+    if (typ !== "rola") continue;
+
+    const id = g(row, "id_elementu");
+    if (!id) continue;
+
+    const label = g(row, "nazwa_wyswietlana") || id;
+    const groups = splitList(g(row, "grupy_workspace"));
+
+    roles[id] = {label, groups};
+  }
+
+  return roles;
+}
+
+async function readSetupVars(
+  sheets: GoogleSheetsProvider,
+  spreadsheetId: string,
+  tabName: string
 ): Promise<Record<string, any>> {
-  const table = await sheets.readTableAsObjects({spreadsheetId, tabName: TAB_SETUP});
+  const table = await sheets.readTableAsObjects({spreadsheetId, tabName});
   const hmap = headerMap(table.headers);
 
   const required = ["zmienna_nazwa", "wartosc_zmiennej", "grupa_zmiennych", "opis"];
   const missing = required.filter((h) => !(h in hmap));
   if (missing.length) {
-    throw new Error(`SETUP headers mismatch in ${spreadsheetId}. Missing: ${JSON.stringify(missing)} Found: ${JSON.stringify(Object.keys(hmap))}`);
+    throw new Error(`${tabName} headers mismatch in ${spreadsheetId}. Missing: ${JSON.stringify(missing)} Found: ${JSON.stringify(Object.keys(hmap))}`);
   }
 
   const g = (row: Record<string, string>, normKey: string): string => norm(row[hmap[normKey]] ?? "");
@@ -211,7 +258,7 @@ async function readSetupVars(
 
 export const setupSyncFromSheetTask: ServiceTask<Payload> = {
   id: "setup.syncFromSheet",
-  description: "Sync setup z arkusza do Firestore: APP_SETUP→modules, SETUP→vars, + roleMappings/statusMappings; kolejkuje users.syncFunctionRolesFromSetup.",
+  description: "Sync setup z arkusza App_SETUP (6 zakładek, jedno źródło) do Firestore: modules+roleMappings, vars_members, vars_gear, vars_basen, vars_godzinki, vars_kurs; kolejkuje users.syncFunctionRolesFromSetup.",
 
   validate: (_payload) => {
     // no required fields
@@ -223,36 +270,43 @@ export const setupSyncFromSheetTask: ServiceTask<Payload> = {
     const dryRun = ctx.dryRun || Boolean(payload?.dry);
     const who = norm(payload?.requestedBy).toLowerCase();
 
-    const membersSheetId = cfg.sheets.membersSpreadsheetId;
-    const gearSheetId = cfg.gear.kayaksSpreadsheetId;
+    const spreadsheetId = cfg.setup.spreadsheetId;
 
-    logger.info("setupSyncFromSheet: start", {membersSheetId, gearSheetId, dryRun, who});
+    logger.info("setupSyncFromSheet: start", {spreadsheetId, dryRun, who});
 
     const sheets = new GoogleSheetsProvider(cfg.workspace.delegatedSubject);
 
-    const modules = await readAppSetupModules(sheets, membersSheetId);
-    const membersVars = await readSetupVars(sheets, membersSheetId);
-    const gearVars = await readSetupVars(sheets, gearSheetId);
+    const modules = await readAppSetupModules(sheets, spreadsheetId);
+    const roleMappings = await readAppSetupRoles(sheets, spreadsheetId);
+    const membersVars = await readSetupVars(sheets, spreadsheetId, TAB_VARS_CZLONKOWIE);
+    const gearVars = await readSetupVars(sheets, spreadsheetId, TAB_VARS_SPRZET);
+    const basenVars = await readSetupVars(sheets, spreadsheetId, TAB_VARS_BASEN);
+    const godzinkiVars = await readSetupVars(sheets, spreadsheetId, TAB_VARS_GODZINKI);
+    const kursVars = await readSetupVars(sheets, spreadsheetId, TAB_VARS_KURS);
 
     const nowIso = new Date().toISOString();
 
     if (dryRun) {
       logger.info("setupSyncFromSheet: [DRY RUN] parsed", {
         modules: Object.keys(modules).length,
+        roles: Object.keys(roleMappings).length,
         membersVars: Object.keys(membersVars).length,
         gearVars: Object.keys(gearVars).length,
+        basenVars: Object.keys(basenVars).length,
+        godzinkiVars: Object.keys(godzinkiVars).length,
+        kursVars: Object.keys(kursVars).length,
       });
       return {
         ok: true,
-        message: `DRYRUN: modules=${Object.keys(modules).length}, vars_members=${Object.keys(membersVars).length}, vars_gear=${Object.keys(gearVars).length}`,
-        details: {modules: Object.keys(modules), roleMappings: Object.keys(ROLE_MAPPINGS)},
+        message: `DRYRUN: modules=${Object.keys(modules).length}, roles=${Object.keys(roleMappings).length}, vars_members=${Object.keys(membersVars).length}, vars_gear=${Object.keys(gearVars).length}, vars_basen=${Object.keys(basenVars).length}, vars_godzinki=${Object.keys(godzinkiVars).length}, vars_kurs=${Object.keys(kursVars).length}`,
+        details: {modules: Object.keys(modules), roleMappings: Object.keys(roleMappings)},
       };
     }
 
     // setup/app: UPDATE (zachowuje defaults i inne pola; zastępuje modules/roleMappings/statusMappings)
     await firestore.collection("setup").doc("app").update({
       modules,
-      roleMappings: ROLE_MAPPINGS,
+      roleMappings,
       statusMappings: STATUS_MAPPINGS,
       updatedAt: nowIso,
       updatedBy: who,
@@ -270,6 +324,24 @@ export const setupSyncFromSheetTask: ServiceTask<Payload> = {
       updatedBy: who,
     });
 
+    await firestore.collection("setup").doc("vars_basen").set({
+      vars: basenVars,
+      updatedAt: nowIso,
+      updatedBy: who,
+    });
+
+    await firestore.collection("setup").doc("vars_godzinki").set({
+      vars: godzinkiVars,
+      updatedAt: nowIso,
+      updatedBy: who,
+    });
+
+    await firestore.collection("setup").doc("vars_kurs").set({
+      vars: kursVars,
+      updatedAt: nowIso,
+      updatedBy: who,
+    });
+
     // Po sync setup wyzwól sync funkcyjnych ról (idempotentny no-op jeśli nic się nie zmieniło)
     const jobId = `setup-fn-roles:${Date.now()}`;
     await firestore.collection("service_jobs").doc(jobId).set({
@@ -282,12 +354,20 @@ export const setupSyncFromSheetTask: ServiceTask<Payload> = {
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    logger.info("setupSyncFromSheet: done", {modules: Object.keys(modules).length});
+    logger.info("setupSyncFromSheet: done", {modules: Object.keys(modules).length, roles: Object.keys(roleMappings).length});
 
     return {
       ok: true,
-      message: `Setup synced: modules=${Object.keys(modules).length}, vars_members=${Object.keys(membersVars).length}, vars_gear=${Object.keys(gearVars).length}`,
-      details: {modules: Object.keys(modules).length, varsMembers: Object.keys(membersVars).length, varsGear: Object.keys(gearVars).length},
+      message: `Setup synced: modules=${Object.keys(modules).length}, roles=${Object.keys(roleMappings).length}, vars_members=${Object.keys(membersVars).length}, vars_gear=${Object.keys(gearVars).length}, vars_basen=${Object.keys(basenVars).length}, vars_godzinki=${Object.keys(godzinkiVars).length}, vars_kurs=${Object.keys(kursVars).length}`,
+      details: {
+        modules: Object.keys(modules).length,
+        roles: Object.keys(roleMappings).length,
+        varsMembers: Object.keys(membersVars).length,
+        varsGear: Object.keys(gearVars).length,
+        varsBasen: Object.keys(basenVars).length,
+        varsGodzinki: Object.keys(godzinkiVars).length,
+        varsKurs: Object.keys(kursVars).length,
+      },
     };
   },
 };

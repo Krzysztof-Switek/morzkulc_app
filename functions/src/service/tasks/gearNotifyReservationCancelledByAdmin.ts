@@ -1,10 +1,11 @@
 import {ServiceTask} from "../types";
+import {getAppVars} from "../../modules/setup/app_vars";
 
 /**
  * Task: gear.notifyReservationCancelledByAdmin
  *
  * Wysyła e-mail do właściciela rezerwacji ORAZ na adres zarządu
- * (ctx.config.adminNotify.email, domyślnie zarzad@morzkulc.pl — żeby cały
+ * (setup/vars_members.admin_notify_email, domyślnie zarzad@morzkulc.pl — żeby cały
  * zarząd wiedział o takich sytuacjach, nie tylko admin, który je obsłużył)
  * po wymuszonym anulowaniu rezerwacji przez zarząd/KR (panel admina, sekcja
  * "Wypożyczenia sprzętu" — np. sprzęt nie został oddany przez poprzedniego
@@ -142,7 +143,8 @@ export const gearNotifyReservationCancelledByAdminTask: ServiceTask<Payload> = {
     ].join("\n");
 
     const subject = "Anulowanie rezerwacji sprzętu przez Zarząd";
-    const boardEmail = norm(ctx.config.adminNotify?.email).toLowerCase();
+    const appVars = await getAppVars(ctx.firestore);
+    const boardEmail = norm(appVars.adminNotifyEmail).toLowerCase();
 
     let sent = 0;
     let errors = 0;

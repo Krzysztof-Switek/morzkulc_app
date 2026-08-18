@@ -1,5 +1,6 @@
 import type {Request, Response} from "express";
 import {submitEarning, getAllRecords} from "../modules/hours/godzinki_service";
+import {getGodzinkiVars} from "../modules/hours/godzinki_vars";
 import {isIsoDateYYYYMMDD} from "../modules/calendar/calendar_utils";
 import {isUserStatusBlocked} from "../modules/users/userStatusCheck";
 import {norm} from "../modules/shared/text_utils";
@@ -7,6 +8,17 @@ import {norm} from "../modules/shared/text_utils";
 type TokenCheck =
   | {error: string}
   | {decoded: {uid: string; email?: string}};
+
+/**
+ * Wylicza próg "za stare zgłoszenie" (today − reportWindowDays, ISO YYYY-MM-DD) i
+ * porównuje z datą pracy. Czysta funkcja — eksportowana dla testów jednostkowych.
+ */
+export function isTooOldGrantedAt(grantedAt: string, todayIso: string, reportWindowDays: number): boolean {
+  const cutoffDate = new Date(todayIso + "T00:00:00Z");
+  cutoffDate.setUTCDate(cutoffDate.getUTCDate() - reportWindowDays);
+  const cutoff = cutoffDate.toISOString().slice(0, 10);
+  return grantedAt < cutoff;
+}
 
 export type SubmitGodzinkiDeps = {
   db: FirebaseFirestore.Firestore;
@@ -25,7 +37,8 @@ export type SubmitGodzinkiDeps = {
  *
  * Body:
  *   amount: number       — liczba godzinek (> 0)
- *   grantedAt: string    — data pracy, format YYYY-MM-DD (nie może być przyszła)
+ *   grantedAt: string    — data pracy, format YYYY-MM-DD (nie może być przyszła; nie
+ *                          starsza niż setup/vars_godzinki.ile_dni_na_zgloszenie_godzinek dni)
  *   reason: string       — opis (obowiązkowy)
  *
  * Tworzy rekord "earn" z approved=false.
@@ -83,7 +96,16 @@ export async function handleSubmitGodzinki(req: Request, res: Response, deps: Su
         // "Dziś" w strefie klubu (Europe/Warsaw), nie UTC — tuż po północy
         // czasu PL data lokalna była w UTC "przyszła" i zgłoszenie odpadało.
         const today = new Intl.DateTimeFormat("sv-SE", {timeZone: "Europe/Warsaw"}).format(new Date());
-        if (grantedAt > today) fields.grantedAt = "cannot_be_future";
+        if (grantedAt > today) {
+          fields.grantedAt = "cannot_be_future";
+        } else {
+          // Limit zgłaszania wstecz (setup/vars_godzinki.ile_dni_na_zgloszenie_godzinek) —
+          // godzinki mają być zgłaszane na bieżąco, nie z pół roku opóźnienia.
+          const godzinkiVars = await getGodzinkiVars(db);
+          if (isTooOldGrantedAt(grantedAt, today, godzinkiVars.reportWindowDays)) {
+            fields.grantedAt = "too_old";
+          }
+        }
       }
       if (!reason) fields.reason = "required";
       if (reason.length > 500) fields.reason = "too_long";

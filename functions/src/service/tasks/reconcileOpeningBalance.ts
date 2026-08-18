@@ -1,6 +1,7 @@
 import * as admin from "firebase-admin";
 import {ServiceTask} from "../types";
 import {creditOpeningBalance} from "../../modules/hours/godzinki_service";
+import {getGodzinkiVars} from "../../modules/hours/godzinki_vars";
 import {getObHours, buildOpeningBalanceAdminPatch, obValueExact, obEmailKey} from "../../modules/hours/opening_balance_fields";
 
 /**
@@ -27,8 +28,6 @@ import {getObHours, buildOpeningBalanceAdminPatch, obValueExact, obEmailKey} fro
  * Idempotentny: ponowne uruchomienie nadpisuje te same wartości.
  */
 
-const OB_HOURS_EXPIRES_AT = new Date(Date.UTC(2029, 5, 30)); // 30.06.2029
-
 type Payload = {
   dry?: boolean;
   email?: string;
@@ -54,6 +53,8 @@ export const reconcileOpeningBalanceTask: ServiceTask<Payload> = {
   run: async (payload, ctx) => {
     const dryRun = ctx.dryRun || Boolean(payload?.dry);
     const targetEmail = lower(payload?.email);
+    // setup/vars_godzinki.data_wygasniecia_bilansu_otwarcia (wymóg biznesowy, domyślnie 30.06.2029)
+    const OB_HOURS_EXPIRES_AT = (await getGodzinkiVars(ctx.firestore)).obHoursExpiresAt;
     ctx.logger.info("opening.reconcile: start", {dryRun, targetEmail: targetEmail || null});
 
     // 1) Wczytaj kolekcję bilansu i zbuduj indeksy (e-mail oraz imię+nazwisko), z referencjami dokumentów

@@ -88,12 +88,14 @@ export async function getBasenVars(db: FirebaseFirestore.Firestore): Promise<Bas
     basen_cena_za_godzine: Number(parseVarValue(vars["basen_cena_za_godzine"]) ?? 0),
     basen_cena_za_karnet: Number(parseVarValue(vars["basen_cena_za_karnet"]) ?? 0),
     basen_ile_wejsc_na_karnet: Number(parseVarValue(vars["basen_ile_wejsc_na_karnet"]) ?? 10),
-    basen_limit_uczestnikow: Number(parseVarValue(vars["basen_limit_uczestnikow"]) ?? 15),
+    // Klucz arkusza ma polskie znaki ("uczestników") — kod dostosowany do arkusza, nie odwrotnie.
+    basen_limit_uczestnikow: Number(parseVarValue(vars["basen_limit_uczestników"]) ?? 15),
     basen_1_godzina_domyslna: String(parseVarValue(vars["basen_1_godzina_domyslna"]) ?? "19:00"),
     basen_2_godzina_domyslna: String(parseVarValue(vars["basen_2_godzina_domyslna"]) ?? "21:00"),
     basen_sauna: Boolean(parseVarValue(vars["basen_sauna"]) ?? false),
     basen_sauna_cena: Number(parseVarValue(vars["basen_sauna_cena"]) ?? 0),
-    basen_okno_anulowania_h: Number(parseVarValue(vars["basen_okno_anulowania_h"]) ?? 24),
+    // Klucz arkusza to "basen_rezygnacja_za_darmo" (ten sam koncept, inna nazwa historycznie w arkuszu).
+    basen_okno_anulowania_h: Number(parseVarValue(vars["basen_rezygnacja_za_darmo"]) ?? 24),
   };
 }
 

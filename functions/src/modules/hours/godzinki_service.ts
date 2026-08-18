@@ -266,7 +266,7 @@ export async function submitEarning(
  * Zatwierdza rekord godzinek lub wykupu (ustawia approved=true).
  *
  * Dla rekordu "earn":
- *   Ustawia remaining=amount, expiresAt = grantedAt + expiryYears.
+ *   Ustawia remaining=amount, expiresAt = grantedAt + expiryMonths.
  *
  * Dla rekordu "purchase":
  *   Ustawia approved=true — wykup zaczyna pomniejszać saldo ujemne.
@@ -277,7 +277,7 @@ export async function processApproval(
   db: FirebaseFirestore.Firestore,
   recordId: string,
   approvedBy: string,
-  expiryYears = 4
+  expiryMonths = 48
 ): Promise<{ok: boolean; code?: string; message?: string}> {
   const ref = db.collection(COLLECTION).doc(recordId);
   const snap = await ref.get();
@@ -327,13 +327,13 @@ export async function processApproval(
   if (!grantedAt) return {ok: false, code: "missing_granted_at", message: "Missing grantedAt"};
 
   const expiresAt = new Date(grantedAt.getTime());
-  expiresAt.setFullYear(expiresAt.getFullYear() + expiryYears);
+  expiresAt.setMonth(expiresAt.getMonth() + expiryMonths);
 
   // Data pracy starsza niż okres ważności → pula byłaby martwa od urodzenia
   // (remaining ustawione, ale expiresAt w przeszłości — bilans bez zmian).
   // Odmawiamy: admin może poprawić "Data pracy" w arkuszu (sync koryguje pending).
   if (expiresAt.getTime() <= Date.now()) {
-    const message = `Data pracy ${grantedAt.toISOString().slice(0, 10)} jest starsza niż okres ważności (${expiryYears} lat) — godzinki byłyby wygasłe w momencie zatwierdzenia`;
+    const message = `Data pracy ${grantedAt.toISOString().slice(0, 10)} jest starsza niż okres ważności (${expiryMonths} mies.) — godzinki byłyby wygasłe w momencie zatwierdzenia`;
     await markApprovalRejected(ref, "already_expired", message);
     return {ok: false, code: "already_expired", message};
   }
@@ -741,7 +741,7 @@ export async function reverseDeductHoursInTx(
   uid: string,
   reservationId: string,
   amount: number,
-  expiryYears: number,
+  expiryMonths: number,
   now: Date = new Date()
 ): Promise<{ok: boolean; code?: string; message?: string}> {
   const toReverse = Number(amount);
@@ -886,7 +886,7 @@ export async function reverseDeductHoursInTx(
   if (untraced > 0) {
     const newEarnRef = db.collection(COLLECTION).doc();
     const expiresAtDate = new Date(now);
-    expiresAtDate.setFullYear(expiresAtDate.getFullYear() + expiryYears);
+    expiresAtDate.setMonth(expiresAtDate.getMonth() + expiryMonths);
     tx.set(newEarnRef, {
       id: newEarnRef.id,
       uid,
@@ -925,12 +925,12 @@ export async function creditReservationAdjustment(
   uid: string,
   amount: number,
   reservationId: string,
-  expiryYears: number,
+  expiryMonths: number,
   now: Date = new Date()
 ): Promise<{id: string}> {
   const ref = db.collection(COLLECTION).doc();
   const expiresAtDate = new Date(now);
-  expiresAtDate.setFullYear(expiresAtDate.getFullYear() + expiryYears);
+  expiresAtDate.setMonth(expiresAtDate.getMonth() + expiryMonths);
 
   await ref.set({
     id: ref.id,

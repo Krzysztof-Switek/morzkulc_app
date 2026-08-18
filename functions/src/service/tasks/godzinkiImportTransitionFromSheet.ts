@@ -172,7 +172,7 @@ export const godzinkiImportTransitionFromSheetTask: ServiceTask<Payload> = {
           if (r.amount > 0) {
             const grantedAt = new Date(r.dateIso + "T00:00:00Z");
             const expiresAt = new Date(grantedAt.getTime());
-            expiresAt.setUTCFullYear(expiresAt.getUTCFullYear() + vars.expiryYears);
+            expiresAt.setUTCMonth(expiresAt.getUTCMonth() + vars.expiryMonths);
 
             const {id} = await creditApprovedEarn(ctx.firestore, uid, r.amount, grantedAt, expiresAt, {
               reason: r.reason || "Godziny 2026 (import)",

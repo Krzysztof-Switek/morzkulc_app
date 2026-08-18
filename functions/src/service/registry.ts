@@ -10,6 +10,7 @@ import { eventsSyncCalendarTask } from "./tasks/eventsSyncCalendar";
 import { basenNotifySessionCancelledTask } from "./tasks/basenNotifySessionCancelled";
 import { gearPrivateStorageTask } from "./tasks/gearPrivateStorage";
 import { godzinkiMonthlyBalanceReviewTask } from "./tasks/godzinkiMonthlyBalanceReview";
+import { godzinkiArchiveSheetRowsTask } from "./tasks/godzinkiArchiveSheetRows";
 import { usersSyncRolesFromSheetTask } from "./tasks/usersSyncRolesFromSheet";
 import { membersSyncToSheetTask } from "./tasks/membersSyncToSheet";
 import { kmRebuildUserStatsTask } from "./tasks/kmRebuildUserStats";
@@ -45,6 +46,7 @@ const tasks: ServiceTask[] = [
   basenNotifySessionCancelledTask,
   gearPrivateStorageTask,
   godzinkiMonthlyBalanceReviewTask,
+  godzinkiArchiveSheetRowsTask,
   usersSyncRolesFromSheetTask,
   membersSyncToSheetTask,
   kmRebuildUserStatsTask,

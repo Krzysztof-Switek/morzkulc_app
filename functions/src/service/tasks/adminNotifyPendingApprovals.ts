@@ -1,5 +1,7 @@
 import {ServiceTask} from "../types";
 import {getServiceConfig} from "../service_config";
+import {getGodzinkiVars} from "../../modules/hours/godzinki_vars";
+import {getAppVars} from "../../modules/setup/app_vars";
 import {norm} from "../../modules/shared/text_utils";
 
 /**
@@ -28,6 +30,8 @@ export type DigestGodzinka = {
   amount: number;
   reason: string;
   ageDays: number;
+  /** Tylko dla type="purchase": amount × setup/vars_godzinki.cena_wykupu_godzinki */
+  pricePlnEstimate?: number;
 };
 
 export type DigestEvent = {
@@ -75,7 +79,8 @@ export function buildPendingDigest(input: DigestInput): {subject: string; bodyTe
     for (const g of godzinki) {
       const label = g.type === "purchase" ? "wykup salda ujemnego" : "godzinki";
       const reason = g.reason ? ` — „${g.reason}”` : "";
-      lines.push(`• ${g.displayName}: ${g.amount} h (${label})${reason} — czeka ${g.ageDays} dni`);
+      const price = g.type === "purchase" && g.pricePlnEstimate != null ? ` (≈ ${g.pricePlnEstimate} zł)` : "";
+      lines.push(`• ${g.displayName}: ${g.amount} h${price} (${label})${reason} — czeka ${g.ageDays} dni`);
     }
     lines.push("");
   }
@@ -108,8 +113,6 @@ export function buildPendingDigest(input: DigestInput): {subject: string; bodyTe
 
   return {subject, bodyText: lines.join("\n")};
 }
-
-const APP_URL = "https://morzkulc-e9df7.web.app/";
 
 function ageDaysFrom(createdAt: any, now: Date): number {
   const d = typeof createdAt?.toDate === "function" ? createdAt.toDate() : null;
@@ -147,9 +150,10 @@ export const adminNotifyPendingApprovalsTask: ServiceTask<Payload> = {
 
   run: async (payload, ctx) => {
     const cfg = getServiceConfig();
+    const appVars = await getAppVars(ctx.firestore);
     const ageDays = Number.isFinite(payload?.forceAgeDays as number) ?
       Number(payload?.forceAgeDays) :
-      cfg.adminNotify.ageDays;
+      appVars.adminNotifyAgeDays;
     const dryRun = ctx.dryRun;
 
     const [godzinkiEarnSnap, godzinkiPurchaseSnap, eventsSnap] = await Promise.all([
@@ -162,6 +166,7 @@ export const adminNotifyPendingApprovalsTask: ServiceTask<Payload> = {
     ]);
 
     const nameCache = new Map<string, string>();
+    const godzinkiVars = await getGodzinkiVars(ctx.firestore);
 
     const godzinki: DigestGodzinka[] = [];
     const rejected: DigestRejected[] = [];
@@ -172,6 +177,7 @@ export const adminNotifyPendingApprovalsTask: ServiceTask<Payload> = {
       const age = ageDaysFrom(data?.createdAt, ctx.now);
       const displayName = await resolveDisplayName(ctx.firestore, norm(data?.uid), nameCache);
       const amount = Number(data?.amount ?? 0);
+      const type = String(data?.type) === "purchase" ? "purchase" : "earn";
 
       // Odmowy zatwierdzenia (osobna sekcja, niezależnie od progu wieku)
       if (norm(data?.approvalRejectedCode)) {
@@ -185,10 +191,11 @@ export const adminNotifyPendingApprovalsTask: ServiceTask<Payload> = {
       if (age < ageDays) continue;
       godzinki.push({
         displayName,
-        type: String(data?.type) === "purchase" ? "purchase" : "earn",
+        type,
         amount,
         reason: norm(data?.reason),
         ageDays: age === Number.MAX_SAFE_INTEGER ? -1 : age,
+        pricePlnEstimate: type === "purchase" ? amount * godzinkiVars.buybackPricePln : undefined,
       });
     }
 
@@ -214,7 +221,7 @@ export const adminNotifyPendingApprovalsTask: ServiceTask<Payload> = {
         `https://docs.google.com/spreadsheets/d/${cfg.godzinki.spreadsheetId}` : null,
       eventsSheetUrl: cfg.events?.spreadsheetId ?
         `https://docs.google.com/spreadsheets/d/${cfg.events.spreadsheetId}` : null,
-      appUrl: APP_URL,
+      appUrl: appVars.appUrl,
       ageDays,
     });
 
@@ -225,26 +232,26 @@ export const adminNotifyPendingApprovalsTask: ServiceTask<Payload> = {
 
     if (dryRun) {
       ctx.logger.info("adminNotifyPendingApprovals: [DRY RUN] would send", {
-        to: cfg.adminNotify.email, subject: digest.subject,
+        to: appVars.adminNotifyEmail, subject: digest.subject,
         godzinki: godzinki.length, events: events.length, rejected: rejected.length,
       });
       return {
         ok: true,
-        message: `[DRY RUN] would notify ${cfg.adminNotify.email}`,
+        message: `[DRY RUN] would notify ${appVars.adminNotifyEmail}`,
         details: {sent: false, dryRun: true, subject: digest.subject, body: digest.bodyText,
           godzinki: godzinki.length, events: events.length, rejected: rejected.length, ageDays},
       };
     }
 
-    await ctx.workspace.sendGenericEmail(cfg.adminNotify.email, digest.subject, digest.bodyText);
+    await ctx.workspace.sendGenericEmail(appVars.adminNotifyEmail, digest.subject, digest.bodyText);
     ctx.logger.info("adminNotifyPendingApprovals: sent", {
-      to: cfg.adminNotify.email, godzinki: godzinki.length, events: events.length, rejected: rejected.length,
+      to: appVars.adminNotifyEmail, godzinki: godzinki.length, events: events.length, rejected: rejected.length,
     });
 
     return {
       ok: true,
-      message: `sent to ${cfg.adminNotify.email}`,
-      details: {sent: true, to: cfg.adminNotify.email,
+      message: `sent to ${appVars.adminNotifyEmail}`,
+      details: {sent: true, to: appVars.adminNotifyEmail,
         godzinki: godzinki.length, events: events.length, rejected: rejected.length, ageDays},
     };
   },

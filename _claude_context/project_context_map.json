@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-17T09:32:20",
+  "generated_at": "2026-08-18T10:40:34",
   "project_root": "C:\\Users\\kswitek\\Documents\\morzkulc_app",
   "settings": {
     "excluded_dirs": [
@@ -1814,53 +1814,15 @@
     {
       "path": "appscript/kurs/env_config.gs",
       "extension": ".gs",
-      "size_bytes": 1355,
-      "line_count": 46,
-      "sha1_short": "fbde831498",
+      "size_bytes": 1196,
+      "line_count": 42,
+      "sha1_short": "5b3a362d44",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
       "internal_dependencies": [],
       "classes": [],
       "functions": [],
-      "top_level_symbols": [],
-      "headings": [],
-      "config_keys": [],
-      "notes": []
-    },
-    {
-      "path": "appscript/kurs/kurs_config_sync.gs",
-      "extension": ".gs",
-      "size_bytes": 2448,
-      "line_count": 92,
-      "sha1_short": "433c2a9028",
-      "kind": "script",
-      "module_aliases": [],
-      "imports": [],
-      "internal_dependencies": [],
-      "classes": [],
-      "functions": [
-        {
-          "name": "readKursSetupVars_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "syncKursConfigToFirestore",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        }
-      ],
       "top_level_symbols": [],
       "headings": [],
       "config_keys": [],
@@ -1905,69 +1867,11 @@
       "notes": []
     },
     {
-      "path": "appscript/kurs/uczestnicy_sync.gs",
-      "extension": ".gs",
-      "size_bytes": 6483,
-      "line_count": 193,
-      "sha1_short": "cad9a75742",
-      "kind": "script",
-      "module_aliases": [],
-      "imports": [],
-      "internal_dependencies": [],
-      "classes": [],
-      "functions": [
-        {
-          "name": "buildUczestnikDiff_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "normalizeComparable_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "readUczestnicyForSync_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "syncUczestnicyToFirestore",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        }
-      ],
-      "top_level_symbols": [],
-      "headings": [],
-      "config_keys": [],
-      "notes": []
-    },
-    {
       "path": "appscript/kurs/ui_menu.gs",
       "extension": ".gs",
-      "size_bytes": 398,
-      "line_count": 15,
-      "sha1_short": "c09bf4fdeb",
+      "size_bytes": 268,
+      "line_count": 13,
+      "sha1_short": "e09d1864be",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -3360,6 +3264,134 @@
         "## Pliki kluczowe",
         "## Weryfikacja",
         "## Decyzje (zatwierdzone)"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "Audyty/17.08_audyt_kursant_wciaz_zablokowany.md",
+      "extension": ".md",
+      "size_bytes": 8606,
+      "line_count": 148,
+      "sha1_short": "8ad5a915e6",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# Kursant nadal nie może rezerwować sprzętu — audyt (17.08.2026)",
+        "## 1. Defekt A (krytyczny, główna przyczyna): zła ścieżka Firestore dla flagi `kurs_wypożycza`",
+        "## 2. Defekt B (niezależny, blokuje po naprawie Defektu A): brak kolumny „rok szkoleniówki\" w arkuszu „Szkoleniówka\"",
+        "## 3. Co NIE jest przyczyną (odrzucone po weryfikacji)",
+        "## 4. Naprawa",
+        "### Defekt A — zmiana ścieżki odczytu flagi",
+        "### Defekt B — kolumna „rok szkoleniówki\"",
+        "### Przy okazji",
+        "## 5. Weryfikacja po naprawie",
+        "## 6. Pliki"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "Audyty/17.08_konsolidacja_setup_i_dysk_PLAN_TO_DO.md",
+      "extension": ".md",
+      "size_bytes": 16482,
+      "line_count": 238,
+      "sha1_short": "7991a98f4b",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# Konsolidacja: jeden arkusz Setup + jeden folder na Dysku + wiadomości systemowe z arkusza — plan (17.08.2026)",
+        "## Kontekst",
+        "## Zweryfikowany stan obecny (fakty z kodu i z żywych danych Firestore, nie domysły)",
+        "## Decyzje użytkownika (potwierdzone w tej sesji)",
+        "## Docelowa struktura",
+        "### Arkusz „App_SETUP\" (w folderze „1_ZARZAD\" > „APLIKACJA ARKUSZE\"), zakładki:",
+        "### Arkusz członków — 2 nowe zakładki:",
+        "### Wspólny folder Dysku „1_ZARZAD\" > „APLIKACJA ARKUSZE\" — pliki do przeniesienia:",
+        "## Fazy wdrożenia",
+        "### Faza 0 — Dysk i nowy arkusz (RĘCZNE, użytkownik; Claude przygotowuje dane)",
+        "### Faza 1 — Kod: jedno źródło zmiennych setup",
+        "### Faza 2 — Kod: silnik szablonów wiadomości",
+        "### Faza 3 — Kod: „Kurs\" + „Co po kursie\" do arkusza członków, naprawa triggera",
+        "### Faza 4 — Przełączenie (kolejność krytyczna dla bezpieczeństwa)",
+        "## Kolejność i ryzyko",
+        "## Weryfikacja",
+        "## Zakres pracy — realistyczna skala",
+        "## Status realizacji"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "Audyty/17.08_kurs_wypożycza_PLAN_TO_DO.md",
+      "extension": ".md",
+      "size_bytes": 6510,
+      "line_count": 109,
+      "sha1_short": "9a3b11cae3",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# Naprawa bramki rezerwacji dla roli kursant — plan (17.08.2026)",
+        "## Kontekst",
+        "## Zmiany w kodzie",
+        "### 1. `functions/src/modules/equipment/bundle/gear_bundle_service.ts`",
+        "### 2. `functions/src/index.ts`",
+        "### 3. `appscript/kurs/uczestnicy_sync.gs`",
+        "## Poza zakresem zmian w repo (działanie zarządu w arkuszu)",
+        "## Weryfikacja",
+        "## Po zakończeniu i zweryfikowaniu: e-mail do kursantów (ODROCZONE)"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "Audyty/17.08_setup_dane_do_wklejenia.md",
+      "extension": ".md",
+      "size_bytes": 11930,
+      "line_count": 348,
+      "sha1_short": "60ab520a11",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# Dane do wklejenia — nowy arkusz „Setup\" (Faza 0)",
+        "## 1. Zakładka `APP` i `VARS_CZLONKOWIE`",
+        "## 2. Zakładka `VARS_SPRZET`",
+        "## 3. Zakładka `VARS_BASEN` (NOWA — dziś ten dokument w Firestore w ogóle nie istnieje)",
+        "## 4. Zakładka `VARS_GODZINKI` (NOWA — dziś ten dokument w Firestore w ogóle nie istnieje)",
+        "## 5. Zakładka `MESSAGES` (NOWA)",
+        "### `welcome_none` — mail powitalny, bez dostępu do listy dyskusyjnej",
+        "### `welcome_readonly` — mail powitalny, dostęp tylko do odczytu listy",
+        "### `welcome_full` — mail powitalny, pełny dostęp do listy",
+        "### `role_changed` — zmiana roli użytkownika",
+        "### `event_new` — nowa impreza",
+        "### `event_upcoming` — zbliżająca się impreza",
+        "### `admin_digest` — zaległe zatwierdzenia dla zarządu",
+        "### `akademik_granted` / `akademik_revoked` — dostęp do akademika",
+        "### `gear_cancelled_user` / `gear_cancelled_board` — anulowanie rezerwacji sprzętu przez zarząd",
+        "### `basen_cancelled` — anulowanie zajęć basenowych",
+        "### `godzinki_limit_user` — przekroczony limit ujemnego salda (użytkownik)",
+        "### `godzinki_limit_board` — przekroczony limit ujemnego salda (zbiorczy do zarządu)",
+        "## 6. Zakładki „Kurs\" i „Co po kursie\" w arkuszu członków"
       ],
       "config_keys": [],
       "notes": []
@@ -6965,12 +6997,19 @@
     {
       "path": "functions/lib/api/getAdminPendingHandler.js",
       "extension": ".js",
-      "size_bytes": 25572,
+      "size_bytes": 25562,
       "line_count": 406,
-      "sha1_short": "714c61418a",
+      "sha1_short": "645707552c",
       "kind": "script",
       "module_aliases": [],
       "imports": [
+        {
+          "raw": "import/require ../modules/equipment/bundle/gear_bundle_service",
+          "module": "../modules/equipment/bundle/gear_bundle_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
         {
           "raw": "import/require ../service/service_config",
           "module": "../service/service_config",
@@ -6987,6 +7026,7 @@
         }
       ],
       "internal_dependencies": [
+        "functions/lib/modules/equipment/bundle/gear_bundle_service.js",
         "functions/lib/service/service_config.js"
       ],
       "classes": [],
@@ -7824,9 +7864,9 @@
     {
       "path": "functions/lib/api/getKursantStatsHandler.js",
       "extension": ".js",
-      "size_bytes": 6050,
-      "line_count": 100,
-      "sha1_short": "1c2f8c75f5",
+      "size_bytes": 5849,
+      "line_count": 95,
+      "sha1_short": "5a0b1b20a9",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -8542,12 +8582,19 @@
     {
       "path": "functions/lib/api/registerUserHandler.js",
       "extension": ".js",
-      "size_bytes": 36996,
-      "line_count": 686,
-      "sha1_short": "4703a2cf40",
+      "size_bytes": 38575,
+      "line_count": 715,
+      "sha1_short": "f577ca0978",
       "kind": "script",
       "module_aliases": [],
       "imports": [
+        {
+          "raw": "import/require ../modules/equipment/bundle/gear_bundle_service",
+          "module": "../modules/equipment/bundle/gear_bundle_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
         {
           "raw": "import/require ../modules/hours/godzinki_service",
           "module": "../modules/hours/godzinki_service",
@@ -8564,6 +8611,7 @@
         }
       ],
       "internal_dependencies": [
+        "functions/lib/modules/equipment/bundle/gear_bundle_service.js",
         "functions/lib/modules/hours/godzinki_service.js",
         "functions/lib/modules/hours/opening_balance_fields.js"
       ],
@@ -8740,6 +8788,16 @@
           "doc": null
         },
         {
+          "name": "resolveKursantEligibility",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "resolveSzkoleniowiec",
           "type": "function",
           "line_start": null,
@@ -8903,9 +8961,9 @@
     {
       "path": "functions/lib/api/userWeightHandler.js",
       "extension": ".js",
-      "size_bytes": 3359,
-      "line_count": 67,
-      "sha1_short": "72922b67be",
+      "size_bytes": 3159,
+      "line_count": 65,
+      "sha1_short": "0f84d2a6f9",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -8939,9 +8997,9 @@
     {
       "path": "functions/lib/index.js",
       "extension": ".js",
-      "size_bytes": 69402,
-      "line_count": 1600,
-      "sha1_short": "00db74b6a1",
+      "size_bytes": 69599,
+      "line_count": 1602,
+      "sha1_short": "823b5a7d78",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -9317,6 +9375,13 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ./modules/equipment/bundle/gear_bundle_service",
+          "module": "./modules/equipment/bundle/gear_bundle_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ./service/admin/adminRunTask",
           "module": "./service/admin/adminRunTask",
           "names": [],
@@ -9455,6 +9520,7 @@
         "functions/lib/api/submitEventHandler.js",
         "functions/lib/api/submitGodzinkiHandler.js",
         "functions/lib/api/userWeightHandler.js",
+        "functions/lib/modules/equipment/bundle/gear_bundle_service.js",
         "functions/lib/service/admin/adminRunTask.js",
         "functions/lib/service/runner.js",
         "functions/lib/service/service_config.js",
@@ -10122,9 +10188,9 @@
     {
       "path": "functions/lib/modules/equipment/bundle/gear_bundle_service.js",
       "extension": ".js",
-      "size_bytes": 47172,
-      "line_count": 896,
-      "sha1_short": "a5203d7236",
+      "size_bytes": 49458,
+      "line_count": 938,
+      "sha1_short": "f86b5bb044",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -10299,6 +10365,36 @@
         },
         {
           "name": "getItemsWithAvailability",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getKursWindowEndDay",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getKursWindowEndSuffix",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getKursWypozyczaFlag",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -14263,12 +14359,19 @@
     {
       "path": "functions/lib/service/tasks/usersSyncFieldsFromSheet.js",
       "extension": ".js",
-      "size_bytes": 19070,
-      "line_count": 389,
-      "sha1_short": "466863fc72",
+      "size_bytes": 26106,
+      "line_count": 519,
+      "sha1_short": "b1712bfdf3",
       "kind": "script",
       "module_aliases": [],
       "imports": [
+        {
+          "raw": "import/require ../../modules/equipment/bundle/gear_bundle_service",
+          "module": "../../modules/equipment/bundle/gear_bundle_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
         {
           "raw": "import/require ../providers/googleSheetsProvider",
           "module": "../providers/googleSheetsProvider",
@@ -14292,6 +14395,7 @@
         }
       ],
       "internal_dependencies": [
+        "functions/lib/modules/equipment/bundle/gear_bundle_service.js",
         "functions/lib/service/providers/googleSheetsProvider.js",
         "functions/lib/service/service_config.js"
       ],
@@ -14379,6 +14483,16 @@
         },
         {
           "name": "normalizeHeader",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "toNumberOrNull",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -17786,12 +17900,19 @@
     {
       "path": "functions/src/api/getAdminPendingHandler.ts",
       "extension": ".ts",
-      "size_bytes": 20404,
+      "size_bytes": 20402,
       "line_count": 509,
-      "sha1_short": "27cce85b72",
+      "sha1_short": "46c7c68b9b",
       "kind": "script",
       "module_aliases": [],
       "imports": [
+        {
+          "raw": "import/require ../modules/equipment/bundle/gear_bundle_service",
+          "module": "../modules/equipment/bundle/gear_bundle_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
         {
           "raw": "import/require ../service/service_config",
           "module": "../service/service_config",
@@ -17815,6 +17936,7 @@
         }
       ],
       "internal_dependencies": [
+        "functions/src/modules/equipment/bundle/gear_bundle_service.ts",
         "functions/src/service/service_config.ts"
       ],
       "classes": [],
@@ -18723,9 +18845,9 @@
     {
       "path": "functions/src/api/getKursantStatsHandler.ts",
       "extension": ".ts",
-      "size_bytes": 4598,
-      "line_count": 128,
-      "sha1_short": "11fa0fd2c3",
+      "size_bytes": 4320,
+      "line_count": 123,
+      "sha1_short": "cc77f72c5a",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -19361,12 +19483,19 @@
     {
       "path": "functions/src/api/registerUserHandler.ts",
       "extension": ".ts",
-      "size_bytes": 33576,
-      "line_count": 862,
-      "sha1_short": "9d7d7a5054",
+      "size_bytes": 35275,
+      "line_count": 901,
+      "sha1_short": "dd4f9f7dd0",
       "kind": "script",
       "module_aliases": [],
       "imports": [
+        {
+          "raw": "import/require ../modules/equipment/bundle/gear_bundle_service",
+          "module": "../modules/equipment/bundle/gear_bundle_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
         {
           "raw": "import/require ../modules/hours/godzinki_service",
           "module": "../modules/hours/godzinki_service",
@@ -19397,6 +19526,7 @@
         }
       ],
       "internal_dependencies": [
+        "functions/src/modules/equipment/bundle/gear_bundle_service.ts",
         "functions/src/modules/hours/godzinki_service.ts",
         "functions/src/modules/hours/opening_balance_fields.ts"
       ],
@@ -19564,6 +19694,16 @@
         },
         {
           "name": "readProfileInput",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "resolveKursantEligibility",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -19750,9 +19890,9 @@
     {
       "path": "functions/src/api/userWeightHandler.ts",
       "extension": ".ts",
-      "size_bytes": 3089,
-      "line_count": 94,
-      "sha1_short": "21c8b40d96",
+      "size_bytes": 2844,
+      "line_count": 91,
+      "sha1_short": "88c940bb0c",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -19793,9 +19933,9 @@
     {
       "path": "functions/src/index.ts",
       "extension": ".ts",
-      "size_bytes": 59049,
-      "line_count": 1763,
-      "sha1_short": "c3c4e6c8fa",
+      "size_bytes": 59151,
+      "line_count": 1765,
+      "sha1_short": "e6c1e2459d",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -20171,6 +20311,13 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ./modules/equipment/bundle/gear_bundle_service",
+          "module": "./modules/equipment/bundle/gear_bundle_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ./service/admin/adminRunTask",
           "module": "./service/admin/adminRunTask",
           "names": [],
@@ -20316,6 +20463,7 @@
         "functions/src/api/submitEventHandler.ts",
         "functions/src/api/submitGodzinkiHandler.ts",
         "functions/src/api/userWeightHandler.ts",
+        "functions/src/modules/equipment/bundle/gear_bundle_service.ts",
         "functions/src/service/admin/adminRunTask.ts",
         "functions/src/service/runner.ts",
         "functions/src/service/service_config.ts",
@@ -20983,9 +21131,9 @@
     {
       "path": "functions/src/modules/equipment/bundle/gear_bundle_service.ts",
       "extension": ".ts",
-      "size_bytes": 42375,
-      "line_count": 1071,
-      "sha1_short": "9969ce5569",
+      "size_bytes": 44445,
+      "line_count": 1115,
+      "sha1_short": "d0fe6a65a5",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -21160,6 +21308,36 @@
         },
         {
           "name": "getItemsWithAvailability",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getKursWindowEndDay",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getKursWindowEndSuffix",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getKursWypozyczaFlag",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -25388,12 +25566,19 @@
     {
       "path": "functions/src/service/tasks/usersSyncFieldsFromSheet.ts",
       "extension": ".ts",
-      "size_bytes": 15888,
-      "line_count": 385,
-      "sha1_short": "ec5fc98506",
+      "size_bytes": 22485,
+      "line_count": 532,
+      "sha1_short": "002dbc82dc",
       "kind": "script",
       "module_aliases": [],
       "imports": [
+        {
+          "raw": "import/require ../../modules/equipment/bundle/gear_bundle_service",
+          "module": "../../modules/equipment/bundle/gear_bundle_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
         {
           "raw": "import/require ../providers/googleSheetsProvider",
           "module": "../providers/googleSheetsProvider",
@@ -25424,6 +25609,7 @@
         }
       ],
       "internal_dependencies": [
+        "functions/src/modules/equipment/bundle/gear_bundle_service.ts",
         "functions/src/service/providers/googleSheetsProvider.ts",
         "functions/src/service/service_config.ts",
         "functions/src/service/types.ts"
@@ -25502,6 +25688,16 @@
         },
         {
           "name": "normalizeHeader",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "toNumberOrNull",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -31508,6 +31704,43 @@
       "functions": [],
       "top_level_symbols": [],
       "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "READ_ME.md",
+      "extension": ".md",
+      "size_bytes": 9692,
+      "line_count": 212,
+      "sha1_short": "33ed746c19",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# SKK Morzkulc — przewodnik dla Zarządu",
+        "## 1. Słowniczek",
+        "## 2. Role i statusy",
+        "## 3. Ścieżka użytkownika",
+        "## 4. Moduły",
+        "## 5. Jak działa synchronizacja",
+        "## 6. Panel Zarządu (moduł „Zarząd\" w aplikacji)",
+        "## 7. Mapa arkuszy",
+        "## 8. App_SETUP — 6 zakładek",
+        "### 8.1 `APP` — moduły",
+        "### 8.2 `VARS_CZLONKOWIE` — parametry klubu",
+        "### 8.3 `VARS_SPRZET` — zasady rezerwacji",
+        "### 8.4 `VARS_BASEN`",
+        "### 8.5 `VARS_GODZINKI`",
+        "### 8.6 `MESSAGES` — treść maili",
+        "## 9. Zadania krok po kroku",
+        "## 10. Konta funkcyjne",
+        "## 11. Diagnostyka",
+        "## 12. Kontakt techniczny"
+      ],
       "config_keys": [],
       "notes": []
     },
@@ -39348,9 +39581,9 @@
     {
       "path": "tests/test_bundle_reservations.py",
       "extension": ".py",
-      "size_bytes": 76882,
+      "size_bytes": 76894,
       "line_count": 1915,
-      "sha1_short": "a597720a6d",
+      "sha1_short": "1f60b545f9",
       "kind": "python",
       "module_aliases": [
         "tests.test_bundle_reservations"

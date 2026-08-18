@@ -183,12 +183,11 @@ export function parseSchoolYear(raw: any): number | null {
 
 /**
  * Master-przełącznik zarządu "kursant wypożycza sprzęt" — zmienna `kurs_wypożycza`
- * w zakładce "setup" arkusza członków, zsynchronizowana zadaniem setup.syncFromSheet
- * do Firestore `setup/vars_members.vars.kurs_wypożycza` (NIE do osobnej kolekcji
- * `var_members` — ta nigdy nie jest zasilana żadnym syncem).
+ * w zakładce "Vars_KURS" arkusza "App_SETUP", zsynchronizowana zadaniem
+ * setup.syncFromSheet do Firestore `setup/vars_kurs.vars.kurs_wypożycza`.
  */
 export async function getKursWypozyczaFlag(db: FirebaseFirestore.Firestore): Promise<boolean> {
-  const snap = await db.collection("setup").doc("vars_members").get();
+  const snap = await db.collection("setup").doc("vars_kurs").get();
   const value = snap.exists ? (snap.data() as any)?.vars?.["kurs_wypożycza"]?.value : undefined;
   return value === true;
 }
@@ -197,15 +196,14 @@ export async function getKursWypozyczaFlag(db: FirebaseFirestore.Firestore): Pro
  * Dzień końca okna szkoleniówki (zawsze wrzesień — nikt w projekcie nie przewiduje
  * kursu kończącego się w innym miesiącu; kod historycznie miał zaszyte na sztywno
  * "-09-30" w 4 miejscach zamiast czytać tę wartość). Źródło:
- * setup/vars_members.vars.koniec_kursu.value — zakładka "setup" arkusza "członkowie
- * sympatycy SKK" (tam samo, gdzie kurs_wypożycza; arkusz "Szkoleniówka" wygaszony,
- * patrz Audyty/17.08_*) — liczba 1-30. Tolerancyjne wobec błędów wpisu (np. "30.09"
- * wpisane jako dzień.miesiąc i odczytane jako liczba dziesiętna 30.09 → floor → 30);
- * poza zakresem lub nieodczytywalne → domyślne 30.
+ * setup/vars_kurs.vars.koniec_kursu.value — zakładka "Vars_KURS" arkusza "App_SETUP"
+ * (tam samo, gdzie kurs_wypożycza) — liczba 1-30. Tolerancyjne wobec błędów wpisu
+ * (np. "30.09" wpisane jako dzień.miesiąc i odczytane jako liczba dziesiętna 30.09 →
+ * floor → 30); poza zakresem lub nieodczytywalne → domyślne 30.
  */
 export async function getKursWindowEndDay(db: FirebaseFirestore.Firestore): Promise<number> {
   const DEFAULT_DAY = 30;
-  const snap = await db.collection("setup").doc("vars_members").get();
+  const snap = await db.collection("setup").doc("vars_kurs").get();
   const raw = snap.exists ? (snap.data() as any)?.vars?.koniec_kursu?.value : undefined;
   const n = Number(raw);
   if (!Number.isFinite(n)) return DEFAULT_DAY;
@@ -984,7 +982,7 @@ async function updateBundleReservationDates(
           args.uid,
           rid,
           Math.abs(delta),
-          godzinkiVars.expiryYears,
+          godzinkiVars.expiryMonths,
           now
         );
         if (!reverseResult.ok) {

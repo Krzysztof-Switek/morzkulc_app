@@ -47,7 +47,8 @@ function getFirebaseConfig() {
 
   if (
     host === "morzkulc-e9df7.web.app" ||
-    host === "morzkulc-e9df7.firebaseapp.com"
+    host === "morzkulc-e9df7.firebaseapp.com" ||
+    host === "app.morzkulc.pl"
   ) {
     return PROD_CONFIG;
   }

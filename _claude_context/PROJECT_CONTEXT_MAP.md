@@ -1,6 +1,6 @@
 # Project Context Map
 
-Generated at: `2026-08-17T09:32:20`
+Generated at: `2026-08-18T10:40:34`
 Project root: `C:\Users\kswitek\Documents\morzkulc_app`
 
 Purpose: this file is a compact project map for Claude Code. It shows which files exist, what functions/classes they contain, and which internal files depend on which other files.
@@ -57,12 +57,12 @@ Excluded sensitive files:
 
 ## Summary
 
-- Total scanned files: `502`
+- Total scanned files: `505`
 - Python files: `42`
-- Script files JS/TS/GS/etc.: `334`
+- Script files JS/TS/GS/etc.: `332`
 - Config files: `21`
-- Markdown files: `76`
-- Internal dependency edges: `525`
+- Markdown files: `81`
+- Internal dependency edges: `533`
 
 ## Project tree
 
@@ -100,6 +100,10 @@ Excluded sensitive files:
   - 17.06_prywatny_sprzęt_TO_DO.md
   - 17.06_prywatny_sprzęt_audyt.md
   - 17.06_prywatny_sprzęt_podsumowanie.md
+  - 17.08_audyt_kursant_wciaz_zablokowany.md
+  - 17.08_konsolidacja_setup_i_dysk_PLAN_TO_DO.md
+  - 17.08_kurs_wypożycza_PLAN_TO_DO.md
+  - 17.08_setup_dane_do_wklejenia.md
   - 18.06_kandydat_audyt_TO_DO.md
   - 18.06_rejestracja_problemy_TO_DO.md
   - 18.06_rejestracja_problemy_podsumowaie.md
@@ -167,9 +171,7 @@ Excluded sensitive files:
     - appsscript.json
     - common_helpers.gs
     - env_config.gs
-    - kurs_config_sync.gs
     - po_kursie_sync.gs
-    - uczestnicy_sync.gs
     - ui_menu.gs
   - sprzęt/
     - appsscript.json
@@ -630,6 +632,7 @@ Excluded sensitive files:
 - .gitattributes
 - .gitignore
 - CLAUDE.md
+- READ_ME.md
 - ai_full_audit_report.json
 - ai_full_audit_report.txt
 - firebase.json
@@ -663,6 +666,7 @@ Excluded sensitive files:
 - `functions/lib/api/gearReservationUpdateHandler.js` -> `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
 - `functions/lib/api/getAdminGearTopRentalsHandler.js` -> `functions/lib/modules/calendar/calendar_utils.js`
 - `functions/lib/api/getAdminMemberDuesHandler.js` -> `functions/lib/modules/hours/godzinki_service.js`
+- `functions/lib/api/getAdminPendingHandler.js` -> `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
 - `functions/lib/api/getAdminPendingHandler.js` -> `functions/lib/service/service_config.js`
 - `functions/lib/api/getAdminUserActivityHandler.js` -> `functions/lib/modules/hours/godzinki_service.js`
 - `functions/lib/api/getBasenGodzinyHandler.js` -> `functions/lib/modules/basen/basen_godziny_service.js`
@@ -684,6 +688,7 @@ Excluded sensitive files:
 - `functions/lib/api/kmMyLogsHandler.js` -> `functions/lib/modules/km/km_log_service.js`
 - `functions/lib/api/kmMyStatsHandler.js` -> `functions/lib/modules/km/km_log_service.js`
 - `functions/lib/api/kmPlacesHandler.js` -> `functions/lib/modules/km/km_places_service.js`
+- `functions/lib/api/registerUserHandler.js` -> `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
 - `functions/lib/api/registerUserHandler.js` -> `functions/lib/modules/hours/godzinki_service.js`
 - `functions/lib/api/registerUserHandler.js` -> `functions/lib/modules/hours/opening_balance_fields.js`
 - `functions/lib/api/submitEventHandler.js` -> `functions/lib/modules/calendar/events_service.js`
@@ -745,6 +750,7 @@ Excluded sensitive files:
 - `functions/lib/index.js` -> `functions/lib/api/submitEventHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/submitGodzinkiHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/userWeightHandler.js`
+- `functions/lib/index.js` -> `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
 - `functions/lib/index.js` -> `functions/lib/service/admin/adminRunTask.js`
 - `functions/lib/index.js` -> `functions/lib/service/runner.js`
 - `functions/lib/index.js` -> `functions/lib/service/service_config.js`
@@ -859,6 +865,7 @@ Excluded sensitive files:
 - `functions/lib/service/tasks/reconcileWorkspaceGroups.js` -> `functions/lib/service/workspaceGroupSync.js`
 - `functions/lib/service/tasks/setupSyncFromSheet.js` -> `functions/lib/service/providers/googleSheetsProvider.js`
 - `functions/lib/service/tasks/setupSyncFromSheet.js` -> `functions/lib/service/service_config.js`
+- `functions/lib/service/tasks/usersSyncFieldsFromSheet.js` -> `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
 - `functions/lib/service/tasks/usersSyncFieldsFromSheet.js` -> `functions/lib/service/providers/googleSheetsProvider.js`
 - `functions/lib/service/tasks/usersSyncFieldsFromSheet.js` -> `functions/lib/service/service_config.js`
 - `functions/lib/service/tasks/usersSyncRolesFromSheet.js` -> `functions/lib/service/providers/googleSheetsProvider.js`
@@ -900,6 +907,7 @@ Excluded sensitive files:
 - `functions/src/api/gearReservationUpdateHandler.ts` -> `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
 - `functions/src/api/getAdminGearTopRentalsHandler.ts` -> `functions/src/modules/calendar/calendar_utils.ts`
 - `functions/src/api/getAdminMemberDuesHandler.ts` -> `functions/src/modules/hours/godzinki_service.ts`
+- `functions/src/api/getAdminPendingHandler.ts` -> `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
 - `functions/src/api/getAdminPendingHandler.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/api/getAdminUserActivityHandler.ts` -> `functions/src/modules/hours/godzinki_service.ts`
 - `functions/src/api/getBasenGodzinyHandler.ts` -> `functions/src/modules/basen/basen_godziny_service.ts`
@@ -920,6 +928,7 @@ Excluded sensitive files:
 - `functions/src/api/kmMyLogsHandler.ts` -> `functions/src/modules/km/km_log_service.ts`
 - `functions/src/api/kmMyStatsHandler.ts` -> `functions/src/modules/km/km_log_service.ts`
 - `functions/src/api/kmPlacesHandler.ts` -> `functions/src/modules/km/km_places_service.ts`
+- `functions/src/api/registerUserHandler.ts` -> `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
 - `functions/src/api/registerUserHandler.ts` -> `functions/src/modules/hours/godzinki_service.ts`
 - `functions/src/api/registerUserHandler.ts` -> `functions/src/modules/hours/opening_balance_fields.ts`
 - `functions/src/api/submitEventHandler.ts` -> `functions/src/modules/calendar/events_service.ts`
@@ -981,6 +990,7 @@ Excluded sensitive files:
 - `functions/src/index.ts` -> `functions/src/api/submitEventHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/submitGodzinkiHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/userWeightHandler.ts`
+- `functions/src/index.ts` -> `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
 - `functions/src/index.ts` -> `functions/src/service/admin/adminRunTask.ts`
 - `functions/src/index.ts` -> `functions/src/service/runner.ts`
 - `functions/src/index.ts` -> `functions/src/service/service_config.ts`
@@ -1130,6 +1140,7 @@ Excluded sensitive files:
 - `functions/src/service/tasks/setupSyncFromSheet.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/service/tasks/setupSyncFromSheet.ts` -> `functions/src/service/types.ts`
 - `functions/src/service/tasks/usersNotifyAkademikAccessChanged.ts` -> `functions/src/service/types.ts`
+- `functions/src/service/tasks/usersSyncFieldsFromSheet.ts` -> `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
 - `functions/src/service/tasks/usersSyncFieldsFromSheet.ts` -> `functions/src/service/providers/googleSheetsProvider.ts`
 - `functions/src/service/tasks/usersSyncFieldsFromSheet.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/service/tasks/usersSyncFieldsFromSheet.ts` -> `functions/src/service/types.ts`
@@ -2459,8 +2470,8 @@ Excluded sensitive files:
 ### `tests/test_bundle_reservations.py`
 
 - Lines: `1915`
-- Size: `76882` bytes
-- SHA1: `a597720a6d`
+- Size: `76894` bytes
+- SHA1: `1f60b545f9`
 - Module aliases: `tests.test_bundle_reservations`
 - Imports:
   - `import unittest`
@@ -3128,16 +3139,8 @@ Excluded sensitive files:
 
 ### `appscript/kurs/env_config.gs`
 
-- Lines: `46`
-- Size: `1355` bytes
-
-### `appscript/kurs/kurs_config_sync.gs`
-
-- Lines: `92`
-- Size: `2448` bytes
-- Functions:
-  - `readKursSetupVars_`
-  - `syncKursConfigToFirestore`
+- Lines: `42`
+- Size: `1196` bytes
 
 ### `appscript/kurs/po_kursie_sync.gs`
 
@@ -3147,20 +3150,10 @@ Excluded sensitive files:
   - `readPoKursieFromSheet_`
   - `syncPoKursieToFirestore`
 
-### `appscript/kurs/uczestnicy_sync.gs`
-
-- Lines: `193`
-- Size: `6483` bytes
-- Functions:
-  - `buildUczestnikDiff_`
-  - `normalizeComparable_`
-  - `readUczestnicyForSync_`
-  - `syncUczestnicyToFirestore`
-
 ### `appscript/kurs/ui_menu.gs`
 
-- Lines: `15`
-- Size: `398` bytes
+- Lines: `13`
+- Size: `268` bytes
 - Functions:
   - `onOpen`
 
@@ -3610,10 +3603,12 @@ Excluded sensitive files:
 ### `functions/lib/api/getAdminPendingHandler.js`
 
 - Lines: `406`
-- Size: `25572` bytes
+- Size: `25562` bytes
 - Internal dependencies:
+  - `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
   - `functions/lib/service/service_config.js`
 - Imports:
+  - `import/require ../modules/equipment/bundle/gear_bundle_service`
   - `import/require ../service/service_config`
   - `import/require firebase-functions/v2`
 - Functions:
@@ -3790,8 +3785,8 @@ Excluded sensitive files:
 
 ### `functions/lib/api/getKursantStatsHandler.js`
 
-- Lines: `100`
-- Size: `6050` bytes
+- Lines: `95`
+- Size: `5849` bytes
 - Imports:
   - `import/require firebase-functions/v2`
 - Functions:
@@ -3944,12 +3939,14 @@ Excluded sensitive files:
 
 ### `functions/lib/api/registerUserHandler.js`
 
-- Lines: `686`
-- Size: `36996` bytes
+- Lines: `715`
+- Size: `38575` bytes
 - Internal dependencies:
+  - `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
   - `functions/lib/modules/hours/godzinki_service.js`
   - `functions/lib/modules/hours/opening_balance_fields.js`
 - Imports:
+  - `import/require ../modules/equipment/bundle/gear_bundle_service`
   - `import/require ../modules/hours/godzinki_service`
   - `import/require ../modules/hours/opening_balance_fields`
 - Functions:
@@ -3970,6 +3967,7 @@ Excluded sensitive files:
   - `normalizePhoneDigits`
   - `normalizeStr`
   - `readProfileInput`
+  - `resolveKursantEligibility`
   - `resolveSzkoleniowiec`
   - `updateObEmail`
   - `validateIncomingProfile`
@@ -4008,8 +4006,8 @@ Excluded sensitive files:
 
 ### `functions/lib/api/userWeightHandler.js`
 
-- Lines: `67`
-- Size: `3359` bytes
+- Lines: `65`
+- Size: `3159` bytes
 - Imports:
   - `import/require firebase-functions/v2`
 - Functions:
@@ -4017,8 +4015,8 @@ Excluded sensitive files:
 
 ### `functions/lib/index.js`
 
-- Lines: `1600`
-- Size: `69402` bytes
+- Lines: `1602`
+- Size: `69599` bytes
 - Internal dependencies:
   - `functions/lib/api/adminApprovalHandler.js`
   - `functions/lib/api/adminEventsSyncCalendarHandler.js`
@@ -4073,6 +4071,7 @@ Excluded sensitive files:
   - `functions/lib/api/submitEventHandler.js`
   - `functions/lib/api/submitGodzinkiHandler.js`
   - `functions/lib/api/userWeightHandler.js`
+  - `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
   - `functions/lib/service/admin/adminRunTask.js`
   - `functions/lib/service/runner.js`
   - `functions/lib/service/service_config.js`
@@ -4134,6 +4133,7 @@ Excluded sensitive files:
   - `import/require ./api/submitEventHandler`
   - `import/require ./api/submitGodzinkiHandler`
   - `import/require ./api/userWeightHandler`
+  - `import/require ./modules/equipment/bundle/gear_bundle_service`
   - `import/require ./service/admin/adminRunTask`
   - `import/require ./service/runner`
   - `import/require ./service/service_config`
@@ -4237,8 +4237,8 @@ Excluded sensitive files:
 
 ### `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
 
-- Lines: `896`
-- Size: `47172` bytes
+- Lines: `938`
+- Size: `49458` bytes
 - Internal dependencies:
   - `functions/lib/modules/calendar/calendar_utils.js`
   - `functions/lib/modules/equipment/kayaks/gear_kayaks_service.js`
@@ -4269,6 +4269,9 @@ Excluded sensitive files:
   - `findBundleConflicts`
   - `formatShortRange`
   - `getItemsWithAvailability`
+  - `getKursWindowEndDay`
+  - `getKursWindowEndSuffix`
+  - `getKursWypozyczaFlag`
   - `getReservedCompositeIdsForPeriod`
   - `getUserRole`
   - `isFreeRentalExempt`
@@ -5069,12 +5072,14 @@ Excluded sensitive files:
 
 ### `functions/lib/service/tasks/usersSyncFieldsFromSheet.js`
 
-- Lines: `389`
-- Size: `19070` bytes
+- Lines: `519`
+- Size: `26106` bytes
 - Internal dependencies:
+  - `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
   - `functions/lib/service/providers/googleSheetsProvider.js`
   - `functions/lib/service/service_config.js`
 - Imports:
+  - `import/require ../../modules/equipment/bundle/gear_bundle_service`
   - `import/require ../providers/googleSheetsProvider`
   - `import/require ../service_config`
   - `import/require firebase-admin`
@@ -5088,6 +5093,7 @@ Excluded sensitive files:
   - `normalizeBoolish`
   - `normalizeDateString`
   - `normalizeHeader`
+  - `toNumberOrNull`
   - `valuesEqual`
 
 ### `functions/lib/service/tasks/usersSyncFunctionRolesFromSetup.js`
@@ -5819,10 +5825,12 @@ Excluded sensitive files:
 ### `functions/src/api/getAdminPendingHandler.ts`
 
 - Lines: `509`
-- Size: `20404` bytes
+- Size: `20402` bytes
 - Internal dependencies:
+  - `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
   - `functions/src/service/service_config.ts`
 - Imports:
+  - `import/require ../modules/equipment/bundle/gear_bundle_service`
   - `import/require ../service/service_config`
   - `import/require express`
   - `import/require firebase-functions/v2`
@@ -6011,8 +6019,8 @@ Excluded sensitive files:
 
 ### `functions/src/api/getKursantStatsHandler.ts`
 
-- Lines: `128`
-- Size: `4598` bytes
+- Lines: `123`
+- Size: `4320` bytes
 - Imports:
   - `import/require express`
   - `import/require firebase-functions/v2`
@@ -6157,12 +6165,14 @@ Excluded sensitive files:
 
 ### `functions/src/api/registerUserHandler.ts`
 
-- Lines: `862`
-- Size: `33576` bytes
+- Lines: `901`
+- Size: `35275` bytes
 - Internal dependencies:
+  - `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
   - `functions/src/modules/hours/godzinki_service.ts`
   - `functions/src/modules/hours/opening_balance_fields.ts`
 - Imports:
+  - `import/require ../modules/equipment/bundle/gear_bundle_service`
   - `import/require ../modules/hours/godzinki_service`
   - `import/require ../modules/hours/opening_balance_fields`
   - `import/require express`
@@ -6185,6 +6195,7 @@ Excluded sensitive files:
   - `normalizePhoneDigits`
   - `normalizeStr`
   - `readProfileInput`
+  - `resolveKursantEligibility`
   - `resolveSzkoleniowiec`
   - `updateObEmail`
   - `validateIncomingProfile`
@@ -6225,8 +6236,8 @@ Excluded sensitive files:
 
 ### `functions/src/api/userWeightHandler.ts`
 
-- Lines: `94`
-- Size: `3089` bytes
+- Lines: `91`
+- Size: `2844` bytes
 - Imports:
   - `import/require express`
   - `import/require firebase-functions/v2`
@@ -6235,8 +6246,8 @@ Excluded sensitive files:
 
 ### `functions/src/index.ts`
 
-- Lines: `1763`
-- Size: `59049` bytes
+- Lines: `1765`
+- Size: `59151` bytes
 - Internal dependencies:
   - `functions/src/api/adminApprovalHandler.ts`
   - `functions/src/api/adminEventsSyncCalendarHandler.ts`
@@ -6291,6 +6302,7 @@ Excluded sensitive files:
   - `functions/src/api/submitEventHandler.ts`
   - `functions/src/api/submitGodzinkiHandler.ts`
   - `functions/src/api/userWeightHandler.ts`
+  - `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
   - `functions/src/service/admin/adminRunTask.ts`
   - `functions/src/service/runner.ts`
   - `functions/src/service/service_config.ts`
@@ -6352,6 +6364,7 @@ Excluded sensitive files:
   - `import/require ./api/submitEventHandler`
   - `import/require ./api/submitGodzinkiHandler`
   - `import/require ./api/userWeightHandler`
+  - `import/require ./modules/equipment/bundle/gear_bundle_service`
   - `import/require ./service/admin/adminRunTask`
   - `import/require ./service/runner`
   - `import/require ./service/service_config`
@@ -6456,8 +6469,8 @@ Excluded sensitive files:
 
 ### `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
 
-- Lines: `1071`
-- Size: `42375` bytes
+- Lines: `1115`
+- Size: `44445` bytes
 - Internal dependencies:
   - `functions/src/modules/calendar/calendar_utils.ts`
   - `functions/src/modules/equipment/kayaks/gear_kayaks_service.ts`
@@ -6488,6 +6501,9 @@ Excluded sensitive files:
   - `findBundleConflicts`
   - `formatShortRange`
   - `getItemsWithAvailability`
+  - `getKursWindowEndDay`
+  - `getKursWindowEndSuffix`
+  - `getKursWypozyczaFlag`
   - `getReservedCompositeIdsForPeriod`
   - `getUserRole`
   - `isFreeRentalExempt`
@@ -7369,13 +7385,15 @@ Excluded sensitive files:
 
 ### `functions/src/service/tasks/usersSyncFieldsFromSheet.ts`
 
-- Lines: `385`
-- Size: `15888` bytes
+- Lines: `532`
+- Size: `22485` bytes
 - Internal dependencies:
+  - `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
   - `functions/src/service/providers/googleSheetsProvider.ts`
   - `functions/src/service/service_config.ts`
   - `functions/src/service/types.ts`
 - Imports:
+  - `import/require ../../modules/equipment/bundle/gear_bundle_service`
   - `import/require ../providers/googleSheetsProvider`
   - `import/require ../service_config`
   - `import/require ../types`
@@ -7389,6 +7407,7 @@ Excluded sensitive files:
   - `normalizeBoolish`
   - `normalizeDateString`
   - `normalizeHeader`
+  - `toNumberOrNull`
   - `valuesEqual`
 
 ### `functions/src/service/tasks/usersSyncFunctionRolesFromSetup.ts`
@@ -9200,6 +9219,86 @@ Excluded sensitive files:
   - `## Weryfikacja`
   - `## Decyzje (zatwierdzone)`
 
+### `Audyty/17.08_audyt_kursant_wciaz_zablokowany.md`
+
+- Lines: `148`
+- Size: `8606` bytes
+- Headings:
+  - `# Kursant nadal nie może rezerwować sprzętu — audyt (17.08.2026)`
+  - `## 1. Defekt A (krytyczny, główna przyczyna): zła ścieżka Firestore dla flagi `kurs_wypożycza``
+  - `## 2. Defekt B (niezależny, blokuje po naprawie Defektu A): brak kolumny „rok szkoleniówki" w arkuszu „Szkoleniówka"`
+  - `## 3. Co NIE jest przyczyną (odrzucone po weryfikacji)`
+  - `## 4. Naprawa`
+  - `### Defekt A — zmiana ścieżki odczytu flagi`
+  - `### Defekt B — kolumna „rok szkoleniówki"`
+  - `### Przy okazji`
+  - `## 5. Weryfikacja po naprawie`
+  - `## 6. Pliki`
+
+### `Audyty/17.08_konsolidacja_setup_i_dysk_PLAN_TO_DO.md`
+
+- Lines: `238`
+- Size: `16482` bytes
+- Headings:
+  - `# Konsolidacja: jeden arkusz Setup + jeden folder na Dysku + wiadomości systemowe z arkusza — plan (17.08.2026)`
+  - `## Kontekst`
+  - `## Zweryfikowany stan obecny (fakty z kodu i z żywych danych Firestore, nie domysły)`
+  - `## Decyzje użytkownika (potwierdzone w tej sesji)`
+  - `## Docelowa struktura`
+  - `### Arkusz „App_SETUP" (w folderze „1_ZARZAD" > „APLIKACJA ARKUSZE"), zakładki:`
+  - `### Arkusz członków — 2 nowe zakładki:`
+  - `### Wspólny folder Dysku „1_ZARZAD" > „APLIKACJA ARKUSZE" — pliki do przeniesienia:`
+  - `## Fazy wdrożenia`
+  - `### Faza 0 — Dysk i nowy arkusz (RĘCZNE, użytkownik; Claude przygotowuje dane)`
+  - `### Faza 1 — Kod: jedno źródło zmiennych setup`
+  - `### Faza 2 — Kod: silnik szablonów wiadomości`
+  - `### Faza 3 — Kod: „Kurs" + „Co po kursie" do arkusza członków, naprawa triggera`
+  - `### Faza 4 — Przełączenie (kolejność krytyczna dla bezpieczeństwa)`
+  - `## Kolejność i ryzyko`
+  - `## Weryfikacja`
+  - `## Zakres pracy — realistyczna skala`
+  - `## Status realizacji`
+
+### `Audyty/17.08_kurs_wypożycza_PLAN_TO_DO.md`
+
+- Lines: `109`
+- Size: `6510` bytes
+- Headings:
+  - `# Naprawa bramki rezerwacji dla roli kursant — plan (17.08.2026)`
+  - `## Kontekst`
+  - `## Zmiany w kodzie`
+  - `### 1. `functions/src/modules/equipment/bundle/gear_bundle_service.ts``
+  - `### 2. `functions/src/index.ts``
+  - `### 3. `appscript/kurs/uczestnicy_sync.gs``
+  - `## Poza zakresem zmian w repo (działanie zarządu w arkuszu)`
+  - `## Weryfikacja`
+  - `## Po zakończeniu i zweryfikowaniu: e-mail do kursantów (ODROCZONE)`
+
+### `Audyty/17.08_setup_dane_do_wklejenia.md`
+
+- Lines: `348`
+- Size: `11930` bytes
+- Headings:
+  - `# Dane do wklejenia — nowy arkusz „Setup" (Faza 0)`
+  - `## 1. Zakładka `APP` i `VARS_CZLONKOWIE``
+  - `## 2. Zakładka `VARS_SPRZET``
+  - `## 3. Zakładka `VARS_BASEN` (NOWA — dziś ten dokument w Firestore w ogóle nie istnieje)`
+  - `## 4. Zakładka `VARS_GODZINKI` (NOWA — dziś ten dokument w Firestore w ogóle nie istnieje)`
+  - `## 5. Zakładka `MESSAGES` (NOWA)`
+  - `### `welcome_none` — mail powitalny, bez dostępu do listy dyskusyjnej`
+  - `### `welcome_readonly` — mail powitalny, dostęp tylko do odczytu listy`
+  - `### `welcome_full` — mail powitalny, pełny dostęp do listy`
+  - `### `role_changed` — zmiana roli użytkownika`
+  - `### `event_new` — nowa impreza`
+  - `### `event_upcoming` — zbliżająca się impreza`
+  - `### `admin_digest` — zaległe zatwierdzenia dla zarządu`
+  - `### `akademik_granted` / `akademik_revoked` — dostęp do akademika`
+  - `### `gear_cancelled_user` / `gear_cancelled_board` — anulowanie rezerwacji sprzętu przez zarząd`
+  - `### `basen_cancelled` — anulowanie zajęć basenowych`
+  - `### `godzinki_limit_user` — przekroczony limit ujemnego salda (użytkownik)`
+  - `### `godzinki_limit_board` — przekroczony limit ujemnego salda (zbiorczy do zarządu)`
+  - `## 6. Zakładki „Kurs" i „Co po kursie" w arkuszu członków`
+
 ### `Audyty/18.06_kandydat_audyt_TO_DO.md`
 
 - Lines: `126`
@@ -10550,6 +10649,31 @@ Excluded sensitive files:
   - `## 8. Ściąga — z jakiego adresu pisać`
   - `## 9. Bezpieczeństwo`
   - `## 10. Co zrobić, gdy coś nie działa`
+
+### `READ_ME.md`
+
+- Lines: `212`
+- Size: `9692` bytes
+- Headings:
+  - `# SKK Morzkulc — przewodnik dla Zarządu`
+  - `## 1. Słowniczek`
+  - `## 2. Role i statusy`
+  - `## 3. Ścieżka użytkownika`
+  - `## 4. Moduły`
+  - `## 5. Jak działa synchronizacja`
+  - `## 6. Panel Zarządu (moduł „Zarząd" w aplikacji)`
+  - `## 7. Mapa arkuszy`
+  - `## 8. App_SETUP — 6 zakładek`
+  - `### 8.1 `APP` — moduły`
+  - `### 8.2 `VARS_CZLONKOWIE` — parametry klubu`
+  - `### 8.3 `VARS_SPRZET` — zasady rezerwacji`
+  - `### 8.4 `VARS_BASEN``
+  - `### 8.5 `VARS_GODZINKI``
+  - `### 8.6 `MESSAGES` — treść maili`
+  - `## 9. Zadania krok po kroku`
+  - `## 10. Konta funkcyjne`
+  - `## 11. Diagnostyka`
+  - `## 12. Kontakt techniczny`
 
 ### `tests/e2e/reports/e2e_prod_20260409_100718.md`
 

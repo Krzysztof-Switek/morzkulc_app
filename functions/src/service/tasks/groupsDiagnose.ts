@@ -92,7 +92,6 @@ export const groupsDiagnoseTask: ServiceTask<Payload> = {
       privilegedPosterGroups: config.privilegedPosterGroups,
       listaGroupEmail: config.listaGroupEmail,
       membersGroupEmail: config.membersGroupEmail,
-      adminActionEmail: config.adminActionEmail,
       welcomeReplyToEmail: config.welcomeReplyToEmail,
       // setup/app
       roleMappingsPresent: Object.keys(roleMappings).length > 0,

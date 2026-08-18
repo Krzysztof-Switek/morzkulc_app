@@ -9,6 +9,18 @@ const NAV_HOME_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height=
 
 const PAGE_SIZE = 30;
 
+// Tłumaczenie kodów walidacji z backendu (POST /api/godzinki/submit) na czytelny tekst PL.
+const FIELD_ERROR_MESSAGES = {
+  required: "pole wymagane",
+  invalid_format: "nieprawidłowy format",
+  cannot_be_future: "nie może być w przyszłości",
+  too_old: "zbyt stara data — godzinki trzeba zgłaszać na bieżąco, nie z dużym opóźnieniem",
+  must_be_positive: "musi być większe od zera",
+  must_be_integer: "musi być liczbą całkowitą",
+  too_large: "zbyt duża wartość",
+  too_long: "zbyt długi tekst",
+};
+
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 function esc(s) {
@@ -351,7 +363,9 @@ function renderSubmitView(viewEl, ctx) {
         setOk("Godzinki zgłoszone! Oczekują zatwierdzenia przez zarząd.");
       } else {
         const fields = resp?.fields || {};
-        const msgs = Object.entries(fields).map(([k, v]) => `${k}: ${v}`).join(", ");
+        const msgs = Object.entries(fields)
+          .map(([k, v]) => `${k}: ${FIELD_ERROR_MESSAGES[v] || v}`)
+          .join(", ");
         setErr("Błąd: " + (msgs || resp?.message || "Nieznany błąd"));
       }
     } catch (err) {

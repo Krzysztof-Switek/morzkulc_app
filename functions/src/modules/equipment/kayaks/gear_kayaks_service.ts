@@ -314,7 +314,7 @@ export async function updateReservationDates(
         args.uid,
         rid,
         Math.abs(delta),
-        godzinkiVars.expiryYears,
+        godzinkiVars.expiryMonths,
         now
       );
 

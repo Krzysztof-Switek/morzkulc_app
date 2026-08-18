@@ -1,5 +1,6 @@
 import {ServiceTask} from "../types";
 import {norm} from "../../modules/shared/text_utils";
+import {getAppVars} from "../../modules/setup/app_vars";
 
 /**
  * Task: events.notifyNew
@@ -14,13 +15,14 @@ type Payload = {
   eventId: string;
 };
 
-const APP_URL = "https://morzkulc-e9df7.web.app/";
-
 function dateRange(startDate: string, endDate: string): string {
   return startDate === endDate ? startDate : `${startDate} – ${endDate}`;
 }
 
-export function buildNewEventEmail(ev: {name: string; startDate: string; endDate: string; location: string}): {subject: string; bodyText: string} {
+export function buildNewEventEmail(
+  ev: {name: string; startDate: string; endDate: string; location: string},
+  appUrl: string
+): {subject: string; bodyText: string} {
   const subject = `SKK Morzkulc — nowa impreza: ${ev.name}`;
 
   const lines: string[] = [];
@@ -29,7 +31,7 @@ export function buildNewEventEmail(ev: {name: string; startDate: string; endDate
   if (ev.location) lines.push(`Miejsce: ${ev.location}`);
   lines.push("");
   lines.push("Szczegóły w aplikacji:");
-  lines.push(APP_URL);
+  lines.push(appUrl);
   lines.push("");
   lines.push("Zarządzaj powiadomieniami w swoim profilu.");
   lines.push("— Automatyczne powiadomienie SKK Morzkulc");
@@ -57,12 +59,13 @@ export const eventsNotifyNewTask: ServiceTask<Payload> = {
       return {ok: true, message: "skip: event rejected", details: {sent: 0}};
     }
 
+    const {appUrl} = await getAppVars(ctx.firestore);
     const {subject, bodyText} = buildNewEventEmail({
       name: norm(eventData?.name),
       startDate: norm(eventData?.startDate),
       endDate: norm(eventData?.endDate),
       location: norm(eventData?.location),
-    });
+    }, appUrl);
 
     const recipientsSnap = await ctx.firestore.collection("users_active")
       .where("profile.notifications.eventsNew", "==", true)

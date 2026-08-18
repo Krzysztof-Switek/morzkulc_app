@@ -3,6 +3,7 @@ import {ServiceTask} from "../types";
 import {norm} from "../../modules/shared/text_utils";
 import {todayIsoUTC, addDaysIso} from "../../modules/calendar/calendar_utils";
 import {getEventsVars} from "../../modules/setup/events_vars";
+import {getAppVars} from "../../modules/setup/app_vars";
 
 /**
  * Task: events.notifyUpcoming
@@ -24,13 +25,15 @@ import {getEventsVars} from "../../modules/setup/events_vars";
 
 type Payload = Record<string, never>;
 
-const APP_URL = "https://morzkulc-e9df7.web.app/";
-
 function dateRange(startDate: string, endDate: string): string {
   return startDate === endDate ? startDate : `${startDate} – ${endDate}`;
 }
 
-export function buildUpcomingEventEmail(ev: {name: string; startDate: string; endDate: string; location: string}, reminderDays: number): {subject: string; bodyText: string} {
+export function buildUpcomingEventEmail(
+  ev: {name: string; startDate: string; endDate: string; location: string},
+  reminderDays: number,
+  appUrl: string
+): {subject: string; bodyText: string} {
   const subject = `SKK Morzkulc — zbliża się impreza: ${ev.name}`;
 
   const lines: string[] = [];
@@ -39,7 +42,7 @@ export function buildUpcomingEventEmail(ev: {name: string; startDate: string; en
   if (ev.location) lines.push(`Miejsce: ${ev.location}`);
   lines.push("");
   lines.push("Szczegóły w aplikacji:");
-  lines.push(APP_URL);
+  lines.push(appUrl);
   lines.push("");
   lines.push("Zarządzaj powiadomieniami w swoim profilu.");
   lines.push("— Automatyczne powiadomienie SKK Morzkulc");
@@ -58,6 +61,7 @@ export const eventsNotifyUpcomingTask: ServiceTask<Payload> = {
   run: async (_payload, ctx) => {
     const dryRun = ctx.dryRun;
     const {reminderDays} = await getEventsVars(ctx.firestore);
+    const {appUrl} = await getAppVars(ctx.firestore);
     const targetDate = addDaysIso(todayIsoUTC(), reminderDays);
 
     const eventsSnap = await ctx.firestore.collection("events")
@@ -112,7 +116,7 @@ export const eventsNotifyUpcomingTask: ServiceTask<Payload> = {
         startDate: norm(eventData?.startDate),
         endDate: norm(eventData?.endDate),
         location: norm(eventData?.location),
-      }, reminderDays);
+      }, reminderDays, appUrl);
 
       if (dryRun) {
         ctx.logger.info("eventsNotifyUpcoming: [DRY RUN] would send", {eventId: doc.id, subject, recipients: recipients.size});

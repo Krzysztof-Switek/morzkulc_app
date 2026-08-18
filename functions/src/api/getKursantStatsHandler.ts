@@ -104,14 +104,14 @@ export async function handleGetKursantStats(req: Request, res: Response, deps: G
         total: s.points,
       }));
 
-      const varsMembersSnap = await db.collection("setup").doc("vars_members").get();
+      const varsKursSnap = await db.collection("setup").doc("vars_kurs").get();
 
       const fee = userData?.admin?.courseFee ?? null;
       const weight = userData?.admin?.weight ?? null;
       const height = userData?.admin?.height ?? null;
       const phone = userData?.profile?.phone ?? null;
       const pesel = userData?.admin?.pesel ?? null;
-      const cenaKursu = (varsMembersSnap.data() as any)?.vars?.cena_kursu?.value ?? null;
+      const cenaKursu = (varsKursSnap.data() as any)?.vars?.cena_kursu?.value ?? null;
 
       res.status(200).json({ok: true, myCapsizes, myRank, totalKursants, fee, weight, height, phone, pesel, cena_kursu: cenaKursu, leaderboard});
     } catch (err: any) {

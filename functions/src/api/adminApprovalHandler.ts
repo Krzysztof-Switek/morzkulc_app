@@ -106,7 +106,7 @@ export async function handleAdminApprove(req: Request, res: Response, deps: Admi
 
       if (kind === "godzinki") {
         const vars = await getGodzinkiVars(db);
-        const result = await processApproval(db, id, auth.email, vars.expiryYears);
+        const result = await processApproval(db, id, auth.email, vars.expiryMonths);
         if (!result.ok) {
           // Odmowa merytoryczna (already_expired, purchase_no_longer_valid, not_found…)
           const status = result.code === "not_found" ? 404 : 422;
