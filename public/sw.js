@@ -14,7 +14,7 @@
  * Stary cache jest automatycznie czyszczony w activate.
  */
 
-const CACHE_VERSION = "msyowhco";
+const CACHE_VERSION = "msyp9mdx";
 const STATIC_CACHE  = `morzkulc-static-${CACHE_VERSION}`;
 
 // Pliki precachowane przy instalacji SW
@@ -110,6 +110,14 @@ self.addEventListener("fetch", (event) => {
   if (url.pathname.startsWith("/api/")) {
     event.respondWith(fetch(req));
     return;
+  }
+
+  // 2b. Ścieżki /__/ (Firebase Hosting/Auth: /__/auth/handler, /__/auth/iframe,
+  //     /__/firebase/init.json) — zarezerwowane, SW nie może ich przechwytywać
+  //     ani cache'ować (zalecenie Firebase — inaczej redirect logowania Google
+  //     może się nie domknąć poprawnie).
+  if (url.pathname.startsWith("/__/")) {
+    return; // przeglądarka obsłuży normalnie
   }
 
   // 3. Nawigacja (wejście na stronę, odświeżenie) — network-first

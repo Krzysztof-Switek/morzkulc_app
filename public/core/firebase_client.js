@@ -26,7 +26,12 @@ const DEV_CONFIG = {
 
 const PROD_CONFIG = {
   apiKey: "AIzaSyDp8Gyd45RkSS6cdJ32oczHGe6Fb9RrWeo",
-  authDomain: "morzkulc-e9df7.web.app",
+  // Własna domena, nie morzkulc-e9df7.web.app — signInWithRedirect na iOS Safari
+  // bounce'ował przez inny origin (morzkulc-e9df7.web.app), co widać było w pasku
+  // adresu i psuło powrót z logowania Google ("mruga i wraca" do ekranu logowania).
+  // Firebase Hosting serwuje /__/auth/handler natywnie też pod app.morzkulc.pl
+  // (zweryfikowane), więc cały redirect zostaje na jednej domenie.
+  authDomain: "app.morzkulc.pl",
   projectId: "morzkulc-e9df7",
   storageBucket: "morzkulc-e9df7.firebasestorage.app",
   messagingSenderId: "137214816080",
