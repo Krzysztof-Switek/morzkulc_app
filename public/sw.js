@@ -14,7 +14,7 @@
  * Stary cache jest automatycznie czyszczony w activate.
  */
 
-const CACHE_VERSION = "msynlf8e";
+const CACHE_VERSION = "msyowhco";
 const STATIC_CACHE  = `morzkulc-static-${CACHE_VERSION}`;
 
 // Pliki precachowane przy instalacji SW
@@ -22,9 +22,9 @@ const PRECACHE_URLS = [
   "/",
   "/index.html",
   "/manifest.json",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
-  "/icons/icon-180.png",
+  "/icons/icon-192-v2.png",
+  "/icons/icon-512-v2.png",
+  "/icons/icon-180-v2.png",
   "/core/app_shell.js",
   "/core/render_shell.js",
   "/core/modules_registry.js",

@@ -54,28 +54,28 @@ class TestPWAFiles(unittest.TestCase):
 
     def test_icon_192_exists(self):
         """Ikona 192x192 musi istnieć."""
-        self.assertTrue(exists("icons/icon-192.png"))
+        self.assertTrue(exists("icons/icon-192-v2.png"))
 
     def test_icon_512_exists(self):
         """Ikona 512x512 musi istnieć."""
-        self.assertTrue(exists("icons/icon-512.png"))
+        self.assertTrue(exists("icons/icon-512-v2.png"))
 
     def test_icon_180_exists(self):
         """Ikona apple-touch-icon 180x180 musi istnieć."""
-        self.assertTrue(exists("icons/icon-180.png"))
+        self.assertTrue(exists("icons/icon-180-v2.png"))
 
 
 class TestPNGDimensions(unittest.TestCase):
     """Sprawdza rozmiary PNG icon."""
 
     def test_icon_192_size(self):
-        self.assertEqual(png_dimensions("icons/icon-192.png"), (192, 192))
+        self.assertEqual(png_dimensions("icons/icon-192-v2.png"), (192, 192))
 
     def test_icon_512_size(self):
-        self.assertEqual(png_dimensions("icons/icon-512.png"), (512, 512))
+        self.assertEqual(png_dimensions("icons/icon-512-v2.png"), (512, 512))
 
     def test_icon_180_size(self):
-        self.assertEqual(png_dimensions("icons/icon-180.png"), (180, 180))
+        self.assertEqual(png_dimensions("icons/icon-180-v2.png"), (180, 180))
 
 
 class TestManifest(unittest.TestCase):
@@ -143,7 +143,7 @@ class TestIndexHtml(unittest.TestCase):
         self.assertIn('apple-mobile-web-app-title', self.html)
 
     def test_favicon_32(self):
-        self.assertIn('icon-32.png', self.html)
+        self.assertIn('icon-32-v2.png', self.html)
 
     def test_viewport(self):
         self.assertIn('name="viewport"', self.html)
