@@ -11,6 +11,10 @@ const ADMIN_SYNC_CALENDAR_URL = "/api/admin/events/sync-calendar";
 const ADMIN_APPROVE_URL = "/api/admin/approve";
 const ADMIN_REJECT_URL = "/api/admin/reject";
 
+// Folder Dysku "1_ZARZAD" > "APLIKACJA ARKUSZE" — wszystkie arkusze Google obsługujące
+// aplikację (App_SETUP, Sprzęt, Członkowie/Godzinki/Imprezy, Bilans otwarcia, Kilometrówka).
+const APP_SHEETS_FOLDER_URL = "https://drive.google.com/drive/folders/1VFvWsHZgglD0Ih-1MlVU56WtXPL7rGxO?usp=drive_link";
+
 export function createAdminPendingModule({ id, type, label, defaultRoute, order, enabled, access }) {
   return {
     id,
@@ -48,10 +52,14 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
           </div>
 
           <div class="modTabPanel" data-panel="administracja">
-          <div class="actions" style="margin-top:12px;display:flex;align-items:center;gap:8px;">
+          <div class="actions" style="margin-top:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <button id="adminPendingReloadBtn" type="button" class="moduleNavBtn" title="Odśwież dane"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.79"/></svg></button>
             <button id="adminSyncCalendarBtn" type="button">Synchronizuj zatwierdzenia (arkusze + kalendarz)</button>
             <span style="color:var(--text-muted);cursor:help;display:flex;align-items:center;" title="Zatwierdzanie odbywa się w arkuszu Google — poniżej lista oczekujących pozycji. Zatwierdzenia i korekty z arkuszy są pobierane automatycznie codziennie rano (imprezy ok. 04:45, godzinki ok. 05:15, kalendarz 05:00). Przycisk wymusza natychmiastowy sync godzinek, imprez i kalendarza."><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+            <a href="${escapeHtml(APP_SHEETS_FOLDER_URL)}" target="_blank" rel="noopener" class="moduleNavBtn" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:0 10px;width:auto;" title="Otwórz w Dysku Google folder ze wszystkimi arkuszami obsługującymi aplikację">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              Folder z arkuszami aplikacji
+            </a>
           </div>
           <div id="adminCalendarMsg" class="hint hidden" style="margin-top:8px;"></div>
 

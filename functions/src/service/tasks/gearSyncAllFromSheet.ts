@@ -139,7 +139,6 @@ function buildDoc(key: string, id: string, r: Row, now: any, sheetTab: string): 
       weightRange: norm(r["Zakres wag"]),
       cockpit: norm(r["Kokpit"]),
       storedAt: norm(r["Składowany"]),
-      images: {top: norm(r["Zdjęcie z góry"])},
       isOperational,
       isHalfHalf: parseBool(r["Pół na pół?"]),
       isPrivate: parseBool(r["Prywatny?"]),
