@@ -577,10 +577,10 @@ function renderHomeProfile({ viewEl, ctx }) {
 
       <div class="profileBlock">
         <h3 class="profileBlockTitle">Powiadomienia e-mail</h3>
-        <p class="muted">Domyślnie wyłączone — wybierz, o czym chcesz dostawać maile na adres z rejestracji.</p>
+        <p class="muted" id="notifyPrefsIntro">Powiadomienia będą wysyłane na twój adres e-mail na … dni przed wydarzeniem</p>
         <div class="checkRow">
           <input id="notifyEventsNew" type="checkbox" />
-          <label for="notifyEventsNew">Nowa impreza</label>
+          <label for="notifyEventsNew">Dodano nową imprezę do kalendarza</label>
         </div>
         <div class="checkRow">
           <input id="notifyEventsUpcoming" type="checkbox" />
@@ -805,6 +805,7 @@ function buildKlubBoxHtml(data) {
 
 function wireNotificationPrefs(viewEl, ctx) {
   const errEl = viewEl.querySelector("#notifyPrefsErr");
+  const introEl = viewEl.querySelector("#notifyPrefsIntro");
   const checkboxes = {
     eventsNew: viewEl.querySelector("#notifyEventsNew"),
     eventsUpcoming: viewEl.querySelector("#notifyEventsUpcoming"),
@@ -820,6 +821,9 @@ function wireNotificationPrefs(viewEl, ctx) {
       Object.entries(checkboxes).forEach(([key, el]) => {
         if (el) el.checked = prefs[key] === true;
       });
+      if (introEl && Number.isFinite(data?.reminderDays)) {
+        introEl.textContent = `Powiadomienia będą wysyłane na twój adres e-mail na ${data.reminderDays} dni przed wydarzeniem`;
+      }
     })
     .catch(() => setErr("Nie udało się wczytać ustawień powiadomień."));
 

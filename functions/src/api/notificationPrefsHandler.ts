@@ -3,6 +3,7 @@
 
 import type {Request, Response} from "express";
 import {logger} from "firebase-functions/v2";
+import {getEventsVars} from "../modules/setup/events_vars";
 
 type TokenCheck =
   | {error: string}
@@ -51,7 +52,9 @@ export async function handleNotificationPrefs(req: Request, res: Response, deps:
           prefs[key] = stored[key] === true;
         }
 
-        res.status(200).json({ok: true, prefs});
+        const {reminderDays} = await getEventsVars(db);
+
+        res.status(200).json({ok: true, prefs, reminderDays});
         return;
       }
 

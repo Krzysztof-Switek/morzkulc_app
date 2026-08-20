@@ -7,6 +7,69 @@
 import {describe, it, expect} from "vitest";
 import {normDate, isApproved, buildEventRowPatch, findHeaderCaseInsensitive, EVENT_ROW_CREATE_ONLY_COLUMNS, shouldScrapAbsentEvent} from "../src/service/tasks/eventsSyncFromSheet";
 import {buildRowValuesForUpsert, findFirstEmptySlotIndex, canonicalHeader, buildLooseRowGetter} from "../src/service/providers/googleSheetsProvider";
+import {selectNewRecipientUids, buildUpcomingEventEmail, daysUntilIso} from "../src/service/tasks/eventsNotifyUpcoming";
+
+describe("selectNewRecipientUids — dogonienie spóźnionych subskrybentów (regresja: impreza za 2 dni bez maila)", () => {
+  it("nikt jeszcze nie dostał maila → wszyscy uprawnieni są nowi", () => {
+    expect(selectNewRecipientUids(["u1", "u2"], [])).toEqual(["u1", "u2"]);
+  });
+
+  it("część już dostała → tylko reszta jest nowa", () => {
+    expect(selectNewRecipientUids(["u1", "u2", "u3"], ["u1"])).toEqual(["u2", "u3"]);
+  });
+
+  it("wszyscy już dostali → pusta lista, brak duplikatów maila", () => {
+    expect(selectNewRecipientUids(["u1", "u2"], ["u1", "u2"])).toEqual([]);
+  });
+
+  it("użytkownik oznaczył zainteresowanie PO tym, jak inni już dostali mail → i tak trafia na listę nowych", () => {
+    // Scenariusz zgłoszony przez usera: włączył powiadomienia i oznaczył
+    // imprezę jako interesującą już po pierwszym uruchomieniu crona dla tej
+    // imprezy — poprzednia logika (globalny reminderSentAt na evencie) by go
+    // pominęła na zawsze; per-uid tracking musi go złapać.
+    expect(selectNewRecipientUids(["u1", "u2", "uSwitek"], ["u1", "u2"])).toEqual(["uSwitek"]);
+  });
+});
+
+describe("daysUntilIso — liczba dni do startu liczona na żywo (nie ze statycznego reminderDays)", () => {
+  it("zwraca różnicę w pełnych dniach", () => {
+    expect(daysUntilIso("2026-08-20", "2026-08-27")).toBe(7);
+    expect(daysUntilIso("2026-08-20", "2026-08-21")).toBe(1);
+    expect(daysUntilIso("2026-08-20", "2026-08-20")).toBe(0);
+  });
+
+  it("regresja: cron dogania spóźnioną wysyłkę innego dnia niż dokładnie reminderDays przed startem — treść maila musi pokazać rzeczywisty odstęp, nie skonfigurowany próg", () => {
+    // reminderDays=7, ale wysyłka realnie leci dzień przed startem (dogonienie okna)
+    expect(daysUntilIso("2026-08-20", "2026-08-21")).toBe(1);
+  });
+});
+
+describe("buildUpcomingEventEmail — treść przypomnienia", () => {
+  it("zawiera nazwę, liczbę dni i link do aplikacji", () => {
+    const {subject, bodyText} = buildUpcomingEventEmail(
+      {name: "Devils extreme Race", startDate: "2026-08-21", endDate: "2026-08-23", location: "Wełtawa"},
+      7,
+      "https://app.morzkulc.pl/"
+    );
+    expect(subject).toContain("Devils extreme Race");
+    expect(bodyText).toContain("Za 7 dni");
+    expect(bodyText).toContain("2026-08-21 – 2026-08-23");
+    expect(bodyText).toContain("Wełtawa");
+    expect(bodyText).toContain("https://app.morzkulc.pl/");
+  });
+
+  it("1 dzień → 'Jutro', 0 dni → 'Dziś' (nie 'Za 1 dni'/'Za 0 dni')", () => {
+    const tomorrow = buildUpcomingEventEmail(
+      {name: "X", startDate: "2026-08-21", endDate: "2026-08-21", location: ""}, 1, "https://app.morzkulc.pl/"
+    );
+    expect(tomorrow.bodyText).toContain("Jutro odbywa się impreza");
+
+    const today = buildUpcomingEventEmail(
+      {name: "X", startDate: "2026-08-20", endDate: "2026-08-20", location: ""}, 0, "https://app.morzkulc.pl/"
+    );
+    expect(today.bodyText).toContain("Dziś odbywa się impreza");
+  });
+});
 
 describe("shouldScrapAbsentEvent — usuwanie imprez skasowanych z arkusza", () => {
   const ts = {toDate: () => new Date("2026-06-01T00:00:00Z")};
