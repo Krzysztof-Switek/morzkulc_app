@@ -3,6 +3,7 @@ import { canSeeModule } from "/core/access_control.js";
 import { setHash, parseHash } from "/core/router.js";
 import { apiPostJson, apiGetJson } from "/core/api_client.js";
 import { isSwUpdatePending, hardReloadApp } from "/core/sw_update.js";
+import { formatFreeText } from "/core/text_format.js";
 
 export function spinnerHtml(text = "Morzkulc myśli") {
   return `<div class="thinking">${escapeHtml(text)}<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></div>`;
@@ -1009,9 +1010,9 @@ async function buildHomeEventsSection(ctx) {
       const isInterested = interestedSet.has(eventId);
 
       const detailRows = [
-        loc ? `<div class="startEventDetailRow"><strong>Miejsce:</strong> ${escapeHtml(loc)}</div>` : "",
-        desc ? `<div class="startEventDetailRow">${escapeHtml(desc)}</div>` : "",
-        contact ? `<div class="startEventDetailRow"><strong>Kontakt:</strong> ${escapeHtml(contact)}</div>` : "",
+        loc ? `<div class="startEventDetailRow"><strong>Miejsce:</strong> ${formatFreeText(loc)}</div>` : "",
+        desc ? `<div class="startEventDetailRow startEventDetailRow--desc">${formatFreeText(desc)}</div>` : "",
+        contact ? `<div class="startEventDetailRow"><strong>Kontakt:</strong> ${formatFreeText(contact)}</div>` : "",
         link ? `<div class="startEventDetailRow"><a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Strona / zgłoszenia →</a></div>` : "",
       ].filter(Boolean).join("");
 

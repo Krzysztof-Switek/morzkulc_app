@@ -236,7 +236,7 @@
 .startSectionFooterBtn { width: 100%; margin-top: 10px; }
 
 /* ── Rozwijane wydarzenia na stronie głównej (najbliższe wydarzenia) ── */
-.startEventItem { border: 1px solid var(--border); border-radius: 14px; background: rgba(255, 255, 255, 0.03); overflow: hidden; }
+.startEventItem { border: 1px solid var(--border); border-radius: 14px; background: rgba(255, 255, 255, 0.03); overflow: hidden; overflow-wrap: anywhere; word-break: break-word; }
 :root[data-theme="light"] .startEventItem { background: rgba(12, 18, 32, 0.02); }
 /* summary współdzieli .startListItem (grid 1fr auto), ale bez własnego obramowania/tła */
 .startEventItem .startEventSummary { border: 0; border-radius: 0; background: transparent; cursor: pointer; align-items: center; list-style: none; }
@@ -250,6 +250,7 @@
 .startEventDetailRow strong { color: var(--text-muted); font-weight: 700; }
 .startEventDetailRow a { color: var(--accent, #5b9dff); font-weight: 700; text-decoration: none; }
 .startEventDetailRow a:hover { text-decoration: underline; }
+.startEventDetailRow--desc { white-space: pre-line; overflow-wrap: anywhere; word-break: break-word; }
 
 /* ── Profil: jedna spójna karta (staż, opiekunowie, popover roli) ── */
 .swUpdateBanner {

@@ -186,6 +186,13 @@
         }
       },
       {
+        "source": "/api/nickname-availability",
+        "function": {
+          "functionId": "checkNicknameAvailability",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "/api/gear/kayaks",
         "function": {
           "functionId": "getGearKayaks",

@@ -1,4 +1,5 @@
 import { apiGetJson, apiPostJson } from "/core/api_client.js";
+import { formatFreeText } from "/core/text_format.js";
 
 const EVENTS_URL = "/api/events";
 const SUBMIT_URL = "/api/events/submit";
@@ -76,10 +77,10 @@ function renderEventCard(ev, isInterested) {
           <span class="imprezaInterestLabel">Interesuje mnie</span>
         </div>
       </div>
-      ${ev.location ? `<div class="imprezaMeta"><strong>Miejsce:</strong> ${esc(ev.location)}</div>` : ""}
-      ${ev.description ? `<div class="imprezaDesc">${esc(ev.description)}</div>` : ""}
+      ${ev.location ? `<div class="imprezaMeta"><strong>Miejsce:</strong> ${formatFreeText(ev.location)}</div>` : ""}
+      ${ev.description ? `<div class="imprezaDesc">${formatFreeText(ev.description)}</div>` : ""}
       <div class="imprezaFooter">
-        ${ev.contact ? `<span class="imprezaContact">Kontakt: ${esc(ev.contact)}</span>` : ""}
+        ${ev.contact ? `<span class="imprezaContact">Kontakt: ${formatFreeText(ev.contact)}</span>` : ""}
         ${ev.link ? `<a class="imprezaLink" href="${esc(ev.link)}" target="_blank" rel="noopener noreferrer">Strona / zgłoszenia →</a>` : ""}
       </div>
     </div>
