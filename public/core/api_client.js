@@ -18,6 +18,23 @@ async function resolveToken(idToken) {
   return idToken;
 }
 
+// Serwer (nasza funkcja) zwraca błędy jako JSON {error, message?}. Ale odpowiedź
+// mogła w ogóle nie dotrzeć do funkcji (np. zły routing Hostingu, przerwane
+// połączenie) — wtedy dostajemy surowy HTML/tekst zamiast JSON. Nigdy nie wolno
+// wrzucać takiej surowej treści do komunikatu widocznego dla użytkownika.
+function friendlyErrorMessage(resp, rawText) {
+  try {
+    const parsed = JSON.parse(rawText);
+    if (parsed && typeof parsed === "object") {
+      const msg = parsed.error || parsed.message;
+      if (msg) return String(msg);
+    }
+  } catch {
+    // odpowiedź nie jest JSON-em — na pewno nie z naszej funkcji, patrz niżej
+  }
+  return `Błąd serwera (HTTP ${resp.status}). Spróbuj ponownie za chwilę.`;
+}
+
 export async function apiPostJson({ url, idToken, body }) {
   const token = await resolveToken(idToken);
   const resp = await fetch(url, {
@@ -31,9 +48,13 @@ export async function apiPostJson({ url, idToken, body }) {
 
   const text = await resp.text();
   if (!resp.ok) {
-    throw new Error("HTTP " + resp.status + ": " + text);
+    throw new Error(friendlyErrorMessage(resp, text));
   }
-  return JSON.parse(text);
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`Błąd serwera (HTTP ${resp.status}: nieprawidłowa odpowiedź). Spróbuj ponownie za chwilę.`);
+  }
 }
 
 export async function apiGetJson({ url, idToken }) {
@@ -47,7 +68,11 @@ export async function apiGetJson({ url, idToken }) {
 
   const text = await resp.text();
   if (!resp.ok) {
-    throw new Error("HTTP " + resp.status + ": " + text);
+    throw new Error(friendlyErrorMessage(resp, text));
   }
-  return JSON.parse(text);
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`Błąd serwera (HTTP ${resp.status}: nieprawidłowa odpowiedź). Spróbuj ponownie za chwilę.`);
+  }
 }
