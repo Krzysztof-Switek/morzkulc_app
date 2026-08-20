@@ -67,10 +67,6 @@ function pickKayak(doc: any, reservedKayakIdsNow: Set<string>) {
     notes: String(doc?.notes || ""),
     isReservedNow,
     reservedNowLabel: isReservedNow ? "zarezerwowany teraz" : "dostępny teraz",
-    images: {
-      top: String(doc?.images?.top || ""),
-      side: String(doc?.images?.side || ""),
-    },
   };
 }
 

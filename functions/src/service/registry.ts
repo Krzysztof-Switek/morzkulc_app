@@ -1,6 +1,5 @@
 import { ServiceTask } from "./types";
 import { onUserRegisteredWelcomeTask } from "./tasks/onUserRegisteredWelcome";
-import { gearSyncKayaksFromSheetTask } from "./tasks/gearSyncKayaksFromSheet";
 import { godzinkiSyncFromSheetTask, godzinkiWriteToSheetTask } from "./tasks/godzinkiSyncFromSheet";
 import { godzinkiImportTransitionFromSheetTask } from "./tasks/godzinkiImportTransitionFromSheet";
 import { godzinkiMergeHistoricalUserTask } from "./tasks/godzinkiMergeHistoricalUser";
@@ -34,7 +33,6 @@ import { eventsNotifyUpcomingTask } from "./tasks/eventsNotifyUpcoming";
 
 const tasks: ServiceTask[] = [
   onUserRegisteredWelcomeTask,
-  gearSyncKayaksFromSheetTask,
   godzinkiSyncFromSheetTask,
   godzinkiWriteToSheetTask,
   godzinkiImportTransitionFromSheetTask,

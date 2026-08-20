@@ -107,8 +107,6 @@ function pickGearItem(doc: any, category: GearCategory, fallbackLabel: string) {
     image: norm(doc?.image),
     images: {
       main: norm(doc?.images?.main),
-      top: norm(doc?.images?.top),
-      side: norm(doc?.images?.side),
     },
     notes: norm(doc?.notes),
     meta: buildMeta(doc, category),

@@ -1628,9 +1628,6 @@ function renderKayakCard(k, isFav = false, canUserReserve = true) {
     ? `<span class="badge soft">${escapeHtml(type)}</span>`
     : "";
 
-  const imgTop = String(k?.images?.top || "").trim();
-  const imgSide = String(k?.images?.side || "").trim();
-
   const title = buildKayakTitle(k);
   const detailsRows = buildKayakDetailsRows(k);
 
@@ -1881,10 +1878,9 @@ function renderGenericGearCard(item, isFav = false, canUserReserve = true) {
   const categoryLabel = String(item?.gearCategoryDisplay || item?.gearCategory || "Sprzęt").trim();
 
   const imgMain = String(item?.images?.main || item?.image || "").trim();
-  const imgTop = String(item?.images?.top || "").trim();
   const imgSide = String(item?.images?.side || "").trim();
 
-  const primaryImg = imgMain || imgTop;
+  const primaryImg = imgMain;
   const secondaryImg = imgSide || "";
 
   const title = buildGenericGearTitle(item);
