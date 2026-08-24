@@ -463,10 +463,19 @@ textarea {
 /* --- Raport (panel Raporty w panelu Zarząd) --- */
 .reportControls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 8px 0; }
 .reportLabel { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
-.reportControls select, .reportControls input[type="date"] { padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+.reportControls select, .reportControls input[type="date"], .reportControls input[type="search"] { width: auto; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+.reportControls input[type="search"] { width: 220px; max-width: 100%; }
 #reportCustomDates { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .reportCats { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 6px 0 4px; }
 .reportCats label { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: var(--text); cursor: pointer; }
+.reportCats input[type="checkbox"] { width: 18px; height: 18px; flex: none; margin: 0; accent-color: var(--primary); }
+
+@media (max-width: 480px) {
+  .reportControls { flex-direction: column; align-items: stretch; }
+  .reportLabel { flex-direction: column; align-items: flex-start; gap: 4px; width: 100%; }
+  .reportControls select, .reportControls input[type="date"], .reportControls input[type="search"] { width: 100%; }
+  #reportCustomDates { width: 100%; }
+}
 .reportTable { width: 100%; border-collapse: collapse; font-size: 13px; }
 .reportTable th { background: var(--surface-2); color: var(--text); font-weight: 700; padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
 .reportTable td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text); }

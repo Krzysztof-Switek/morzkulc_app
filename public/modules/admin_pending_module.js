@@ -110,7 +110,7 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
         const deadJobs = data?.deadJobs || { count: 0, items: [] };
         const failedCharges = data?.failedStorageCharges || { count: 0, items: [] };
         const gearSync = data?.gearSync || { hasWarnings: false, perCategory: [], totals: {}, ranAt: null, error: null, blocked: false, privateKayakErrors: [], duplicateIdErrors: [] };
-        const negativeBalances = data?.negativeBalances || { count: 0, items: [], ranAt: null, error: null };
+        const negativeBalances = data?.negativeBalances || { count: 0, items: [], error: null };
         const expiredKursants = data?.expiredKursants || { count: 0, items: [], error: null };
         const godzinkiSheetUrl = data?.meta?.godzinkiSheetUrl || null;
 
@@ -365,15 +365,14 @@ export function createAdminPendingModule({ id, type, label, defaultRoute, order,
           html += `</div>`;
         }
 
-        // Sekcja: ujemne salda godzinek (snapshot z miesięcznego przeglądu).
-        const nbRanStr = negativeBalances.ranAt ? formatDatePL(negativeBalances.ranAt.slice(0, 10)) : "—";
+        // Sekcja: ujemne salda godzinek (liczone na żywo, nie snapshot).
         html += `<h3 style="margin:16px 0 8px;">Ujemne salda godzinek (${escapeHtml(String(negativeBalances.count || 0))})</h3>`;
         if (negativeBalances.error) {
           html += `<p class="err" style="margin-bottom:20px;">${escapeHtml(negativeBalances.error)}</p>`;
         } else if (!negativeBalances.items?.length) {
-          html += `<p class="hint">Brak. <span class="hint">(ostatni przegląd: ${escapeHtml(nbRanStr)})</span></p>`;
+          html += `<p class="hint">Brak.</p>`;
         } else {
-          html += `<p class="hint" style="margin:0 0 8px;">Ostatni przegląd: ${escapeHtml(nbRanStr)}. Pozycje oznaczone czerwono przekraczają limit ujemnego salda.</p>`;
+          html += `<p class="hint" style="margin:0 0 8px;">Stan na żywo. Pozycje oznaczone czerwono przekraczają limit ujemnego salda.</p>`;
           html += `<div>`;
           for (const item of negativeBalances.items) {
             const over = item.belowLimit;

@@ -5,6 +5,8 @@ import type {Request, Response} from "express";
 import {logger} from "firebase-functions/v2";
 import {getServiceConfig} from "../service/service_config";
 import {parseSchoolYear, getKursWindowEndSuffix} from "../modules/equipment/bundle/gear_bundle_service";
+import {computeNegativeBalances, NegativeBalanceEntry} from "../modules/hours/godzinki_service";
+import {getGodzinkiVars} from "../modules/hours/godzinki_vars";
 
 type TokenCheck =
   | {error: string}
@@ -83,16 +85,8 @@ type GearSyncReport = {
   error: string | null;
 };
 
-type NegativeBalanceItem = {
-  uid: string;
-  displayName: string;
-  balance: number;
-  belowLimit: boolean;
-};
-
 type NegativeBalancesReport = {
-  ranAt: string | null;
-  items: NegativeBalanceItem[];
+  items: NegativeBalanceEntry[];
   error: string | null;
 };
 
@@ -428,28 +422,18 @@ export async function handleGetAdminPending(req: Request, res: Response, deps: G
         gearSync = {...emptyGearSync, error: "Sekcja chwilowo niedostępna"};
       }
 
-      // Ujemne salda — snapshot z miesięcznego godzinki.monthlyBalanceReview (jak gearSync).
-      let negativeBalances: NegativeBalancesReport = {ranAt: null, items: [], error: null};
+      // Ujemne salda — liczone NA ŻYWO (computeNegativeBalances, ta sama funkcja co
+      // miesięczny task godzinki.monthlyBalanceReview). Wcześniej panel czytał tu
+      // miesięczny snapshot z service_reports/negativeBalances, co dawało nawet
+      // miesiąc rozjazdu względem realnego salda widocznego w raportach/koncie usera.
+      let negativeBalances: NegativeBalancesReport = {items: [], error: null};
       try {
-        const nbSnap = await db.collection("service_reports").doc("negativeBalances").get();
-        if (nbSnap.exists) {
-          const d = nbSnap.data() as any;
-          negativeBalances = {
-            ranAt: tsToIso(d?.ranAt),
-            items: Array.isArray(d?.items) ?
-              d.items.map((x: any) => ({
-                uid: norm(x?.uid),
-                displayName: norm(x?.displayName) || norm(x?.uid),
-                balance: Number(x?.balance ?? 0),
-                belowLimit: x?.belowLimit === true,
-              })).sort((a: NegativeBalanceItem, b: NegativeBalanceItem) => a.balance - b.balance) :
-              [],
-            error: null,
-          };
-        }
+        const godzinkiVars = await getGodzinkiVars(db);
+        const items = await computeNegativeBalances(db, new Date(), godzinkiVars.negativeBalanceLimit);
+        negativeBalances = {items, error: null};
       } catch (e: any) {
-        logger.error("getAdminPending: negativeBalances report read failed", {message: e?.message});
-        negativeBalances = {ranAt: null, items: [], error: "Sekcja chwilowo niedostępna"};
+        logger.error("getAdminPending: negativeBalances live compute failed", {message: e?.message});
+        negativeBalances = {items: [], error: "Sekcja chwilowo niedostępna"};
       }
 
       // Kursanci po terminie (P6): role_key == rola_kursant, którzy minęli okno
@@ -498,7 +482,7 @@ export async function handleGetAdminPending(req: Request, res: Response, deps: G
         deadJobs: {count: deadJobs.length, items: deadJobs, error: deadJobsSnap.error},
         failedStorageCharges: {count: failedStorageCharges.length, items: failedStorageCharges, error: failedChargesSnap.error},
         gearSync,
-        negativeBalances: {count: negativeBalances.items.length, ranAt: negativeBalances.ranAt, items: negativeBalances.items, error: negativeBalances.error},
+        negativeBalances: {count: negativeBalances.items.length, items: negativeBalances.items, error: negativeBalances.error},
       });
     } catch (err: any) {
       logger.error("getAdminPending failed", {message: err?.message, stack: err?.stack});

@@ -126,6 +126,64 @@ export function computeBalance(records: GodzinkiRecord[], now: Date = new Date()
   return positiveBalance - netOverdraft;
 }
 
+export type NegativeBalanceEntry = {
+  uid: string;
+  displayName: string;
+  email: string;
+  balance: number;
+  belowLimit: boolean;
+};
+
+/**
+ * Liczy NA ŻYWO wszystkich użytkowników z ujemnym saldem (skan całego godzinki_ledger,
+ * grupowanie po uid, computeBalance per uid). Pomija uid "hist_*" (właściciele/osoby
+ * jeszcze niezarejestrowane). Współdzielone przez panel Zarządu (getAdminPendingHandler)
+ * i miesięczny task godzinki.monthlyBalanceReview (mail przy przekroczeniu limitu +
+ * snapshot service_reports/negativeBalances jako fallback, gdyby live-query zawiodło).
+ */
+export async function computeNegativeBalances(
+  db: FirebaseFirestore.Firestore,
+  now: Date,
+  limit: number
+): Promise<NegativeBalanceEntry[]> {
+  const snap = await db.collection(COLLECTION).get();
+  const byUid = new Map<string, GodzinkiRecord[]>();
+  for (const doc of snap.docs) {
+    const data = doc.data() as GodzinkiRecord;
+    const uid = String((data as any)?.uid || "");
+    if (!uid || uid.startsWith("hist_")) continue;
+    const arr = byUid.get(uid) || [];
+    arr.push({...data, id: doc.id} as GodzinkiRecord);
+    byUid.set(uid, arr);
+  }
+
+  const negatives: {uid: string; balance: number; belowLimit: boolean}[] = [];
+  for (const [uid, records] of byUid.entries()) {
+    const balance = computeBalance(records, now);
+    if (balance < 0) negatives.push({uid, balance, belowLimit: balance < -limit});
+  }
+
+  const items: NegativeBalanceEntry[] = [];
+  await Promise.all(negatives.map(async (n) => {
+    let displayName = n.uid;
+    let email = "";
+    try {
+      const u = await db.collection("users_active").doc(n.uid).get();
+      if (u.exists) {
+        const d = u.data() as any;
+        displayName = String(d?.profile?.nickname || d?.profile?.firstName || d?.email || n.uid).trim();
+        email = String(d?.email || "").trim();
+      }
+    } catch {
+      // Nazwa/email nieznane — panel i tak pokaże uid jako fallback.
+    }
+    items.push({uid: n.uid, displayName, email, balance: n.balance, belowLimit: n.belowLimit});
+  }));
+
+  items.sort((a, b) => a.balance - b.balance);
+  return items;
+}
+
 /**
  * Suma WYPRACOWANYCH godzinek: zatwierdzone rekordy "earn" (approved=true),
  * z pominięciem korekt rezerwacji (sourceType="adjustment" — to zwroty z edycji

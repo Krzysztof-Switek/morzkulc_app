@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-18T10:40:34",
+  "generated_at": "2026-08-24T14:22:37",
   "project_root": "C:\\Users\\kswitek\\Documents\\morzkulc_app",
   "settings": {
     "excluded_dirs": [
@@ -45,9 +45,9 @@
     {
       "path": ".claude/settings.local.json",
       "extension": ".json",
-      "size_bytes": 14187,
-      "line_count": 72,
-      "sha1_short": "e384c22252",
+      "size_bytes": 14522,
+      "line_count": 75,
+      "sha1_short": "f0292d5074",
       "kind": "config",
       "module_aliases": [],
       "imports": [],
@@ -656,7 +656,141 @@
       "notes": []
     },
     {
-      "path": "appscript/członkowie sympatycy SKK/api_router",
+      "path": "appscript/1_App_SETUP/appsscript.json",
+      "extension": ".json",
+      "size_bytes": 370,
+      "line_count": 13,
+      "sha1_short": "568e4153ed",
+      "kind": "config",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [
+        "dependencies",
+        "exceptionLogging",
+        "oauthScopes",
+        "runtimeVersion",
+        "timeZone"
+      ],
+      "notes": []
+    },
+    {
+      "path": "appscript/1_App_SETUP/backend_sync.gs",
+      "extension": ".gs",
+      "size_bytes": 1556,
+      "line_count": 47,
+      "sha1_short": "b4be779be1",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "callBackendSync_",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "runSync_",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "appscript/1_App_SETUP/config.gs",
+      "extension": ".gs",
+      "size_bytes": 414,
+      "line_count": 13,
+      "sha1_short": "4a6804b234",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "appscript/1_App_SETUP/setup_sync.gs",
+      "extension": ".gs",
+      "size_bytes": 464,
+      "line_count": 13,
+      "sha1_short": "94242c5d8f",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "syncSetupToFirestore",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "appscript/1_App_SETUP/ui_menu.gs",
+      "extension": ".gs",
+      "size_bytes": 200,
+      "line_count": 12,
+      "sha1_short": "58d8c8b407",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "onOpen",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "appscript/2_Członkowie Godzinki Imprezy/api_router",
       "extension": "",
       "size_bytes": 7928,
       "line_count": 280,
@@ -673,7 +807,7 @@
       "notes": []
     },
     {
-      "path": "appscript/członkowie sympatycy SKK/appsscript.json",
+      "path": "appscript/2_Członkowie Godzinki Imprezy/appsscript.json",
       "extension": ".json",
       "size_bytes": 432,
       "line_count": 14,
@@ -696,7 +830,7 @@
       "notes": []
     },
     {
-      "path": "appscript/członkowie sympatycy SKK/common_helpers.gs",
+      "path": "appscript/2_Członkowie Godzinki Imprezy/common_helpers.gs",
       "extension": ".gs",
       "size_bytes": 7625,
       "line_count": 286,
@@ -874,7 +1008,7 @@
       "notes": []
     },
     {
-      "path": "appscript/członkowie sympatycy SKK/env_config.gs",
+      "path": "appscript/2_Członkowie Godzinki Imprezy/env_config.gs",
       "extension": ".gs",
       "size_bytes": 2542,
       "line_count": 67,
@@ -891,7 +1025,7 @@
       "notes": []
     },
     {
-      "path": "appscript/członkowie sympatycy SKK/events_sync.gs",
+      "path": "appscript/2_Członkowie Godzinki Imprezy/events_sync.gs",
       "extension": ".gs",
       "size_bytes": 1127,
       "line_count": 24,
@@ -919,7 +1053,7 @@
       "notes": []
     },
     {
-      "path": "appscript/członkowie sympatycy SKK/hours_sync.gs",
+      "path": "appscript/2_Członkowie Godzinki Imprezy/hours_sync.gs",
       "extension": ".gs",
       "size_bytes": 3238,
       "line_count": 74,
@@ -967,7 +1101,7 @@
       "notes": []
     },
     {
-      "path": "appscript/członkowie sympatycy SKK/opening_balance_import.gs",
+      "path": "appscript/2_Członkowie Godzinki Imprezy/opening_balance_import.gs",
       "extension": ".gs",
       "size_bytes": 9535,
       "line_count": 234,
@@ -1065,49 +1199,11 @@
       "notes": []
     },
     {
-      "path": "appscript/członkowie sympatycy SKK/setup_sync.gs",
+      "path": "appscript/2_Członkowie Godzinki Imprezy/ui_menu.gs",
       "extension": ".gs",
-      "size_bytes": 3028,
-      "line_count": 72,
-      "sha1_short": "a2f9d29d03",
-      "kind": "script",
-      "module_aliases": [],
-      "imports": [],
-      "internal_dependencies": [],
-      "classes": [],
-      "functions": [
-        {
-          "name": "initRoleMappings",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "syncSetupToFirestore",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        }
-      ],
-      "top_level_symbols": [],
-      "headings": [],
-      "config_keys": [],
-      "notes": []
-    },
-    {
-      "path": "appscript/członkowie sympatycy SKK/ui_menu.gs",
-      "extension": ".gs",
-      "size_bytes": 977,
-      "line_count": 24,
-      "sha1_short": "f7860db770",
+      "size_bytes": 926,
+      "line_count": 23,
+      "sha1_short": "79990f5db7",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -1131,7 +1227,7 @@
       "notes": []
     },
     {
-      "path": "appscript/członkowie sympatycy SKK/users_sync.gs",
+      "path": "appscript/2_Członkowie Godzinki Imprezy/users_sync.gs",
       "extension": ".gs",
       "size_bytes": 603,
       "line_count": 14,
@@ -1159,7 +1255,141 @@
       "notes": []
     },
     {
-      "path": "appscript/kilometrówka/.clasp.json",
+      "path": "appscript/3_Sprzęt/appsscript.json",
+      "extension": ".json",
+      "size_bytes": 382,
+      "line_count": 13,
+      "sha1_short": "a2d4fe4558",
+      "kind": "config",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [
+        "dependencies",
+        "exceptionLogging",
+        "oauthScopes",
+        "runtimeVersion",
+        "timeZone"
+      ],
+      "notes": []
+    },
+    {
+      "path": "appscript/3_Sprzęt/backend_sync.gs",
+      "extension": ".gs",
+      "size_bytes": 1619,
+      "line_count": 47,
+      "sha1_short": "a4d5a6b3bd",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "callBackendSync_",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "runSync_",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "appscript/3_Sprzęt/config.gs",
+      "extension": ".gs",
+      "size_bytes": 870,
+      "line_count": 30,
+      "sha1_short": "b5a606a614",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "appscript/3_Sprzęt/menu.gs",
+      "extension": ".gs",
+      "size_bytes": 169,
+      "line_count": 8,
+      "sha1_short": "c01034b169",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "onOpen",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "appscript/3_Sprzęt/sync_kayaks.gs",
+      "extension": ".gs",
+      "size_bytes": 235,
+      "line_count": 8,
+      "sha1_short": "c5ea017688",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "syncAllGearToFirestore",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "appscript/5_kilometrówka_archiwum 2025/.clasp.json",
       "extension": ".json",
       "size_bytes": 96,
       "line_count": 5,
@@ -1179,7 +1409,7 @@
       "notes": []
     },
     {
-      "path": "appscript/kilometrówka/appsscript.json",
+      "path": "appscript/5_kilometrówka_archiwum 2025/appsscript.json",
       "extension": ".json",
       "size_bytes": 359,
       "line_count": 12,
@@ -1202,7 +1432,7 @@
       "notes": []
     },
     {
-      "path": "appscript/kilometrówka/archiwum_sync.gs",
+      "path": "appscript/5_kilometrówka_archiwum 2025/archiwum_sync.gs",
       "extension": ".gs",
       "size_bytes": 10265,
       "line_count": 296,
@@ -1260,7 +1490,7 @@
       "notes": []
     },
     {
-      "path": "appscript/kilometrówka/common_helpers.gs",
+      "path": "appscript/5_kilometrówka_archiwum 2025/common_helpers.gs",
       "extension": ".gs",
       "size_bytes": 9296,
       "line_count": 319,
@@ -1438,7 +1668,7 @@
       "notes": []
     },
     {
-      "path": "appscript/kilometrówka/env_config.gs",
+      "path": "appscript/5_kilometrówka_archiwum 2025/env_config.gs",
       "extension": ".gs",
       "size_bytes": 1234,
       "line_count": 41,
@@ -1455,7 +1685,7 @@
       "notes": []
     },
     {
-      "path": "appscript/kilometrówka/ranking_sync.gs",
+      "path": "appscript/5_kilometrówka_archiwum 2025/ranking_sync.gs",
       "extension": ".gs",
       "size_bytes": 8202,
       "line_count": 241,
@@ -1493,7 +1723,7 @@
       "notes": []
     },
     {
-      "path": "appscript/kilometrówka/ui_menu.gs",
+      "path": "appscript/5_kilometrówka_archiwum 2025/ui_menu.gs",
       "extension": ".gs",
       "size_bytes": 1645,
       "line_count": 46,
@@ -1895,728 +2125,118 @@
       "notes": []
     },
     {
-      "path": "appscript/sprzęt/appsscript.json",
-      "extension": ".json",
-      "size_bytes": 382,
-      "line_count": 13,
-      "sha1_short": "a2d4fe4558",
-      "kind": "config",
+      "path": "CLAUDE.md",
+      "extension": ".md",
+      "size_bytes": 6051,
+      "line_count": 137,
+      "sha1_short": "25652e11fe",
+      "kind": "markdown",
       "module_aliases": [],
       "imports": [],
       "internal_dependencies": [],
       "classes": [],
       "functions": [],
       "top_level_symbols": [],
-      "headings": [],
-      "config_keys": [
-        "dependencies",
-        "exceptionLogging",
-        "oauthScopes",
-        "runtimeVersion",
-        "timeZone"
+      "headings": [
+        "# CLAUDE.md",
+        "## Project Overview",
+        "## Commands",
+        "# Build TypeScript (required before deploy)",
+        "# Lint",
+        "# Watch mode (during development)",
+        "# Local emulator (builds first, then starts Firebase emulators)",
+        "# Deploy everything",
+        "# Deploy only functions",
+        "# Deploy only hosting",
+        "# Switch active Firebase project",
+        "## Architecture",
+        "### Frontend (`public/`)",
+        "### Backend (`functions/src/`)",
+        "### Security model",
+        "### Async job system (`functions/src/service/`)",
+        "### Firestore collections",
+        "### User roles and statuses",
+        "### Google Workspace integration",
+        "### Environment configuration",
+        "### API handler pattern",
+        "### ESLint"
       ],
-      "notes": []
-    },
-    {
-      "path": "appscript/sprzęt/backend_sync.gs",
-      "extension": ".gs",
-      "size_bytes": 1619,
-      "line_count": 47,
-      "sha1_short": "a4d5a6b3bd",
-      "kind": "script",
-      "module_aliases": [],
-      "imports": [],
-      "internal_dependencies": [],
-      "classes": [],
-      "functions": [
-        {
-          "name": "callBackendSync_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "runSync_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        }
-      ],
-      "top_level_symbols": [],
-      "headings": [],
       "config_keys": [],
       "notes": []
     },
     {
-      "path": "appscript/sprzęt/config.gs",
-      "extension": ".gs",
-      "size_bytes": 4548,
-      "line_count": 167,
-      "sha1_short": "4645c8c1ad",
-      "kind": "script",
+      "path": "DOCS/Clode Design/audyt-ux-skk-morzkulc.md",
+      "extension": ".md",
+      "size_bytes": 16485,
+      "line_count": 199,
+      "sha1_short": "b76642247f",
+      "kind": "markdown",
       "module_aliases": [],
       "imports": [],
       "internal_dependencies": [],
       "classes": [],
-      "functions": [
-        {
-          "name": "buildGearCategoriesConfig_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        }
-      ],
+      "functions": [],
       "top_level_symbols": [],
-      "headings": [],
+      "headings": [
+        "# Analiza produktu i UX — SKK Morzkulc",
+        "## 01 — Czym jest produkt",
+        "## 02 — Inwentarz ekranów",
+        "### A. Wejście i konto",
+        "### B. Start (dashboard)",
+        "### C. Sprzęt + rezerwacje",
+        "### D. Godzinki, imprezy, basen, ranking, kurs, klub",
+        "### E. Panel Zarządu",
+        "## 03 — Rekonstrukcja nawigacji",
+        "### Trzy równoległe warstwy wejścia",
+        "### Co decyduje o widoczności",
+        "## 04 — Główne user flows",
+        "## 05 — Ergonomia mobile",
+        "### Działa dobrze",
+        "### Boli w kciuku",
+        "## 06 — Problemy UX i ich waga",
+        "### P0",
+        "### P1",
+        "### P2",
+        "## 07 — Czego nie mogłem ocenić z kodu"
+      ],
       "config_keys": [],
       "notes": []
     },
     {
-      "path": "appscript/sprzęt/firestore_rest.gs",
-      "extension": ".gs",
-      "size_bytes": 5729,
-      "line_count": 217,
-      "sha1_short": "5c037710df",
-      "kind": "script",
+      "path": "DOCS/Clode Design/plan-naprawy-skk-morzkulc.md",
+      "extension": ".md",
+      "size_bytes": 17583,
+      "line_count": 294,
+      "sha1_short": "6663a636c3",
+      "kind": "markdown",
       "module_aliases": [],
       "imports": [],
       "internal_dependencies": [],
       "classes": [],
-      "functions": [
-        {
-          "name": "fsCommitDocuments_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "fsGetDoc_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "fsListDocs_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "fsPatchFields_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "fsUpsertDoc_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "isIsoTimestamp_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "toFirestoreFields_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "toFirestoreValue_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        }
-      ],
+      "functions": [],
       "top_level_symbols": [],
-      "headings": [],
+      "headings": [
+        "# Plan naprawy — SKK Morzkulc",
+        "## A — Zaufanie do danych i sync z arkuszami",
+        "## B — Rezerwacja sprzętu: koszt i pewność",
+        "## C — Wejście: logowanie, rejestracja, nadanie roli",
+        "## D — Nawigacja i orientacja",
+        "## E — Ergonomia mobile",
+        "## F — Komunikaty, błędy, stany ładowania",
+        "## G — Profil i godzinki",
+        "## H — Szukanie i filtrowanie sprzętu",
+        "## I — Akcje destrukcyjne i odwracalność",
+        "## J — Panel Zarządu i raporty",
+        "## K — Stany puste, wyłączone i rolowe",
+        "## L — Język i spójność",
+        "## M — Sesja, PWA, aktualizacje",
+        "## Do rozstrzygnięcia przez Was, zanim cokolwiek ruszy"
+      ],
       "config_keys": [],
       "notes": []
     },
     {
-      "path": "appscript/sprzęt/menu.gs",
-      "extension": ".gs",
-      "size_bytes": 425,
-      "line_count": 15,
-      "sha1_short": "dc6dd53d57",
-      "kind": "script",
-      "module_aliases": [],
-      "imports": [],
-      "internal_dependencies": [],
-      "classes": [],
-      "functions": [
-        {
-          "name": "onOpen",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        }
-      ],
-      "top_level_symbols": [],
-      "headings": [],
-      "config_keys": [],
-      "notes": []
-    },
-    {
-      "path": "appscript/sprzęt/setup_sync.gs",
-      "extension": ".gs",
-      "size_bytes": 10049,
-      "line_count": 327,
-      "sha1_short": "9f4ccf0ccc",
-      "kind": "script",
-      "module_aliases": [],
-      "imports": [],
-      "internal_dependencies": [],
-      "classes": [],
-      "functions": [
-        {
-          "name": "formatTimeHHMM_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "isDateObject_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "normalizeHeader_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "parseSetupValue_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "readAppSetupModules_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "readSetupVars_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "rolesAllowedFromFlags_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "splitList_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "syncSetupToFirestore",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "toBool_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "toNumberOrNull_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "toStringOrEmpty_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        }
-      ],
-      "top_level_symbols": [],
-      "headings": [],
-      "config_keys": [],
-      "notes": []
-    },
-    {
-      "path": "appscript/sprzęt/sync_kayaks.gs",
-      "extension": ".gs",
-      "size_bytes": 20219,
-      "line_count": 779,
-      "sha1_short": "b5e626595a",
-      "kind": "script",
-      "module_aliases": [],
-      "imports": [],
-      "internal_dependencies": [],
-      "classes": [],
-      "functions": [
-        {
-          "name": "buildDocLogLabel_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "buildFirestorePayload_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "buildFloatationChamberDocFromRow_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "buildGearDocFromRow_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "buildHelmetDocFromRow_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "buildKayakDocFromRow_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "buildLifejacketDocFromRow_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "buildMiscDocFromRow_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "buildPaddleDocFromRow_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "buildSprayskirtDocFromRow_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "buildThrowbagDocFromRow_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "buildWetsuitDocFromRow_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "extractDocIdFromName_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "getGearCategoryList_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "isRealFloatationChamberRow_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "isRealGearRow_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "isRealHelmetRow_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "isRealKayakRow_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "isRealLifejacketRow_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "isRealMiscRow_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "isRealPaddleRow_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "isRealSprayskirtRow_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "isRealThrowbagRow_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "isRealWetsuitRow_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "markMissingGearAsScrapped_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "normCell_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "parseBool_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "parseNumber_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "parseSheetDate_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "rowToObject_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "summarizeAllGearResults_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "syncAllGearCore_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "syncAllGearDryRun",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "syncAllGearToFirestore",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "syncSingleGearCategory_",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        }
-      ],
-      "top_level_symbols": [],
-      "headings": [],
-      "config_keys": [],
-      "notes": []
-    },
-    {
-      "path": "Audyty/10.06_session_summary.md",
+      "path": "DOCS/Sessions & TO DOs/10.06_session_summary.md",
       "extension": ".md",
       "size_bytes": 9348,
       "line_count": 142,
@@ -2646,7 +2266,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/10.07_audyt_kursant_błąd.md",
+      "path": "DOCS/Sessions & TO DOs/10.07_audyt_kursant_błąd.md",
       "extension": ".md",
       "size_bytes": 8898,
       "line_count": 142,
@@ -2681,7 +2301,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/11.08_blachy_i_brakujące_pola_TO_DO.md",
+      "path": "DOCS/Sessions & TO DOs/11.08_blachy_i_brakujące_pola_TO_DO.md",
       "extension": ".md",
       "size_bytes": 7073,
       "line_count": 95,
@@ -2706,7 +2326,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/12.06_godzinki_audyt.md",
+      "path": "DOCS/Sessions & TO DOs/12.06_godzinki_audyt.md",
       "extension": ".md",
       "size_bytes": 18997,
       "line_count": 241,
@@ -2744,7 +2364,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/12.06_godzinki_podsumowanie.md",
+      "path": "DOCS/Sessions & TO DOs/12.06_godzinki_podsumowanie.md",
       "extension": ".md",
       "size_bytes": 19067,
       "line_count": 194,
@@ -2789,7 +2409,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/12.06_godzinki_potencjalne_problemy.md",
+      "path": "DOCS/Sessions & TO DOs/12.06_godzinki_potencjalne_problemy.md",
       "extension": ".md",
       "size_bytes": 23751,
       "line_count": 264,
@@ -2833,7 +2453,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/12.06_imprezy_audyt.md",
+      "path": "DOCS/Sessions & TO DOs/12.06_imprezy_audyt.md",
       "extension": ".md",
       "size_bytes": 19775,
       "line_count": 153,
@@ -2866,7 +2486,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/12.06_imprezy_podsumowanie_wdrożenia.md",
+      "path": "DOCS/Sessions & TO DOs/12.06_imprezy_podsumowanie_wdrożenia.md",
       "extension": ".md",
       "size_bytes": 11250,
       "line_count": 128,
@@ -2898,7 +2518,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/12.06_panel_zarzadu_audyt.md",
+      "path": "DOCS/Sessions & TO DOs/12.06_panel_zarzadu_audyt.md",
       "extension": ".md",
       "size_bytes": 9630,
       "line_count": 106,
@@ -2927,7 +2547,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/12.06_panel_zarzadu_problemy_i_plan_wdrozenia.md",
+      "path": "DOCS/Sessions & TO DOs/12.06_panel_zarzadu_problemy_i_plan_wdrozenia.md",
       "extension": ".md",
       "size_bytes": 16423,
       "line_count": 134,
@@ -2960,7 +2580,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/12.06_podsumowanie_sesji_zarzad.md",
+      "path": "DOCS/Sessions & TO DOs/12.06_podsumowanie_sesji_zarzad.md",
       "extension": ".md",
       "size_bytes": 9473,
       "line_count": 99,
@@ -2987,7 +2607,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/13.06_podsumowanie_wdrożenia_sesji_zarząd.md",
+      "path": "DOCS/Sessions & TO DOs/13.06_podsumowanie_wdrożenia_sesji_zarząd.md",
       "extension": ".md",
       "size_bytes": 8833,
       "line_count": 118,
@@ -3016,7 +2636,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/13.08_NAPRAWA_UPRAWNIEŃ_LISTA.MD",
+      "path": "DOCS/Sessions & TO DOs/13.08_NAPRAWA_UPRAWNIEŃ_LISTA.MD",
       "extension": ".md",
       "size_bytes": 20232,
       "line_count": 183,
@@ -3052,7 +2672,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/15.06_audyt_invoker_funkcje.md",
+      "path": "DOCS/Sessions & TO DOs/15.06_audyt_invoker_funkcje.md",
       "extension": ".md",
       "size_bytes": 5025,
       "line_count": 64,
@@ -3077,7 +2697,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/15.06_zarząd_TO_DO.md",
+      "path": "DOCS/Sessions & TO DOs/15.06_zarząd_TO_DO.md",
       "extension": ".md",
       "size_bytes": 4565,
       "line_count": 56,
@@ -3104,7 +2724,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/16.06.bilans_otwarcia_plan.md",
+      "path": "DOCS/Sessions & TO DOs/16.06.bilans_otwarcia_plan.md",
       "extension": ".md",
       "size_bytes": 20178,
       "line_count": 177,
@@ -3139,7 +2759,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/16.06_bilans_otwarcia_TO_DO.md",
+      "path": "DOCS/Sessions & TO DOs/16.06_bilans_otwarcia_TO_DO.md",
       "extension": ".md",
       "size_bytes": 11470,
       "line_count": 164,
@@ -3176,7 +2796,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/17.06_prywatny_sprzęt_audyt.md",
+      "path": "DOCS/Sessions & TO DOs/17.06_prywatny_sprzęt_audyt.md",
       "extension": ".md",
       "size_bytes": 6397,
       "line_count": 86,
@@ -3207,7 +2827,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/17.06_prywatny_sprzęt_podsumowanie.md",
+      "path": "DOCS/Sessions & TO DOs/17.06_prywatny_sprzęt_podsumowanie.md",
       "extension": ".md",
       "size_bytes": 6996,
       "line_count": 112,
@@ -3240,7 +2860,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/17.06_prywatny_sprzęt_TO_DO.md",
+      "path": "DOCS/Sessions & TO DOs/17.06_prywatny_sprzęt_TO_DO.md",
       "extension": ".md",
       "size_bytes": 7130,
       "line_count": 89,
@@ -3269,7 +2889,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/17.08_audyt_kursant_wciaz_zablokowany.md",
+      "path": "DOCS/Sessions & TO DOs/17.08_audyt_kursant_wciaz_zablokowany.md",
       "extension": ".md",
       "size_bytes": 8606,
       "line_count": 148,
@@ -3297,7 +2917,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/17.08_konsolidacja_setup_i_dysk_PLAN_TO_DO.md",
+      "path": "DOCS/Sessions & TO DOs/17.08_konsolidacja_setup_i_dysk_PLAN_TO_DO.md",
       "extension": ".md",
       "size_bytes": 16482,
       "line_count": 238,
@@ -3333,7 +2953,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/17.08_kurs_wypożycza_PLAN_TO_DO.md",
+      "path": "DOCS/Sessions & TO DOs/17.08_kurs_wypożycza_PLAN_TO_DO.md",
       "extension": ".md",
       "size_bytes": 6510,
       "line_count": 109,
@@ -3360,11 +2980,11 @@
       "notes": []
     },
     {
-      "path": "Audyty/17.08_setup_dane_do_wklejenia.md",
+      "path": "DOCS/Sessions & TO DOs/17.08_setup_dane_do_wklejenia.md",
       "extension": ".md",
-      "size_bytes": 11930,
+      "size_bytes": 11931,
       "line_count": 348,
-      "sha1_short": "60ab520a11",
+      "sha1_short": "2e3723630b",
       "kind": "markdown",
       "module_aliases": [],
       "imports": [],
@@ -3373,7 +2993,6 @@
       "functions": [],
       "top_level_symbols": [],
       "headings": [
-        "# Dane do wklejenia — nowy arkusz „Setup\" (Faza 0)",
         "## 1. Zakładka `APP` i `VARS_CZLONKOWIE`",
         "## 2. Zakładka `VARS_SPRZET`",
         "## 3. Zakładka `VARS_BASEN` (NOWA — dziś ten dokument w Firestore w ogóle nie istnieje)",
@@ -3397,7 +3016,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/18.06_kandydat_audyt_TO_DO.md",
+      "path": "DOCS/Sessions & TO DOs/18.06_kandydat_audyt_TO_DO.md",
       "extension": ".md",
       "size_bytes": 10476,
       "line_count": 126,
@@ -3434,7 +3053,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/18.06_rejestracja_problemy_podsumowaie.md",
+      "path": "DOCS/Sessions & TO DOs/18.06_rejestracja_problemy_podsumowaie.md",
       "extension": ".md",
       "size_bytes": 7535,
       "line_count": 108,
@@ -3466,7 +3085,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/18.06_rejestracja_problemy_TO_DO.md",
+      "path": "DOCS/Sessions & TO DOs/18.06_rejestracja_problemy_TO_DO.md",
       "extension": ".md",
       "size_bytes": 14250,
       "line_count": 165,
@@ -3509,7 +3128,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/18.06_rezerwacje_czas_audyt_TO_DO.md",
+      "path": "DOCS/Sessions & TO DOs/18.06_rezerwacje_czas_audyt_TO_DO.md",
       "extension": ".md",
       "size_bytes": 8661,
       "line_count": 119,
@@ -3544,7 +3163,143 @@
       "notes": []
     },
     {
-      "path": "Audyty/24.07_klucze.md",
+      "path": "DOCS/Sessions & TO DOs/18.08_audyt_gotowosci_setup.md",
+      "extension": ".md",
+      "size_bytes": 11258,
+      "line_count": 177,
+      "sha1_short": "4d1ab0bee6",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# Audyt gotowości arkusza „App_SETUP\" do Fazy 1 (kod) — 18.08.2026",
+        "## Werdykt",
+        "## A. Struktura zakładek odbiega od zatwierdzonego planu",
+        "## B. Niezgodności nazw zmiennych z kodem (dziś ciche, po syncu realne)",
+        "### B.1 `Vars_GODZINKI` — KRYTYCZNE, żadna z 6 zmiennych nie pasuje do kodu",
+        "### B.2 `Vars_BASEN` — 2 z 10 kluczy nie pasują do kodu",
+        "### B.3 `Vars_CZLONKOWIE` — literówka formatu klucza (kosmetyczna, dziś nieszkodliwa)",
+        "### B.4 `Vars_SPRZET` — pełna zgodność ✅",
+        "## C. Które zmienne mają dziś realny kod (a które to zadatek na przyszłość)",
+        "## D. `Vars_MESSAGES` — 13 wierszy",
+        "### D.1 Błąd danych — wiersz `akademik_granted / akademik_revoked` (KRYTYCZNE dla Fazy 2)",
+        "### D.2 Pozostałe 12 wierszy — treść zgodna z kodem (spot-check)",
+        "### D.3 Niuanse do zapamiętania przy pisaniu Fazy 2 (nie błędy, tylko pułapki)",
+        "## E. Znalezisko przy okazji (nie blokuje migracji, do sprzątnięcia)",
+        "## Rekomendowana kolejność przed Fazą 1"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "DOCS/Sessions & TO DOs/18.08_session_handoff.md",
+      "extension": ".md",
+      "size_bytes": 11428,
+      "line_count": 160,
+      "sha1_short": "a8da2d3d63",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# Session Handoff — Pełne przełączenie na arkusz App_SETUP (18.08.2026)",
+        "## Where it started",
+        "## Decisions locked + what shipped",
+        "## Key files for next session",
+        "## Running state",
+        "## Verification — how to confirm things still work",
+        "## Deferred + open questions",
+        "## 19.08.2026 — dodatkowe prace tej samej nitki sesji",
+        "## Pick up here"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "DOCS/Sessions & TO DOs/20.08_naprawa_powiadomień.md",
+      "extension": ".md",
+      "size_bytes": 8830,
+      "line_count": 150,
+      "sha1_short": "064fdb7cb5",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# Naprawa: powiadomienia o zbliżających się imprezach nie działały",
+        "## Przyczyna",
+        "## Potwierdzenie na danych produkcyjnych",
+        "## Naprawa",
+        "## Wdrożenie",
+        "## Weryfikacja",
+        "## Poprawki po pierwszej wysyłce (feedback usera po otrzymaniu maila)",
+        "### 1. Treść maila pokazywała skonfigurowany próg, nie rzeczywistą liczbę dni",
+        "### 2. Link w mailu pokazywał domyślny adres Cloud Run zamiast przyjaznej domeny",
+        "### Wdrożenie i weryfikacja poprawek"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "DOCS/Sessions & TO DOs/20.08_opisy_imprez_TO_DO.md",
+      "extension": ".md",
+      "size_bytes": 11416,
+      "line_count": 217,
+      "sha1_short": "14e7079109",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# Czytelne wyświetlanie opisów imprez (pełna lista + widget na stronie głównej)",
+        "## Kontekst",
+        "## Architektura naprawy",
+        "### `formatFreeText(raw)` — algorytm",
+        "## Zmiany plik po pliku",
+        "## Weryfikacja",
+        "## Poprawka po pierwszym wdrożeniu — plan nie objął pól `location`/`contact`",
+        "## Poprawka #2 — reguła zbyt łagodna na REALNYCH danych (impreza „Igraszki Morskie\")"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "DOCS/Sessions & TO DOs/21.08_wyświetlnie_zdjęć_TO_DO.md",
+      "extension": ".md",
+      "size_bytes": 7496,
+      "line_count": 126,
+      "sha1_short": "20d1ec9490",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# Wskaźnik ładowania przy przełączaniu zdjęć kajaka",
+        "## Kontekst",
+        "## Rozwiązanie",
+        "## Weryfikacja"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "DOCS/Sessions & TO DOs/24.07_klucze.md",
       "extension": ".md",
       "size_bytes": 11719,
       "line_count": 176,
@@ -3579,7 +3334,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/26.06_o_klubie.md",
+      "path": "DOCS/Sessions & TO DOs/26.06_o_klubie.md",
       "extension": ".md",
       "size_bytes": 9809,
       "line_count": 209,
@@ -3615,7 +3370,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/26.06_raporty_zarzadu_v1.md",
+      "path": "DOCS/Sessions & TO DOs/26.06_raporty_zarzadu_v1.md",
       "extension": ".md",
       "size_bytes": 11437,
       "line_count": 215,
@@ -3657,7 +3412,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/26.06_rapotry_sessoin_summary.md",
+      "path": "DOCS/Sessions & TO DOs/26.06_rapotry_sessoin_summary.md",
       "extension": ".md",
       "size_bytes": 8184,
       "line_count": 147,
@@ -3688,7 +3443,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/27.06_godzinki_poprawki.md",
+      "path": "DOCS/Sessions & TO DOs/27.06_godzinki_poprawki.md",
       "extension": ".md",
       "size_bytes": 4685,
       "line_count": 79,
@@ -3716,7 +3471,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/27.06_session_summaty_raporty.md",
+      "path": "DOCS/Sessions & TO DOs/27.06_session_summaty_raporty.md",
       "extension": ".md",
       "size_bytes": 7369,
       "line_count": 141,
@@ -3747,7 +3502,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/28.06_rola_kursant_TO_DO.md",
+      "path": "DOCS/Sessions & TO DOs/28.06_rola_kursant_TO_DO.md",
       "extension": ".md",
       "size_bytes": 18105,
       "line_count": 230,
@@ -3786,7 +3541,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/28.07_basen_stara_aplikacja.md",
+      "path": "DOCS/Sessions & TO DOs/28.07_basen_stara_aplikacja.md",
       "extension": ".md",
       "size_bytes": 24559,
       "line_count": 401,
@@ -3845,7 +3600,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/29.07_basen_logika_biznesowa.md",
+      "path": "DOCS/Sessions & TO DOs/29.07_basen_logika_biznesowa.md",
       "extension": ".md",
       "size_bytes": 15039,
       "line_count": 170,
@@ -3882,7 +3637,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/AUDIT_MAP.md",
+      "path": "DOCS/Sessions & TO DOs/AUDIT_MAP.md",
       "extension": ".md",
       "size_bytes": 11997,
       "line_count": 216,
@@ -3915,7 +3670,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/AUDIT_PLAN.md",
+      "path": "DOCS/Sessions & TO DOs/AUDIT_PLAN.md",
       "extension": ".md",
       "size_bytes": 4803,
       "line_count": 116,
@@ -3949,7 +3704,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/audyt_ekrany_użytkowników.md",
+      "path": "DOCS/Sessions & TO DOs/audyt_ekrany_użytkowników.md",
       "extension": ".md",
       "size_bytes": 14425,
       "line_count": 272,
@@ -3991,7 +3746,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/audyt_ranking_kilometrowka_mapa_v2.md",
+      "path": "DOCS/Sessions & TO DOs/audyt_ranking_kilometrowka_mapa_v2.md",
       "extension": ".md",
       "size_bytes": 21490,
       "line_count": 440,
@@ -4050,7 +3805,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/audyt_rejestracja.md",
+      "path": "DOCS/Sessions & TO DOs/audyt_rejestracja.md",
       "extension": ".md",
       "size_bytes": 9086,
       "line_count": 222,
@@ -4091,7 +3846,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/audyt_testow_logowanie_uzytkownicy_v1.md",
+      "path": "DOCS/Sessions & TO DOs/audyt_testow_logowanie_uzytkownicy_v1.md",
       "extension": ".md",
       "size_bytes": 14872,
       "line_count": 254,
@@ -4133,7 +3888,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/audyt_testow_ranking_kilometrowka_mapa.md",
+      "path": "DOCS/Sessions & TO DOs/audyt_testow_ranking_kilometrowka_mapa.md",
       "extension": ".md",
       "size_bytes": 9588,
       "line_count": 202,
@@ -4176,7 +3931,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/audyt_v2.md",
+      "path": "DOCS/Sessions & TO DOs/audyt_v2.md",
       "extension": ".md",
       "size_bytes": 16871,
       "line_count": 208,
@@ -4206,7 +3961,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/basen_TO_DO.md",
+      "path": "DOCS/Sessions & TO DOs/basen_TO_DO.md",
       "extension": ".md",
       "size_bytes": 18576,
       "line_count": 190,
@@ -4239,7 +3994,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/ekran_kursant_podsumowanie_wdrozenia.md",
+      "path": "DOCS/Sessions & TO DOs/ekran_kursant_podsumowanie_wdrozenia.md",
       "extension": ".md",
       "size_bytes": 29472,
       "line_count": 822,
@@ -4309,7 +4064,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/GRUPY_UZYTKOWNICY_PLAN_AND_TO_DO.MD",
+      "path": "DOCS/Sessions & TO DOs/GRUPY_UZYTKOWNICY_PLAN_AND_TO_DO.MD",
       "extension": ".md",
       "size_bytes": 30792,
       "line_count": 692,
@@ -4384,7 +4139,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/kajaki_w_mojej_wadze_plan.md",
+      "path": "DOCS/Sessions & TO DOs/kajaki_w_mojej_wadze_plan.md",
       "extension": ".md",
       "size_bytes": 7641,
       "line_count": 216,
@@ -4419,7 +4174,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/konta testowe.md",
+      "path": "DOCS/Sessions & TO DOs/konta testowe.md",
       "extension": ".md",
       "size_bytes": 5572,
       "line_count": 162,
@@ -4448,7 +4203,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/kurs_wdrożenie_ekrany.md",
+      "path": "DOCS/Sessions & TO DOs/kurs_wdrożenie_ekrany.md",
       "extension": ".md",
       "size_bytes": 8219,
       "line_count": 196,
@@ -4494,7 +4249,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/kursanc_ekrany_wdrozenie.md",
+      "path": "DOCS/Sessions & TO DOs/kursanc_ekrany_wdrozenie.md",
       "extension": ".md",
       "size_bytes": 23042,
       "line_count": 571,
@@ -4560,7 +4315,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/live_web_audyt_v1.md",
+      "path": "DOCS/Sessions & TO DOs/live_web_audyt_v1.md",
       "extension": ".md",
       "size_bytes": 8371,
       "line_count": 200,
@@ -4593,7 +4348,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/plan_audyt_v2.md",
+      "path": "DOCS/Sessions & TO DOs/plan_audyt_v2.md",
       "extension": ".md",
       "size_bytes": 28332,
       "line_count": 270,
@@ -4630,7 +4385,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/plan_ranking_kilometrowka_mapa_v1.md",
+      "path": "DOCS/Sessions & TO DOs/plan_ranking_kilometrowka_mapa_v1.md",
       "extension": ".md",
       "size_bytes": 15248,
       "line_count": 394,
@@ -4725,7 +4480,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/plan_testow_logowanie_uzytkownicy_v1.md",
+      "path": "DOCS/Sessions & TO DOs/plan_testow_logowanie_uzytkownicy_v1.md",
       "extension": ".md",
       "size_bytes": 31744,
       "line_count": 852,
@@ -4781,7 +4536,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/plan_testow_ranking_kilometrowka_mapa_v1.md",
+      "path": "DOCS/Sessions & TO DOs/plan_testow_ranking_kilometrowka_mapa_v1.md",
       "extension": ".md",
       "size_bytes": 16483,
       "line_count": 199,
@@ -4820,7 +4575,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/ranking_wdrozenie_audyt.md",
+      "path": "DOCS/Sessions & TO DOs/ranking_wdrozenie_audyt.md",
       "extension": ".md",
       "size_bytes": 12217,
       "line_count": 275,
@@ -4869,7 +4624,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/RUN_TESTS.md",
+      "path": "DOCS/Sessions & TO DOs/RUN_TESTS.md",
       "extension": ".md",
       "size_bytes": 6081,
       "line_count": 224,
@@ -4916,7 +4671,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/TEST_DATA_REQUIREMENTS.md",
+      "path": "DOCS/Sessions & TO DOs/TEST_DATA_REQUIREMENTS.md",
       "extension": ".md",
       "size_bytes": 6261,
       "line_count": 169,
@@ -4965,7 +4720,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/test_logowania_wymagania_wstepne.md",
+      "path": "DOCS/Sessions & TO DOs/test_logowania_wymagania_wstepne.md",
       "extension": ".md",
       "size_bytes": 10957,
       "line_count": 309,
@@ -5015,7 +4770,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/TEST_MATRIX.md",
+      "path": "DOCS/Sessions & TO DOs/TEST_MATRIX.md",
       "extension": ".md",
       "size_bytes": 10480,
       "line_count": 141,
@@ -5042,7 +4797,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/TO_DO_USERS.md",
+      "path": "DOCS/Sessions & TO DOs/TO_DO_USERS.md",
       "extension": ".md",
       "size_bytes": 6276,
       "line_count": 117,
@@ -5070,7 +4825,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/users_wdrozenie_1.md",
+      "path": "DOCS/Sessions & TO DOs/users_wdrozenie_1.md",
       "extension": ".md",
       "size_bytes": 13729,
       "line_count": 394,
@@ -5116,7 +4871,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/users_wdrozenie_1_TO_DO.MD",
+      "path": "DOCS/Sessions & TO DOs/users_wdrozenie_1_TO_DO.MD",
       "extension": ".md",
       "size_bytes": 6781,
       "line_count": 139,
@@ -5148,7 +4903,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/wdrożenia kalendarza.md",
+      "path": "DOCS/Sessions & TO DOs/wdrożenia kalendarza.md",
       "extension": ".md",
       "size_bytes": 6988,
       "line_count": 176,
@@ -5179,7 +4934,7 @@
       "notes": []
     },
     {
-      "path": "Audyty/zasady_ekrany_uzytkownikow.md",
+      "path": "DOCS/Sessions & TO DOs/zasady_ekrany_uzytkownikow.md",
       "extension": ".md",
       "size_bytes": 2932,
       "line_count": 95,
@@ -5208,51 +4963,11 @@
       "notes": []
     },
     {
-      "path": "CLAUDE.md",
-      "extension": ".md",
-      "size_bytes": 6051,
-      "line_count": 137,
-      "sha1_short": "25652e11fe",
-      "kind": "markdown",
-      "module_aliases": [],
-      "imports": [],
-      "internal_dependencies": [],
-      "classes": [],
-      "functions": [],
-      "top_level_symbols": [],
-      "headings": [
-        "# CLAUDE.md",
-        "## Project Overview",
-        "## Commands",
-        "# Build TypeScript (required before deploy)",
-        "# Lint",
-        "# Watch mode (during development)",
-        "# Local emulator (builds first, then starts Firebase emulators)",
-        "# Deploy everything",
-        "# Deploy only functions",
-        "# Deploy only hosting",
-        "# Switch active Firebase project",
-        "## Architecture",
-        "### Frontend (`public/`)",
-        "### Backend (`functions/src/`)",
-        "### Security model",
-        "### Async job system (`functions/src/service/`)",
-        "### Firestore collections",
-        "### User roles and statuses",
-        "### Google Workspace integration",
-        "### Environment configuration",
-        "### API handler pattern",
-        "### ESLint"
-      ],
-      "config_keys": [],
-      "notes": []
-    },
-    {
       "path": "firebase.json",
       "extension": ".json",
-      "size_bytes": 12085,
-      "line_count": 485,
-      "sha1_short": "682b519c44",
+      "size_bytes": 12269,
+      "line_count": 492,
+      "sha1_short": "cde5cf7932",
       "kind": "config",
       "module_aliases": [],
       "imports": [],
@@ -5271,9 +4986,9 @@
     {
       "path": "firestore.indexes.json",
       "extension": ".json",
-      "size_bytes": 4415,
-      "line_count": 153,
-      "sha1_short": "e5a20756b5",
+      "size_bytes": 4641,
+      "line_count": 161,
+      "sha1_short": "f9de7c5068",
       "kind": "config",
       "module_aliases": [],
       "imports": [],
@@ -5325,9 +5040,9 @@
     {
       "path": "functions/lib/api/adminApprovalHandler.js",
       "extension": ".js",
-      "size_bytes": 10801,
+      "size_bytes": 10802,
       "line_count": 232,
-      "sha1_short": "17922fa271",
+      "sha1_short": "3914cae49a",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -7601,9 +7316,9 @@
     {
       "path": "functions/lib/api/getGearKayaksHandler.js",
       "extension": ".js",
-      "size_bytes": 6736,
-      "line_count": 130,
-      "sha1_short": "e3ead98967",
+      "size_bytes": 6421,
+      "line_count": 126,
+      "sha1_short": "a1b696b220",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -7864,9 +7579,9 @@
     {
       "path": "functions/lib/api/getKursantStatsHandler.js",
       "extension": ".js",
-      "size_bytes": 5849,
+      "size_bytes": 5840,
       "line_count": 95,
-      "sha1_short": "5a0b1b20a9",
+      "sha1_short": "392b81b128",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -8132,15 +7847,22 @@
     {
       "path": "functions/lib/api/godzinkiPurchaseHandler.js",
       "extension": ".js",
-      "size_bytes": 3502,
-      "line_count": 77,
-      "sha1_short": "a20989a485",
+      "size_bytes": 3944,
+      "line_count": 82,
+      "sha1_short": "8acbec5d5a",
       "kind": "script",
       "module_aliases": [],
       "imports": [
         {
           "raw": "import/require ../modules/hours/godzinki_service",
           "module": "../modules/hours/godzinki_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../modules/hours/godzinki_vars",
+          "module": "../modules/hours/godzinki_vars",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -8155,6 +7877,7 @@
       ],
       "internal_dependencies": [
         "functions/lib/modules/hours/godzinki_service.js",
+        "functions/lib/modules/hours/godzinki_vars.js",
         "functions/lib/modules/users/userStatusCheck.js"
       ],
       "classes": [],
@@ -8546,12 +8269,19 @@
     {
       "path": "functions/lib/api/notificationPrefsHandler.js",
       "extension": ".js",
-      "size_bytes": 2923,
-      "line_count": 63,
-      "sha1_short": "b61113293e",
+      "size_bytes": 3085,
+      "line_count": 65,
+      "sha1_short": "1ef1f130ae",
       "kind": "script",
       "module_aliases": [],
       "imports": [
+        {
+          "raw": "import/require ../modules/setup/events_vars",
+          "module": "../modules/setup/events_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
         {
           "raw": "import/require firebase-functions/v2",
           "module": "firebase-functions/v2",
@@ -8560,7 +8290,9 @@
           "type": "script_import"
         }
       ],
-      "internal_dependencies": [],
+      "internal_dependencies": [
+        "functions/lib/modules/setup/events_vars.js"
+      ],
       "classes": [],
       "functions": [
         {
@@ -8582,9 +8314,9 @@
     {
       "path": "functions/lib/api/registerUserHandler.js",
       "extension": ".js",
-      "size_bytes": 38575,
-      "line_count": 715,
-      "sha1_short": "f577ca0978",
+      "size_bytes": 38760,
+      "line_count": 717,
+      "sha1_short": "67df6f32fd",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -8603,6 +8335,13 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ../modules/hours/godzinki_vars",
+          "module": "../modules/hours/godzinki_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ../modules/hours/opening_balance_fields",
           "module": "../modules/hours/opening_balance_fields",
           "names": [],
@@ -8613,6 +8352,7 @@
       "internal_dependencies": [
         "functions/lib/modules/equipment/bundle/gear_bundle_service.js",
         "functions/lib/modules/hours/godzinki_service.js",
+        "functions/lib/modules/hours/godzinki_vars.js",
         "functions/lib/modules/hours/opening_balance_fields.js"
       ],
       "classes": [],
@@ -8899,9 +8639,9 @@
     {
       "path": "functions/lib/api/submitGodzinkiHandler.js",
       "extension": ".js",
-      "size_bytes": 6497,
-      "line_count": 123,
-      "sha1_short": "626c7d8fff",
+      "size_bytes": 7707,
+      "line_count": 145,
+      "sha1_short": "e0ec9c8553",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -8915,6 +8655,13 @@
         {
           "raw": "import/require ../modules/hours/godzinki_service",
           "module": "../modules/hours/godzinki_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../modules/hours/godzinki_vars",
+          "module": "../modules/hours/godzinki_vars",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -8937,6 +8684,7 @@
       "internal_dependencies": [
         "functions/lib/modules/calendar/calendar_utils.js",
         "functions/lib/modules/hours/godzinki_service.js",
+        "functions/lib/modules/hours/godzinki_vars.js",
         "functions/lib/modules/shared/text_utils.js",
         "functions/lib/modules/users/userStatusCheck.js"
       ],
@@ -8944,6 +8692,16 @@
       "functions": [
         {
           "name": "handleSubmitGodzinki",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isTooOldGrantedAt",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -8997,9 +8755,9 @@
     {
       "path": "functions/lib/index.js",
       "extension": ".js",
-      "size_bytes": 69599,
-      "line_count": 1602,
-      "sha1_short": "823b5a7d78",
+      "size_bytes": 70391,
+      "line_count": 1615,
+      "sha1_short": "51a8372c84",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -9846,9 +9604,9 @@
     {
       "path": "functions/lib/modules/basen/basen_service.js",
       "extension": ".js",
-      "size_bytes": 14978,
-      "line_count": 337,
-      "sha1_short": "2cde698773",
+      "size_bytes": 15197,
+      "line_count": 339,
+      "sha1_short": "a7ef45b726",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -10188,9 +9946,9 @@
     {
       "path": "functions/lib/modules/equipment/bundle/gear_bundle_service.js",
       "extension": ".js",
-      "size_bytes": 49458,
-      "line_count": 938,
-      "sha1_short": "f86b5bb044",
+      "size_bytes": 49292,
+      "line_count": 936,
+      "sha1_short": "e895df5c4d",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -10522,9 +10280,9 @@
     {
       "path": "functions/lib/modules/equipment/kayaks/gear_kayaks_service.js",
       "extension": ".js",
-      "size_bytes": 15398,
+      "size_bytes": 15399,
       "line_count": 284,
-      "sha1_short": "a4d117edeb",
+      "sha1_short": "74e611b712",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -10678,9 +10436,9 @@
     {
       "path": "functions/lib/modules/equipment/shared/gear_catalog_service.js",
       "extension": ".js",
-      "size_bytes": 5686,
-      "line_count": 131,
-      "sha1_short": "f461122bce",
+      "size_bytes": 5420,
+      "line_count": 129,
+      "sha1_short": "5540895c24",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -10834,9 +10592,9 @@
     {
       "path": "functions/lib/modules/hours/godzinki_service.js",
       "extension": ".js",
-      "size_bytes": 40605,
+      "size_bytes": 40598,
       "line_count": 889,
-      "sha1_short": "d469ad2eab",
+      "sha1_short": "1b0b279058",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -11080,9 +10838,9 @@
     {
       "path": "functions/lib/modules/hours/godzinki_vars.js",
       "extension": ".js",
-      "size_bytes": 816,
-      "line_count": 20,
-      "sha1_short": "4648d590eb",
+      "size_bytes": 1637,
+      "line_count": 32,
+      "sha1_short": "8815cf0563",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -11101,6 +10859,16 @@
         },
         {
           "name": "getVar",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "toDateUtc",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -11433,9 +11201,9 @@
     {
       "path": "functions/lib/modules/km/km_vars.js",
       "extension": ".js",
-      "size_bytes": 1252,
+      "size_bytes": 1206,
       "line_count": 33,
-      "sha1_short": "27d8cffd61",
+      "sha1_short": "6b07a1e5ae",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -11464,6 +11232,64 @@
         },
         {
           "name": "toNumber",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/modules/setup/app_vars.js",
+      "extension": ".js",
+      "size_bytes": 1126,
+      "line_count": 26,
+      "sha1_short": "10f64ee092",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "getAppVars",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getVar",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "toNumber",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "toStr",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -11862,9 +11688,9 @@
     {
       "path": "functions/lib/service/providers/googleSheetsProvider.js",
       "extension": ".js",
-      "size_bytes": 19515,
-      "line_count": 423,
-      "sha1_short": "b5da4c49e1",
+      "size_bytes": 21764,
+      "line_count": 469,
+      "sha1_short": "2d022d7275",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -12072,9 +11898,9 @@
     {
       "path": "functions/lib/service/registry.js",
       "extension": ".js",
-      "size_bytes": 4691,
+      "size_bytes": 4695,
       "line_count": 79,
-      "sha1_short": "c57f6a4040",
+      "sha1_short": "0794630731",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -12149,8 +11975,8 @@
           "type": "script_import"
         },
         {
-          "raw": "import/require ./tasks/gearSyncKayaksFromSheet",
-          "module": "./tasks/gearSyncKayaksFromSheet",
+          "raw": "import/require ./tasks/godzinkiArchiveSheetRows",
+          "module": "./tasks/godzinkiArchiveSheetRows",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -12307,7 +12133,7 @@
         "functions/lib/service/tasks/gearNotifyReservationCancelledByAdmin.js",
         "functions/lib/service/tasks/gearPrivateStorage.js",
         "functions/lib/service/tasks/gearSyncAllFromSheet.js",
-        "functions/lib/service/tasks/gearSyncKayaksFromSheet.js",
+        "functions/lib/service/tasks/godzinkiArchiveSheetRows.js",
         "functions/lib/service/tasks/godzinkiImportTransitionFromSheet.js",
         "functions/lib/service/tasks/godzinkiMergeHistoricalUser.js",
         "functions/lib/service/tasks/godzinkiMonthlyBalanceReview.js",
@@ -12431,9 +12257,9 @@
     {
       "path": "functions/lib/service/service_config.js",
       "extension": ".js",
-      "size_bytes": 13839,
-      "line_count": 270,
-      "sha1_short": "859e8f5697",
+      "size_bytes": 13500,
+      "line_count": 261,
+      "sha1_short": "b06d6dcdd0",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -12448,16 +12274,6 @@
       "internal_dependencies": [],
       "classes": [],
       "functions": [
-        {
-          "name": "adminNotifyAgeDays",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
         {
           "name": "getServiceConfig",
           "type": "function",
@@ -12512,12 +12328,26 @@
     {
       "path": "functions/lib/service/tasks/adminNotifyPendingApprovals.js",
       "extension": ".js",
-      "size_bytes": 9719,
-      "line_count": 186,
-      "sha1_short": "d6cbd0d9b7",
+      "size_bytes": 10248,
+      "line_count": 192,
+      "sha1_short": "11c5e326f1",
       "kind": "script",
       "module_aliases": [],
       "imports": [
+        {
+          "raw": "import/require ../../modules/hours/godzinki_vars",
+          "module": "../../modules/hours/godzinki_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../../modules/setup/app_vars",
+          "module": "../../modules/setup/app_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
         {
           "raw": "import/require ../../modules/shared/text_utils",
           "module": "../../modules/shared/text_utils",
@@ -12534,6 +12364,8 @@
         }
       ],
       "internal_dependencies": [
+        "functions/lib/modules/hours/godzinki_vars.js",
+        "functions/lib/modules/setup/app_vars.js",
         "functions/lib/modules/shared/text_utils.js",
         "functions/lib/service/service_config.js"
       ],
@@ -12616,12 +12448,19 @@
     {
       "path": "functions/lib/service/tasks/eventsNotifyNew.js",
       "extension": ".js",
-      "size_bytes": 4198,
-      "line_count": 84,
-      "sha1_short": "d83339f757",
+      "size_bytes": 4298,
+      "line_count": 85,
+      "sha1_short": "3945f538b3",
       "kind": "script",
       "module_aliases": [],
       "imports": [
+        {
+          "raw": "import/require ../../modules/setup/app_vars",
+          "module": "../../modules/setup/app_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
         {
           "raw": "import/require ../../modules/shared/text_utils",
           "module": "../../modules/shared/text_utils",
@@ -12631,6 +12470,7 @@
         }
       ],
       "internal_dependencies": [
+        "functions/lib/modules/setup/app_vars.js",
         "functions/lib/modules/shared/text_utils.js"
       ],
       "classes": [],
@@ -12664,15 +12504,22 @@
     {
       "path": "functions/lib/service/tasks/eventsNotifyUpcoming.js",
       "extension": ".js",
-      "size_bytes": 7674,
-      "line_count": 147,
-      "sha1_short": "7bca9bb7f8",
+      "size_bytes": 9781,
+      "line_count": 180,
+      "sha1_short": "3bd26efdee",
       "kind": "script",
       "module_aliases": [],
       "imports": [
         {
           "raw": "import/require ../../modules/calendar/calendar_utils",
           "module": "../../modules/calendar/calendar_utils",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../../modules/setup/app_vars",
+          "module": "../../modules/setup/app_vars",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -12701,6 +12548,7 @@
       ],
       "internal_dependencies": [
         "functions/lib/modules/calendar/calendar_utils.js",
+        "functions/lib/modules/setup/app_vars.js",
         "functions/lib/modules/setup/events_vars.js",
         "functions/lib/modules/shared/text_utils.js"
       ],
@@ -12718,6 +12566,26 @@
         },
         {
           "name": "dateRange",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "daysUntilIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "selectNewRecipientUids",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -12897,13 +12765,23 @@
     {
       "path": "functions/lib/service/tasks/gearNotifyReservationCancelledByAdmin.js",
       "extension": ".js",
-      "size_bytes": 7105,
-      "line_count": 151,
-      "sha1_short": "35a342efeb",
+      "size_bytes": 7171,
+      "line_count": 152,
+      "sha1_short": "a6d75a6f65",
       "kind": "script",
       "module_aliases": [],
-      "imports": [],
-      "internal_dependencies": [],
+      "imports": [
+        {
+          "raw": "import/require ../../modules/setup/app_vars",
+          "module": "../../modules/setup/app_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/setup/app_vars.js"
+      ],
       "classes": [],
       "functions": [
         {
@@ -13084,9 +12962,9 @@
     {
       "path": "functions/lib/service/tasks/gearSyncAllFromSheet.js",
       "extension": ".js",
-      "size_bytes": 22539,
+      "size_bytes": 22493,
       "line_count": 428,
-      "sha1_short": "2bf574cfba",
+      "sha1_short": "fd6113492c",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -13318,11 +13196,75 @@
       "notes": []
     },
     {
+      "path": "functions/lib/service/tasks/godzinkiArchiveSheetRows.js",
+      "extension": ".js",
+      "size_bytes": 3699,
+      "line_count": 75,
+      "sha1_short": "a00b0ee7a6",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../../modules/hours/godzinki_vars",
+          "module": "../../modules/hours/godzinki_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../providers/googleSheetsProvider",
+          "module": "../providers/googleSheetsProvider",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../service_config",
+          "module": "../service_config",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/hours/godzinki_vars.js",
+        "functions/lib/service/providers/googleSheetsProvider.js",
+        "functions/lib/service/service_config.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "isIsoDate",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "selectRowsToArchive",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/lib/service/tasks/godzinkiImportTransitionFromSheet.js",
       "extension": ".js",
-      "size_bytes": 8920,
+      "size_bytes": 8915,
       "line_count": 169,
-      "sha1_short": "a4cd1a0632",
+      "sha1_short": "319964adb3",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -13446,9 +13388,9 @@
     {
       "path": "functions/lib/service/tasks/godzinkiMonthlyBalanceReview.js",
       "extension": ".js",
-      "size_bytes": 8125,
-      "line_count": 156,
-      "sha1_short": "665edfb68d",
+      "size_bytes": 10400,
+      "line_count": 202,
+      "sha1_short": "232d93dcb6",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -13467,8 +13409,8 @@
           "type": "script_import"
         },
         {
-          "raw": "import/require ../service_config",
-          "module": "../service_config",
+          "raw": "import/require ../../modules/setup/app_vars",
+          "module": "../../modules/setup/app_vars",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -13484,12 +13426,32 @@
       "internal_dependencies": [
         "functions/lib/modules/hours/godzinki_service.js",
         "functions/lib/modules/hours/godzinki_vars.js",
-        "functions/lib/service/service_config.js"
+        "functions/lib/modules/setup/app_vars.js"
       ],
       "classes": [],
       "functions": [
         {
+          "name": "creditBoardMonthlyBonus",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "fmtBalance",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "monthKeyOf",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -13507,9 +13469,9 @@
     {
       "path": "functions/lib/service/tasks/godzinkiSyncFromSheet.js",
       "extension": ".js",
-      "size_bytes": 21383,
+      "size_bytes": 21384,
       "line_count": 440,
-      "sha1_short": "aa3ed18db2",
+      "sha1_short": "26dcd030ee",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -13634,9 +13596,9 @@
     {
       "path": "functions/lib/service/tasks/groupsDiagnose.js",
       "extension": ".js",
-      "size_bytes": 4908,
-      "line_count": 100,
-      "sha1_short": "94525c95c0",
+      "size_bytes": 4853,
+      "line_count": 99,
+      "sha1_short": "3856170617",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -14047,15 +14009,22 @@
     {
       "path": "functions/lib/service/tasks/reconcileOpeningBalance.js",
       "extension": ".js",
-      "size_bytes": 13308,
-      "line_count": 254,
-      "sha1_short": "b628d7affc",
+      "size_bytes": 12275,
+      "line_count": 233,
+      "sha1_short": "0486bbc08a",
       "kind": "script",
       "module_aliases": [],
       "imports": [
         {
           "raw": "import/require ../../modules/hours/godzinki_service",
           "module": "../../modules/hours/godzinki_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../../modules/hours/godzinki_vars",
+          "module": "../../modules/hours/godzinki_vars",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -14077,6 +14046,7 @@
       ],
       "internal_dependencies": [
         "functions/lib/modules/hours/godzinki_service.js",
+        "functions/lib/modules/hours/godzinki_vars.js",
         "functions/lib/modules/hours/opening_balance_fields.js"
       ],
       "classes": [],
@@ -14178,9 +14148,9 @@
     {
       "path": "functions/lib/service/tasks/setupSyncFromSheet.js",
       "extension": ".js",
-      "size_bytes": 12930,
-      "line_count": 294,
-      "sha1_short": "ffd44da5b5",
+      "size_bytes": 16570,
+      "line_count": 362,
+      "sha1_short": "989f2eba80",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -14264,6 +14234,16 @@
         },
         {
           "name": "readAppSetupModules",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "readAppSetupRoles",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -14520,9 +14500,9 @@
     {
       "path": "functions/lib/service/tasks/usersSyncFunctionRolesFromSetup.js",
       "extension": ".js",
-      "size_bytes": 23071,
-      "line_count": 470,
-      "sha1_short": "4f9c1b324a",
+      "size_bytes": 23320,
+      "line_count": 472,
+      "sha1_short": "2fc9da9ae9",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -15500,6 +15480,31 @@
       "notes": []
     },
     {
+      "path": "functions/scripts/enqueueEventsNotifyUpcoming.js",
+      "extension": ".js",
+      "size_bytes": 1580,
+      "line_count": 45,
+      "sha1_short": "9a3e7a6c93",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/scripts/enqueueGodzinkiTransitionImport.js",
       "extension": ".js",
       "size_bytes": 2544,
@@ -15724,6 +15729,52 @@
       "internal_dependencies": [],
       "classes": [],
       "functions": [],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/scripts/investigateEventNotif.js",
+      "extension": ".js",
+      "size_bytes": 3586,
+      "line_count": 109,
+      "sha1_short": "bf94c38a69",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "addDays",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "tsToIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
       "top_level_symbols": [],
       "headings": [],
       "config_keys": [],
@@ -16226,9 +16277,9 @@
     {
       "path": "functions/src/api/adminApprovalHandler.ts",
       "extension": ".ts",
-      "size_bytes": 8699,
+      "size_bytes": 8700,
       "line_count": 222,
-      "sha1_short": "6b9a47ec42",
+      "sha1_short": "cb932a764d",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -18556,9 +18607,9 @@
     {
       "path": "functions/src/api/getGearKayaksHandler.ts",
       "extension": ".ts",
-      "size_bytes": 5073,
-      "line_count": 166,
-      "sha1_short": "a4bebd1a84",
+      "size_bytes": 4964,
+      "line_count": 162,
+      "sha1_short": "a3cbb051fe",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -18845,9 +18896,9 @@
     {
       "path": "functions/src/api/getKursantStatsHandler.ts",
       "extension": ".ts",
-      "size_bytes": 4320,
+      "size_bytes": 4311,
       "line_count": 123,
-      "sha1_short": "cc77f72c5a",
+      "sha1_short": "506225bf38",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -18960,15 +19011,22 @@
     {
       "path": "functions/src/api/godzinkiPurchaseHandler.ts",
       "extension": ".ts",
-      "size_bytes": 3395,
-      "line_count": 97,
-      "sha1_short": "9bf70aa920",
+      "size_bytes": 3790,
+      "line_count": 103,
+      "sha1_short": "fb4e4ac489",
       "kind": "script",
       "module_aliases": [],
       "imports": [
         {
           "raw": "import/require ../modules/hours/godzinki_service",
           "module": "../modules/hours/godzinki_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../modules/hours/godzinki_vars",
+          "module": "../modules/hours/godzinki_vars",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -18990,6 +19048,7 @@
       ],
       "internal_dependencies": [
         "functions/src/modules/hours/godzinki_service.ts",
+        "functions/src/modules/hours/godzinki_vars.ts",
         "functions/src/modules/users/userStatusCheck.ts"
       ],
       "classes": [],
@@ -19440,12 +19499,19 @@
     {
       "path": "functions/src/api/notificationPrefsHandler.ts",
       "extension": ".ts",
-      "size_bytes": 2848,
-      "line_count": 89,
-      "sha1_short": "4e46b57e8c",
+      "size_bytes": 2979,
+      "line_count": 92,
+      "sha1_short": "1809b4bfb2",
       "kind": "script",
       "module_aliases": [],
       "imports": [
+        {
+          "raw": "import/require ../modules/setup/events_vars",
+          "module": "../modules/setup/events_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
         {
           "raw": "import/require express",
           "module": "express",
@@ -19461,7 +19527,9 @@
           "type": "script_import"
         }
       ],
-      "internal_dependencies": [],
+      "internal_dependencies": [
+        "functions/src/modules/setup/events_vars.ts"
+      ],
       "classes": [],
       "functions": [
         {
@@ -19483,9 +19551,9 @@
     {
       "path": "functions/src/api/registerUserHandler.ts",
       "extension": ".ts",
-      "size_bytes": 35275,
-      "line_count": 901,
-      "sha1_short": "dd4f9f7dd0",
+      "size_bytes": 35430,
+      "line_count": 903,
+      "sha1_short": "19fbc09d3d",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -19499,6 +19567,13 @@
         {
           "raw": "import/require ../modules/hours/godzinki_service",
           "module": "../modules/hours/godzinki_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../modules/hours/godzinki_vars",
+          "module": "../modules/hours/godzinki_vars",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -19528,6 +19603,7 @@
       "internal_dependencies": [
         "functions/src/modules/equipment/bundle/gear_bundle_service.ts",
         "functions/src/modules/hours/godzinki_service.ts",
+        "functions/src/modules/hours/godzinki_vars.ts",
         "functions/src/modules/hours/opening_balance_fields.ts"
       ],
       "classes": [],
@@ -19821,9 +19897,9 @@
     {
       "path": "functions/src/api/submitGodzinkiHandler.ts",
       "extension": ".ts",
-      "size_bytes": 5525,
-      "line_count": 135,
-      "sha1_short": "74ab9a3f5e",
+      "size_bytes": 6613,
+      "line_count": 157,
+      "sha1_short": "caff8fae85",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -19837,6 +19913,13 @@
         {
           "raw": "import/require ../modules/hours/godzinki_service",
           "module": "../modules/hours/godzinki_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../modules/hours/godzinki_vars",
+          "module": "../modules/hours/godzinki_vars",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -19866,6 +19949,7 @@
       "internal_dependencies": [
         "functions/src/modules/calendar/calendar_utils.ts",
         "functions/src/modules/hours/godzinki_service.ts",
+        "functions/src/modules/hours/godzinki_vars.ts",
         "functions/src/modules/shared/text_utils.ts",
         "functions/src/modules/users/userStatusCheck.ts"
       ],
@@ -19873,6 +19957,16 @@
       "functions": [
         {
           "name": "handleSubmitGodzinki",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isTooOldGrantedAt",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -19933,9 +20027,9 @@
     {
       "path": "functions/src/index.ts",
       "extension": ".ts",
-      "size_bytes": 59151,
-      "line_count": 1765,
-      "sha1_short": "e6c1e2459d",
+      "size_bytes": 59912,
+      "line_count": 1782,
+      "sha1_short": "a6401274ad",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -20789,9 +20883,9 @@
     {
       "path": "functions/src/modules/basen/basen_service.ts",
       "extension": ".ts",
-      "size_bytes": 14570,
-      "line_count": 454,
-      "sha1_short": "012ac64ee7",
+      "size_bytes": 14781,
+      "line_count": 456,
+      "sha1_short": "cd2f2305e0",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -21131,9 +21225,9 @@
     {
       "path": "functions/src/modules/equipment/bundle/gear_bundle_service.ts",
       "extension": ".ts",
-      "size_bytes": 44445,
-      "line_count": 1115,
-      "sha1_short": "d0fe6a65a5",
+      "size_bytes": 44279,
+      "line_count": 1113,
+      "sha1_short": "07b33577c9",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -21455,9 +21549,9 @@
     {
       "path": "functions/src/modules/equipment/kayaks/gear_kayaks_service.ts",
       "extension": ".ts",
-      "size_bytes": 13429,
+      "size_bytes": 13430,
       "line_count": 347,
-      "sha1_short": "d2c157aea9",
+      "sha1_short": "0e73c7e6ad",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -21611,9 +21705,9 @@
     {
       "path": "functions/src/modules/equipment/shared/gear_catalog_service.ts",
       "extension": ".ts",
-      "size_bytes": 3737,
-      "line_count": 156,
-      "sha1_short": "941b09764b",
+      "size_bytes": 3665,
+      "line_count": 154,
+      "sha1_short": "c1a3c64126",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -21767,9 +21861,9 @@
     {
       "path": "functions/src/modules/hours/godzinki_service.ts",
       "extension": ".ts",
-      "size_bytes": 40532,
+      "size_bytes": 40525,
       "line_count": 1096,
-      "sha1_short": "50374bbb55",
+      "sha1_short": "8caab586a9",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -22022,9 +22116,9 @@
     {
       "path": "functions/src/modules/hours/godzinki_vars.ts",
       "extension": ".ts",
-      "size_bytes": 935,
-      "line_count": 30,
-      "sha1_short": "9f855862bd",
+      "size_bytes": 2317,
+      "line_count": 52,
+      "sha1_short": "0dc5049914",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -22043,6 +22137,16 @@
         },
         {
           "name": "getVar",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "toDateUtc",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -22401,9 +22505,9 @@
     {
       "path": "functions/src/modules/km/km_vars.ts",
       "extension": ".ts",
-      "size_bytes": 1245,
+      "size_bytes": 1199,
       "line_count": 44,
-      "sha1_short": "81eca82342",
+      "sha1_short": "9d0e84afb3",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -22432,6 +22536,64 @@
         },
         {
           "name": "toNumber",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/src/modules/setup/app_vars.ts",
+      "extension": ".ts",
+      "size_bytes": 1501,
+      "line_count": 41,
+      "sha1_short": "5bebe7e5e1",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "getAppVars",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getVar",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "toNumber",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "toStr",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -22830,9 +22992,9 @@
     {
       "path": "functions/src/service/providers/googleSheetsProvider.ts",
       "extension": ".ts",
-      "size_bytes": 18381,
-      "line_count": 518,
-      "sha1_short": "549588fe05",
+      "size_bytes": 20376,
+      "line_count": 568,
+      "sha1_short": "c1ce7a4172",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -23030,9 +23192,9 @@
     {
       "path": "functions/src/service/registry.ts",
       "extension": ".ts",
-      "size_bytes": 3794,
+      "size_bytes": 3797,
       "line_count": 78,
-      "sha1_short": "4dc8b58dea",
+      "sha1_short": "7b970b75a8",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -23107,8 +23269,8 @@
           "type": "script_import"
         },
         {
-          "raw": "import/require ./tasks/gearSyncKayaksFromSheet",
-          "module": "./tasks/gearSyncKayaksFromSheet",
+          "raw": "import/require ./tasks/godzinkiArchiveSheetRows",
+          "module": "./tasks/godzinkiArchiveSheetRows",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -23272,7 +23434,7 @@
         "functions/src/service/tasks/gearNotifyReservationCancelledByAdmin.ts",
         "functions/src/service/tasks/gearPrivateStorage.ts",
         "functions/src/service/tasks/gearSyncAllFromSheet.ts",
-        "functions/src/service/tasks/gearSyncKayaksFromSheet.ts",
+        "functions/src/service/tasks/godzinkiArchiveSheetRows.ts",
         "functions/src/service/tasks/godzinkiImportTransitionFromSheet.ts",
         "functions/src/service/tasks/godzinkiMergeHistoricalUser.ts",
         "functions/src/service/tasks/godzinkiMonthlyBalanceReview.ts",
@@ -23405,9 +23567,9 @@
     {
       "path": "functions/src/service/service_config.ts",
       "extension": ".ts",
-      "size_bytes": 13961,
-      "line_count": 376,
-      "sha1_short": "9b410ef5fd",
+      "size_bytes": 13477,
+      "line_count": 365,
+      "sha1_short": "155e2f69dc",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -23422,16 +23584,6 @@
       "internal_dependencies": [],
       "classes": [],
       "functions": [
-        {
-          "name": "adminNotifyAgeDays",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
         {
           "name": "getServiceConfig",
           "type": "function",
@@ -23494,12 +23646,26 @@
     {
       "path": "functions/src/service/tasks/adminNotifyPendingApprovals.ts",
       "extension": ".ts",
-      "size_bytes": 9019,
-      "line_count": 252,
-      "sha1_short": "151bf04500",
+      "size_bytes": 9592,
+      "line_count": 259,
+      "sha1_short": "c4ebd06698",
       "kind": "script",
       "module_aliases": [],
       "imports": [
+        {
+          "raw": "import/require ../../modules/hours/godzinki_vars",
+          "module": "../../modules/hours/godzinki_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../../modules/setup/app_vars",
+          "module": "../../modules/setup/app_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
         {
           "raw": "import/require ../../modules/shared/text_utils",
           "module": "../../modules/shared/text_utils",
@@ -23523,6 +23689,8 @@
         }
       ],
       "internal_dependencies": [
+        "functions/src/modules/hours/godzinki_vars.ts",
+        "functions/src/modules/setup/app_vars.ts",
         "functions/src/modules/shared/text_utils.ts",
         "functions/src/service/service_config.ts",
         "functions/src/service/types.ts"
@@ -23614,12 +23782,19 @@
     {
       "path": "functions/src/service/tasks/eventsNotifyNew.ts",
       "extension": ".ts",
-      "size_bytes": 3731,
-      "line_count": 108,
-      "sha1_short": "6c0402d563",
+      "size_bytes": 3819,
+      "line_count": 111,
+      "sha1_short": "f51034fbb8",
       "kind": "script",
       "module_aliases": [],
       "imports": [
+        {
+          "raw": "import/require ../../modules/setup/app_vars",
+          "module": "../../modules/setup/app_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
         {
           "raw": "import/require ../../modules/shared/text_utils",
           "module": "../../modules/shared/text_utils",
@@ -23636,6 +23811,7 @@
         }
       ],
       "internal_dependencies": [
+        "functions/src/modules/setup/app_vars.ts",
         "functions/src/modules/shared/text_utils.ts",
         "functions/src/service/types.ts"
       ],
@@ -23670,15 +23846,22 @@
     {
       "path": "functions/src/service/tasks/eventsNotifyUpcoming.ts",
       "extension": ".ts",
-      "size_bytes": 5770,
-      "line_count": 148,
-      "sha1_short": "819bfb940a",
+      "size_bytes": 8343,
+      "line_count": 198,
+      "sha1_short": "ec0119973b",
       "kind": "script",
       "module_aliases": [],
       "imports": [
         {
           "raw": "import/require ../../modules/calendar/calendar_utils",
           "module": "../../modules/calendar/calendar_utils",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../../modules/setup/app_vars",
+          "module": "../../modules/setup/app_vars",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -23714,6 +23897,7 @@
       ],
       "internal_dependencies": [
         "functions/src/modules/calendar/calendar_utils.ts",
+        "functions/src/modules/setup/app_vars.ts",
         "functions/src/modules/setup/events_vars.ts",
         "functions/src/modules/shared/text_utils.ts",
         "functions/src/service/types.ts"
@@ -23732,6 +23916,26 @@
         },
         {
           "name": "dateRange",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "daysUntilIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "selectNewRecipientUids",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -23927,12 +24131,19 @@
     {
       "path": "functions/src/service/tasks/gearNotifyReservationCancelledByAdmin.ts",
       "extension": ".ts",
-      "size_bytes": 6146,
-      "line_count": 180,
-      "sha1_short": "fddd325745",
+      "size_bytes": 6260,
+      "line_count": 182,
+      "sha1_short": "504eb8e20a",
       "kind": "script",
       "module_aliases": [],
       "imports": [
+        {
+          "raw": "import/require ../../modules/setup/app_vars",
+          "module": "../../modules/setup/app_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
         {
           "raw": "import/require ../types",
           "module": "../types",
@@ -23942,6 +24153,7 @@
         }
       ],
       "internal_dependencies": [
+        "functions/src/modules/setup/app_vars.ts",
         "functions/src/service/types.ts"
       ],
       "classes": [],
@@ -24132,9 +24344,9 @@
     {
       "path": "functions/src/service/tasks/gearSyncAllFromSheet.ts",
       "extension": ".ts",
-      "size_bytes": 20933,
-      "line_count": 582,
-      "sha1_short": "1e9b31b2ac",
+      "size_bytes": 20883,
+      "line_count": 581,
+      "sha1_short": "934a657230",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -24301,14 +24513,21 @@
       "notes": []
     },
     {
-      "path": "functions/src/service/tasks/gearSyncKayaksFromSheet.ts",
+      "path": "functions/src/service/tasks/godzinkiArchiveSheetRows.ts",
       "extension": ".ts",
-      "size_bytes": 5363,
-      "line_count": 162,
-      "sha1_short": "88ad4b2fbc",
+      "size_bytes": 3844,
+      "line_count": 102,
+      "sha1_short": "eea3a2620a",
       "kind": "script",
       "module_aliases": [],
       "imports": [
+        {
+          "raw": "import/require ../../modules/hours/godzinki_vars",
+          "module": "../../modules/hours/godzinki_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
         {
           "raw": "import/require ../providers/googleSheetsProvider",
           "module": "../providers/googleSheetsProvider",
@@ -24329,16 +24548,10 @@
           "names": [],
           "level": 0,
           "type": "script_import"
-        },
-        {
-          "raw": "import/require firebase-admin",
-          "module": "firebase-admin",
-          "names": [],
-          "level": 0,
-          "type": "script_import"
         }
       ],
       "internal_dependencies": [
+        "functions/src/modules/hours/godzinki_vars.ts",
         "functions/src/service/providers/googleSheetsProvider.ts",
         "functions/src/service/service_config.ts",
         "functions/src/service/types.ts"
@@ -24346,7 +24559,7 @@
       "classes": [],
       "functions": [
         {
-          "name": "norm",
+          "name": "isIsoDate",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -24356,17 +24569,7 @@
           "doc": null
         },
         {
-          "name": "parseBool",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "parseNumber",
+          "name": "selectRowsToArchive",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -24384,9 +24587,9 @@
     {
       "path": "functions/src/service/tasks/godzinkiImportTransitionFromSheet.ts",
       "extension": ".ts",
-      "size_bytes": 8728,
+      "size_bytes": 8723,
       "line_count": 228,
-      "sha1_short": "af9eff57fe",
+      "sha1_short": "838a36970f",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -24527,9 +24730,9 @@
     {
       "path": "functions/src/service/tasks/godzinkiMonthlyBalanceReview.ts",
       "extension": ".ts",
-      "size_bytes": 6151,
-      "line_count": 150,
-      "sha1_short": "fb8963efe9",
+      "size_bytes": 8609,
+      "line_count": 213,
+      "sha1_short": "610e6ec97d",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -24548,8 +24751,8 @@
           "type": "script_import"
         },
         {
-          "raw": "import/require ../service_config",
-          "module": "../service_config",
+          "raw": "import/require ../../modules/setup/app_vars",
+          "module": "../../modules/setup/app_vars",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -24572,13 +24775,33 @@
       "internal_dependencies": [
         "functions/src/modules/hours/godzinki_service.ts",
         "functions/src/modules/hours/godzinki_vars.ts",
-        "functions/src/service/service_config.ts",
+        "functions/src/modules/setup/app_vars.ts",
         "functions/src/service/types.ts"
       ],
       "classes": [],
       "functions": [
         {
+          "name": "creditBoardMonthlyBonus",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "fmtBalance",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "monthKeyOf",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -24596,9 +24819,9 @@
     {
       "path": "functions/src/service/tasks/godzinkiSyncFromSheet.ts",
       "extension": ".ts",
-      "size_bytes": 17885,
+      "size_bytes": 17886,
       "line_count": 510,
-      "sha1_short": "fe908402db",
+      "sha1_short": "65e084e37a",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -24731,9 +24954,9 @@
     {
       "path": "functions/src/service/tasks/groupsDiagnose.ts",
       "extension": ".ts",
-      "size_bytes": 4305,
-      "line_count": 116,
-      "sha1_short": "f262ce684a",
+      "size_bytes": 4256,
+      "line_count": 115,
+      "sha1_short": "1a7bea3805",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -25222,15 +25445,22 @@
     {
       "path": "functions/src/service/tasks/reconcileOpeningBalance.ts",
       "extension": ".ts",
-      "size_bytes": 10003,
-      "line_count": 233,
-      "sha1_short": "f58b61a52f",
+      "size_bytes": 10186,
+      "line_count": 234,
+      "sha1_short": "e429602852",
       "kind": "script",
       "module_aliases": [],
       "imports": [
         {
           "raw": "import/require ../../modules/hours/godzinki_service",
           "module": "../../modules/hours/godzinki_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../../modules/hours/godzinki_vars",
+          "module": "../../modules/hours/godzinki_vars",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -25259,6 +25489,7 @@
       ],
       "internal_dependencies": [
         "functions/src/modules/hours/godzinki_service.ts",
+        "functions/src/modules/hours/godzinki_vars.ts",
         "functions/src/modules/hours/opening_balance_fields.ts",
         "functions/src/service/types.ts"
       ],
@@ -25377,9 +25608,9 @@
     {
       "path": "functions/src/service/tasks/setupSyncFromSheet.ts",
       "extension": ".ts",
-      "size_bytes": 11043,
-      "line_count": 294,
-      "sha1_short": "b272ea2a6c",
+      "size_bytes": 14542,
+      "line_count": 374,
+      "sha1_short": "aa041cb765",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -25461,6 +25692,16 @@
         },
         {
           "name": "readAppSetupModules",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "readAppSetupRoles",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -25725,9 +25966,9 @@
     {
       "path": "functions/src/service/tasks/usersSyncFunctionRolesFromSetup.ts",
       "extension": ".ts",
-      "size_bytes": 18735,
-      "line_count": 528,
-      "sha1_short": "84a19c89ec",
+      "size_bytes": 18882,
+      "line_count": 531,
+      "sha1_short": "deb8646efd",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -26292,15 +26533,22 @@
     {
       "path": "functions/test/events_core.test.ts",
       "extension": ".ts",
-      "size_bytes": 11696,
-      "line_count": 275,
-      "sha1_short": "d74abaa8e2",
+      "size_bytes": 14843,
+      "line_count": 338,
+      "sha1_short": "e86608162f",
       "kind": "script",
       "module_aliases": [],
       "imports": [
         {
           "raw": "import/require ../src/service/providers/googleSheetsProvider",
           "module": "../src/service/providers/googleSheetsProvider",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../src/service/tasks/eventsNotifyUpcoming",
+          "module": "../src/service/tasks/eventsNotifyUpcoming",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -26322,6 +26570,7 @@
       ],
       "internal_dependencies": [
         "functions/src/service/providers/googleSheetsProvider.ts",
+        "functions/src/service/tasks/eventsNotifyUpcoming.ts",
         "functions/src/service/tasks/eventsSyncFromSheet.ts"
       ],
       "classes": [],
@@ -26334,9 +26583,9 @@
     {
       "path": "functions/test/faza2_core.test.ts",
       "extension": ".ts",
-      "size_bytes": 3024,
-      "line_count": 81,
-      "sha1_short": "dc95a8ff34",
+      "size_bytes": 3618,
+      "line_count": 95,
+      "sha1_short": "baabee84d5",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -26553,6 +26802,48 @@
           "doc": null
         }
       ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/test/setup_consolidation.test.ts",
+      "extension": ".ts",
+      "size_bytes": 2451,
+      "line_count": 65,
+      "sha1_short": "84c349f5bb",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../src/api/submitGodzinkiHandler",
+          "module": "../src/api/submitGodzinkiHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../src/service/tasks/godzinkiArchiveSheetRows",
+          "module": "../src/service/tasks/godzinkiArchiveSheetRows",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require vitest",
+          "module": "vitest",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/src/api/submitGodzinkiHandler.ts",
+        "functions/src/service/tasks/godzinkiArchiveSheetRows.ts"
+      ],
+      "classes": [],
+      "functions": [],
       "top_level_symbols": [],
       "headings": [],
       "config_keys": [],
@@ -27285,9 +27576,9 @@
     {
       "path": "public/core/api_client.js",
       "extension": ".js",
-      "size_bytes": 1381,
-      "line_count": 53,
-      "sha1_short": "5602f4049f",
+      "size_bytes": 2410,
+      "line_count": 78,
+      "sha1_short": "2c30794672",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -27306,6 +27597,16 @@
         },
         {
           "name": "apiPostJson",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "friendlyErrorMessage",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -27410,9 +27711,9 @@
     {
       "path": "public/core/firebase_client.js",
       "extension": ".js",
-      "size_bytes": 5937,
-      "line_count": 188,
-      "sha1_short": "94de340cb1",
+      "size_bytes": 6888,
+      "line_count": 195,
+      "sha1_short": "a64d6f4280",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -27730,9 +28031,9 @@
     {
       "path": "public/core/render_shell.js",
       "extension": ".js",
-      "size_bytes": 77294,
-      "line_count": 1742,
-      "sha1_short": "7378970d4f",
+      "size_bytes": 77685,
+      "line_count": 1747,
+      "sha1_short": "52e1ef6433",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -27760,6 +28061,13 @@
         {
           "raw": "import/require /core/sw_update.js",
           "module": "/core/sw_update.js",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require /core/text_format.js",
+          "module": "/core/text_format.js",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -28391,6 +28699,64 @@
       "notes": []
     },
     {
+      "path": "public/core/text_format.js",
+      "extension": ".js",
+      "size_bytes": 2029,
+      "line_count": 53,
+      "sha1_short": "7c2458e2f9",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "escapeHtml",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "formatFreeText",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "normalizeBlankLines",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "stripTrailingPunct",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "public/core/theme.js",
       "extension": ".js",
       "size_bytes": 1467,
@@ -28509,9 +28875,9 @@
     {
       "path": "public/index.html",
       "extension": ".html",
-      "size_bytes": 2120,
+      "size_bytes": 2129,
       "line_count": 52,
-      "sha1_short": "d37a99846a",
+      "sha1_short": "f796eecd8d",
       "kind": "text",
       "module_aliases": [],
       "imports": [],
@@ -28526,9 +28892,9 @@
     {
       "path": "public/manifest.json",
       "extension": ".json",
-      "size_bytes": 552,
+      "size_bytes": 558,
       "line_count": 26,
-      "sha1_short": "0b33d16748",
+      "sha1_short": "11036071b7",
       "kind": "config",
       "module_aliases": [],
       "imports": [],
@@ -28572,9 +28938,9 @@
     {
       "path": "public/modules/admin_pending_module.js",
       "extension": ".js",
-      "size_bytes": 27739,
-      "line_count": 510,
-      "sha1_short": "f404dc1984",
+      "size_bytes": 28719,
+      "line_count": 518,
+      "sha1_short": "45b0a49b5f",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -28895,9 +29261,9 @@
     {
       "path": "public/modules/gear_module.js",
       "extension": ".js",
-      "size_bytes": 96551,
-      "line_count": 2284,
-      "sha1_short": "e5e34faf6b",
+      "size_bytes": 98252,
+      "line_count": 2320,
+      "sha1_short": "0edb6cd777",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -29198,6 +29564,16 @@
         },
         {
           "name": "loadGear",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "loadPhotoWithOverlay",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -29565,9 +29941,9 @@
     {
       "path": "public/modules/godzinki_module.js",
       "extension": ".js",
-      "size_bytes": 17234,
-      "line_count": 429,
-      "sha1_short": "1a4fc61de2",
+      "size_bytes": 17812,
+      "line_count": 443,
+      "sha1_short": "f500b6b09d",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -29771,15 +30147,22 @@
     {
       "path": "public/modules/impreza_module.js",
       "extension": ".js",
-      "size_bytes": 12572,
-      "line_count": 335,
-      "sha1_short": "21d9ae5341",
+      "size_bytes": 12660,
+      "line_count": 336,
+      "sha1_short": "496882bcc4",
       "kind": "script",
       "module_aliases": [],
       "imports": [
         {
           "raw": "import/require /core/api_client.js",
           "module": "/core/api_client.js",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require /core/text_format.js",
+          "module": "/core/text_format.js",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -31591,9 +31974,9 @@
     {
       "path": "public/styles/events.css",
       "extension": ".css",
-      "size_bytes": 3233,
-      "line_count": 196,
-      "sha1_short": "bca6778880",
+      "size_bytes": 3427,
+      "line_count": 206,
+      "sha1_short": "ee8b2143c3",
       "kind": "text",
       "module_aliases": [],
       "imports": [],
@@ -31608,9 +31991,9 @@
     {
       "path": "public/styles/gear.css",
       "extension": ".css",
-      "size_bytes": 21257,
-      "line_count": 1184,
-      "sha1_short": "906f05134d",
+      "size_bytes": 21669,
+      "line_count": 1206,
+      "sha1_short": "0dd8ee82da",
       "kind": "text",
       "module_aliases": [],
       "imports": [],
@@ -31676,9 +32059,9 @@
     {
       "path": "public/styles/start.css",
       "extension": ".css",
-      "size_bytes": 11352,
-      "line_count": 309,
-      "sha1_short": "94a41cd61d",
+      "size_bytes": 11504,
+      "line_count": 310,
+      "sha1_short": "0ef81676a8",
       "kind": "text",
       "module_aliases": [],
       "imports": [],
@@ -31693,9 +32076,9 @@
     {
       "path": "public/sw.js",
       "extension": ".js",
-      "size_bytes": 5021,
-      "line_count": 148,
-      "sha1_short": "d40c9eee9a",
+      "size_bytes": 5447,
+      "line_count": 157,
+      "sha1_short": "c1f9fcbdcc",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -42522,9 +42905,9 @@
     {
       "path": "tests/test_pwa.py",
       "extension": ".py",
-      "size_bytes": 14697,
+      "size_bytes": 14718,
       "line_count": 375,
-      "sha1_short": "62a17d0ad6",
+      "sha1_short": "3312ed5a9b",
       "kind": "python",
       "module_aliases": [
         "tests.test_pwa"

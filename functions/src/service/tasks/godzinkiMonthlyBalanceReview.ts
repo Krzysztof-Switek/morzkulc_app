@@ -1,6 +1,6 @@
 import * as admin from "firebase-admin";
 import {ServiceTask} from "../types";
-import {computeBalance, creditApprovedEarn, GodzinkiRecord} from "../../modules/hours/godzinki_service";
+import {computeNegativeBalances, creditApprovedEarn} from "../../modules/hours/godzinki_service";
 import {getGodzinkiVars} from "../../modules/hours/godzinki_vars";
 import {getAppVars} from "../../modules/setup/app_vars";
 
@@ -13,10 +13,12 @@ import {getAppVars} from "../../modules/setup/app_vars";
  *    dla ról zarząd/KR — PRZED liczeniem sald, żeby bonus tego miesiąca wliczał się do
  *    przeglądu poniżej. Idempotentnie: pomija uid, jeśli w bieżącym miesiącu (wg grantedAt)
  *    już istnieje wpis z tym samym powodem (ponowne/ręczne odpalenie taska nie dubluje bonusu).
- * 1. Liczy saldo każdego użytkownika (skan godzinki_ledger grupowany po uid, computeBalance).
- *    Pomija uid "hist_*" (właściciele/osoby jeszcze niezarejestrowane).
- * 2. WS4: zapisuje snapshot service_reports/negativeBalances (salda < 0) — panel zarządu go czyta.
- * 3. WS5: dla sald < -limit wysyła mail do użytkownika oraz zbiorczy mail do zarządu.
+ * 1-3. Liczy saldo każdego użytkownika NA ŻYWO (computeNegativeBalances — ta sama
+ *    funkcja, której panel Zarządu używa przy każdym wejściu w Administrację, więc
+ *    obie liczby są zawsze spójne).
+ * 4. WS4: nadal zapisuje snapshot service_reports/negativeBalances — nieużywany
+ *    już przez panel Zarządu (ten liczy na żywo), zostaje jako log/audyt historyczny.
+ * 5. WS5: dla sald < -limit wysyła mail do użytkownika oraz zbiorczy mail do zarządu.
  */
 
 type Payload = {
@@ -103,45 +105,9 @@ export const godzinkiMonthlyBalanceReviewTask: ServiceTask<Payload> = {
     );
     ctx.logger.info("godzinki.monthlyBalanceReview: board bonus", {bonusCredited, dryRun});
 
-    // 1. Grupuj rekordy ledgera po uid (pomijając hist_*)
-    const snap = await ctx.firestore.collection("godzinki_ledger").get();
-    const byUid = new Map<string, GodzinkiRecord[]>();
-    for (const doc of snap.docs) {
-      const data = doc.data() as GodzinkiRecord;
-      const uid = String((data as any)?.uid || "");
-      if (!uid || uid.startsWith("hist_")) continue;
-      const arr = byUid.get(uid) || [];
-      arr.push({...data, id: doc.id} as GodzinkiRecord);
-      byUid.set(uid, arr);
-    }
-
-    // 2. Policz salda < 0
-    type Neg = {uid: string; balance: number; belowLimit: boolean};
-    const negatives: Neg[] = [];
-    for (const [uid, records] of byUid.entries()) {
-      const balance = computeBalance(records, now);
-      if (balance < 0) negatives.push({uid, balance, belowLimit: balance < -limit});
-    }
-
-    // 3. Dociągnij dane użytkowników (nazwa + email) dla ujemnych sald
-    const items: {uid: string; displayName: string; email: string; balance: number; belowLimit: boolean}[] = [];
-    await Promise.all(negatives.map(async (n) => {
-      let displayName = n.uid;
-      let email = "";
-      try {
-        const u = await ctx.firestore.collection("users_active").doc(n.uid).get();
-        if (u.exists) {
-          const d = u.data() as any;
-          displayName = String(d?.profile?.nickname || d?.profile?.firstName || d?.email || n.uid).trim();
-          email = String(d?.email || "").trim();
-        }
-      } catch (e: any) {
-        ctx.logger.warn("godzinki.monthlyBalanceReview: user lookup failed", {uid: n.uid, message: e?.message});
-      }
-      items.push({uid: n.uid, displayName, email, balance: n.balance, belowLimit: n.belowLimit});
-    }));
-
-    items.sort((a, b) => a.balance - b.balance);
+    // 1-3. Salda < 0 na żywo (skan godzinki_ledger + nazwy/email) — ta sama funkcja,
+    // której panel Zarządu używa do liczenia na żywo przy każdym wejściu w panel.
+    const items = await computeNegativeBalances(ctx.firestore, now, limit);
     const overLimit = items.filter((i) => i.belowLimit);
 
     // 4. Snapshot dla panelu zarządu (WS4)
