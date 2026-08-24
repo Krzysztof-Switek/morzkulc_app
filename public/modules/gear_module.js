@@ -17,6 +17,28 @@ const USER_WEIGHT_URL = "/api/user/weight";
 // Lokalny placeholder dostępny zawsze z aplikacji
 const PLACEHOLDER_SVG = "/assets/kayak-placeholder.png";
 
+// Ustawia nowe zdjęcie z overlayem ładowania (kropki nad starym, wciąż widocznym
+// zdjęciem — natywne zachowanie <img> samo zachowuje poprzednią klatkę, dopóki
+// nowa się nie wczyta). Licznik generacji chroni przed sytuacją, w której stare
+// onload/onerror odpali się już PO kolejnym swipe'ie (np. przy szybkim
+// wielokrotnym przewijaniu) i błędnie schowa overlay dla aktualnie ładowanego
+// zdjęcia.
+function loadPhotoWithOverlay({ imgEl, overlayEl, url, bumpGen, currentGen, onError }) {
+  const myGen = bumpGen();
+  if (overlayEl) overlayEl.classList.remove("hidden");
+  imgEl.onload = () => {
+    if (currentGen() !== myGen) return;
+    if (overlayEl) overlayEl.classList.add("hidden");
+  };
+  imgEl.onerror = () => {
+    if (currentGen() !== myGen) return;
+    if (overlayEl) overlayEl.classList.add("hidden");
+    if (imgEl.getAttribute("src") !== PLACEHOLDER_SVG) imgEl.setAttribute("src", PLACEHOLDER_SVG);
+    if (typeof onError === "function") onError();
+  };
+  imgEl.src = url;
+}
+
 const GEAR_TABS_PRIMARY = [
   { id: "kayaks", label: "Kajaki" },
   { id: "paddles", label: "Wiosła" },
@@ -230,6 +252,7 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
                 <button id="gearModalPrevBtn" type="button" class="gearImgNavBtn gearImgNavPrev hidden" aria-label="Poprzednie zdjęcie">&#8249;</button>
                 <img id="gearModalImg" alt="Zdjęcie sprzętu" />
                 <button id="gearModalNextBtn" type="button" class="gearImgNavBtn gearImgNavNext hidden" aria-label="Następne zdjęcie">&#8250;</button>
+                <div id="gearModalLoading" class="gearPhotoLoading hidden" aria-hidden="true"><div class="spinner"></div></div>
               </div>
               <span class="hint" id="gearModalHint" style="text-align:center; display:block; margin-top:6px; min-height:16px;"></span>
             </div>
@@ -449,6 +472,7 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
       const modalCounterEl = viewEl.querySelector("#gearModalCounter");
       const modalPrevBtn = viewEl.querySelector("#gearModalPrevBtn");
       const modalNextBtn = viewEl.querySelector("#gearModalNextBtn");
+      const modalLoadingEl = viewEl.querySelector("#gearModalLoading");
 
       let all = [];
       let favSet = new Set();
@@ -894,7 +918,7 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
                 if (!url) return;
                 // Track photo state for in-list swipe
                 if (!photoState.has(num)) {
-                  photoState.set(num, { urls: [url], idx: 0, loaded: false });
+                  photoState.set(num, { urls: [url], idx: 0, loaded: false, gen: 0 });
                 } else {
                   const s = photoState.get(num);
                   if (!s.urls.includes(url)) s.urls[0] = url;
@@ -1158,11 +1182,19 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
       let allPhotoUrls = [];
       let currentPhotoIdx = 0;
       let currentTitle = "";
+      let modalPhotoGen = 0;
 
       function showPhotoAtIdx(idx) {
         if (!allPhotoUrls.length) return;
         currentPhotoIdx = Math.max(0, Math.min(idx, allPhotoUrls.length - 1));
-        modalImgEl.setAttribute("src", allPhotoUrls[currentPhotoIdx]);
+        loadPhotoWithOverlay({
+          imgEl: modalImgEl,
+          overlayEl: modalLoadingEl,
+          url: allPhotoUrls[currentPhotoIdx],
+          bumpGen: () => ++modalPhotoGen,
+          currentGen: () => modalPhotoGen,
+          onError: () => { modalHintEl.textContent = "Brak zdjęcia."; },
+        });
         modalHintEl.textContent = "";
         if (allPhotoUrls.length > 1) {
           modalCounterEl.textContent = `${currentPhotoIdx + 1} / ${allPhotoUrls.length}`;
@@ -1368,11 +1400,18 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
         if (state.urls.length <= 1) return; // only one photo, nothing to cycle
 
         state.idx = ((state.idx + (dx < 0 ? 1 : -1)) + state.urls.length) % state.urls.length;
+        btn.setAttribute("data-loaded-cover-url", state.urls[state.idx]);
 
         const imgEl = btn.querySelector("img");
         if (imgEl) {
-          imgEl.src = state.urls[state.idx];
           imgEl.classList.add("gearCoverLoaded");
+          loadPhotoWithOverlay({
+            imgEl,
+            overlayEl: btn.querySelector(".gearPhotoLoading"),
+            url: state.urls[state.idx],
+            bumpGen: () => ++state.gen,
+            currentGen: () => state.gen,
+          });
         }
         const counter = btn.querySelector(".gearImgCounter");
         if (counter) {
@@ -1676,6 +1715,7 @@ function renderKayakCard(k, isFav = false, canUserReserve = true) {
               />
               <span class="gearImgCounter" hidden></span>
               <div class="gearImgLabel">Zdjecia</div>
+              <div class="gearPhotoLoading hidden" aria-hidden="true"><div class="spinner"></div></div>
             </div>
           </button>
         </div>
