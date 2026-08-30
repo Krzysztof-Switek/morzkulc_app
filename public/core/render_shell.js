@@ -161,6 +161,12 @@ async function renderHomeDashboard({ viewEl, ctx }) {
   // Render struktury natychmiast — rezerwacje ładujemy asynchronicznie
   viewEl.innerHTML = `
     <div class="dashboard dashboardStart">
+      ${isSwUpdatePending() ? `
+      <div class="swUpdateBannerHome">
+        <span>Dostępna nowa wersja aplikacji.</span>
+        <button type="button" class="primary" id="swUpdateReloadBtnHome">Odśwież teraz</button>
+      </div>
+      ` : ""}
       <section class="startTop">
         <div class="startHero">
           <h2>Cześć${helloName ? `, ${escapeHtml(helloName)}` : ""}</h2>
@@ -315,6 +321,8 @@ async function renderHomeDashboard({ viewEl, ctx }) {
 
     </div>
   `;
+
+  viewEl.querySelector("#swUpdateReloadBtnHome")?.addEventListener("click", () => hardReloadApp());
 
   // Kafelek „Imprezy" oraz „Zobacz wszystkie" w sekcji wydarzeń → lista imprez.
   viewEl.querySelectorAll("[data-home-action='events-list'], [data-home-action='all-events']").forEach((btn) => {
@@ -492,12 +500,6 @@ function renderHomeProfile({ viewEl, ctx }) {
 
   viewEl.innerHTML = `
     <div class="card center profileCard">
-      ${isSwUpdatePending() ? `
-      <div class="swUpdateBanner">
-        <span>Dostępna nowa wersja aplikacji.</span>
-        <button type="button" class="primary" id="swUpdateReloadBtn">Odśwież teraz</button>
-      </div>
-      ` : ""}
       <h2>${name ? escapeHtml(name) : "Profil"}</h2>
 
       <div class="profileChipsWrap">
@@ -618,8 +620,6 @@ function renderHomeProfile({ viewEl, ctx }) {
 
   const backBtn = viewEl.querySelector("#profileBackBtn");
   if (backBtn) backBtn.addEventListener("click", () => setHash("home", "home"));
-
-  viewEl.querySelector("#swUpdateReloadBtn")?.addEventListener("click", () => hardReloadApp());
 
   viewEl.querySelectorAll("[data-profile-action='all-reservations']").forEach((btn) => {
     btn.addEventListener("click", () => setHash("my_reservations", "list"));

@@ -10,6 +10,7 @@ import { apiPostJson, apiGetJson, setApiTokenGetter } from "/core/api_client.js"
 import { buildModulesFromSetup } from "/core/modules_registry.js";
 import { renderNav, renderView, spinnerHtml } from "/core/render_shell.js";
 import { setSwUpdatePending, hardReloadApp } from "/core/sw_update.js";
+import { parseHash } from "/core/router.js";
 
 // ── Service Worker registration + nasłuch aktualizacji ───────────────────────
 let swUpdatePending = false;
@@ -27,6 +28,13 @@ if ("serviceWorker" in navigator) {
     if (event.data?.type === "SW_UPDATED") {
       swUpdatePending = true;
       setSwUpdatePending(true);
+
+      // Jeśli użytkownik jest już na ekranie głównym, odśwież go od razu, żeby
+      // baner pojawił się natychmiast — nie dopiero po nawigacji gdzie indziej i z powrotem.
+      const { moduleId, routeId } = parseHash();
+      if (moduleId === "home" && routeId !== "profile") {
+        renderView({ viewEl, ctx }).catch(() => { /* najwyżej zobaczy baner po nawigacji */ });
+      }
     }
   });
 
