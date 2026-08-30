@@ -1787,13 +1787,14 @@ function renderHelmetCard(item, isFav = false, canUserReserve = true) {
   const number = String(item?.number || "").trim();
   const brand = String(item?.brand || "").trim();
   const model = String(item?.model || "").trim();
+  const isPool = toBool(item?.isPoolAllowed);
 
   const title = buildGenericGearTitle(item);
   const line2 = buildHelmetLine2(item);
   const line3 = buildHelmetLine3(item);
 
   return `
-    <div class="gearCard gearOk" data-gear-card-id="${escapeAttr(String(item?.id || ""))}">
+    <div class="gearCard gearOk${isPool ? " gearPool" : ""}" data-gear-card-id="${escapeAttr(String(item?.id || ""))}">
       <div class="gearCardInner">
 
         <div class="gearHead">
@@ -1812,6 +1813,7 @@ function renderHelmetCard(item, isFav = false, canUserReserve = true) {
               data-gear-fav="${escapeAttr(String(item?.id || ""))}"
               aria-label="${isFav ? "Usuń z ulubionych" : "Dodaj do ulubionych"}"
             >${heartSvg(isFav)}</button>
+            ${isPool ? `<div class="gearBadges gearBadgesStack"><span class="badge pool">Basen</span></div>` : ""}
           </div>
         </div>
 
@@ -1834,13 +1836,15 @@ function renderHelmetCard(item, isFav = false, canUserReserve = true) {
         </div>
 
         <div class="gearMiniBar">
-          <button
-            type="button"
-            class="gearMiniReserveBtn gearBundleReserveBtn"
-            data-gear-bundle-reserve="${escapeAttr(String(item?.id || ""))}"
-            data-gear-bundle-category="helmets"
-            ${canUserReserve ? "" : "disabled"}
-          >Rezerwuj</button>
+          ${isPool
+            ? `<span class="badge pool gearPoolActionLabel">Basen</span>`
+            : `<button
+                type="button"
+                class="gearMiniReserveBtn gearBundleReserveBtn"
+                data-gear-bundle-reserve="${escapeAttr(String(item?.id || ""))}"
+                data-gear-bundle-category="helmets"
+                ${canUserReserve ? "" : "disabled"}
+              >Rezerwuj</button>`}
         </div>
 
       </div>
@@ -1923,6 +1927,8 @@ function renderGenericGearCard(item, isFav = false, canUserReserve = true) {
   const primaryImg = imgMain;
   const secondaryImg = imgSide || "";
 
+  const isPool = toBool(item?.isPoolAllowed);
+
   const title = buildGenericGearTitle(item);
 
   const typeBadge = type
@@ -1937,8 +1943,10 @@ function renderGenericGearCard(item, isFav = false, canUserReserve = true) {
     ? `<span class="badge soft">${escapeHtml(status)}</span>`
     : "";
 
+  const poolBadge = isPool ? `<span class="badge pool">Basen</span>` : "";
+
   return `
-    <div class="gearCard gearOk">
+    <div class="gearCard gearOk${isPool ? " gearPool" : ""}">
       <div class="gearCardInner">
 
         <div class="gearHead">
@@ -1958,6 +1966,7 @@ function renderGenericGearCard(item, isFav = false, canUserReserve = true) {
               aria-label="${isFav ? "Usuń z ulubionych" : "Dodaj do ulubionych"}"
             >${heartSvg(isFav)}</button>
             <div class="gearBadges gearBadgesStack">
+              ${poolBadge}
               ${typeBadge}
               ${sizeBadge}
               ${statusBadge}
@@ -1994,13 +2003,15 @@ function renderGenericGearCard(item, isFav = false, canUserReserve = true) {
         </div>
 
         <div class="actions gearCardActions">
-          <button
+          ${isPool
+            ? `<span class="badge pool gearPoolActionLabel">Basen</span>`
+            : `<button
             type="button"
             class="primary gearBundleReserveBtn"
             data-gear-bundle-reserve="${escapeAttr(String(item?.id || ""))}"
             data-gear-bundle-category="${escapeAttr(String(item?.gearCategory || ""))}"
             ${canUserReserve ? "" : "disabled"}
-          >Rezerwuj</button>
+          >Rezerwuj</button>`}
         </div>
 
       </div>
@@ -2119,13 +2130,14 @@ function renderLifejacketCard(item, isFav = false, canUserReserve = true) {
   const number = String(item?.number || "").trim();
   const brand = String(item?.brand || "").trim();
   const model = String(item?.model || "").trim();
+  const isPool = toBool(item?.isPoolAllowed);
 
   const title = buildGenericGearTitle(item);
   const line2 = buildLifejacketLine2(item);
   const line3 = buildLifejacketLine3(item);
 
   return `
-    <div class="gearCard gearOk" data-gear-card-id="${escapeAttr(String(item?.id || ""))}">
+    <div class="gearCard gearOk${isPool ? " gearPool" : ""}" data-gear-card-id="${escapeAttr(String(item?.id || ""))}">
       <div class="gearCardInner">
 
         <div class="gearHead">
@@ -2144,6 +2156,7 @@ function renderLifejacketCard(item, isFav = false, canUserReserve = true) {
               data-gear-fav="${escapeAttr(String(item?.id || ""))}"
               aria-label="${isFav ? "Usuń z ulubionych" : "Dodaj do ulubionych"}"
             >${heartSvg(isFav)}</button>
+            ${isPool ? `<div class="gearBadges gearBadgesStack"><span class="badge pool">Basen</span></div>` : ""}
           </div>
         </div>
 
@@ -2166,13 +2179,15 @@ function renderLifejacketCard(item, isFav = false, canUserReserve = true) {
         </div>
 
         <div class="gearMiniBar">
-          <button
-            type="button"
-            class="gearMiniReserveBtn gearBundleReserveBtn"
-            data-gear-bundle-reserve="${escapeAttr(String(item?.id || ""))}"
-            data-gear-bundle-category="lifejackets"
-            ${canUserReserve ? "" : "disabled"}
-          >Rezerwuj</button>
+          ${isPool
+            ? `<span class="badge pool gearPoolActionLabel">Basen</span>`
+            : `<button
+                type="button"
+                class="gearMiniReserveBtn gearBundleReserveBtn"
+                data-gear-bundle-reserve="${escapeAttr(String(item?.id || ""))}"
+                data-gear-bundle-category="lifejackets"
+                ${canUserReserve ? "" : "disabled"}
+              >Rezerwuj</button>`}
         </div>
 
       </div>

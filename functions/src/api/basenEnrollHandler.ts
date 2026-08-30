@@ -1,5 +1,5 @@
 import type {Request, Response} from "express";
-import {enrollInSession, getActiveKarnet, getBasenVars} from "../modules/basen/basen_service";
+import {enrollInSlot, getActiveKarnet, getBasenVars, BasenSlotLabel} from "../modules/basen/basen_service";
 import {isUserStatusBlocked} from "../modules/users/userStatusCheck";
 
 type Deps = {
@@ -11,6 +11,9 @@ type Deps = {
   requireIdToken: (req: Request) => Promise<{error: string} | {decoded: any}>;
   memberRoleKeys: string[];
 };
+
+const VALID_SLOTS: BasenSlotLabel[] = ["H1", "H2", "SAUNA"];
+const INSTRUCTOR_ROLE_KEYS = ["rola_czlonek", "rola_kandydat"];
 
 export async function handleBasenEnroll(req: Request, res: Response, deps: Deps): Promise<void> {
   if (deps.sendPreflight(req, res)) return;
@@ -47,23 +50,29 @@ export async function handleBasenEnroll(req: Request, res: Response, deps: Deps)
         return;
       }
 
-      // Sympatyk też może zapisać się na basen (mimo że nie jest w memberRoleKeys).
-      if (!deps.memberRoleKeys.includes(roleKey) && roleKey !== "rola_sympatyk") {
+      // Sympatyk i kursant też mogą zapisać się na basen (mimo że nie są w memberRoleKeys).
+      const canEnroll = deps.memberRoleKeys.includes(roleKey) ||
+        roleKey === "rola_sympatyk" ||
+        roleKey === "rola_kursant";
+      if (!canEnroll) {
         res.status(403).json({error: "Brak uprawnień do zapisu na basen."});
         return;
       }
 
       const body = req.body || {};
       const sessionId = String(body.sessionId || "").trim();
-      const paymentType = String(body.paymentType || "").trim() as "karnet" | "jednorazowe";
+      const slot = String(body.slot || "").trim() as BasenSlotLabel;
+      const mode = String(body.mode || "regular").trim() as "regular" | "training" | "instructor";
+      const instructorUid = String(body.instructorUid || "").trim();
+      const kayakId = String(body.kayakId || "").trim();
 
-      if (!sessionId) {
-        res.status(400).json({error: "Brakuje sessionId."});
+      if (!sessionId || !VALID_SLOTS.includes(slot)) {
+        res.status(400).json({error: "Brakuje sessionId lub nieprawidłowy slot."});
         return;
       }
 
-      if (!["karnet", "jednorazowe"].includes(paymentType)) {
-        res.status(400).json({error: "paymentType musi być 'karnet' lub 'jednorazowe'."});
+      if (!["regular", "training", "instructor"].includes(mode)) {
+        res.status(400).json({error: "mode musi być 'regular', 'training' lub 'instructor'."});
         return;
       }
 
@@ -73,38 +82,74 @@ export async function handleBasenEnroll(req: Request, res: Response, deps: Deps)
       const userDisplayName = [firstName, lastName].filter(Boolean).join(" ") || String(userData?.email || uid);
       const userEmail = String(userData?.email || "").trim();
 
-      let karnetId: string | undefined;
-
-      if (paymentType === "karnet") {
-        const activeKarnet = await getActiveKarnet(deps.db, uid);
-        if (!activeKarnet) {
-          res.status(400).json({error: "Nie masz aktywnego karnetu."});
+      if (mode === "instructor") {
+        const isInstructor = INSTRUCTOR_ROLE_KEYS.includes(roleKey) && userData?.admin?.basenInstructor === true;
+        if (!isInstructor) {
+          res.status(403).json({error: "Brak uprawnień instruktora basenowego."});
           return;
         }
-        if (activeKarnet.totalEntries - activeKarnet.usedEntries <= 0) {
-          res.status(400).json({error: "Karnet nie ma już dostępnych wejść."});
+        if (slot === "SAUNA") {
+          res.status(400).json({error: "Sauna nie ma slotu instruktorskiego."});
           return;
         }
-        karnetId = activeKarnet.id;
       }
 
-      // Check vars for config (not strictly needed for enrollment, but validates setup exists)
+      if (mode === "training" && slot === "SAUNA") {
+        res.status(400).json({error: "Sauna nie ma slotu instruktorskiego."});
+        return;
+      }
+
+      if (mode === "training" && !instructorUid) {
+        res.status(400).json({error: "Wybierz instruktora."});
+        return;
+      }
+
+      let paymentType: "karnet" | "jednorazowe" | undefined;
+      let karnetId: string | undefined;
+
+      if (mode !== "instructor") {
+        paymentType = String(body.paymentType || "").trim() as "karnet" | "jednorazowe";
+        if (!["karnet", "jednorazowe"].includes(paymentType)) {
+          res.status(400).json({error: "paymentType musi być 'karnet' lub 'jednorazowe'."});
+          return;
+        }
+
+        if (paymentType === "karnet") {
+          const activeKarnet = await getActiveKarnet(deps.db, uid);
+          if (!activeKarnet) {
+            res.status(400).json({error: "Nie masz aktywnego karnetu."});
+            return;
+          }
+          if (activeKarnet.totalEntries - activeKarnet.usedEntries <= 0) {
+            res.status(400).json({error: "Karnet nie ma już dostępnych wejść."});
+            return;
+          }
+          karnetId = activeKarnet.id;
+        }
+      }
+
+      // Waliduje istnienie configu (spójne z dotychczasowym zachowaniem).
       await getBasenVars(deps.db);
 
-      const {enrollmentId} = await enrollInSession(deps.db, {
+      const {enrollmentId} = await enrollInSlot(deps.db, {
         sessionId,
-        userUid: uid,
-        userEmail,
-        userDisplayName,
+        slot,
+        uid,
+        email: userEmail,
+        displayName: userDisplayName,
+        mode,
+        instructorUid: mode === "training" ? instructorUid : undefined,
         paymentType,
         karnetId,
+        kayakId: kayakId || undefined,
       });
 
       res.status(200).json({ok: true, enrollmentId});
     } catch (err) {
       const e = err as {message?: string};
       const msg = e?.message || String(err);
-      const status = msg.includes("pełna") || msg.includes("anulowana") || msg.includes("już zapisany") ? 400 : 500;
+      const clientPatterns = ["pełny", "anulowan", "już zapisany", "nie istnieje", "zajęty", "dostępny", "wejść", "aktywny", "należy"];
+      const status = clientPatterns.some((p) => msg.includes(p)) ? 400 : 500;
       res.status(status).json({error: msg});
     }
   });

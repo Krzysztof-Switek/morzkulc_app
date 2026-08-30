@@ -1,25 +1,26 @@
 import {ServiceTask} from "../types";
-import {getBasenVars} from "../../modules/basen/basen_service";
+import {BasenSlotLabel} from "../../modules/basen/basen_service";
 
 type Payload = {
   sessionId: string;
+  slot?: BasenSlotLabel; // brak = anulowano cały dzień (wszystkie sloty)
 };
 
 function norm(v: any): string {
   return String(v || "").trim();
 }
 
+const SLOT_LABELS: Record<string, string> = {H1: "I godzina", H2: "II godzina", SAUNA: "Sauna"};
+
 export const basenNotifySessionCancelledTask: ServiceTask<Payload> = {
   id: "basen.notifySessionCancelled",
-  description: "Wysyła e-mail do prowadzącego i uczestników po anulowaniu sesji basenowej.",
+  description: "Wysyła e-mail do instruktorów i uczestników po anulowaniu terminu/slotu basenowego.",
 
   validate: (payload) => {
     if (!payload?.sessionId) throw new Error("Missing sessionId");
   },
 
   run: async (payload, ctx) => {
-    const vars = await getBasenVars(ctx.firestore);
-
     const sessionSnap = await ctx.firestore
       .collection("basen_sessions")
       .doc(payload.sessionId)
@@ -31,24 +32,26 @@ export const basenNotifySessionCancelledTask: ServiceTask<Payload> = {
 
     const session = sessionSnap.data() as any;
     const dateStr = norm(session?.date);
-    const timeStart = norm(session?.timeStart);
-    const timeEnd = norm(session?.timeEnd);
+    const slotLabel = payload.slot ? (SLOT_LABELS[payload.slot] || payload.slot) : "cały dzień";
 
-    // Get all cancelled enrollments for this session
+    // Wszystkie anulowane zapisy dla tej sesji, ograniczone do anulowanego slotu
+    // (gdy podano) — inaczej wcześniejsze anulowania innego slotu dostałyby powiadomienie ponownie.
     const enrollmentsSnap = await ctx.firestore
       .collection("basen_enrollments")
       .where("sessionId", "==", payload.sessionId)
       .where("status", "==", "cancelled")
       .get();
 
-    const enrollments = enrollmentsSnap.docs.map((d) => d.data() as any);
+    const enrollments = enrollmentsSnap.docs
+      .map((d) => d.data() as any)
+      .filter((e) => !payload.slot || e.slot === payload.slot);
 
-    const sessionDesc = `${dateStr} ${timeStart}–${timeEnd}`;
+    const sessionDesc = `${dateStr} (${slotLabel})`;
     const subject = `Anulowanie zajęć basenowych — ${sessionDesc}`;
     const body = [
       "Informujemy, że zajęcia basenowe zostały anulowane.",
       "",
-      `Data i godzina: ${sessionDesc}`,
+      `Termin: ${sessionDesc}`,
       "",
       "Jeśli byłeś/aś zapisany/a z karnetu, wejście zostało automatycznie zwrócone.",
       "",
@@ -57,18 +60,9 @@ export const basenNotifySessionCancelledTask: ServiceTask<Payload> = {
 
     const recipients = new Set<string>();
 
-    // Add instructor
-    const instructorEmail = norm(session?.instructorEmail);
-    if (instructorEmail && instructorEmail.includes("@")) {
-      recipients.add(instructorEmail);
-    }
-
-    // Add admin mail from vars
-    if (vars.basen_admin_mail && vars.basen_admin_mail.includes("@")) {
-      recipients.add(vars.basen_admin_mail);
-    }
-
-    // Add enrolled users
+    // Instruktorzy i uczestnicy — wszyscy są dziś zapisami (type: instructor/training/regular).
+    // Opiekunowie basenowi (vars_basen.basen_admin_mail) świadomie NIE dostają tu kopii —
+    // to oni anulują termin, więc już wiedzą, że to zrobili.
     for (const enrollment of enrollments) {
       const email = norm(enrollment?.userEmail);
       if (email && email.includes("@")) {
@@ -83,7 +77,7 @@ export const basenNotifySessionCancelledTask: ServiceTask<Payload> = {
       try {
         await ctx.workspace.sendGenericEmail(to, subject, body);
         sent++;
-        ctx.logger.info("basenNotifySessionCancelled: sent", {to, sessionId: payload.sessionId});
+        ctx.logger.info("basenNotifySessionCancelled: sent", {to, sessionId: payload.sessionId, slot: payload.slot || null});
       } catch (e: any) {
         errors++;
         ctx.logger.error("basenNotifySessionCancelled: send failed", {

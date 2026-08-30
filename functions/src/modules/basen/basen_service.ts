@@ -1,14 +1,20 @@
 import * as admin from "firebase-admin";
+import {resolveFunctionRoleEmail} from "../setup/function_roles_service";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-export type SessionStatus = "open" | "full" | "cancelled";
+export type BasenSlotLabel = "H1" | "H2" | "SAUNA";
+export type SlotStatus = "open" | "full" | "cancelled";
 export type EnrollmentStatus = "active" | "cancelled";
+export type EnrollmentType = "regular" | "training" | "instructor";
 export type KarnetStatus = "pending" | "active" | "exhausted" | "expired";
 export type PaymentType = "karnet" | "jednorazowe";
 
 export interface BasenVars {
-  basen_admin_mail: string;
+  // E-maile "opiekunów basenowych" — ci sami ludzie mają dostęp do zakładki Zarządzanie
+  // co zarząd/KR (patrz registerUserHandler.ts::resolveBasenAdminGrant), niezależnie od
+  // swojej roli klubowej. Zakładka Vars_BASEN, lista rozdzielona przecinkami.
+  basen_admin_mail: string[];
   basen_cena_za_godzine: number;
   basen_cena_za_karnet: number;
   basen_ile_wejsc_na_karnet: number;
@@ -20,30 +26,36 @@ export interface BasenVars {
   basen_okno_anulowania_h: number;
 }
 
-export interface BasenSession {
-  id: string;
-  date: string;
+export interface BasenSlot {
   timeStart: string;
   timeEnd: string;
   capacity: number;
   enrolledCount: number;
-  instructorEmail: string;
-  instructorName: string;
+  status: SlotStatus;
+}
+
+export interface BasenSession {
+  id: string;
+  date: string;
   notes: string;
-  status: SessionStatus;
+  slots: Partial<Record<BasenSlotLabel, BasenSlot>>;
   createdBy: string;
   createdAt: any;
   updatedAt: any;
 }
 
 export interface BasenEnrollment {
-  id: string;
+  id: string; // deterministyczne: `${sessionId}_${slot}_${uid}`
   sessionId: string;
+  slot: BasenSlotLabel;
   userUid: string;
   userEmail: string;
   userDisplayName: string;
-  paymentType: PaymentType;
-  karnetId?: string;
+  type: EnrollmentType;
+  paymentType: PaymentType | null; // null dla type="instructor"
+  karnetId?: string | null;
+  instructorUid?: string | null; // uid sparowanego instruktora, tylko dla type="training"
+  kayakId?: string | null; // id z gear_kayaks lub sentinel "PRIVATE"
   status: EnrollmentStatus;
   cancelledAt?: any;
   createdAt: any;
@@ -63,6 +75,31 @@ export interface BasenKarnet {
   updatedAt: any;
 }
 
+export interface BasenKayakAllocation {
+  id: string; // deterministyczne: `${sessionId}_${slot}_${kayakId}`
+  sessionId: string;
+  slot: BasenSlotLabel;
+  kayakId: string;
+  enrollmentId: string;
+  uid: string;
+  createdAt: any;
+}
+
+export interface SlotAttendee {
+  enrollmentId: string;
+  userUid: string;
+  userDisplayName: string;
+  userEmail: string;
+  paymentType: PaymentType | null;
+  kayakId: string | null;
+}
+
+export interface SlotAttendeesResult {
+  instructors: SlotAttendee[];
+  paired: Array<{ instructorUid: string; instructor: SlotAttendee | null; participants: SlotAttendee[] }>;
+  regular: SlotAttendee[];
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 export function todayIso(): string {
@@ -79,12 +116,20 @@ function parseVarValue(v: any): any {
   return v;
 }
 
+// Lista e-maili rozdzielona przecinkami — wzorem flattenEmails() z index.ts (index.ts
+// nie może być importowany tutaj, bo importuje ten moduł — więc lokalna kopia).
+function splitEmails(raw: any): string[] {
+  const s = String(raw ?? "").trim();
+  if (!s) return [];
+  return s.split(",").map((x) => x.trim().toLowerCase()).filter(Boolean);
+}
+
 export async function getBasenVars(db: FirebaseFirestore.Firestore): Promise<BasenVars> {
   const snap = await db.collection("setup").doc("vars_basen").get();
   const vars = (snap.exists ? (snap.data() as any)?.vars || {} : {}) as Record<string, any>;
 
   return {
-    basen_admin_mail: String(parseVarValue(vars["basen_admin_mail"]) ?? ""),
+    basen_admin_mail: splitEmails(parseVarValue(vars["basen_admin_mail"])),
     basen_cena_za_godzine: Number(parseVarValue(vars["basen_cena_za_godzine"]) ?? 0),
     basen_cena_za_karnet: Number(parseVarValue(vars["basen_cena_za_karnet"]) ?? 0),
     basen_ile_wejsc_na_karnet: Number(parseVarValue(vars["basen_ile_wejsc_na_karnet"]) ?? 10),
@@ -99,13 +144,24 @@ export async function getBasenVars(db: FirebaseFirestore.Firestore): Promise<Bas
   };
 }
 
-export function sessionDatetimeMs(session: Pick<BasenSession, "date" | "timeStart">): number {
+export function sessionSlotDatetimeMs(
+  session: Pick<BasenSession, "date">,
+  slotData: Pick<BasenSlot, "timeStart"> | undefined | null
+): number {
+  if (!slotData?.timeStart) return 0;
   try {
-    const dt = new Date(`${session.date}T${session.timeStart}:00`);
-    return dt.getTime();
+    return new Date(`${session.date}T${slotData.timeStart}:00`).getTime();
   } catch {
     return 0;
   }
+}
+
+function kayakAllocationId(sessionId: string, slot: BasenSlotLabel, kayakId: string): string {
+  return `${sessionId}_${slot}_${kayakId}`;
+}
+
+function enrollmentId(sessionId: string, slot: BasenSlotLabel, uid: string): string {
+  return `${sessionId}_${slot}_${uid}`;
 }
 
 // ─── Sessions ────────────────────────────────────────────────────────────────
@@ -117,12 +173,16 @@ export async function listUpcomingSessions(
   const snap = await db
     .collection("basen_sessions")
     .where("date", ">=", today)
-    .where("status", "in", ["open", "full"])
     .orderBy("date", "asc")
-    .orderBy("timeStart", "asc")
     .get();
 
-  return snap.docs.map((d) => ({id: d.id, ...d.data()} as BasenSession));
+  const sessions = snap.docs.map((d) => ({id: d.id, ...d.data()} as BasenSession));
+
+  // Ukryj dni, w których WSZYSTKIE sloty są anulowane (nic do pokazania/zapisu).
+  return sessions.filter((s) => {
+    const slots = Object.values(s.slots || {});
+    return slots.some((slot) => slot && slot.status !== "cancelled");
+  });
 }
 
 export async function getUserEnrollments(
@@ -142,11 +202,9 @@ export async function createSession(
   db: FirebaseFirestore.Firestore,
   args: {
     date: string;
-    timeStart: string;
-    timeEnd: string;
-    capacity: number;
-    instructorEmail: string;
-    instructorName: string;
+    h1: { timeStart: string; timeEnd: string; capacity: number };
+    h2: { timeStart: string; timeEnd: string; capacity: number };
+    sauna?: { enabled: boolean; timeStart?: string; timeEnd?: string; capacity?: number };
     notes: string;
     createdBy: string;
   }
@@ -154,17 +212,26 @@ export async function createSession(
   const ref = db.collection("basen_sessions").doc();
   const now = admin.firestore.FieldValue.serverTimestamp();
 
+  const slots: Partial<Record<BasenSlotLabel, BasenSlot>> = {
+    H1: {timeStart: args.h1.timeStart, timeEnd: args.h1.timeEnd, capacity: args.h1.capacity, enrolledCount: 0, status: "open"},
+    H2: {timeStart: args.h2.timeStart, timeEnd: args.h2.timeEnd, capacity: args.h2.capacity, enrolledCount: 0, status: "open"},
+  };
+
+  if (args.sauna?.enabled) {
+    slots.SAUNA = {
+      timeStart: args.sauna.timeStart || args.h1.timeStart,
+      timeEnd: args.sauna.timeEnd || args.h1.timeEnd,
+      capacity: args.sauna.capacity || args.h1.capacity,
+      enrolledCount: 0,
+      status: "open",
+    };
+  }
+
   await ref.set({
     id: ref.id,
     date: args.date,
-    timeStart: args.timeStart,
-    timeEnd: args.timeEnd,
-    capacity: args.capacity,
-    enrolledCount: 0,
-    instructorEmail: args.instructorEmail,
-    instructorName: args.instructorName,
     notes: args.notes,
-    status: "open",
+    slots,
     createdBy: args.createdBy,
     createdAt: now,
     updatedAt: now,
@@ -175,223 +242,431 @@ export async function createSession(
 
 // ─── Enrollments ─────────────────────────────────────────────────────────────
 
-export async function enrollInSession(
+export async function enrollInSlot(
   db: FirebaseFirestore.Firestore,
   args: {
     sessionId: string;
-    userUid: string;
-    userEmail: string;
-    userDisplayName: string;
-    paymentType: PaymentType;
+    slot: BasenSlotLabel;
+    uid: string;
+    email: string;
+    displayName: string;
+    mode: "regular" | "training" | "instructor";
+    instructorUid?: string;
+    paymentType?: PaymentType;
     karnetId?: string;
+    kayakId?: string; // id z gear_kayaks lub "PRIVATE"
   }
 ): Promise<{ enrollmentId: string }> {
   const sessionRef = db.collection("basen_sessions").doc(args.sessionId);
+  const eid = enrollmentId(args.sessionId, args.slot, args.uid);
+  const enrollRef = db.collection("basen_enrollments").doc(eid);
   const now = admin.firestore.FieldValue.serverTimestamp();
 
-  // Check for duplicate enrollment
-  const existing = await db
-    .collection("basen_enrollments")
-    .where("sessionId", "==", args.sessionId)
-    .where("userUid", "==", args.userUid)
-    .where("status", "==", "active")
-    .limit(1)
-    .get();
+  const hasKayak = Boolean(args.kayakId) && args.kayakId !== "PRIVATE";
+  const allocationRef = hasKayak ?
+    db.collection("basen_kayak_allocations").doc(kayakAllocationId(args.sessionId, args.slot, args.kayakId as string)) :
+    null;
 
-  if (!existing.empty) {
-    throw new Error("Jesteś już zapisany/a na tę sesję.");
-  }
+  const instructorEnrollRef = args.mode === "training" && args.instructorUid ?
+    db.collection("basen_enrollments").doc(enrollmentId(args.sessionId, args.slot, args.instructorUid)) :
+    null;
 
-  const enrollmentRef = db.collection("basen_enrollments").doc();
+  const karnetRef = args.karnetId ? db.collection("basen_karnety").doc(args.karnetId) : null;
 
-  const result = await db.runTransaction(async (tx) => {
-    const sessionSnap = await tx.get(sessionRef);
-    if (!sessionSnap.exists) throw new Error("Sesja nie istnieje.");
+  await db.runTransaction(async (tx) => {
+    // ── wszystkie odczyty przed jakimkolwiek zapisem ──
+    const [sessionSnap, existingEnrollSnap, allocationSnap, instructorEnrollSnap, karnetSnap] = await Promise.all([
+      tx.get(sessionRef),
+      tx.get(enrollRef),
+      allocationRef ? tx.get(allocationRef) : Promise.resolve(null),
+      instructorEnrollRef ? tx.get(instructorEnrollRef) : Promise.resolve(null),
+      karnetRef ? tx.get(karnetRef) : Promise.resolve(null),
+    ]);
 
+    if (!sessionSnap.exists) throw new Error("Termin nie istnieje.");
     const session = sessionSnap.data() as BasenSession;
-    if (session.status === "cancelled") throw new Error("Sesja jest anulowana.");
-    if (session.status === "full") throw new Error("Sesja jest już pełna.");
-    if (session.date < todayIso()) throw new Error("Nie można zapisać się na przeszłą sesję.");
+    if (session.date < todayIso()) throw new Error("Nie można zapisać się na przeszły termin.");
 
-    const newCount = session.enrolledCount + 1;
-    const newStatus: SessionStatus = newCount >= session.capacity ? "full" : "open";
+    const slotData = session.slots?.[args.slot];
+    if (!slotData) throw new Error("Slot nie istnieje dla tego terminu.");
+    if (slotData.status === "cancelled") throw new Error("Slot jest anulowany.");
 
-    tx.update(sessionRef, {
-      enrolledCount: newCount,
-      status: newStatus,
-      updatedAt: now,
-    });
+    if (existingEnrollSnap && existingEnrollSnap.exists) {
+      const existing = existingEnrollSnap.data() as BasenEnrollment;
+      if (existing.status === "active") throw new Error("Jesteś już zapisany/a na ten slot.");
+    }
 
-    // If karnet payment — deduct entry inside transaction
-    if (args.paymentType === "karnet" && args.karnetId) {
-      const karnetRef = db.collection("basen_karnety").doc(args.karnetId);
-      const karnetSnap = await tx.get(karnetRef);
+    if (args.mode !== "instructor") {
+      if (slotData.enrolledCount >= slotData.capacity) throw new Error("Slot jest już pełny.");
+    }
 
-      if (!karnetSnap.exists) throw new Error("Karnet nie istnieje.");
+    if (args.mode === "training") {
+      if (!args.instructorUid) throw new Error("Brakuje wybranego instruktora.");
+      const instrData = instructorEnrollSnap && instructorEnrollSnap.exists ?
+        (instructorEnrollSnap.data() as BasenEnrollment) :
+        null;
+      if (!instrData || instrData.status !== "active" || instrData.type !== "instructor") {
+        throw new Error("Wybrany instruktor nie jest już dostępny na ten slot.");
+      }
+    }
 
-      const karnet = karnetSnap.data() as BasenKarnet;
+    if (allocationRef && allocationSnap && allocationSnap.exists) {
+      throw new Error("Ten kajak jest już zajęty dla tej godziny.");
+    }
+
+    let karnet: BasenKarnet | null = null;
+    if (args.paymentType === "karnet") {
+      if (!karnetSnap || !karnetSnap.exists) throw new Error("Karnet nie istnieje.");
+      karnet = karnetSnap.data() as BasenKarnet;
       if (karnet.status !== "active") throw new Error("Karnet nie jest aktywny.");
-      if (karnet.userUid !== args.userUid) throw new Error("Karnet nie należy do Ciebie.");
+      if (karnet.userUid !== args.uid) throw new Error("Karnet nie należy do Ciebie.");
+      if (karnet.totalEntries - karnet.usedEntries <= 0) throw new Error("Karnet nie ma już wejść.");
+    }
 
-      const remaining = karnet.totalEntries - karnet.usedEntries;
-      if (remaining <= 0) throw new Error("Karnet nie ma już wejść.");
-
-      const newUsed = karnet.usedEntries + 1;
-      const newKarnetStatus: KarnetStatus =
-        newUsed >= karnet.totalEntries ? "exhausted" : "active";
-
-      tx.update(karnetRef, {
-        usedEntries: newUsed,
-        status: newKarnetStatus,
+    // ── zapisy ──
+    if (args.mode !== "instructor") {
+      const newCount = slotData.enrolledCount + 1;
+      const newStatus: SlotStatus = newCount >= slotData.capacity ? "full" : "open";
+      tx.update(sessionRef, {
+        [`slots.${args.slot}.enrolledCount`]: newCount,
+        [`slots.${args.slot}.status`]: newStatus,
         updatedAt: now,
       });
     }
 
-    tx.set(enrollmentRef, {
-      id: enrollmentRef.id,
+    if (karnetRef && karnet) {
+      const newUsed = karnet.usedEntries + 1;
+      const newKarnetStatus: KarnetStatus = newUsed >= karnet.totalEntries ? "exhausted" : "active";
+      tx.update(karnetRef, {usedEntries: newUsed, status: newKarnetStatus, updatedAt: now});
+    }
+
+    if (allocationRef) {
+      tx.set(allocationRef, {
+        id: allocationRef.id,
+        sessionId: args.sessionId,
+        slot: args.slot,
+        kayakId: args.kayakId,
+        enrollmentId: eid,
+        uid: args.uid,
+        createdAt: now,
+      });
+    }
+
+    tx.set(enrollRef, {
+      id: eid,
       sessionId: args.sessionId,
-      userUid: args.userUid,
-      userEmail: args.userEmail,
-      userDisplayName: args.userDisplayName,
-      paymentType: args.paymentType,
+      slot: args.slot,
+      userUid: args.uid,
+      userEmail: args.email,
+      userDisplayName: args.displayName,
+      type: args.mode,
+      paymentType: args.mode === "instructor" ? null : (args.paymentType || null),
       karnetId: args.karnetId || null,
+      instructorUid: args.mode === "training" ? (args.instructorUid || null) : null,
+      kayakId: args.kayakId || null,
       status: "active",
       createdAt: now,
       updatedAt: now,
     });
-
-    return {enrollmentId: enrollmentRef.id};
   });
 
-  return result;
+  return {enrollmentId: eid};
 }
 
 export async function cancelEnrollment(
   db: FirebaseFirestore.Firestore,
   args: {
-    enrollmentId: string;
-    userUid: string;
+    sessionId: string;
+    slot: BasenSlotLabel;
+    uid: string;
     cancellationWindowHours: number;
   }
 ): Promise<void> {
-  const enrollmentRef = db.collection("basen_enrollments").doc(args.enrollmentId);
+  const eid = enrollmentId(args.sessionId, args.slot, args.uid);
+  const enrollRef = db.collection("basen_enrollments").doc(eid);
+  const sessionRef = db.collection("basen_sessions").doc(args.sessionId);
   const now = admin.firestore.FieldValue.serverTimestamp();
 
   await db.runTransaction(async (tx) => {
-    const enrollmentSnap = await tx.get(enrollmentRef);
-    if (!enrollmentSnap.exists) throw new Error("Zapis nie istnieje.");
+    const [enrollSnap, sessionSnap] = await Promise.all([tx.get(enrollRef), tx.get(sessionRef)]);
+    if (!enrollSnap.exists) throw new Error("Zapis nie istnieje.");
 
-    const enrollment = enrollmentSnap.data() as BasenEnrollment;
-    if (enrollment.userUid !== args.userUid) throw new Error("Brak dostępu.");
+    const enrollment = enrollSnap.data() as BasenEnrollment;
     if (enrollment.status === "cancelled") throw new Error("Zapis jest już anulowany.");
-
-    const sessionRef = db.collection("basen_sessions").doc(enrollment.sessionId);
-    const sessionSnap = await tx.get(sessionRef);
-    if (!sessionSnap.exists) throw new Error("Sesja nie istnieje.");
+    if (!sessionSnap.exists) throw new Error("Termin nie istnieje.");
 
     const session = sessionSnap.data() as BasenSession;
+    const slotData = session.slots?.[args.slot] || null;
 
-    // Check cancellation window
-    if (session.status !== "cancelled") {
-      const sessionMs = sessionDatetimeMs(session);
+    // Okno anulowania — pomijane, gdy slot jest już anulowany przez admina (sprzątanie).
+    if (slotData && slotData.status !== "cancelled") {
+      const slotMs = sessionSlotDatetimeMs(session, slotData);
       const windowMs = args.cancellationWindowHours * 60 * 60 * 1000;
-      if (sessionMs > 0 && Date.now() + windowMs > sessionMs) {
-        throw new Error(
-          `Anulowanie możliwe tylko do ${args.cancellationWindowHours}h przed sesją.`
-        );
+      if (slotMs > 0 && Date.now() + windowMs > slotMs) {
+        throw new Error(`Anulowanie możliwe tylko do ${args.cancellationWindowHours}h przed zajęciami.`);
       }
     }
 
-    // Refund karnet entry if applicable
-    if (enrollment.paymentType === "karnet" && enrollment.karnetId) {
-      const karnetRef = db.collection("basen_karnety").doc(enrollment.karnetId);
-      const karnetSnap = await tx.get(karnetRef);
+    const karnetRef = enrollment.paymentType === "karnet" && enrollment.karnetId ?
+      db.collection("basen_karnety").doc(enrollment.karnetId) :
+      null;
+    const karnetSnap = karnetRef ? await tx.get(karnetRef) : null;
 
-      if (karnetSnap.exists) {
-        const karnet = karnetSnap.data() as BasenKarnet;
-        const newUsed = Math.max(0, karnet.usedEntries - 1);
-        const newStatus: KarnetStatus =
-          karnet.status === "exhausted" ? "active" : karnet.status;
-
-        tx.update(karnetRef, {
-          usedEntries: newUsed,
-          status: newStatus,
-          updatedAt: now,
-        });
-      }
+    // ── zapisy ──
+    if (karnetRef && karnetSnap && karnetSnap.exists) {
+      const karnet = karnetSnap.data() as BasenKarnet;
+      const newUsed = Math.max(0, karnet.usedEntries - 1);
+      const newStatus: KarnetStatus = karnet.status === "exhausted" ? "active" : karnet.status;
+      tx.update(karnetRef, {usedEntries: newUsed, status: newStatus, updatedAt: now});
     }
 
-    // Update session count
-    if (session.status !== "cancelled") {
-      const newCount = Math.max(0, session.enrolledCount - 1);
-      const newStatus: SessionStatus = newCount < session.capacity ? "open" : "full";
+    if (slotData && slotData.status !== "cancelled" && enrollment.type !== "instructor") {
+      const newCount = Math.max(0, slotData.enrolledCount - 1);
+      const newStatus: SlotStatus = newCount < slotData.capacity ? "open" : "full";
       tx.update(sessionRef, {
-        enrolledCount: newCount,
-        status: newStatus,
+        [`slots.${args.slot}.enrolledCount`]: newCount,
+        [`slots.${args.slot}.status`]: newStatus,
         updatedAt: now,
       });
     }
 
-    tx.update(enrollmentRef, {
-      status: "cancelled",
-      cancelledAt: now,
-      updatedAt: now,
-    });
+    if (enrollment.kayakId && enrollment.kayakId !== "PRIVATE") {
+      const allocationRef = db.collection("basen_kayak_allocations")
+        .doc(kayakAllocationId(args.sessionId, args.slot, enrollment.kayakId));
+      tx.delete(allocationRef);
+    }
+
+    tx.update(enrollRef, {status: "cancelled", cancelledAt: now, updatedAt: now});
   });
 }
 
 export async function cancelSession(
   db: FirebaseFirestore.Firestore,
-  sessionId: string
+  sessionId: string,
+  slot?: BasenSlotLabel
 ): Promise<{ enrollments: BasenEnrollment[] }> {
   const sessionRef = db.collection("basen_sessions").doc(sessionId);
   const now = admin.firestore.FieldValue.serverTimestamp();
 
-  // Get active enrollments before cancelling
-  const enrollmentsSnap = await db
-    .collection("basen_enrollments")
+  const sessionSnapPre = await sessionRef.get();
+  if (!sessionSnapPre.exists) throw new Error("Termin nie istnieje.");
+  const sessionPre = sessionSnapPre.data() as BasenSession;
+
+  const allLabels = Object.keys(sessionPre.slots || {}) as BasenSlotLabel[];
+  const targetLabels = slot ? [slot] : allLabels;
+
+  if (slot && !sessionPre.slots?.[slot]) throw new Error("Slot nie istnieje dla tego terminu.");
+  if (slot && sessionPre.slots?.[slot]?.status === "cancelled") throw new Error("Slot jest już anulowany.");
+  if (!slot && allLabels.every((l) => sessionPre.slots?.[l]?.status === "cancelled")) {
+    throw new Error("Termin jest już anulowany.");
+  }
+
+  const activeLabels = targetLabels.filter((l) => {
+    const s = sessionPre.slots?.[l];
+    return Boolean(s) && s?.status !== "cancelled";
+  });
+
+  // Odczyt aktywnych zapisów PRZED transakcją (jak w dotychczasowym cancelSession) —
+  // filtrowanie po slocie w pamięci, żeby reużyć istniejący indeks (sessionId, status).
+  const enrollmentsSnap = await db.collection("basen_enrollments")
     .where("sessionId", "==", sessionId)
     .where("status", "==", "active")
     .get();
-
-  const enrollments = enrollmentsSnap.docs.map(
-    (d) => ({id: d.id, ...d.data()} as BasenEnrollment)
-  );
+  const enrollments = enrollmentsSnap.docs
+    .map((d) => ({id: d.id, ...d.data()} as BasenEnrollment))
+    .filter((e) => activeLabels.includes(e.slot));
 
   await db.runTransaction(async (tx) => {
     const sessionSnap = await tx.get(sessionRef);
-    if (!sessionSnap.exists) throw new Error("Sesja nie istnieje.");
+    if (!sessionSnap.exists) throw new Error("Termin nie istnieje.");
 
-    const session = sessionSnap.data() as BasenSession;
-    if (session.status === "cancelled") throw new Error("Sesja jest już anulowana.");
+    const karnetIds = Array.from(new Set(
+      enrollments.filter((e) => e.paymentType === "karnet" && e.karnetId).map((e) => e.karnetId as string)
+    ));
+    const karnetRefs = new Map(karnetIds.map((kid) => [kid, db.collection("basen_karnety").doc(kid)]));
+    const karnetSnaps = new Map<string, FirebaseFirestore.DocumentSnapshot>();
+    for (const [kid, ref] of karnetRefs) {
+      karnetSnaps.set(kid, await tx.get(ref));
+    }
 
-    tx.update(sessionRef, {status: "cancelled", updatedAt: now});
+    // ── zapisy ──
+    const slotUpdate: Record<string, any> = {updatedAt: now};
+    for (const l of activeLabels) slotUpdate[`slots.${l}.status`] = "cancelled";
+    tx.update(sessionRef, slotUpdate);
 
-    // Cancel all enrollments and refund karnety
-    for (const enrollment of enrollments) {
-      const enrollRef = db.collection("basen_enrollments").doc(enrollment.id);
-      tx.update(enrollRef, {status: "cancelled", cancelledAt: now, updatedAt: now});
+    for (const e of enrollments) {
+      tx.update(db.collection("basen_enrollments").doc(e.id), {status: "cancelled", cancelledAt: now, updatedAt: now});
 
-      if (enrollment.paymentType === "karnet" && enrollment.karnetId) {
-        const karnetRef = db.collection("basen_karnety").doc(enrollment.karnetId);
-        const karnetSnap = await tx.get(karnetRef);
-
-        if (karnetSnap.exists) {
+      if (e.paymentType === "karnet" && e.karnetId) {
+        const karnetSnap = karnetSnaps.get(e.karnetId);
+        const karnetRef = karnetRefs.get(e.karnetId);
+        if (karnetSnap && karnetSnap.exists && karnetRef) {
           const karnet = karnetSnap.data() as BasenKarnet;
           const newUsed = Math.max(0, karnet.usedEntries - 1);
-          const newStatus: KarnetStatus =
-            karnet.status === "exhausted" ? "active" : karnet.status;
-          tx.update(karnetRef, {
-            usedEntries: newUsed,
-            status: newStatus,
-            updatedAt: now,
-          });
+          const newStatus: KarnetStatus = karnet.status === "exhausted" ? "active" : karnet.status;
+          tx.update(karnetRef, {usedEntries: newUsed, status: newStatus, updatedAt: now});
         }
+      }
+
+      if (e.kayakId && e.kayakId !== "PRIVATE") {
+        tx.delete(db.collection("basen_kayak_allocations").doc(kayakAllocationId(e.sessionId, e.slot, e.kayakId)));
       }
     }
   });
 
   return {enrollments};
+}
+
+// ─── Kajaki basenowe ─────────────────────────────────────────────────────────
+
+export async function setEnrollmentKayak(
+  db: FirebaseFirestore.Firestore,
+  args: {
+    sessionId: string;
+    slot: BasenSlotLabel;
+    uid: string;
+    kayakId: string | null; // null/"" = zwolnij; "PRIVATE" = kajak prywatny
+  }
+): Promise<void> {
+  const eid = enrollmentId(args.sessionId, args.slot, args.uid);
+  const enrollRef = db.collection("basen_enrollments").doc(eid);
+  const nextKayakId = args.kayakId && args.kayakId.trim() ? args.kayakId.trim() : null;
+  const now = admin.firestore.FieldValue.serverTimestamp();
+
+  const newAllocationRef = nextKayakId && nextKayakId !== "PRIVATE" ?
+    db.collection("basen_kayak_allocations").doc(kayakAllocationId(args.sessionId, args.slot, nextKayakId)) :
+    null;
+
+  await db.runTransaction(async (tx) => {
+    const [enrollSnap, newAllocationSnap] = await Promise.all([
+      tx.get(enrollRef),
+      newAllocationRef ? tx.get(newAllocationRef) : Promise.resolve(null),
+    ]);
+
+    if (!enrollSnap.exists) throw new Error("Zapis nie istnieje.");
+    const enrollment = enrollSnap.data() as BasenEnrollment;
+    if (enrollment.status !== "active") throw new Error("Zapis jest anulowany.");
+
+    const currentKayakId = enrollment.kayakId || null;
+    if (currentKayakId === nextKayakId) return; // no-op
+
+    if (newAllocationRef && newAllocationSnap && newAllocationSnap.exists) {
+      throw new Error("Ten kajak jest już zajęty dla tej godziny.");
+    }
+
+    if (currentKayakId && currentKayakId !== "PRIVATE") {
+      tx.delete(db.collection("basen_kayak_allocations").doc(kayakAllocationId(args.sessionId, args.slot, currentKayakId)));
+    }
+
+    if (newAllocationRef) {
+      tx.set(newAllocationRef, {
+        id: newAllocationRef.id,
+        sessionId: args.sessionId,
+        slot: args.slot,
+        kayakId: nextKayakId,
+        enrollmentId: eid,
+        uid: args.uid,
+        createdAt: now,
+      });
+    }
+
+    tx.update(enrollRef, {kayakId: nextKayakId, updatedAt: now});
+  });
+}
+
+export async function listAvailableBasenKayaks(
+  db: FirebaseFirestore.Firestore,
+  sessionId: string,
+  slot: BasenSlotLabel
+): Promise<Array<{ id: string; label: string; isPrivate: boolean; ownerContact: string | null }>> {
+  const kayaksSnap = await db.collection("gear_kayaks").where("isActive", "==", true).get();
+  const poolKayaks = kayaksSnap.docs
+    .map((d) => {
+      const data = d.data() as any;
+      return {id: String(data?.id || d.id), ...data};
+    })
+    .filter((k) => k.gearScrapped !== true)
+    .filter((k) => String(k?.storage || k?.storedAt || "").trim().toLowerCase() === "basen")
+    .filter((k) => k?.isOperational === true)
+    // Prywatny kajak niedostępny do wypożyczenia — widoczny tylko dla właściciela poza
+    // tą listą (nie ma tu żadnej roli), więc go nie proponujemy innym uczestnikom.
+    // Wzorem tej samej reguły w module Sprzęt (gear_bundle_service.ts).
+    .filter((k) => k?.isPrivate !== true || k?.isPrivateRentable === true);
+
+  const allocSnap = await db.collection("basen_kayak_allocations")
+    .where("sessionId", "==", sessionId)
+    .where("slot", "==", slot)
+    .get();
+  const allocatedIds = new Set(allocSnap.docs.map((d) => String((d.data() as any)?.kayakId || "")));
+
+  const available = poolKayaks
+    .filter((k) => !allocatedIds.has(k.id))
+    .map((k) => {
+      const brand = norm(k?.brand);
+      const model = norm(k?.model);
+      const number = norm(k?.number || k?.id);
+      const base = [brand, model].filter(Boolean).join(" ") || number || k.id;
+      const baseLabel = number && base !== number ? `${base} (nr ${number})` : base;
+      const isPrivate = k?.isPrivate === true;
+      const ownerContact = isPrivate ? (norm(k?.ownerContact) || null) : null;
+      // Kajak prywatny (choć użyczalny) — jasno oznaczony w liście wyboru, żeby
+      // uczestnik wiedział, że wypożyczenie wymaga zgody właściciela (poza aplikacją —
+      // ten sam wzorzec zaufania co płatność "jednorazowe"/nagrody instruktorskie).
+      const label = isPrivate ?
+        `${baseLabel} — PRYWATNY, wymaga zgody właściciela${ownerContact ? ` (${ownerContact})` : ""}` :
+        baseLabel;
+      return {id: k.id, label, isPrivate, ownerContact};
+    })
+    .sort((a, b) => a.label.localeCompare(b.label, "pl"));
+
+  available.push({id: "PRIVATE", label: "Kajak prywatny", isPrivate: false, ownerContact: null});
+  return available;
+}
+
+// ─── Lista uczestników slotu ─────────────────────────────────────────────────
+
+export async function listSlotAttendees(
+  db: FirebaseFirestore.Firestore,
+  sessionId: string,
+  slot: BasenSlotLabel
+): Promise<SlotAttendeesResult> {
+  const snap = await db.collection("basen_enrollments")
+    .where("sessionId", "==", sessionId)
+    .where("slot", "==", slot)
+    .where("status", "==", "active")
+    .get();
+
+  const all = snap.docs.map((d) => ({id: d.id, ...d.data()} as BasenEnrollment));
+
+  const toAttendee = (e: BasenEnrollment): SlotAttendee => ({
+    enrollmentId: e.id,
+    userUid: e.userUid,
+    userDisplayName: e.userDisplayName,
+    userEmail: e.userEmail,
+    paymentType: e.paymentType ?? null,
+    kayakId: e.kayakId ?? null,
+  });
+
+  const instructors = all.filter((e) => e.type === "instructor").map(toAttendee);
+  const instructorByUid = new Map(instructors.map((i) => [i.userUid, i]));
+
+  const trainingByInstructor = new Map<string, SlotAttendee[]>();
+  for (const e of all) {
+    if (e.type !== "training") continue;
+    const key = e.instructorUid || "";
+    if (!trainingByInstructor.has(key)) trainingByInstructor.set(key, []);
+    (trainingByInstructor.get(key) as SlotAttendee[]).push(toAttendee(e));
+  }
+
+  const paired = Array.from(trainingByInstructor.entries()).map(([instructorUid, participants]) => ({
+    instructorUid,
+    instructor: instructorByUid.get(instructorUid) || null,
+    participants,
+  }));
+
+  const regular = all.filter((e) => e.type === "regular").map(toAttendee);
+
+  return {instructors, paired, regular};
 }
 
 // ─── Karnety ─────────────────────────────────────────────────────────────────
@@ -452,4 +727,31 @@ export async function grantKarnet(
   });
 
   return ref.id;
+}
+
+// ─── Uprawnienia panelu "Zarządzanie" ────────────────────────────────────────
+
+/**
+ * Czy dany e-mail ma dostęp do zakładki "Zarządzanie" modułu Basen na takich samych
+ * zasadach jak zarząd/KR — bo jest aktualnym skarbnikiem (konto funkcyjne) LUB jest na
+ * liście "opiekunów basenowych" (setup/vars_basen.vars.basen_admin_mail, zakładka
+ * Vars_BASEN arkusza App_SETUP). Rola zarząd/KR jest już objęta przez adminRoleKeys w
+ * computeAllowedActions — to rozszerzenie dla osób BEZ tej roli.
+ *
+ * Używane w dwóch miejscach: registerUserHandler.ts (żeby dopisać "basen.admin" do
+ * allowed_actions przy logowaniu, dla frontendu) i w handlerach basenCreateSession/
+ * basenCancelSession/basenGrantKarnet (żeby faktycznie WPUŚCIĆ tę osobę do akcji, nie
+ * tylko pokazać jej zakładkę).
+ */
+export async function resolveBasenAdminGrant(db: FirebaseFirestore.Firestore, email: string): Promise<boolean> {
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  if (!normalizedEmail) return false;
+
+  const [skarbnikEmail, basenVars] = await Promise.all([
+    resolveFunctionRoleEmail(db, "skarbnik"),
+    getBasenVars(db),
+  ]);
+
+  if (skarbnikEmail && skarbnikEmail === normalizedEmail) return true;
+  return basenVars.basen_admin_mail.includes(normalizedEmail);
 }

@@ -1,5 +1,5 @@
 import type {Request, Response} from "express";
-import {cancelEnrollment, getBasenVars, BasenSlotLabel} from "../modules/basen/basen_service";
+import {setEnrollmentKayak, BasenSlotLabel} from "../modules/basen/basen_service";
 
 type Deps = {
   db: FirebaseFirestore.Firestore;
@@ -12,7 +12,7 @@ type Deps = {
 
 const VALID_SLOTS: BasenSlotLabel[] = ["H1", "H2", "SAUNA"];
 
-export async function handleBasenCancelEnrollment(req: Request, res: Response, deps: Deps): Promise<void> {
+export async function handleBasenSetKayak(req: Request, res: Response, deps: Deps): Promise<void> {
   if (deps.sendPreflight(req, res)) return;
   if (!deps.requireAllowedHost(req, res)) return;
   deps.setCorsHeaders(req, res);
@@ -35,26 +35,21 @@ export async function handleBasenCancelEnrollment(req: Request, res: Response, d
       const body = req.body || {};
       const sessionId = String(body.sessionId || "").trim();
       const slot = String(body.slot || "").trim() as BasenSlotLabel;
+      const kayakIdRaw = body.kayakId;
+      const kayakId = kayakIdRaw === null || kayakIdRaw === undefined ? null : String(kayakIdRaw).trim();
 
       if (!sessionId || !VALID_SLOTS.includes(slot)) {
         res.status(400).json({error: "Brakuje sessionId lub nieprawidłowy slot."});
         return;
       }
 
-      const vars = await getBasenVars(deps.db);
-
-      await cancelEnrollment(deps.db, {
-        sessionId,
-        slot,
-        uid,
-        cancellationWindowHours: vars.basen_okno_anulowania_h,
-      });
+      await setEnrollmentKayak(deps.db, {sessionId, slot, uid, kayakId});
 
       res.status(200).json({ok: true});
     } catch (err) {
       const e = err as {message?: string};
       const msg = e?.message || String(err);
-      const clientErrors = ["nie istnieje", "już anulowany", "możliwe tylko"];
+      const clientErrors = ["nie istnieje", "anulowany", "zajęty"];
       const isClient = clientErrors.some((s) => msg.includes(s));
       res.status(isClient ? 400 : 500).json({error: msg});
     }

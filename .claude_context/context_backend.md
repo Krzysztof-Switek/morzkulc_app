@@ -1,147 +1,6 @@
 # Backend Context
 
-Files indexed here: 108
-
-## `archived/functions/node_modules/@grpc/grpc-js/build/src/load-balancer-child-handler.d.ts`
-
-- kind: `api_handler`
-- lines: 25
-- size_bytes: 1039
-- keywords:
-  - status
-- symbols:
-  - ChildLoadBalancerHandler
-- local imports:
-  - ./call-interface
-  - ./channel-options
-  - ./load-balancer
-  - ./subchannel-address
-
-## `archived/functions/node_modules/@grpc/grpc-js/build/src/load-balancer-child-handler.js`
-
-- kind: `api_handler`
-- lines: 151
-- size_bytes: 5866
-- keywords:
-  - auth
-- exports:
-  - ChildLoadBalancerHandler
-- symbols:
-  - ChildLoadBalancerHandler
-  - latestChild
-  - newChild
-- local imports:
-  - ./connectivity-state
-  - ./load-balancer
-
-## `archived/functions/node_modules/@grpc/grpc-js/src/load-balancer-child-handler.ts`
-
-- kind: `api_handler`
-- lines: 174
-- size_bytes: 5647
-- keywords:
-  - auth
-  - status
-- exports:
-  - ChildLoadBalancerHandler
-- symbols:
-  - ChildLoadBalancerHandler
-- local imports:
-  - ./call-interface
-  - ./channel-options
-  - ./channelz
-  - ./connectivity-state
-  - ./picker
-  - ./subchannel-address
-  - ./subchannel-interface
-
-## `archived/functions/node_modules/firebase-admin/lib/installations/installations-request-handler.d.ts`
-
-- kind: `api_handler`
-- lines: 44
-- size_bytes: 1472
-- keywords:
-  - admin
-  - index
-- symbols:
-  - FirebaseInstallationsRequestHandler
-- local imports:
-  - ../app/index
-
-## `archived/functions/node_modules/firebase-admin/lib/installations/installations-request-handler.js`
-
-- kind: `api_handler`
-- lines: 115
-- size_bytes: 5017
-- keywords:
-  - auth
-  - admin
-  - status
-  - index
-- exports:
-  - FirebaseInstallationsRequestHandler
-- symbols:
-  - FirebaseInstallationsRequestHandler
-  - errorMessage
-- local imports:
-  - ../utils/api-request
-  - ../utils/error
-  - ../utils/index
-  - ../utils/validator
-
-## `archived/functions/node_modules/google-auth-library/build/src/auth/pluggable-auth-handler.d.ts`
-
-- kind: `api_handler`
-- lines: 52
-- size_bytes: 1842
-- keywords:
-  - auth
-  - map
-- symbols:
-  - PluggableAuthHandler
-- local imports:
-  - ./executable-response
-
-## `archived/functions/node_modules/google-auth-library/build/src/auth/pluggable-auth-handler.js`
-
-- kind: `api_handler`
-- lines: 157
-- size_bytes: 6774
-- keywords:
-  - auth
-  - map
-  - sync
-- exports:
-  - PluggableAuthHandler
-- symbols:
-  - PluggableAuthHandler
-- local imports:
-  - ./executable-response
-  - ./pluggable-auth-client
-
-## `archived/functions/node_modules/undici-types/handlers.d.ts`
-
-- kind: `api_handler`
-- lines: 16
-- size_bytes: 447
-- symbols:
-  - DecoratorHandler
-  - RedirectHandler
-- local imports:
-  - ./dispatcher
-
-## `archived/functions/node_modules/undici-types/retry-handler.d.ts`
-
-- kind: `api_handler`
-- lines: 117
-- size_bytes: 2983
-- keywords:
-  - member
-  - status
-- symbols:
-  - RetryHandler
-- local imports:
-  - ./dispatcher
+Files indexed here: 101
 
 ## `functions/node_modules/@grpc/grpc-js/build/src/load-balancer-child-handler.d.ts`
 
@@ -2003,8 +1862,10 @@ Files indexed here: 108
 ## `functions/src/service/providers/googleWorkspaceProvider.ts`
 
 - kind: `service_task`
-- lines: 245
-- size_bytes: 7558
+- lines: 455
+- size_bytes: 15395
+- warnings:
+  - large file: 455 lines
 - keywords:
   - auth
   - admin
@@ -2021,6 +1882,8 @@ Files indexed here: 108
   - GoogleWorkspaceProvider
   - assertLooksLikeEmail
   - currentRole
+  - encodeMimeHeader
+  - existing
   - normalizeEmail
 - local imports:
   - ./googleAuth
@@ -2028,9 +1891,10 @@ Files indexed here: 108
 ## `functions/src/service/registry.ts`
 
 - kind: `service_task`
-- lines: 44
-- size_bytes: 1837
+- lines: 48
+- size_bytes: 2087
 - keywords:
+  - setup
   - gear
   - kayak
   - godzinki
@@ -2061,8 +1925,10 @@ Files indexed here: 108
   - ./tasks/kmRebuildRankings
   - ./tasks/kmRebuildUserStats
   - ./tasks/kursSyncFromSheet
+  - ./tasks/listaEnforcePostingPolicy
   - ./tasks/membersSyncToSheet
   - ./tasks/onUserRegisteredWelcome
+  - ./tasks/usersSyncFunctionRolesFromSetup
   - ./tasks/usersSyncRolesFromSheet
   - ./types
 
@@ -2092,8 +1958,8 @@ Files indexed here: 108
 ## `functions/src/service/service_config.ts`
 
 - kind: `service_task`
-- lines: 242
-- size_bytes: 8573
+- lines: 345
+- size_bytes: 12824
 - keywords:
   - admin
   - gear
@@ -2102,11 +1968,12 @@ Files indexed here: 108
   - basen
   - events
   - calendar
-  - map
+  - km
   - member
   - role
   - sync
   - job
+  - task
   - batch
   - email
   - groups
@@ -2346,6 +2213,21 @@ Files indexed here: 108
   - ../service_config
   - ../types
 
+## `functions/src/service/tasks/listaEnforcePostingPolicy.ts`
+
+- kind: `service_task`
+- lines: 50
+- size_bytes: 1275
+- keywords:
+  - sync
+  - task
+  - email
+  - groups
+- exports:
+  - listaEnforcePostingPolicyTask
+- local imports:
+  - ../types
+
 ## `functions/src/service/tasks/membersSyncToSheet.ts`
 
 - kind: `service_task`
@@ -2380,8 +2262,8 @@ Files indexed here: 108
 ## `functions/src/service/tasks/onUserRegisteredWelcome.ts`
 
 - kind: `service_task`
-- lines: 265
-- size_bytes: 9867
+- lines: 279
+- size_bytes: 10470
 - keywords:
   - setup
   - map
@@ -2398,16 +2280,49 @@ Files indexed here: 108
 - symbols:
   - asErr
   - assertString
+  - listaRoleForUserRole
   - service
   - setupData
+- local imports:
+  - ../types
+
+## `functions/src/service/tasks/usersSyncFunctionRolesFromSetup.ts`
+
+- kind: `service_task`
+- lines: 528
+- size_bytes: 18735
+- warnings:
+  - large file: 528 lines
+- keywords:
+  - admin
+  - setup
+  - map
+  - role
+  - sync
+  - task
+  - email
+- exports:
+  - usersSyncFunctionRolesFromSetupTask
+- symbols:
+  - buildAdminAlertBody
+  - buildAdminOffboardingBody
+  - buildAdminOnboardingBody
+  - buildOperatorOffboardingBody
+  - buildOperatorWaitBody
+  - buildOperatorWelcomeTemplate
+  - decideCase
+  - operatorHandle
+  - parseSingleEmail
+  - prevState
+  - vars
 - local imports:
   - ../types
 
 ## `functions/src/service/tasks/usersSyncRolesFromSheet.ts`
 
 - kind: `service_task`
-- lines: 383
-- size_bytes: 13471
+- lines: 425
+- size_bytes: 15320
 - keywords:
   - admin
   - setup
@@ -2425,6 +2340,7 @@ Files indexed here: 108
   - usersSyncRolesFromSheetTask
 - symbols:
   - buildInvertedLabelMap
+  - listaRoleForUserRole
   - norm
   - setupData
   - syncWorkspaceGroupsForUser

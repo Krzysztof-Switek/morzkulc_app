@@ -1,31 +1,9 @@
 /* public/styles/basen.css */
 /* ================= BASEN ================= */
 
-.basenTabs {
-  display: flex;
-  gap: 6px;
-  margin: 12px 0;
-  flex-wrap: wrap;
-}
-
-.basenTab {
-  padding: 8px 18px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-
-.basenTab.active,
-.basenTab:hover {
-  background: var(--accent, #3b82f6);
-  color: #fff;
-  border-color: transparent;
-}
+/* Zakładki modułu (Sesje / Mój karnet / Zarządzanie) — reużywają współdzielone
+   .modTabs/.modTab z base.css (były niemal identyczną duplikacją); .basenTabs/.basenTab
+   zostają jako marker klasy dla JS (querySelector/event delegation), bez własnego CSS. */
 
 /* ─── Session cards ─── */
 
@@ -263,4 +241,127 @@
   .basenFormGrid {
     grid-template-columns: 1fr;
   }
+}
+
+/* ─── Day card / slot cards ─── */
+
+.basenDayCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.basenSlotGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.basenSlotCard {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+:root[data-theme="light"] .basenSlotCard {
+  background: rgba(12, 18, 32, 0.015);
+}
+
+.basenSlotCancelled {
+  opacity: 0.6;
+}
+
+.basenSlotHead {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.basenSlotLabel {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.basenSlotFooter {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.basenCheckLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-muted, #888);
+  cursor: pointer;
+}
+
+.basenEnrolledInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.basenKayakRow {
+  font-size: 13px;
+  color: var(--text-muted, #888);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.basenSlotFooter .small,
+.basenKayakRow .small {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+/* ─── Attendees details/summary ─── */
+
+.basenAttendeesDetails {
+  font-size: 13px;
+}
+
+.basenAttendeesDetails summary {
+  cursor: pointer;
+  color: var(--accent, #3b82f6);
+  font-weight: 600;
+}
+
+.basenAttendeesBody {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.basenAttendeesGroupTitle {
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.basenAttendeeRow {
+  color: var(--text-muted, #888);
+}
+
+.basenAttendeeRowSub {
+  padding-left: 12px;
+}
+
+.basenAttendeePair {
+  margin-bottom: 6px;
+}
+
+.basenAttendeePairInstructor {
+  font-weight: 600;
+  color: var(--text);
 }

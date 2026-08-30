@@ -368,30 +368,23 @@
         }
       },
       {
-        "source": "/api/basen/godziny",
+        "source": "/api/basen/kayak",
         "function": {
-          "functionId": "getBasenGodziny",
+          "functionId": "basenSetKayak",
           "region": "us-central1"
         }
       },
       {
-        "source": "/api/basen/admin/godziny/add",
+        "source": "/api/basen/kayaks",
         "function": {
-          "functionId": "basenAdminAddGodziny",
+          "functionId": "getBasenKayaks",
           "region": "us-central1"
         }
       },
       {
-        "source": "/api/basen/admin/godziny/correct",
+        "source": "/api/basen/attendees",
         "function": {
-          "functionId": "basenAdminCorrectGodziny",
-          "region": "us-central1"
-        }
-      },
-      {
-        "source": "/api/basen/admin/users",
-        "function": {
-          "functionId": "basenAdminSearchUsers",
+          "functionId": "getBasenAttendees",
           "region": "us-central1"
         }
       },
@@ -487,5 +480,12 @@
         }
       }
     ]
+  },
+  "emulators": {
+    "functions": { "port": 5001 },
+    "firestore": { "port": 8080 },
+    "auth": { "port": 9099 },
+    "ui": { "enabled": true, "port": 4000 },
+    "singleProjectMode": true
   }
 }

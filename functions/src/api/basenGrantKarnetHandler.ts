@@ -1,5 +1,5 @@
 import type {Request, Response} from "express";
-import {grantKarnet, getBasenVars} from "../modules/basen/basen_service";
+import {grantKarnet, getBasenVars, resolveBasenAdminGrant} from "../modules/basen/basen_service";
 
 type Deps = {
   db: FirebaseFirestore.Firestore;
@@ -38,8 +38,10 @@ export async function handleBasenGrantKarnet(req: Request, res: Response, deps: 
       }
 
       const adminData = adminSnap.data() as any;
-      if (!deps.adminRoleKeys.includes(String(adminData?.role_key || ""))) {
-        res.status(403).json({error: "Brak uprawnień. Wymagana rola: zarząd lub KR."});
+      const adminRoleKey = String(adminData?.role_key || "");
+      const adminEmail = String(adminData?.email || "");
+      if (!deps.adminRoleKeys.includes(adminRoleKey) && !(await resolveBasenAdminGrant(deps.db, adminEmail))) {
+        res.status(403).json({error: "Brak uprawnień. Wymagana rola: zarząd/KR lub opiekun basenowy."});
         return;
       }
 

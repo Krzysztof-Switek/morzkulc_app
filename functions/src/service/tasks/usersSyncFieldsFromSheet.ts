@@ -424,6 +424,12 @@ export const usersSyncFieldsFromSheetTask: ServiceTask<Payload> = {
         candidates.push(["admin.hasAkademikAccess", normalizeBoolish(g(row, "dostep_akademik"))]);
       }
 
+      // Instruktor basenowy — OPCJONALNA kolumna „Instruktor basenowy" (moduł Basen).
+      // Wzorem „opiekun stażu": patchujemy TYLKO gdy kolumna istnieje w arkuszu.
+      if ("instruktor_basenowy" in hmap) {
+        candidates.push(["admin.basenInstructor", normalizeBoolish(g(row, "instruktor_basenowy"))]);
+      }
+
       // Dane kursowe (PESEL/waga/wzrost/opłata) — OPCJONALNE kolumny przejęte z dawnego
       // arkusza "Szkoleniówka" (kolekcja kurs_uczestnicy, wygaszona). Wzorem powyższych:
       // patchujemy TYLKO gdy kolumna istnieje w arkuszu.

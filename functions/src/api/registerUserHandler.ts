@@ -7,6 +7,7 @@ import {creditOpeningBalance} from "../modules/hours/godzinki_service";
 import {getGodzinkiVars} from "../modules/hours/godzinki_vars";
 import {getObHours, buildOpeningBalanceAdminPatch, obValueExact, obEmailKey} from "../modules/hours/opening_balance_fields";
 import {getKursWindowEndSuffix} from "../modules/equipment/bundle/gear_bundle_service";
+import {resolveBasenAdminGrant} from "../modules/basen/basen_service";
 
 type TokenCheck =
   | {error: string}
@@ -728,6 +729,11 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
         // szkoleniowiec (rozwiązywany tylko dla kandydata — ogranicza odczyty).
         const szkoleniowiec = roleKey === "rola_kandydat" ? await resolveSzkoleniowiec(db) : null;
 
+        const allowedActions = deps.computeAllowedActions(roleKey);
+        if (await resolveBasenAdminGrant(db, email)) {
+          if (!allowedActions.includes("basen.admin")) allowedActions.push("basen.admin");
+        }
+
         res.status(200).json({
           ok: true,
           existed: true,
@@ -736,7 +742,7 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
           role_key: roleKey,
           status_key: statusKey,
           screen: defaultScreenForRoleKey(roleKey),
-          allowed_actions: deps.computeAllowedActions(roleKey),
+          allowed_actions: allowedActions,
           setupMissing: !setupApp,
           openingMatch: Boolean((data as any).openingMatch),
           profileComplete,
@@ -745,6 +751,7 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
           contributionsPaidUntil: (data as any).admin?.contributions ?? null,
           entryFeePaidAt: (data as any).admin?.entryFeePaidAt ?? null,
           mentor: (data as any).admin?.mentor ?? null,
+          basenInstructor: (data as any).admin?.basenInstructor === true,
           szkoleniowiec,
           openingNameMatchPendingConfirm,
           obEmail: obEmailForConfirm,
@@ -873,6 +880,11 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
       // jeszcze admin.mentor (trafia syncem z arkusza) — wtedy null.
       const szkoleniowiec = roleKey === "rola_kandydat" ? await resolveSzkoleniowiec(db) : null;
 
+      const allowedActions = deps.computeAllowedActions(roleKey);
+      if (await resolveBasenAdminGrant(db, email)) {
+        if (!allowedActions.includes("basen.admin")) allowedActions.push("basen.admin");
+      }
+
       res.status(200).json({
         ok: true,
         existed: false,
@@ -881,7 +893,7 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
         role_key: roleKey,
         status_key: statusKey,
         screen: defaultScreenForRoleKey(roleKey),
-        allowed_actions: deps.computeAllowedActions(roleKey),
+        allowed_actions: allowedActions,
         setupMissing: !setupApp,
         openingMatch,
         profileComplete,
@@ -890,6 +902,7 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
         contributionsPaidUntil: docToCreate.admin?.contributions ?? null,
         entryFeePaidAt: docToCreate.admin?.entryFeePaidAt ?? null,
         mentor: docToCreate.admin?.mentor ?? null,
+        basenInstructor: docToCreate.admin?.basenInstructor === true,
         szkoleniowiec,
         openingNameMatchPendingConfirm,
         obEmail: obEmailForConfirm,

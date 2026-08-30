@@ -1045,6 +1045,9 @@ async function buildHomeEventsSection(ctx) {
   }
 }
 
+const BASEN_HOME_SLOT_LABELS = { H1: "I godzina", H2: "II godzina", SAUNA: "Sauna" };
+const BASEN_HOME_SLOT_ORDER = ["H1", "H2", "SAUNA"];
+
 async function buildHomeBasenSection(ctx) {
   if (!ctx?.idToken) {
     return `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Brak sesji.</div></div></div>`;
@@ -1053,7 +1056,17 @@ async function buildHomeBasenSection(ctx) {
   try {
     const data = await apiGetJson({ url: BASEN_SESSIONS_URL, idToken: ctx.idToken });
     const sessions = Array.isArray(data?.sessions) ? data.sessions : [];
-    const upcoming = sessions.slice(0, 3);
+
+    // Spłaszcz sesje po slotach (H1/H2/SAUNA), pomiń odwołane — pokaż do 3 najbliższych.
+    const flatSlots = [];
+    for (const s of sessions) {
+      for (const key of BASEN_HOME_SLOT_ORDER) {
+        const slot = s?.slots?.[key];
+        if (!slot || slot.status === "cancelled") continue;
+        flatSlots.push({ date: s.date, slotKey: key, ...slot });
+      }
+    }
+    const upcoming = flatSlots.slice(0, 3);
 
     if (!upcoming.length) {
       return `
@@ -1075,12 +1088,13 @@ async function buildHomeBasenSection(ctx) {
       const spotsLabel = s.userEnrolled
         ? "Zapisany/a"
         : spotsLeft > 0 ? `${spotsLeft} miejsc` : "Brak miejsc";
+      const slotLabel = BASEN_HOME_SLOT_LABELS[s.slotKey] || s.slotKey;
 
       return `
         <div class="startListItem">
           <div class="startListMain">
-            <div class="startListTitle">${escapeHtml(dateStr)} ${escapeHtml(s.timeStart || "")}–${escapeHtml(s.timeEnd || "")}</div>
-            <div class="startListMeta">${escapeHtml(spotsLabel)}${s.instructorName ? " · " + escapeHtml(String(s.instructorName)) : ""}</div>
+            <div class="startListTitle">${escapeHtml(dateStr)} ${escapeHtml(slotLabel)} · ${escapeHtml(s.timeStart || "")}–${escapeHtml(s.timeEnd || "")}</div>
+            <div class="startListMeta">${escapeHtml(spotsLabel)}</div>
           </div>
         </div>
       `;

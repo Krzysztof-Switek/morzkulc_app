@@ -1,5 +1,5 @@
 import type {Request, Response} from "express";
-import {cancelEnrollment, getBasenVars, BasenSlotLabel} from "../modules/basen/basen_service";
+import {listAvailableBasenKayaks, BasenSlotLabel} from "../modules/basen/basen_service";
 
 type Deps = {
   db: FirebaseFirestore.Firestore;
@@ -12,17 +12,12 @@ type Deps = {
 
 const VALID_SLOTS: BasenSlotLabel[] = ["H1", "H2", "SAUNA"];
 
-export async function handleBasenCancelEnrollment(req: Request, res: Response, deps: Deps): Promise<void> {
+export async function handleGetBasenKayaks(req: Request, res: Response, deps: Deps): Promise<void> {
   if (deps.sendPreflight(req, res)) return;
   if (!deps.requireAllowedHost(req, res)) return;
   deps.setCorsHeaders(req, res);
 
   deps.corsHandler(req, res, async () => {
-    if (req.method !== "POST") {
-      res.status(405).json({error: "Method not allowed"});
-      return;
-    }
-
     try {
       const tokenCheck = await deps.requireIdToken(req);
       if ("error" in tokenCheck) {
@@ -30,33 +25,20 @@ export async function handleBasenCancelEnrollment(req: Request, res: Response, d
         return;
       }
 
-      const uid = tokenCheck.decoded.uid;
-
-      const body = req.body || {};
-      const sessionId = String(body.sessionId || "").trim();
-      const slot = String(body.slot || "").trim() as BasenSlotLabel;
+      const sessionId = String(req.query.sessionId || "").trim();
+      const slot = String(req.query.slot || "").trim() as BasenSlotLabel;
 
       if (!sessionId || !VALID_SLOTS.includes(slot)) {
         res.status(400).json({error: "Brakuje sessionId lub nieprawidłowy slot."});
         return;
       }
 
-      const vars = await getBasenVars(deps.db);
+      const kayaks = await listAvailableBasenKayaks(deps.db, sessionId, slot);
 
-      await cancelEnrollment(deps.db, {
-        sessionId,
-        slot,
-        uid,
-        cancellationWindowHours: vars.basen_okno_anulowania_h,
-      });
-
-      res.status(200).json({ok: true});
+      res.status(200).json({ok: true, kayaks});
     } catch (err) {
       const e = err as {message?: string};
-      const msg = e?.message || String(err);
-      const clientErrors = ["nie istnieje", "już anulowany", "możliwe tylko"];
-      const isClient = clientErrors.some((s) => msg.includes(s));
-      res.status(isClient ? 400 : 500).json({error: msg});
+      res.status(500).json({error: "Server error", message: e?.message || String(err)});
     }
   });
 }

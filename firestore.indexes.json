@@ -70,17 +70,7 @@
       "collectionGroup": "basen_sessions",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "status", "order": "ASCENDING" },
-        { "fieldPath": "date", "order": "ASCENDING" },
-        { "fieldPath": "timeStart", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "basen_sessions",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "date", "order": "ASCENDING" },
-        { "fieldPath": "timeStart", "order": "ASCENDING" }
+        { "fieldPath": "date", "order": "ASCENDING" }
       ]
     },
     {
@@ -95,8 +85,25 @@
       "collectionGroup": "basen_enrollments",
       "queryScope": "COLLECTION",
       "fields": [
+        { "fieldPath": "sessionId", "order": "ASCENDING" },
+        { "fieldPath": "slot", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "basen_enrollments",
+      "queryScope": "COLLECTION",
+      "fields": [
         { "fieldPath": "userUid", "order": "ASCENDING" },
         { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "basen_kayak_allocations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "sessionId", "order": "ASCENDING" },
+        { "fieldPath": "slot", "order": "ASCENDING" }
       ]
     },
     {
@@ -112,14 +119,6 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "userUid", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "basen_godziny_ledger",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "uid", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },

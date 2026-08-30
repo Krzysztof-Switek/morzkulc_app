@@ -385,6 +385,17 @@ export async function fetchItemDetails(
       }
     }
 
+    // Drobny sprzęt przypisany do basenu (wiosła/kamizelki/kaski/fartuchy) — wykluczony
+    // z wypożyczenia w module Sprzęt, tak samo jak kajaki ze storedAt="Basen" powyżej.
+    if (["paddles", "lifejackets", "helmets", "sprayskirts"].includes(cat) && found?.isPoolAllowed === true) {
+      return {
+        ok: false,
+        code: "item_not_reservable",
+        message: `Przedmiot ${iid} jest przypisany do basenu i nie może być rezerwowany w module Sprzęt`,
+        details: {itemId: iid, category: cat},
+      };
+    }
+
     const isKayak = cat === "kayaks";
     const number = norm(found?.number || found?._resolvedId);
     const brand = norm(found?.brand);
@@ -1084,6 +1095,11 @@ export async function getItemsWithAvailability(
       item.storage = norm(d?.storage || d?.storedAt);
     } else {
       item.meta = buildNonKayakMeta(d, cat);
+      // Basen (wiosła/kamizelki/kaski/fartuchy) — top-level, spójnie z item.storage dla
+      // kajaków, żeby karty tych 4 kategorii mogły pokazać badge "Basen" wzorem kajaków.
+      if (["paddles", "lifejackets", "helmets", "sprayskirts"].includes(cat)) {
+        item.isPoolAllowed = d?.isPoolAllowed === true;
+      }
     }
 
     items.push(item);

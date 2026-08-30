@@ -41,10 +41,9 @@ import {handleGetBasenKarnety} from "./api/getBasenKarnetyHandler";
 import {handleBasenCreateSession} from "./api/basenCreateSessionHandler";
 import {handleBasenCancelSession} from "./api/basenCancelSessionHandler";
 import {handleBasenGrantKarnet} from "./api/basenGrantKarnetHandler";
-import {handleGetBasenGodziny} from "./api/getBasenGodzinyHandler";
-import {handleBasenAdminAddGodziny} from "./api/basenAdminAddGodzinyHandler";
-import {handleBasenAdminCorrectGodziny} from "./api/basenAdminCorrectGodzinyHandler";
-import {handleBasenAdminSearchUsers} from "./api/basenAdminSearchUsersHandler";
+import {handleBasenSetKayak} from "./api/basenSetKayakHandler";
+import {handleGetBasenKayaks} from "./api/getBasenKayaksHandler";
+import {handleGetBasenAttendees} from "./api/getBasenAttendeesHandler";
 import {handleKmAddLog} from "./api/kmAddLogHandler";
 import {handleKmMyLogs} from "./api/kmMyLogsHandler";
 import {handleKmMyStats} from "./api/kmMyStatsHandler";
@@ -258,7 +257,7 @@ function computeAllowedActions(roleKey: string): string[] {
   // szkoleniówki (patrz getSetup oraz gear_bundle_service). Bez zgłaszania imprez /
   // standardowych godzinek.
   if (roleKey === "rola_kursant") {
-    actions.push("gear.reserve");
+    actions.push("gear.reserve", "basen.enroll");
   }
   if (godzinkiRoleKeys.includes(roleKey)) {
     actions.push("godzinki.submit");
@@ -1214,14 +1213,14 @@ export const submitEvent = onRequest({invoker: "private"}, async (req, res) => {
 });
 
 /**
- * Kolejkuje powiadomienie o anulowaniu sesji basenowej.
+ * Kolejkuje powiadomienie o anulowaniu terminu/slotu basenowego.
  */
-async function enqueueBasenSessionCancelledNotify(sessionId: string): Promise<void> {
+async function enqueueBasenSessionCancelledNotify(sessionId: string, slot?: string): Promise<void> {
   const jobRef = db.collection("service_jobs").doc();
   await jobRef.set({
     id: jobRef.id,
     taskId: "basen.notifySessionCancelled",
-    payload: {sessionId},
+    payload: {sessionId, ...(slot ? {slot} : {})},
     status: "queued",
     attempts: 0,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -1333,66 +1332,47 @@ export const basenGrantKarnet = onRequest({invoker: "private"}, async (req, res)
 });
 
 /**
- * GET /api/basen/godziny (authenticated)
- * Saldo i historia godzin basenowych. Admin może podać ?uid= dla innego użytkownika.
+ * POST /api/basen/kayak (authenticated)
+ * Właściciel zapisu wybiera/zmienia/zwalnia kajak basenowy dla swojego zapisu.
  */
-export const getBasenGodziny = onRequest({invoker: "private"}, async (req, res) => {
-  return handleGetBasenGodziny(req, res, {
+export const basenSetKayak = onRequest({invoker: "private"}, async (req, res) => {
+  return handleBasenSetKayak(req, res, {
     db,
     sendPreflight,
     requireAllowedHost,
     setCorsHeaders,
     corsHandler,
     requireIdToken,
-    adminRoleKeys,
   });
 });
 
 /**
- * POST /api/basen/admin/godziny/add (authenticated, role: zarzad/kr)
- * Admin dopisuje godziny basenowe użytkownikowi.
+ * GET /api/basen/kayaks (authenticated)
+ * Lista dostępnych kajaków basenowych dla danego terminu+slotu (+ "Kajak prywatny").
  */
-export const basenAdminAddGodziny = onRequest({invoker: "private"}, async (req, res) => {
-  return handleBasenAdminAddGodziny(req, res, {
+export const getBasenKayaks = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetBasenKayaks(req, res, {
     db,
     sendPreflight,
     requireAllowedHost,
     setCorsHeaders,
     corsHandler,
     requireIdToken,
-    adminRoleKeys,
   });
 });
 
 /**
- * POST /api/basen/admin/godziny/correct (authenticated, role: zarzad/kr)
- * Admin wykonuje korektę godzin basenowych (plus lub minus).
+ * GET /api/basen/attendees (authenticated)
+ * Lista uczestników/instruktorów danego terminu+slotu.
  */
-export const basenAdminCorrectGodziny = onRequest({invoker: "private"}, async (req, res) => {
-  return handleBasenAdminCorrectGodziny(req, res, {
+export const getBasenAttendees = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetBasenAttendees(req, res, {
     db,
     sendPreflight,
     requireAllowedHost,
     setCorsHeaders,
     corsHandler,
     requireIdToken,
-    adminRoleKeys,
-  });
-});
-
-/**
- * GET /api/basen/admin/users (authenticated, role: zarzad/kr)
- * Wyszukiwanie użytkowników po fragmencie e-mail (?q=).
- */
-export const basenAdminSearchUsers = onRequest({invoker: "private"}, async (req, res) => {
-  return handleBasenAdminSearchUsers(req, res, {
-    db,
-    sendPreflight,
-    requireAllowedHost,
-    setCorsHeaders,
-    corsHandler,
-    requireIdToken,
-    adminRoleKeys,
   });
 });
 

@@ -3,7 +3,7 @@
 const { GoogleAuth } = require("google-auth-library");
 const PROJECT = "morzkulc-e9df7";
 const LOCATION = "us-central1";
-const TARGETS = ["adminApprove", "getBasenGodziny", "submitGodzinki", "kmMapData", "gearPrivateStorageMonthly"];
+const TARGETS = ["adminApprove", "getBasenSessions", "submitGodzinki", "kmMapData", "gearPrivateStorageMonthly"];
 
 (async () => {
   const auth = new GoogleAuth({ scopes: ["https://www.googleapis.com/auth/cloud-platform"] });

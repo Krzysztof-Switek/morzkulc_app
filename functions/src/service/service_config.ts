@@ -68,11 +68,6 @@ export interface ServiceConfig {
     tabName: string;
   };
 
-  // ✅ NEW: Basen (pool) config
-  basen: {
-    adminEmail: string;
-  };
-
   // ✅ NEW: Google Calendar config
   calendar: {
     calendarId: string; // empty string = calendar sync disabled
@@ -281,10 +276,6 @@ export function getServiceConfig(): ServiceConfig {
     events: {
       spreadsheetId: eventsSpreadsheetId,
       tabName: eventsTabName,
-    },
-
-    basen: {
-      adminEmail: process.env.SVC_BASEN_ADMIN_EMAIL || "",
     },
 
     calendar: {

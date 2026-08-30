@@ -32,25 +32,33 @@ export async function handleGetBasenSessions(req: Request, res: Response, deps: 
         getUserKarnety(deps.db, uid),
       ]);
 
-      const enrolledSessionIds = new Set(userEnrollments.map((e) => e.sessionId));
-      const enrollmentBySessionId = Object.fromEntries(
-        userEnrollments.map((e) => [e.sessionId, e])
-      );
+      const enrollmentByKey = new Map(userEnrollments.map((e) => [`${e.sessionId}_${e.slot}`, e]));
 
-      const sessionsWithStatus = sessions.map((s) => ({
-        id: s.id,
-        date: s.date,
-        timeStart: s.timeStart,
-        timeEnd: s.timeEnd,
-        capacity: s.capacity,
-        enrolledCount: s.enrolledCount,
-        instructorName: s.instructorName,
-        notes: s.notes,
-        status: s.status,
-        userEnrolled: enrolledSessionIds.has(s.id),
-        userEnrollmentId: enrollmentBySessionId[s.id]?.id || null,
-        userPaymentType: enrollmentBySessionId[s.id]?.paymentType || null,
-      }));
+      const sessionsWithStatus = sessions.map((s) => {
+        const slots: Record<string, any> = {};
+        for (const [label, slot] of Object.entries(s.slots || {})) {
+          if (!slot) continue;
+          const enrollment = enrollmentByKey.get(`${s.id}_${label}`) || null;
+          slots[label] = {
+            timeStart: slot.timeStart,
+            timeEnd: slot.timeEnd,
+            capacity: slot.capacity,
+            enrolledCount: slot.enrolledCount,
+            status: slot.status,
+            userEnrolled: Boolean(enrollment),
+            userEnrollmentType: enrollment?.type || null,
+            userPaymentType: enrollment?.paymentType || null,
+            userKayakId: enrollment?.kayakId || null,
+          };
+        }
+
+        return {
+          id: s.id,
+          date: s.date,
+          notes: s.notes,
+          slots,
+        };
+      });
 
       res.status(200).json({
         ok: true,

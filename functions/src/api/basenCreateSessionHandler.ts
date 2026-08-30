@@ -1,5 +1,5 @@
 import type {Request, Response} from "express";
-import {createSession, getBasenVars} from "../modules/basen/basen_service";
+import {createSession, getBasenVars, resolveBasenAdminGrant} from "../modules/basen/basen_service";
 
 type Deps = {
   db: FirebaseFirestore.Firestore;
@@ -10,6 +10,13 @@ type Deps = {
   requireIdToken: (req: Request) => Promise<{error: string} | {decoded: any}>;
   adminRoleKeys: string[];
 };
+
+function readTimeBlock(raw: any, fallback: {timeStart: string; timeEnd: string}, defaultCapacity: number) {
+  const timeStart = String(raw?.timeStart || "").trim() || fallback.timeStart;
+  const timeEnd = String(raw?.timeEnd || "").trim() || fallback.timeEnd;
+  const capacity = Number(raw?.capacity || 0) || defaultCapacity;
+  return {timeStart, timeEnd, capacity};
+}
 
 export async function handleBasenCreateSession(req: Request, res: Response, deps: Deps): Promise<void> {
   if (deps.sendPreflight(req, res)) return;
@@ -39,22 +46,19 @@ export async function handleBasenCreateSession(req: Request, res: Response, deps
 
       const userData = userSnap.data() as any;
       const roleKey = String(userData?.role_key || "");
+      const email = String(userData?.email || "");
 
-      if (!deps.adminRoleKeys.includes(roleKey)) {
-        res.status(403).json({error: "Brak uprawnień. Wymagana rola: zarząd lub KR."});
+      if (!deps.adminRoleKeys.includes(roleKey) && !(await resolveBasenAdminGrant(deps.db, email))) {
+        res.status(403).json({error: "Brak uprawnień. Wymagana rola: zarząd/KR lub opiekun basenowy."});
         return;
       }
 
       const body = req.body || {};
       const date = String(body.date || "").trim();
-      const timeStart = String(body.timeStart || "").trim();
-      const timeEnd = String(body.timeEnd || "").trim();
       const notes = String(body.notes || "").trim();
-      const instructorEmail = String(body.instructorEmail || "").trim();
-      const instructorName = String(body.instructorName || "").trim();
 
-      if (!date || !timeStart || !timeEnd) {
-        res.status(400).json({error: "Wymagane pola: data, godzina od, godzina do."});
+      if (!date) {
+        res.status(400).json({error: "Wymagane pole: data."});
         return;
       }
 
@@ -64,15 +68,29 @@ export async function handleBasenCreateSession(req: Request, res: Response, deps
       }
 
       const vars = await getBasenVars(deps.db);
-      const capacity = Number(body.capacity || 0) || vars.basen_limit_uczestnikow;
+      const h1 = readTimeBlock(body.h1, {timeStart: vars.basen_1_godzina_domyslna, timeEnd: vars.basen_1_godzina_domyslna}, vars.basen_limit_uczestnikow);
+      const h2 = readTimeBlock(body.h2, {timeStart: vars.basen_2_godzina_domyslna, timeEnd: vars.basen_2_godzina_domyslna}, vars.basen_limit_uczestnikow);
+
+      if (!h1.timeStart || !h1.timeEnd || !h2.timeStart || !h2.timeEnd) {
+        res.status(400).json({error: "Wymagane godziny H1 i H2."});
+        return;
+      }
+
+      const saunaRaw = body.sauna || {};
+      const sauna = saunaRaw?.enabled === true ?
+        {
+          enabled: true,
+          timeStart: String(saunaRaw?.timeStart || "").trim() || h1.timeStart,
+          timeEnd: String(saunaRaw?.timeEnd || "").trim() || h1.timeEnd,
+          capacity: Number(saunaRaw?.capacity || 0) || vars.basen_limit_uczestnikow,
+        } :
+        undefined;
 
       const sessionId = await createSession(deps.db, {
         date,
-        timeStart,
-        timeEnd,
-        capacity,
-        instructorEmail,
-        instructorName,
+        h1,
+        h2,
+        sauna,
         notes,
         createdBy: uid,
       });
