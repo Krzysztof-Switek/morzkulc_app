@@ -40,6 +40,7 @@ import {handleBasenCancelEnrollment} from "./api/basenCancelEnrollmentHandler";
 import {handleBasenCreateSession} from "./api/basenCreateSessionHandler";
 import {handleBasenCancelSession} from "./api/basenCancelSessionHandler";
 import {handleBasenSetKayak} from "./api/basenSetKayakHandler";
+import {handleBasenSetInstructor} from "./api/basenSetInstructorHandler";
 import {handleGetBasenKayaks} from "./api/getBasenKayaksHandler";
 import {handleGetBasenAttendees} from "./api/getBasenAttendeesHandler";
 import {handleKmAddLog} from "./api/kmAddLogHandler";
@@ -1306,6 +1307,21 @@ export const basenCancelSession = onRequest({invoker: "private"}, async (req, re
  */
 export const basenSetKayak = onRequest({invoker: "private"}, async (req, res) => {
   return handleBasenSetKayak(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * POST /api/basen/instructor (authenticated)
+ * Właściciel zapisu dodaje/zmienia/usuwa parowanie z instruktorem na już aktywnym zapisie.
+ */
+export const basenSetInstructor = onRequest({invoker: "private"}, async (req, res) => {
+  return handleBasenSetInstructor(req, res, {
     db,
     sendPreflight,
     requireAllowedHost,

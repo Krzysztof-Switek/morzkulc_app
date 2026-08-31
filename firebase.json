@@ -361,6 +361,13 @@
         }
       },
       {
+        "source": "/api/basen/instructor",
+        "function": {
+          "functionId": "basenSetInstructor",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "/api/basen/kayaks",
         "function": {
           "functionId": "getBasenKayaks",

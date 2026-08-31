@@ -10,6 +10,7 @@ const CANCEL_ENROLL_URL = "/api/basen/cancel-enrollment";
 const CREATE_SESSION_URL = "/api/basen/sessions/create";
 const CANCEL_SESSION_URL = "/api/basen/sessions/cancel";
 const SET_KAYAK_URL = "/api/basen/kayak";
+const SET_INSTRUCTOR_URL = "/api/basen/instructor";
 const KAYAKS_URL = "/api/basen/kayaks";
 const ATTENDEES_URL = "/api/basen/attendees";
 
@@ -44,10 +45,11 @@ function formatDate(iso) {
   return `${m[3]}.${m[2]}.${m[1]} (${dayName})`;
 }
 
-function kayakLabel(kayakId) {
+function kayakLabel(kayakId, resolvedLabel) {
   if (!kayakId) return "Brak";
+  if (resolvedLabel) return resolvedLabel;
   if (kayakId === "PRIVATE") return "Kajak prywatny";
-  return `Kajak (nr ${esc(kayakId)})`;
+  return `Kajak (nr ${esc(kayakId)})`; // fallback gdy backend nie zwrócił etykiety
 }
 
 // ─── Tabs ─────────────────────────────────────────────────────────────────────
@@ -96,7 +98,7 @@ function renderAttendeesBody(data) {
       ${paired.map((p) => `
         <div class="basenAttendeePair">
           <div class="basenAttendeePairInstructor">${esc(p.instructor?.userDisplayName || "Instruktor")}</div>
-          ${p.participants.map((a) => `<div class="basenAttendeeRow basenAttendeeRowSub">${esc(a.userDisplayName)}${a.kayakId ? ` · ${esc(kayakLabel(a.kayakId))}` : ""}</div>`).join("")}
+          ${p.participants.map((a) => `<div class="basenAttendeeRow basenAttendeeRowSub">${esc(a.userDisplayName)}${a.kayakId ? ` · ${esc(kayakLabel(a.kayakId, a.kayakLabel))}` : ""}</div>`).join("")}
         </div>
       `).join("")}
     </div>`;
@@ -105,7 +107,7 @@ function renderAttendeesBody(data) {
   if (regular.length) {
     html += `<div class="basenAttendeesGroup">
       <div class="basenAttendeesGroupTitle">Uczestnicy</div>
-      ${regular.map((a) => `<div class="basenAttendeeRow">${esc(a.userDisplayName)}${a.kayakId ? ` · ${esc(kayakLabel(a.kayakId))}` : ""}</div>`).join("")}
+      ${regular.map((a) => `<div class="basenAttendeeRow">${esc(a.userDisplayName)}${a.kayakId ? ` · ${esc(kayakLabel(a.kayakId, a.kayakLabel))}` : ""}</div>`).join("")}
     </div>`;
   }
 
@@ -164,14 +166,18 @@ function renderSlotCard(sessionId, slotKey, slot, ctx, canEnroll) {
     `;
   } else if (isParticipantEnrolled) {
     const typeLabel = slot.userEnrollmentType === "training" ? "z instruktorem" : "";
+    const kayakLine = (!isSauna && slot.userKayakId)
+      ? `<div class="basenKayakRow">${esc(kayakLabel(slot.userKayakId, slot.userKayakLabel))}</div>`
+      : "";
     footerHtml = `
       <div class="basenEnrolledInfo">
         <div class="basenEnrolledBadge">Zapisany/a${typeLabel ? ` ${esc(typeLabel)}` : ""}</div>
-        ${!isSauna ? `<div class="basenKayakRow">Kajak: <strong data-kayak-current>${esc(kayakLabel(slot.userKayakId))}</strong>
-          <button type="button" class="ghost small basenChangeKayakBtn" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}">Zmień</button>
-        </div>` : ""}
+        ${kayakLine}
       </div>
-      <button type="button" class="ghost basenCancelBtn" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}">Anuluj</button>
+      <div class="basenEnrolledActions">
+        ${!isSauna ? `<button type="button" class="ghost basenModifyBtn" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}" data-current-kayak-id="${esc(slot.userKayakId || "")}" data-current-instructor-uid="${esc(slot.userInstructorUid || "")}">Modyfikuj zapis</button>` : ""}
+        <button type="button" class="ghost basenCancelBtn" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}" data-within-window="${slot.isWithinCancellationWindow ? "1" : "0"}">Anuluj zapis</button>
+      </div>
     `;
   } else if (!canEnroll) {
     footerHtml = `<span class="basenHint">Tylko dla członków klubu.</span>`;
@@ -209,7 +215,7 @@ function renderSlotCard(sessionId, slotKey, slot, ctx, canEnroll) {
     <div class="basenSlotCard${isCancelled ? " basenSlotCancelled" : ""}" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}">
       <div class="basenSlotHead">
         <span class="basenSlotLabel">${esc(SLOT_LABELS[slotKey] || slotKey)}</span>
-        <span class="basenCardTime">${esc(slot.timeStart)} – ${esc(slot.timeEnd)}</span>
+        <span class="basenCardTime">${esc(slot.timeStart)}</span>
         ${spotsHtml}
       </div>
       ${reservedNote}
@@ -260,6 +266,7 @@ async function renderSessionsView(innerEl, ctx, canEnroll) {
       <div class="basenList">
         ${sessions.map((s) => renderSessionCard(s, ctx, canEnroll)).join("")}
       </div>
+      ${renderModifyModalHtml()}
     `;
 
     bindSessionActions(innerEl, ctx, canEnroll);
@@ -404,7 +411,11 @@ function bindSessionActions(innerEl, ctx, canEnroll) {
       const cardEl = btn.closest(".basenSlotCard");
       const msgEl = cardEl?.querySelector("[data-slot-msg]");
 
-      if (!confirm("Anulować ten zapis?")) return;
+      const withinWindow = btn.getAttribute("data-within-window") === "1";
+      const confirmMsg = withinWindow
+        ? "Rezygnujesz mniej niż 24h przed zajęciami — mimo anulowania nadal obowiązuje pełna opłata za tę godzinę basenową. Kontynuować?"
+        : "Anulować ten zapis?";
+      if (!confirm(confirmMsg)) return;
 
       btn.disabled = true;
       btn.textContent = "Anuluję…";
@@ -414,7 +425,7 @@ function bindSessionActions(innerEl, ctx, canEnroll) {
         await refreshSessionsView(innerEl, ctx, canEnroll);
       } catch (e) {
         btn.disabled = false;
-        btn.textContent = "Anuluj";
+        btn.textContent = "Anuluj zapis";
         if (msgEl) {
           msgEl.textContent = e?.message || "Nie udało się anulować.";
           msgEl.classList.remove("hidden");
@@ -423,42 +434,146 @@ function bindSessionActions(innerEl, ctx, canEnroll) {
     });
   });
 
-  // Change kayak for an existing enrollment
-  innerEl.querySelectorAll(".basenChangeKayakBtn").forEach((btn) => {
-    btn.addEventListener("click", async () => {
+  // Modyfikuj zapis (kajak + instruktor) — otwiera wspólny modal
+  innerEl.querySelectorAll(".basenModifyBtn").forEach((btn) => {
+    btn.addEventListener("click", () => {
       const sessionId = btn.getAttribute("data-session-id");
       const slot = btn.getAttribute("data-slot");
-      const row = btn.closest(".basenKayakRow");
-      if (!row) return;
-
-      btn.disabled = true;
-      try {
-        const data = await apiGetJson({ url: `${KAYAKS_URL}?sessionId=${encodeURIComponent(sessionId)}&slot=${encodeURIComponent(slot)}`, idToken: ctx.idToken });
-        const kayaks = Array.isArray(data?.kayaks) ? data.kayaks : [];
-        row.innerHTML = `
-          <select class="basenKayakChangeSelect">
-            <option value="">Bez kajaka</option>
-            ${kayaks.map((k) => `<option value="${esc(k.id)}">${esc(k.label)}</option>`).join("")}
-          </select>
-          <button type="button" class="ghost small basenSaveKayakBtn" data-session-id="${esc(sessionId)}" data-slot="${esc(slot)}">Zapisz</button>
-        `;
-        row.querySelector(".basenSaveKayakBtn")?.addEventListener("click", async () => {
-          const kayakId = row.querySelector(".basenKayakChangeSelect")?.value || "";
-          const saveBtn = row.querySelector(".basenSaveKayakBtn");
-          saveBtn.disabled = true;
-          try {
-            await apiPostJson({ url: SET_KAYAK_URL, idToken: ctx.idToken, body: { sessionId, slot, kayakId: kayakId || null } });
-            await refreshSessionsView(innerEl, ctx, canEnroll);
-          } catch (e) {
-            saveBtn.disabled = false;
-            alert(e?.message || "Nie udało się zmienić kajaka.");
-          }
-        });
-      } catch (e) {
-        row.innerHTML += `<span class="err">Nie udało się pobrać listy kajaków.</span>`;
-      }
+      const currentKayakId = btn.getAttribute("data-current-kayak-id") || "";
+      const currentInstructorUid = btn.getAttribute("data-current-instructor-uid") || "";
+      openModifyModal(innerEl, ctx, sessionId, slot, {currentKayakId, currentInstructorUid}, () => refreshSessionsView(innerEl, ctx, canEnroll));
     });
   });
+
+  bindModalCloseDelegation(innerEl);
+}
+
+function bindModalCloseDelegation(innerEl) {
+  innerEl.addEventListener("click", (ev) => {
+    if (ev.target?.getAttribute?.("data-basen-modal-close") === "modify") closeModifyModal(innerEl);
+  });
+}
+
+// ─── Modal "Modyfikuj zapis" (kajak + instruktor) ─────────────────────────────
+
+function renderModifyModalHtml() {
+  return `
+    <div id="basenModifyModal" class="basenModal hidden" aria-hidden="true">
+      <div class="basenModalBackdrop" data-basen-modal-close="modify"></div>
+      <div class="basenModalCard" role="dialog" aria-modal="true" aria-label="Modyfikuj zapis">
+        <div class="basenModalTop">
+          <div class="basenModalTitle" data-modify-title>Modyfikuj zapis</div>
+          <button type="button" class="basenModalClose" data-basen-modal-close="modify" aria-label="Zamknij">✕</button>
+        </div>
+        <div class="basenModalBody">
+          <div class="basenModifySection">
+            <div class="basenModifySectionTitle">Kajak</div>
+            <div class="row">
+              <select class="basenModifyKayakSelect"><option value="">Ładowanie…</option></select>
+            </div>
+            <div class="basenModifySectionMsg hidden err" data-modify-kayak-msg></div>
+            <div class="actions">
+              <button type="button" class="ghost small basenModifyKayakSaveBtn">Zapisz kajak</button>
+            </div>
+          </div>
+          <div class="basenModifySection">
+            <div class="basenModifySectionTitle">Instruktor</div>
+            <div class="row">
+              <select class="basenModifyInstructorSelect"><option value="">Ładowanie…</option></select>
+            </div>
+            <div class="basenModifySectionMsg hidden err" data-modify-instructor-msg></div>
+            <div class="actions">
+              <button type="button" class="ghost small basenModifyInstructorSaveBtn">Zapisz instruktora</button>
+            </div>
+          </div>
+        </div>
+        <div class="basenModalActions">
+          <button type="button" class="ghost" data-basen-modal-close="modify">Zamknij</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function openModifyModal(innerEl, ctx, sessionId, slotKey, current, onChanged) {
+  const modal = innerEl.querySelector("#basenModifyModal");
+  if (!modal) return;
+
+  modal.querySelector("[data-modify-title]").textContent = `Modyfikuj zapis — ${SLOT_LABELS[slotKey] || slotKey}`;
+
+  const kayakSelect = modal.querySelector(".basenModifyKayakSelect");
+  const kayakMsg = modal.querySelector("[data-modify-kayak-msg]");
+  const kayakSaveBtn = modal.querySelector(".basenModifyKayakSaveBtn");
+  kayakSelect.innerHTML = `<option value="">Ładowanie…</option>`;
+  kayakMsg.classList.add("hidden");
+
+  const instructorSelect = modal.querySelector(".basenModifyInstructorSelect");
+  const instructorMsg = modal.querySelector("[data-modify-instructor-msg]");
+  const instructorSaveBtn = modal.querySelector(".basenModifyInstructorSaveBtn");
+  instructorSelect.innerHTML = `<option value="">Ładowanie…</option>`;
+  instructorMsg.classList.add("hidden");
+
+  apiGetJson({ url: `${KAYAKS_URL}?sessionId=${encodeURIComponent(sessionId)}&slot=${encodeURIComponent(slotKey)}`, idToken: ctx.idToken })
+    .then((data) => {
+      const kayaks = Array.isArray(data?.kayaks) ? data.kayaks : [];
+      kayakSelect.innerHTML = `<option value="">Bez kajaka</option>${kayaks.map((k) => `<option value="${esc(k.id)}">${esc(k.label)}</option>`).join("")}`;
+      kayakSelect.value = current.currentKayakId || "";
+    })
+    .catch(() => { kayakSelect.innerHTML = `<option value="">Błąd ładowania</option>`; });
+
+  kayakSaveBtn.onclick = async () => {
+    kayakMsg.classList.add("hidden");
+    kayakSaveBtn.disabled = true;
+    kayakSaveBtn.textContent = "Zapisuję…";
+    try {
+      await apiPostJson({ url: SET_KAYAK_URL, idToken: ctx.idToken, body: { sessionId, slot: slotKey, kayakId: kayakSelect.value || null } });
+      closeModifyModal(innerEl);
+      await onChanged();
+    } catch (e) {
+      kayakMsg.textContent = e?.message || "Nie udało się zmienić kajaka.";
+      kayakMsg.classList.remove("hidden");
+    } finally {
+      kayakSaveBtn.disabled = false;
+      kayakSaveBtn.textContent = "Zapisz kajak";
+    }
+  };
+
+  apiGetJson({ url: `${ATTENDEES_URL}?sessionId=${encodeURIComponent(sessionId)}&slot=${encodeURIComponent(slotKey)}`, idToken: ctx.idToken })
+    .then((data) => {
+      const instructors = Array.isArray(data?.instructors) ? data.instructors : [];
+      instructorSelect.innerHTML = `<option value="">Brak</option>${instructors.map((i) => `<option value="${esc(i.userUid)}">${esc(i.userDisplayName)}</option>`).join("")}`;
+      instructorSelect.value = current.currentInstructorUid || "";
+    })
+    .catch(() => { instructorSelect.innerHTML = `<option value="">Błąd ładowania</option>`; });
+
+  instructorSaveBtn.onclick = async () => {
+    instructorMsg.classList.add("hidden");
+    instructorSaveBtn.disabled = true;
+    instructorSaveBtn.textContent = "Zapisuję…";
+    try {
+      await apiPostJson({ url: SET_INSTRUCTOR_URL, idToken: ctx.idToken, body: { sessionId, slot: slotKey, instructorUid: instructorSelect.value || null } });
+      closeModifyModal(innerEl);
+      await onChanged();
+    } catch (e) {
+      instructorMsg.textContent = e?.message || "Nie udało się zmienić instruktora.";
+      instructorMsg.classList.remove("hidden");
+    } finally {
+      instructorSaveBtn.disabled = false;
+      instructorSaveBtn.textContent = "Zapisz instruktora";
+    }
+  };
+
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function closeModifyModal(innerEl) {
+  const modal = innerEl.querySelector("#basenModifyModal");
+  if (!modal) return;
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
 }
 
 // ─── Kalendarz admina ("Dodaj basen") ──────────────────────────────────────────
@@ -753,7 +868,7 @@ function renderDayDetailSlotHtml(slotKey, slot) {
     <div class="basenDayDetailSlot">
       <div class="basenDayDetailSlotHead">
         <span class="basenSlotLabel">${esc(SLOT_LABELS[slotKey] || slotKey)}</span>
-        <span class="basenCardTime">${esc(slot.timeStart)} – ${esc(slot.timeEnd)}</span>
+        <span class="basenCardTime">${esc(slot.timeStart)}</span>
         ${isCancelled ? `<span class="basenSpotsFull">Odwołane</span>` : ""}
       </div>
       <div class="basenDayDetailSlotStats">

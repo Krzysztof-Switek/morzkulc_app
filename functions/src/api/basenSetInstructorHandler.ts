@@ -1,5 +1,5 @@
 import type {Request, Response} from "express";
-import {cancelEnrollment, getBasenVars, BasenSlotLabel} from "../modules/basen/basen_service";
+import {setEnrollmentInstructor, BasenSlotLabel} from "../modules/basen/basen_service";
 
 type Deps = {
   db: FirebaseFirestore.Firestore;
@@ -10,9 +10,9 @@ type Deps = {
   requireIdToken: (req: Request) => Promise<{error: string} | {decoded: any}>;
 };
 
-const VALID_SLOTS: BasenSlotLabel[] = ["H1", "H2", "SAUNA"];
+const VALID_SLOTS: BasenSlotLabel[] = ["H1", "H2"]; // sauna nie ma parowania z instruktorem
 
-export async function handleBasenCancelEnrollment(req: Request, res: Response, deps: Deps): Promise<void> {
+export async function handleBasenSetInstructor(req: Request, res: Response, deps: Deps): Promise<void> {
   if (deps.sendPreflight(req, res)) return;
   if (!deps.requireAllowedHost(req, res)) return;
   deps.setCorsHeaders(req, res);
@@ -35,26 +35,23 @@ export async function handleBasenCancelEnrollment(req: Request, res: Response, d
       const body = req.body || {};
       const sessionId = String(body.sessionId || "").trim();
       const slot = String(body.slot || "").trim() as BasenSlotLabel;
+      const instructorUidRaw = body.instructorUid;
+      const instructorUid = instructorUidRaw === null || instructorUidRaw === undefined || instructorUidRaw === "" ?
+        null :
+        String(instructorUidRaw).trim();
 
       if (!sessionId || !VALID_SLOTS.includes(slot)) {
         res.status(400).json({error: "Brakuje sessionId lub nieprawidłowy slot."});
         return;
       }
 
-      const vars = await getBasenVars(deps.db);
+      await setEnrollmentInstructor(deps.db, {sessionId, slot, uid, instructorUid});
 
-      const {wasLate} = await cancelEnrollment(deps.db, {
-        sessionId,
-        slot,
-        uid,
-        cancellationWindowHours: vars.basen_okno_anulowania_h,
-      });
-
-      res.status(200).json({ok: true, wasLate});
+      res.status(200).json({ok: true});
     } catch (err) {
       const e = err as {message?: string};
       const msg = e?.message || String(err);
-      const clientErrors = ["nie istnieje", "już anulowany"];
+      const clientErrors = ["nie istnieje", "anulowany", "dostępny", "samego siebie", "sam ze sobą"];
       const isClient = clientErrors.some((s) => msg.includes(s));
       res.status(isClient ? 400 : 500).json({error: msg});
     }

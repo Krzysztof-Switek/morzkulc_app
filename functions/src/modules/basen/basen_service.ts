@@ -60,6 +60,7 @@ export interface BasenEnrollment {
   viaReservedPool?: boolean; // true tylko gdy zapis poszedł przez pulę kursancką (reservedSpots.restrictedToKursant)
   status: EnrollmentStatus;
   cancelledAt?: any;
+  cancelledLate?: boolean; // true jeśli anulowano w oknie <cancellationWindowHours> — ślad dla rozliczeń
   createdAt: any;
   updatedAt: any;
 }
@@ -80,6 +81,7 @@ export interface SlotAttendee {
   userDisplayName: string;
   userEmail: string;
   kayakId: string | null;
+  kayakLabel: string | null; // nazwa+numer kajaka (patrz resolveKayakLabel), nie surowe ID
 }
 
 export interface SlotAttendeesResult {
@@ -416,11 +418,12 @@ export async function cancelEnrollment(
     uid: string;
     cancellationWindowHours: number;
   }
-): Promise<void> {
+): Promise<{ wasLate: boolean }> {
   const eid = enrollmentId(args.sessionId, args.slot, args.uid);
   const enrollRef = db.collection("basen_enrollments").doc(eid);
   const sessionRef = db.collection("basen_sessions").doc(args.sessionId);
   const now = admin.firestore.FieldValue.serverTimestamp();
+  let wasLate = false;
 
   await db.runTransaction(async (tx) => {
     const [enrollSnap, sessionSnap] = await Promise.all([tx.get(enrollRef), tx.get(sessionRef)]);
@@ -433,13 +436,15 @@ export async function cancelEnrollment(
     const session = sessionSnap.data() as BasenSession;
     const slotData = session.slots?.[args.slot] || null;
 
-    // Okno anulowania — pomijane, gdy slot jest już anulowany przez admina (sprzątanie).
+    // Okno anulowania JUŻ NIE BLOKUJE anulowania (potwierdzone z użytkownikiem: można
+    // zrezygnować nawet <24h przed, ale nadal obowiązuje pełna opłata za tę godzinę
+    // basenową jak za obecność) — tylko oznaczamy zapis jako spóźniony, żeby ślad
+    // dotarł do kogoś rozliczającego płatności. Pomijane, gdy slot już anulowany
+    // przez admina (sprzątanie po jego akcji, nie "spóźniona rezygnacja" usera).
     if (slotData && slotData.status !== "cancelled") {
       const slotMs = sessionSlotDatetimeMs(session, slotData);
       const windowMs = args.cancellationWindowHours * 60 * 60 * 1000;
-      if (slotMs > 0 && Date.now() + windowMs > slotMs) {
-        throw new Error(`Anulowanie możliwe tylko do ${args.cancellationWindowHours}h przed zajęciami.`);
-      }
+      wasLate = slotMs > 0 && Date.now() + windowMs > slotMs;
     }
 
     // ── zapisy ──
@@ -468,7 +473,59 @@ export async function cancelEnrollment(
       tx.delete(allocationRef);
     }
 
-    tx.update(enrollRef, {status: "cancelled", cancelledAt: now, updatedAt: now});
+    tx.update(enrollRef, {status: "cancelled", cancelledAt: now, updatedAt: now, cancelledLate: wasLate});
+  });
+
+  return {wasLate};
+}
+
+// Dodaje/zmienia/usuwa parowanie z instruktorem na JUŻ AKTYWNYM zapisie (dziś
+// parowanie było możliwe wyłącznie w momencie tworzenia zapisu). Nie dotyka
+// capacity/enrolledCount/reservedSpots — to wciąż to samo zajęte miejsce, tylko
+// zmienia się jego typ/adnotacja.
+export async function setEnrollmentInstructor(
+  db: FirebaseFirestore.Firestore,
+  args: {
+    sessionId: string;
+    slot: BasenSlotLabel;
+    uid: string;
+    instructorUid: string | null; // null = usuń parowanie (wróć do "regular")
+  }
+): Promise<void> {
+  const eid = enrollmentId(args.sessionId, args.slot, args.uid);
+  const enrollRef = db.collection("basen_enrollments").doc(eid);
+  const now = admin.firestore.FieldValue.serverTimestamp();
+
+  const instructorEnrollRef = args.instructorUid ?
+    db.collection("basen_enrollments").doc(enrollmentId(args.sessionId, args.slot, args.instructorUid)) :
+    null;
+
+  await db.runTransaction(async (tx) => {
+    const [enrollSnap, instructorEnrollSnap] = await Promise.all([
+      tx.get(enrollRef),
+      instructorEnrollRef ? tx.get(instructorEnrollRef) : Promise.resolve(null),
+    ]);
+
+    if (!enrollSnap.exists) throw new Error("Zapis nie istnieje.");
+    const enrollment = enrollSnap.data() as BasenEnrollment;
+    if (enrollment.status !== "active") throw new Error("Zapis jest anulowany.");
+    if (enrollment.type === "instructor") throw new Error("Instruktor nie paruje się sam ze sobą.");
+
+    if (args.instructorUid) {
+      if (args.instructorUid === args.uid) throw new Error("Nie możesz wybrać samego siebie jako instruktora.");
+      const instrData = instructorEnrollSnap && instructorEnrollSnap.exists ?
+        (instructorEnrollSnap.data() as BasenEnrollment) :
+        null;
+      if (!instrData || instrData.status !== "active" || instrData.type !== "instructor") {
+        throw new Error("Wybrany instruktor nie jest już dostępny na ten slot.");
+      }
+    }
+
+    tx.update(enrollRef, {
+      type: args.instructorUid ? "training" : "regular",
+      instructorUid: args.instructorUid || null,
+      updatedAt: now,
+    });
   });
 }
 
@@ -586,6 +643,30 @@ export async function setEnrollmentKayak(
   });
 }
 
+// Nazwa+numer kajaka (np. "Optima 2 (nr 66)") zamiast surowego ID — współdzielone
+// przez listAvailableBasenKayaks (wybór) i resolveKayakLabel (już wybrany kajak).
+function kayakBaseLabel(k: any, fallbackId: string): string {
+  const brand = norm(k?.brand);
+  const model = norm(k?.model);
+  const number = norm(k?.number || k?.id || fallbackId);
+  const color = norm(k?.color);
+  // Producent na pierwszym miejscu (najważniejszy), potem model/numer/kolor —
+  // wszystko w jednej linii, bez słowa "Kajak" (kontekst już to mówi).
+  const secondary = [model, number ? `nr ${number}` : "", color].filter(Boolean).join(", ");
+  if (brand && secondary) return `${brand} — ${secondary}`;
+  return brand || secondary || fallbackId;
+}
+
+// Nazwa+numer JUŻ wybranego kajaka (basen_enrollments.kayakId) — używane tam, gdzie
+// pokazujemy istniejący zapis (własna karta slotu, lista uczestników), w
+// odróżnieniu od listAvailableBasenKayaks (lista do wyboru przy zapisie).
+export async function resolveKayakLabel(db: FirebaseFirestore.Firestore, kayakId: string): Promise<string> {
+  if (kayakId === "PRIVATE") return "Kajak prywatny";
+  const snap = await db.collection("gear_kayaks").doc(kayakId).get();
+  if (!snap.exists) return `Kajak (nr ${kayakId})`; // sprzątnięty/nieznaleziony kajak — degraduje się do surowego ID
+  return kayakBaseLabel(snap.data(), kayakId);
+}
+
 export async function listAvailableBasenKayaks(
   db: FirebaseFirestore.Firestore,
   sessionId: string,
@@ -614,11 +695,7 @@ export async function listAvailableBasenKayaks(
   const available = poolKayaks
     .filter((k) => !allocatedIds.has(k.id))
     .map((k) => {
-      const brand = norm(k?.brand);
-      const model = norm(k?.model);
-      const number = norm(k?.number || k?.id);
-      const base = [brand, model].filter(Boolean).join(" ") || number || k.id;
-      const baseLabel = number && base !== number ? `${base} (nr ${number})` : base;
+      const baseLabel = kayakBaseLabel(k, k.id);
       const isPrivate = k?.isPrivate === true;
       const ownerContact = isPrivate ? (norm(k?.ownerContact) || null) : null;
       // Kajak prywatny (choć użyczalny) — jasno oznaczony w liście wyboru, żeby
@@ -650,12 +727,21 @@ export async function listSlotAttendees(
 
   const all = snap.docs.map((d) => ({id: d.id, ...d.data()} as BasenEnrollment));
 
+  const kayakIds = Array.from(new Set(
+    all.map((e) => e.kayakId).filter((id): id is string => Boolean(id) && id !== "PRIVATE")
+  ));
+  const kayakLabels = new Map<string, string>();
+  await Promise.all(kayakIds.map(async (id) => {
+    kayakLabels.set(id, await resolveKayakLabel(db, id));
+  }));
+
   const toAttendee = (e: BasenEnrollment): SlotAttendee => ({
     enrollmentId: e.id,
     userUid: e.userUid,
     userDisplayName: e.userDisplayName,
     userEmail: e.userEmail,
     kayakId: e.kayakId ?? null,
+    kayakLabel: !e.kayakId ? null : e.kayakId === "PRIVATE" ? "Kajak prywatny" : (kayakLabels.get(e.kayakId) || null),
   });
 
   const instructors = all.filter((e) => e.type === "instructor").map(toAttendee);

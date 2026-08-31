@@ -463,7 +463,10 @@ async function renderHomeDashboard({ viewEl, ctx }) {
 
     buildHomeBasenSection(ctx).then((html) => {
       const listEl = viewEl.querySelector("#homeBasenList");
-      if (listEl) listEl.innerHTML = html;
+      if (listEl) {
+        listEl.innerHTML = html;
+        bindHomeBasenRows(listEl, ctx);
+      }
     }).catch(() => {
       const listEl = viewEl.querySelector("#homeBasenList");
       if (listEl) listEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać zajęć.</div></div></div>`;
@@ -1037,9 +1040,6 @@ async function buildHomeEventsSection(ctx) {
   }
 }
 
-const BASEN_HOME_SLOT_LABELS = { H1: "I godzina", H2: "II godzina", SAUNA: "Sauna" };
-const BASEN_HOME_SLOT_ORDER = ["H1", "H2", "SAUNA"];
-
 async function buildHomeBasenSection(ctx) {
   if (!ctx?.idToken) {
     return `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Brak sesji.</div></div></div>`;
@@ -1049,18 +1049,25 @@ async function buildHomeBasenSection(ctx) {
     const data = await apiGetJson({ url: BASEN_SESSIONS_URL, idToken: ctx.idToken });
     const sessions = Array.isArray(data?.sessions) ? data.sessions : [];
 
-    // Spłaszcz sesje po slotach (H1/H2/SAUNA), pomiń odwołane — pokaż do 3 najbliższych.
-    const flatSlots = [];
-    for (const s of sessions) {
-      for (const key of BASEN_HOME_SLOT_ORDER) {
-        const slot = s?.slots?.[key];
-        if (!slot || slot.status === "cancelled") continue;
-        flatSlots.push({ date: s.date, slotKey: key, ...slot });
-      }
-    }
-    const upcoming = flatSlots.slice(0, 3);
+    // Jeden dzień = jeden wiersz (nie jeden slot). Godzina basenu = tylko start
+    // (H1/H2 mają dziś zawsze timeStart===timeEnd, bo czasy są sztywne z setupu —
+    // podawanie "20:00–20:00" wyglądałoby jak błąd). Sauna pomijana tutaj celowo —
+    // widoczna dopiero w module przy samym zapisie, nie w tym skrócie.
+    const days = sessions
+      .map((s) => {
+        const activeSlots = ["H1", "H2"]
+          .map((key) => s?.slots?.[key])
+          .filter((slot) => slot && slot.status !== "cancelled");
+        return {
+          date: s.date,
+          starts: activeSlots.map((slot) => slot.timeStart).filter(Boolean),
+          anyEnrolled: activeSlots.some((slot) => slot.userEnrolled),
+        };
+      })
+      .filter((d) => d.starts.length > 0)
+      .slice(0, 3);
 
-    if (!upcoming.length) {
+    if (!days.length) {
       return `
         <div class="startListItem">
           <div class="startListMain">
@@ -1070,23 +1077,19 @@ async function buildHomeBasenSection(ctx) {
       `;
     }
 
-    return upcoming.map((s) => {
-      const days = ["niedz.", "pon.", "wt.", "śr.", "czw.", "pt.", "sob."];
-      const d = new Date(`${s.date}T12:00:00`);
-      const dayName = days[d.getDay()] || "";
-      const m = String(s.date || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
-      const dateStr = m ? `${m[3]}.${m[2]} (${dayName})` : String(s.date || "");
-      const spotsLeft = Number(s.remaining ?? 0);
-      const spotsLabel = s.userEnrolled
-        ? "Zapisany/a"
-        : spotsLeft > 0 ? `${spotsLeft} miejsc` : "Brak miejsc";
-      const slotLabel = BASEN_HOME_SLOT_LABELS[s.slotKey] || s.slotKey;
+    const dayNames = ["niedziela", "poniedziałek", "wtorek", "środa", "czwartek", "piątek", "sobota"];
+
+    return days.map((d) => {
+      const dt = new Date(`${d.date}T12:00:00`);
+      const dayName = dayNames[dt.getDay()] || "";
+      const m = String(d.date || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      const dateStr = m ? `${m[3]}.${m[2]} (${dayName})` : String(d.date || "");
 
       return `
-        <div class="startListItem">
+        <div class="startListItem startListItem--clickable" data-home-action="basen">
           <div class="startListMain">
-            <div class="startListTitle">${escapeHtml(dateStr)} ${escapeHtml(slotLabel)} · ${escapeHtml(s.timeStart || "")}–${escapeHtml(s.timeEnd || "")}</div>
-            <div class="startListMeta">${escapeHtml(spotsLabel)}</div>
+            <div class="startListTitle">${escapeHtml(dateStr)} · ${escapeHtml(d.starts.join(" i "))}</div>
+            ${d.anyEnrolled ? `<div class="startListMeta">Zapisany/a</div>` : ""}
           </div>
         </div>
       `;
@@ -1094,6 +1097,19 @@ async function buildHomeBasenSection(ctx) {
   } catch {
     return `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać zajęć.</div></div></div>`;
   }
+}
+
+// Wiersze dnia dopisywane asynchronicznie (po buildHomeBasenSection) — wstrzyknięte
+// PO tym jak statyczne data-home-action='basen' zostały już zbindowane wyżej
+// (ten sam querySelectorAll ich jeszcze nie widział), więc wiążemy je osobno tutaj,
+// wzorem bindHomeEventInterestButtons.
+function bindHomeBasenRows(listEl, ctx) {
+  listEl.querySelectorAll("[data-home-action='basen']").forEach((row) => {
+    row.addEventListener("click", () => {
+      const basenTarget = getModuleRouteByType(ctx, "basen");
+      setHash(basenTarget.moduleId, basenTarget.routeId);
+    });
+  });
 }
 
 async function buildHomeKursEventsSection(ctx) {

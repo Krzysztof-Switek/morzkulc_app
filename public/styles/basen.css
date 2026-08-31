@@ -201,14 +201,50 @@
 .basenKayakRow {
   font-size: 13px;
   color: var(--text-muted, #888);
-  display: flex;
-  align-items: center;
-  gap: 6px;
 }
 
-.basenSlotFooter .small,
-.basenKayakRow .small {
+.basenSlotFooter .small {
   padding: 4px 10px;
+  font-size: 12px;
+}
+
+/* ─── Akcje przy aktywnym zapisie (Modyfikuj/Anuluj) ─── */
+
+.basenEnrolledActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+@media (max-width: 480px) {
+  .basenEnrolledActions {
+    flex-direction: column;
+  }
+
+  .basenEnrolledActions button {
+    width: 100%;
+  }
+}
+
+/* ─── Modal "Modyfikuj zapis" ─── */
+
+.basenModifySection {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.basenModifySectionTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.basenModifySectionMsg {
   font-size: 12px;
 }
 

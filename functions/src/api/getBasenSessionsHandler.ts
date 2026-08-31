@@ -1,5 +1,5 @@
 import type {Request, Response} from "express";
-import {listUpcomingSessions, getUserEnrollments, computeSlotAvailability} from "../modules/basen/basen_service";
+import {listUpcomingSessions, getUserEnrollments, computeSlotAvailability, resolveKayakLabel, getBasenVars, sessionSlotDatetimeMs} from "../modules/basen/basen_service";
 
 type Deps = {
   db: FirebaseFirestore.Firestore;
@@ -34,12 +34,29 @@ export async function handleGetBasenSessions(req: Request, res: Response, deps: 
       const userData = userSnap.data() as any;
       const isKursant = String(userData?.role_key || "") === "rola_kursant";
 
-      const [sessions, userEnrollments] = await Promise.all([
+      const [sessions, userEnrollments, vars] = await Promise.all([
         listUpcomingSessions(deps.db),
         getUserEnrollments(deps.db, uid),
+        getBasenVars(deps.db),
       ]);
+      const cancellationWindowMs = vars.basen_okno_anulowania_h * 60 * 60 * 1000;
 
       const enrollmentByKey = new Map(userEnrollments.map((e) => [`${e.sessionId}_${e.slot}`, e]));
+
+      // Nazwa+numer wybranego kajaka zamiast surowego ID (patrz resolveKayakLabel) —
+      // rozwiązywane raz dla wszystkich unikalnych ID własnych zapisów requestera.
+      const kayakIds = Array.from(new Set(
+        userEnrollments.map((e) => e.kayakId).filter((id): id is string => Boolean(id) && id !== "PRIVATE")
+      ));
+      const kayakLabels = new Map<string, string>();
+      await Promise.all(kayakIds.map(async (id) => {
+        kayakLabels.set(id, await resolveKayakLabel(deps.db, id));
+      }));
+      const resolveOwnKayakLabel = (kayakId: string | null | undefined): string | null => {
+        if (!kayakId) return null;
+        if (kayakId === "PRIVATE") return "Kajak prywatny";
+        return kayakLabels.get(kayakId) || null;
+      };
 
       const sessionsWithStatus = sessions.map((s) => {
         const slots: Record<string, any> = {};
@@ -47,6 +64,7 @@ export async function handleGetBasenSessions(req: Request, res: Response, deps: 
           if (!slot) continue;
           const enrollment = enrollmentByKey.get(`${s.id}_${label}`) || null;
           const availability = computeSlotAvailability(slot, isKursant);
+          const slotMs = sessionSlotDatetimeMs(s, slot);
           slots[label] = {
             timeStart: slot.timeStart,
             timeEnd: slot.timeEnd,
@@ -56,9 +74,12 @@ export async function handleGetBasenSessions(req: Request, res: Response, deps: 
             reservedSpots: slot.reservedSpots || null,
             remaining: availability.remaining,
             isFull: availability.isFull,
+            isWithinCancellationWindow: slotMs > 0 && Date.now() + cancellationWindowMs > slotMs,
             userEnrolled: Boolean(enrollment),
             userEnrollmentType: enrollment?.type || null,
+            userInstructorUid: enrollment?.instructorUid || null,
             userKayakId: enrollment?.kayakId || null,
+            userKayakLabel: resolveOwnKayakLabel(enrollment?.kayakId),
             userViaReservedPool: enrollment?.viaReservedPool === true,
           };
         }
