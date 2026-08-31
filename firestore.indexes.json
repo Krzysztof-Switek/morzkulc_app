@@ -67,13 +67,6 @@
       ]
     },
     {
-      "collectionGroup": "basen_sessions",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "date", "order": "ASCENDING" }
-      ]
-    },
-    {
       "collectionGroup": "basen_enrollments",
       "queryScope": "COLLECTION",
       "fields": [

@@ -66,7 +66,7 @@ function kayakLabel(kayakId) {
 
 function renderTabsHtml(activeTab, isAdmin) {
   const tabs = [
-    { id: "sessions", label: "Sesje" },
+    { id: "sessions", label: "Baseny" },
     { id: "karnet", label: "Mój karnet" },
   ];
   if (isAdmin) tabs.push({ id: "admin", label: "Zarządzanie" });
@@ -256,7 +256,7 @@ function renderSessionCard(s, ctx, canEnroll) {
 }
 
 async function renderSessionsView(innerEl, ctx, canEnroll) {
-  innerEl.innerHTML = spinnerHtml("Ładowanie sesji…");
+  innerEl.innerHTML = spinnerHtml("Ładowanie terminów…");
 
   try {
     const data = await apiGetJson({ url: SESSIONS_URL, idToken: ctx.idToken });
@@ -630,7 +630,7 @@ function renderAdminView(innerEl, ctx) {
         <form id="basenCancelSessionForm" class="basenAdminForm" autocomplete="off">
           <div class="row">
             <label for="bCancelSessionId">ID terminu</label>
-            <input id="bCancelSessionId" type="text" placeholder="ID z listy sesji" required />
+            <input id="bCancelSessionId" type="text" placeholder="ID z listy terminów" required />
           </div>
           <div class="row">
             <label for="bCancelSlot">Slot</label>
