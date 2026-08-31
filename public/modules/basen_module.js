@@ -111,17 +111,20 @@ function renderSlotCard(sessionId, slotKey, slot, ctx, canEnroll) {
   const isParticipantEnrolled = slot.userEnrolled && slot.userEnrollmentType !== "instructor";
 
   // Prosta, zawsze widoczna lista uczestników — bez rozwijania, bez kajaka. Ksywka,
-  // a jak brak to imię+nazwisko. Osoba szukająca instruktora dostaje klikalny kafelek
-  // (zamiast osobnego przycisku) TYLKO dla widza, który sam jest instruktorem na ten
-  // slot — klik od razu go do niej przypisuje.
+  // a jak brak to imię+nazwisko. Instruktorzy zawsze na górze (lekka kreska oddziela
+  // ich od reszty), sparowany uczestnik (training + instructorUid) pokazany razem
+  // z instruktorem w jednym niebieskim kaflu. Osoba szukająca instruktora dostaje
+  // klikalny kafelek (zamiast osobnego przycisku) TYLKO dla widza, który sam jest
+  // instruktorem na ten slot — klik od razu go do niej przypisuje.
   const attendeesList = Array.isArray(slot.attendees) ? slot.attendees : [];
-  const attendeesHtml = !isCancelled && attendeesList.length ? `
-    <div class="basenAttendeesSimple">
-      <div class="basenAttendeesSimpleTitle">Uczestnicy</div>
-      ${attendeesList.map((a) => {
+  const instructorAttendees = attendeesList.filter((a) => a.type === "instructor");
+  const otherAttendees = attendeesList.filter((a) => a.type !== "instructor");
+  const instructorLabelByUid = new Map(instructorAttendees.map((a) => [a.userUid, a.displayLabel]));
+  const renderOtherAttendeeRow = (a) => {
     const label = esc(a.displayLabel);
-    if (a.type === "instructor") {
-      return `<div class="basenAttendeeRow">${label} <span class="basenAttendeeTag">instruktor</span></div>`;
+    if (a.type === "training" && a.instructorUid) {
+      const instructorLabel = instructorLabelByUid.get(a.instructorUid);
+      return `<div class="basenAttendeeRow"><span class="basenAttendeeTag">${label}${instructorLabel ? ` + ${esc(instructorLabel)}` : ""}</span></div>`;
     }
     if (a.type === "training" && !a.instructorUid) {
       return isInstructorEnrolled
@@ -129,7 +132,13 @@ function renderSlotCard(sessionId, slotKey, slot, ctx, canEnroll) {
         : `<div class="basenAttendeeRow">${label} <span class="basenAttendeeTag">potrzebuje instruktora</span></div>`;
     }
     return `<div class="basenAttendeeRow">${label}</div>`;
-  }).join("")}
+  };
+  const attendeesHtml = !isCancelled && attendeesList.length ? `
+    <div class="basenAttendeesSimple">
+      <div class="basenAttendeesSimpleTitle">Uczestnicy</div>
+      ${instructorAttendees.map((a) => `<div class="basenAttendeeRow">${esc(a.displayLabel)} <span class="basenAttendeeTag">instruktor</span></div>`).join("")}
+      ${instructorAttendees.length && otherAttendees.length ? `<div class="basenAttendeeDivider"></div>` : ""}
+      ${otherAttendees.map(renderOtherAttendeeRow).join("")}
     </div>
   ` : "";
 

@@ -262,6 +262,16 @@
   flex-wrap: wrap;
 }
 
+.basenAttendeeDivider {
+  height: 1px;
+  background: rgba(230, 232, 238, 0.10);
+  margin: 2px 0;
+}
+
+:root[data-theme="light"] .basenAttendeeDivider {
+  background: rgba(12, 18, 32, 0.08);
+}
+
 .basenAttendeeTag {
   display: inline-block;
   padding: 1px 8px;
