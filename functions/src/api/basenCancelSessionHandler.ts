@@ -1,5 +1,5 @@
 import type {Request, Response} from "express";
-import {cancelSession, resolveBasenAdminGrant, BasenSlotLabel} from "../modules/basen/basen_service";
+import {cancelSession, resolveBasenAdminGrant} from "../modules/basen/basen_service";
 
 type Deps = {
   db: FirebaseFirestore.Firestore;
@@ -8,12 +8,15 @@ type Deps = {
   setCorsHeaders: (req: Request, res: Response) => void;
   corsHandler: (req: Request, res: Response, next: () => void) => void;
   requireIdToken: (req: Request) => Promise<{error: string} | {decoded: any}>;
-  enqueueBasenSessionCancelledNotify: (sessionId: string, slot?: BasenSlotLabel) => Promise<void>;
+  enqueueBasenSessionCancelledNotify: (sessionId: string, reason?: string) => Promise<void>;
   adminRoleKeys: string[];
 };
 
-const VALID_SLOTS: BasenSlotLabel[] = ["H1", "H2", "SAUNA"];
-
+/**
+ * POST /api/basen/sessions/cancel (authenticated, role: zarzad/kr/opiekun basenowy)
+ * Anuluje CAŁY termin (wszystkie sloty naraz) — basen jest zawsze anulowany w
+ * całości, nigdy pojedynczym slotem/sauną osobno (świadoma decyzja użytkownika).
+ */
 export async function handleBasenCancelSession(req: Request, res: Response, deps: Deps): Promise<void> {
   if (deps.sendPreflight(req, res)) return;
   if (!deps.requireAllowedHost(req, res)) return;
@@ -51,22 +54,17 @@ export async function handleBasenCancelSession(req: Request, res: Response, deps
 
       const body = req.body || {};
       const sessionId = String(body.sessionId || "").trim();
-      const slotRaw = String(body.slot || "").trim();
-      const slot = slotRaw && VALID_SLOTS.includes(slotRaw as BasenSlotLabel) ? (slotRaw as BasenSlotLabel) : undefined;
+      const reason = String(body.reason || "").trim().slice(0, 500);
 
       if (!sessionId) {
         res.status(400).json({error: "Brakuje sessionId."});
         return;
       }
-      if (slotRaw && !slot) {
-        res.status(400).json({error: "Nieprawidłowy slot."});
-        return;
-      }
 
-      const {enrollments} = await cancelSession(deps.db, sessionId, slot);
+      const {enrollments} = await cancelSession(deps.db, sessionId, uid);
 
       // Fire-and-forget email notification
-      deps.enqueueBasenSessionCancelledNotify(sessionId, slot).catch(() => {
+      deps.enqueueBasenSessionCancelledNotify(sessionId, reason || undefined).catch(() => {
         // best-effort
       });
 

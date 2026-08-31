@@ -41,6 +41,11 @@ import {handleBasenCreateSession} from "./api/basenCreateSessionHandler";
 import {handleBasenCancelSession} from "./api/basenCancelSessionHandler";
 import {handleBasenSetKayak} from "./api/basenSetKayakHandler";
 import {handleBasenSetInstructor} from "./api/basenSetInstructorHandler";
+import {handleBasenClaimWaitingStudent} from "./api/basenClaimWaitingStudentHandler";
+import {handleBasenAddSauna} from "./api/basenAddSaunaHandler";
+import {handleGetBasenAdminGodzinyUsers} from "./api/getBasenAdminGodzinyUsersHandler";
+import {handleGetBasenMyGodziny} from "./api/getBasenMyGodzinyHandler";
+import {handleBasenAdminAddGodziny} from "./api/basenAdminAddGodzinyHandler";
 import {handleGetBasenKayaks} from "./api/getBasenKayaksHandler";
 import {handleGetBasenAttendees} from "./api/getBasenAttendeesHandler";
 import {handleKmAddLog} from "./api/kmAddLogHandler";
@@ -1214,12 +1219,12 @@ export const submitEvent = onRequest({invoker: "private"}, async (req, res) => {
 /**
  * Kolejkuje powiadomienie o anulowaniu terminu/slotu basenowego.
  */
-async function enqueueBasenSessionCancelledNotify(sessionId: string, slot?: string): Promise<void> {
+async function enqueueBasenSessionCancelledNotify(sessionId: string, reason?: string): Promise<void> {
   const jobRef = db.collection("service_jobs").doc();
   await jobRef.set({
     id: jobRef.id,
     taskId: "basen.notifySessionCancelled",
-    payload: {sessionId, ...(slot ? {slot} : {})},
+    payload: {sessionId, ...(reason ? {reason} : {})},
     status: "queued",
     attempts: 0,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -1302,6 +1307,22 @@ export const basenCancelSession = onRequest({invoker: "private"}, async (req, re
 });
 
 /**
+ * POST /api/basen/sessions/add-sauna (authenticated, role: zarzad/kr/opiekun basenowy)
+ * Dodaje saunę do istniejącego terminu, który powstał bez niej.
+ */
+export const basenAddSauna = onRequest({invoker: "private"}, async (req, res) => {
+  return handleBasenAddSauna(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    adminRoleKeys,
+  });
+});
+
+/**
  * POST /api/basen/kayak (authenticated)
  * Właściciel zapisu wybiera/zmienia/zwalnia kajak basenowy dla swojego zapisu.
  */
@@ -1328,6 +1349,68 @@ export const basenSetInstructor = onRequest({invoker: "private"}, async (req, re
     setCorsHeaders,
     corsHandler,
     requireIdToken,
+  });
+});
+
+/**
+ * POST /api/basen/instructor/claim (authenticated)
+ * Instruktor przypisuje siebie do studenta, który zapisał się bez wybranego instruktora.
+ */
+export const basenClaimWaitingStudent = onRequest({invoker: "private"}, async (req, res) => {
+  return handleBasenClaimWaitingStudent(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * GET /api/basen/godziny/my (authenticated)
+ * Własna pełna historia godzin basenowych (wyciąg bankowy).
+ */
+export const getBasenMyGodziny = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetBasenMyGodziny(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+  });
+});
+
+/**
+ * GET /api/basen/admin/godziny/users (authenticated, role: zarzad/kr/opiekun basenowy)
+ * Lista zarejestrowanych userów z saldem godzin basenowych — wyszukiwanie po stronie klienta.
+ */
+export const getBasenAdminGodzinyUsers = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetBasenAdminGodzinyUsers(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    adminRoleKeys,
+  });
+});
+
+/**
+ * POST /api/basen/admin/godziny/add (authenticated, role: zarzad/kr/opiekun basenowy)
+ * Admin dopisuje godziny basenowe userowi po potwierdzeniu wpłaty poza aplikacją.
+ */
+export const basenAdminAddGodziny = onRequest({invoker: "private"}, async (req, res) => {
+  return handleBasenAdminAddGodziny(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    adminRoleKeys,
   });
 });
 
@@ -1697,6 +1780,20 @@ export const kmRebuildMapMonthly = onSchedule(
     logger.info("kmRebuildMapMonthly: start");
     const result = await runTaskById("km.rebuildMapData", {});
     logger.info("kmRebuildMapMonthly: done", result as unknown as Record<string, unknown>);
+  }
+);
+
+/**
+ * SCHEDULER: Nagradza instruktorów basenowych 1h za każdy PRZEPROWADZONY (miniony)
+ * termin — dopiero następnego dnia rano, nie przy samym zapisie. Uruchamiane
+ * codziennie o 03:45 czasu warszawskiego, przed porannymi syncami godzinek/imprez.
+ */
+export const basenGrantInstructorRewardsDaily = onSchedule(
+  {schedule: "45 3 * * *", timeZone: "Europe/Warsaw"},
+  async () => {
+    logger.info("basenGrantInstructorRewardsDaily: start");
+    const result = await runTaskById("basen.grantInstructorRewards", {});
+    logger.info("basenGrantInstructorRewardsDaily: done", result as unknown as Record<string, unknown>);
   }
 );
 

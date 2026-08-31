@@ -7,6 +7,7 @@ import { reconcileOpeningBalanceTask } from "./tasks/reconcileOpeningBalance";
 import { eventsSyncFromSheetTask, eventsWriteToSheetTask } from "./tasks/eventsSyncFromSheet";
 import { eventsSyncCalendarTask } from "./tasks/eventsSyncCalendar";
 import { basenNotifySessionCancelledTask } from "./tasks/basenNotifySessionCancelled";
+import { basenGrantInstructorRewardsTask } from "./tasks/basenGrantInstructorRewards";
 import { gearPrivateStorageTask } from "./tasks/gearPrivateStorage";
 import { godzinkiMonthlyBalanceReviewTask } from "./tasks/godzinkiMonthlyBalanceReview";
 import { godzinkiArchiveSheetRowsTask } from "./tasks/godzinkiArchiveSheetRows";
@@ -42,6 +43,7 @@ const tasks: ServiceTask[] = [
   eventsWriteToSheetTask,
   eventsSyncCalendarTask,
   basenNotifySessionCancelledTask,
+  basenGrantInstructorRewardsTask,
   gearPrivateStorageTask,
   godzinkiMonthlyBalanceReviewTask,
   godzinkiArchiveSheetRowsTask,

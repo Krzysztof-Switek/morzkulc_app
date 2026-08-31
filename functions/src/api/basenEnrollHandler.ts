@@ -13,7 +13,6 @@ type Deps = {
 };
 
 const VALID_SLOTS: BasenSlotLabel[] = ["H1", "H2", "SAUNA"];
-const INSTRUCTOR_ROLE_KEYS = ["rola_czlonek", "rola_kandydat"];
 
 export async function handleBasenEnroll(req: Request, res: Response, deps: Deps): Promise<void> {
   if (deps.sendPreflight(req, res)) return;
@@ -85,7 +84,12 @@ export async function handleBasenEnroll(req: Request, res: Response, deps: Deps)
       const userEmail = String(userData?.email || "").trim();
 
       if (mode === "instructor") {
-        const isInstructor = INSTRUCTOR_ROLE_KEYS.includes(roleKey) && userData?.admin?.basenInstructor === true;
+        // Jedyny gatekeeper: kolumna "Instruktor (kadra)" w arkuszu (admin.basenInstructor).
+        // Bez dodatkowego ograniczenia po roli — flaga jest już wystarczająco jawną,
+        // ręcznie zarządzaną decyzją zarządu (patrz usersSyncFieldsFromSheet.ts), a
+        // ograniczenie po roli tylko odcinało legalne przypadki (np. konta zewnętrzne
+        // typu sympatyk oznaczone jako instruktor).
+        const isInstructor = userData?.admin?.basenInstructor === true;
         if (!isInstructor) {
           res.status(403).json({error: "Brak uprawnień instruktora basenowego."});
           return;
@@ -101,10 +105,8 @@ export async function handleBasenEnroll(req: Request, res: Response, deps: Deps)
         return;
       }
 
-      if (mode === "training" && !instructorUid) {
-        res.status(400).json({error: "Wybierz instruktora."});
-        return;
-      }
+      // instructorUid dla mode="training" jest OPCJONALNY — brak → zapis powstaje jako
+      // "szuka instruktora" (patrz basen_service.ts::listSlotAttendees/claimWaitingStudent).
 
       // Waliduje istnienie configu (spójne z dotychczasowym zachowaniem).
       await getBasenVars(deps.db);
@@ -125,7 +127,7 @@ export async function handleBasenEnroll(req: Request, res: Response, deps: Deps)
     } catch (err) {
       const e = err as {message?: string};
       const msg = e?.message || String(err);
-      const clientPatterns = ["pełny", "anulowan", "już zapisany", "nie istnieje", "zajęty", "dostępny"];
+      const clientPatterns = ["pełny", "anulowan", "już zapisany", "nie istnieje", "zajęty", "dostępny", "maksymalną"];
       const status = clientPatterns.some((p) => msg.includes(p)) ? 400 : 500;
       res.status(status).json({error: msg});
     }

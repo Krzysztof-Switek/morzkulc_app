@@ -347,6 +347,13 @@
         }
       },
       {
+        "source": "/api/basen/sessions/add-sauna",
+        "function": {
+          "functionId": "basenAddSauna",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "/api/godzinki/purchase",
         "function": {
           "functionId": "purchaseGodzinki",
@@ -364,6 +371,34 @@
         "source": "/api/basen/instructor",
         "function": {
           "functionId": "basenSetInstructor",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/basen/instructor/claim",
+        "function": {
+          "functionId": "basenClaimWaitingStudent",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/basen/godziny/my",
+        "function": {
+          "functionId": "getBasenMyGodziny",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/basen/admin/godziny/users",
+        "function": {
+          "functionId": "getBasenAdminGodzinyUsers",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/basen/admin/godziny/add",
+        "function": {
+          "functionId": "basenAdminAddGodziny",
           "region": "us-central1"
         }
       },

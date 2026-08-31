@@ -1086,11 +1086,11 @@ async function buildHomeBasenSection(ctx) {
       const dateStr = m ? `${m[3]}.${m[2]} (${dayName})` : String(d.date || "");
 
       return `
-        <div class="startListItem startListItem--clickable" data-home-action="basen">
+        <div class="startListItem startListItem--clickable${d.anyEnrolled ? " startListItem--enrolled" : ""}" data-home-action="basen">
           <div class="startListMain">
             <div class="startListTitle">${escapeHtml(dateStr)} · ${escapeHtml(d.starts.join(" i "))}</div>
-            ${d.anyEnrolled ? `<div class="startListMeta">Zapisany/a</div>` : ""}
           </div>
+          ${d.anyEnrolled ? `<div class="startListSide startListEnrolledTag">Zapisana/y</div>` : ""}
         </div>
       `;
     }).join("");

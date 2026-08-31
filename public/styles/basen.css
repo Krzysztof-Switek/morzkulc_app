@@ -102,6 +102,13 @@
   flex-wrap: wrap;
 }
 
+.basenEnrollExpanded {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
 .basenEnrolledBadge {
   display: inline-block;
   padding: 4px 10px;
@@ -227,44 +234,18 @@
   }
 }
 
-/* ─── Modal "Modyfikuj zapis" ─── */
+/* ─── Uczestnicy — prosta, zawsze widoczna lista (bez rozwijania, bez kajaka) ─── */
 
-.basenModifySection {
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 12px;
+.basenAttendeesSimple {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  font-size: 13px;
 }
 
-.basenModifySectionTitle {
-  font-size: 13px;
+.basenAttendeesSimpleTitle {
   font-weight: 700;
   color: var(--text);
-}
-
-.basenModifySectionMsg {
-  font-size: 12px;
-}
-
-/* ─── Attendees details/summary ─── */
-
-.basenAttendeesDetails {
-  font-size: 13px;
-}
-
-.basenAttendeesDetails summary {
-  cursor: pointer;
-  color: var(--accent, #3b82f6);
-  font-weight: 600;
-}
-
-.basenAttendeesBody {
-  margin-top: 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 
 .basenAttendeesGroupTitle {
@@ -275,19 +256,37 @@
 
 .basenAttendeeRow {
   color: var(--text-muted, #888);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.basenAttendeeRowSub {
-  padding-left: 12px;
+.basenAttendeeTag {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(138, 180, 255, 0.14);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 700;
 }
 
-.basenAttendeePair {
-  margin-bottom: 6px;
+/* Kafelek jako przycisk — klikalny wyłącznie dla widza-instruktora, więc dostaje
+   wyraźniejszy affordance (obramowanie + kursor) niż zwykły, nieklikalny .basenAttendeeTag. */
+button.basenClaimTagBtn {
+  border: 1px solid var(--primary);
+  cursor: pointer;
+  font-family: inherit;
 }
 
-.basenAttendeePairInstructor {
-  font-weight: 600;
-  color: var(--text);
+button.basenClaimTagBtn:hover {
+  background: rgba(138, 180, 255, 0.28);
+}
+
+button.basenClaimTagBtn:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 /* ─── Modal (kalendarz: tworzenie terminu / szczegóły dnia) ───────────────────
@@ -333,6 +332,15 @@
   gap: var(--space-2);
   padding: var(--space-3);
   border-bottom: 1px solid var(--border);
+}
+
+/* Akcja niszcząca (np. "Anuluj basen") w pasku tytułu — po lewej, przed tytułem,
+   żeby nie dało się jej pomylić z dyskretnym "Zamknij" na dole modala. */
+.basenModalTopLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
 }
 
 .basenModalTitle {
@@ -459,11 +467,23 @@
   line-height: 1;
 }
 
-.basenCalDayDot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--primary);
+.basenCalDayIcons {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.basenCalIcon {
+  width: 18px;
+  height: 18px;
+}
+
+.basenCalIconPool {
+  color: var(--primary);
+}
+
+.basenCalIconSauna {
+  color: #f59e0b;
 }
 
 /* ─── Formularz rezerwacji miejsc (w modalu tworzenia) ─── */
@@ -517,4 +537,79 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+/* ─── Płatności (saldo godzin basenowych) ─── */
+
+.basenGodzinyList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.basenGodzinyRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.basenGodzinyRowInfo {
+  flex: 1;
+  min-width: 160px;
+}
+
+.basenGodzinyBalance {
+  font-weight: 700;
+  color: #22c55e;
+}
+
+.basenGodzinyBalanceZero {
+  font-weight: 700;
+  color: var(--text-muted, #888);
+}
+
+/* ─── Moje konto (wyciąg godzin basenowych) ─── */
+
+.basenLedgerList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.basenLedgerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.basenLedgerMain {
+  min-width: 0;
+}
+
+.basenLedgerType {
+  font-weight: 700;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.basenLedgerReason {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.basenLedgerDate {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
 }

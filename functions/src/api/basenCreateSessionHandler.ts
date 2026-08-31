@@ -103,7 +103,9 @@ export async function handleBasenCreateSession(req: Request, res: Response, deps
       res.status(200).json({ok: true, sessionId});
     } catch (err) {
       const e = err as {message?: string};
-      res.status(500).json({error: "Server error", message: e?.message || String(err)});
+      const msg = e?.message || String(err);
+      const isClient = msg.includes("już istnieje");
+      res.status(isClient ? 400 : 500).json({error: msg});
     }
   });
 }

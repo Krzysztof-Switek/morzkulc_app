@@ -3,19 +3,30 @@ import { apiGetJson, apiPostJson } from "/core/api_client.js";
 
 const NAV_BACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`;
 const NAV_HOME_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
+// Ikonki w komórkach kalendarza admina — basen (fala) i sauna (płomień) zaznaczane
+// OSOBNO, żeby dało się na pierwszy rzut oka odróżnić dzień z samą sauną od dnia
+// z basenem (albo obiema).
+const POOL_ICON_SVG = `<svg class="basenCalIcon basenCalIconPool" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 17c1.5-2 3.5-2 5 0s3.5 2 5 0 3.5-2 5 0 3.5 2 5 0"/><path d="M2 12c1.5-2 3.5-2 5 0s3.5 2 5 0 3.5-2 5 0 3.5 2 5 0"/></svg>`;
+const SAUNA_ICON_SVG = `<svg class="basenCalIcon basenCalIconSauna" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1 3-3 4-3 8a3 3 0 0 0 6 0c0-1-1-2-1-2 2 1 3 3 3 5a5 5 0 0 1-10 0c0-5 5-6 5-11z"/></svg>`;
 
 const SESSIONS_URL = "/api/basen/sessions";
 const ENROLL_URL = "/api/basen/enroll";
 const CANCEL_ENROLL_URL = "/api/basen/cancel-enrollment";
 const CREATE_SESSION_URL = "/api/basen/sessions/create";
 const CANCEL_SESSION_URL = "/api/basen/sessions/cancel";
+const ADD_SAUNA_URL = "/api/basen/sessions/add-sauna";
 const SET_KAYAK_URL = "/api/basen/kayak";
 const SET_INSTRUCTOR_URL = "/api/basen/instructor";
+const CLAIM_URL = "/api/basen/instructor/claim";
 const KAYAKS_URL = "/api/basen/kayaks";
 const ATTENDEES_URL = "/api/basen/attendees";
+const GODZINY_USERS_URL = "/api/basen/admin/godziny/users";
+const GODZINY_ADD_URL = "/api/basen/admin/godziny/add";
+const GODZINY_MY_URL = "/api/basen/godziny/my";
 
 const SLOT_ORDER = ["H1", "H2", "SAUNA"];
 const SLOT_LABELS = { H1: "I godzina", H2: "II godzina", SAUNA: "Sauna" };
+const SEEKING_SENTINEL = "__SEEKING__";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -55,12 +66,18 @@ function kayakLabel(kayakId, resolvedLabel) {
 // ─── Tabs ─────────────────────────────────────────────────────────────────────
 
 function renderTabsHtml(activeTab, isAdmin) {
-  if (!isAdmin) return ""; // brak zakładek dla zwykłych userów — lista terminów jest jedyną zawartością
-
-  const tabs = [
-    { id: "calendar", label: "Dodaj basen" },
-    { id: "payments", label: "Płatności" },
-  ];
+  // "Moje konto" (historia własnych godzin basenowych) widoczne dla WSZYSTKICH —
+  // to nie funkcja administracyjna, każdy user ma prawo widzieć swój wyciąg.
+  const tabs = isAdmin
+    ? [
+      { id: "calendar", label: "Dodaj / usuń basen" },
+      { id: "payments", label: "Płatności" },
+      { id: "account", label: "Moje konto" },
+    ]
+    : [
+      { id: "sessions", label: "Baseny" },
+      { id: "account", label: "Moje konto" },
+    ];
 
   return `<div class="modTabs basenTabs">
     ${tabs.map((t) => `
@@ -70,68 +87,6 @@ function renderTabsHtml(activeTab, isAdmin) {
       >${esc(t.label)}</button>
     `).join("")}
   </div>`;
-}
-
-// ─── Attendees panel (lazy loaded) ────────────────────────────────────────────
-
-function renderAttendeesBody(data) {
-  const instructors = Array.isArray(data?.instructors) ? data.instructors : [];
-  const paired = Array.isArray(data?.paired) ? data.paired : [];
-  const regular = Array.isArray(data?.regular) ? data.regular : [];
-
-  if (!instructors.length && !paired.length && !regular.length) {
-    return `<div class="basenHint">Brak zapisanych osób.</div>`;
-  }
-
-  let html = "";
-
-  if (instructors.length) {
-    html += `<div class="basenAttendeesGroup">
-      <div class="basenAttendeesGroupTitle">Instruktorzy dostępni</div>
-      ${instructors.map((i) => `<div class="basenAttendeeRow">${esc(i.userDisplayName)}</div>`).join("")}
-    </div>`;
-  }
-
-  if (paired.length) {
-    html += `<div class="basenAttendeesGroup">
-      <div class="basenAttendeesGroupTitle">Zapisy z instruktorem</div>
-      ${paired.map((p) => `
-        <div class="basenAttendeePair">
-          <div class="basenAttendeePairInstructor">${esc(p.instructor?.userDisplayName || "Instruktor")}</div>
-          ${p.participants.map((a) => `<div class="basenAttendeeRow basenAttendeeRowSub">${esc(a.userDisplayName)}${a.kayakId ? ` · ${esc(kayakLabel(a.kayakId, a.kayakLabel))}` : ""}</div>`).join("")}
-        </div>
-      `).join("")}
-    </div>`;
-  }
-
-  if (regular.length) {
-    html += `<div class="basenAttendeesGroup">
-      <div class="basenAttendeesGroupTitle">Uczestnicy</div>
-      ${regular.map((a) => `<div class="basenAttendeeRow">${esc(a.userDisplayName)}${a.kayakId ? ` · ${esc(kayakLabel(a.kayakId, a.kayakLabel))}` : ""}</div>`).join("")}
-    </div>`;
-  }
-
-  return html;
-}
-
-function bindAttendeesDetails(container, ctx) {
-  container.querySelectorAll("details.basenAttendeesDetails").forEach((details) => {
-    details.addEventListener("toggle", async () => {
-      if (!details.open) return;
-      const body = details.querySelector("[data-attendees-body]");
-      if (!body || body.getAttribute("data-loaded") === "1") return;
-      body.innerHTML = spinnerHtml("Ładowanie…");
-      const sessionId = details.getAttribute("data-session-id");
-      const slot = details.getAttribute("data-slot");
-      try {
-        const data = await apiGetJson({ url: `${ATTENDEES_URL}?sessionId=${encodeURIComponent(sessionId)}&slot=${encodeURIComponent(slot)}`, idToken: ctx.idToken });
-        body.innerHTML = renderAttendeesBody(data);
-        body.setAttribute("data-loaded", "1");
-      } catch (e) {
-        body.innerHTML = `<div class="err">${esc(e?.message || "Nie udało się pobrać listy uczestników.")}</div>`;
-      }
-    });
-  });
 }
 
 // ─── Slot card ────────────────────────────────────────────────────────────────
@@ -155,6 +110,29 @@ function renderSlotCard(sessionId, slotKey, slot, ctx, canEnroll) {
   const isInstructorEnrolled = slot.userEnrolled && slot.userEnrollmentType === "instructor";
   const isParticipantEnrolled = slot.userEnrolled && slot.userEnrollmentType !== "instructor";
 
+  // Prosta, zawsze widoczna lista uczestników — bez rozwijania, bez kajaka. Ksywka,
+  // a jak brak to imię+nazwisko. Osoba szukająca instruktora dostaje klikalny kafelek
+  // (zamiast osobnego przycisku) TYLKO dla widza, który sam jest instruktorem na ten
+  // slot — klik od razu go do niej przypisuje.
+  const attendeesList = Array.isArray(slot.attendees) ? slot.attendees : [];
+  const attendeesHtml = !isCancelled && attendeesList.length ? `
+    <div class="basenAttendeesSimple">
+      <div class="basenAttendeesSimpleTitle">Uczestnicy</div>
+      ${attendeesList.map((a) => {
+    const label = esc(a.displayLabel);
+    if (a.type === "instructor") {
+      return `<div class="basenAttendeeRow">${label} <span class="basenAttendeeTag">instruktor</span></div>`;
+    }
+    if (a.type === "training" && !a.instructorUid) {
+      return isInstructorEnrolled
+        ? `<button type="button" class="basenAttendeeTag basenClaimTagBtn" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}" data-target-uid="${esc(a.userUid)}" title="Kliknij, aby przypisać siebie jako instruktora">${label} — potrzebuje instruktora</button>`
+        : `<div class="basenAttendeeRow">${label} <span class="basenAttendeeTag">potrzebuje instruktora</span></div>`;
+    }
+    return `<div class="basenAttendeeRow">${label}</div>`;
+  }).join("")}
+    </div>
+  ` : "";
+
   let footerHtml = "";
 
   if (isCancelled) {
@@ -165,7 +143,9 @@ function renderSlotCard(sessionId, slotKey, slot, ctx, canEnroll) {
       <button type="button" class="ghost basenCancelBtn" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}">Zrezygnuj</button>
     `;
   } else if (isParticipantEnrolled) {
-    const typeLabel = slot.userEnrollmentType === "training" ? "z instruktorem" : "";
+    const typeLabel = slot.userEnrollmentType === "training"
+      ? (slot.userInstructorUid ? "z instruktorem" : "szukam instruktora")
+      : "";
     const kayakLine = (!isSauna && slot.userKayakId)
       ? `<div class="basenKayakRow">${esc(kayakLabel(slot.userKayakId, slot.userKayakLabel))}</div>`
       : "";
@@ -175,7 +155,7 @@ function renderSlotCard(sessionId, slotKey, slot, ctx, canEnroll) {
         ${kayakLine}
       </div>
       <div class="basenEnrolledActions">
-        ${!isSauna ? `<button type="button" class="ghost basenModifyBtn" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}" data-current-kayak-id="${esc(slot.userKayakId || "")}" data-current-instructor-uid="${esc(slot.userInstructorUid || "")}">Modyfikuj zapis</button>` : ""}
+        ${!isSauna ? `<button type="button" class="ghost basenModifyBtn" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}" data-current-kayak-id="${esc(slot.userKayakId || "")}" data-current-instructor-uid="${esc(slot.userInstructorUid || "")}" data-current-type="${esc(slot.userEnrollmentType || "")}">Modyfikuj zapis</button>` : ""}
         <button type="button" class="ghost basenCancelBtn" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}" data-within-window="${slot.isWithinCancellationWindow ? "1" : "0"}">Anuluj zapis</button>
       </div>
     `;
@@ -183,32 +163,46 @@ function renderSlotCard(sessionId, slotKey, slot, ctx, canEnroll) {
     footerHtml = `<span class="basenHint">Tylko dla członków klubu.</span>`;
   } else if (isFull) {
     footerHtml = `<span class="basenHint">Slot jest pełny.</span>`;
-    if (canBeInstructor) {
-      footerHtml += `<button type="button" class="ghost basenInstructorBtn" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}">Dodaj się jako instruktor</button>`;
-    }
-  } else {
+  } else if (isSauna) {
+    // Sauna nie ma kajaka ani parowania z instruktorem — nic do rozwinięcia,
+    // "Zapisz się" zapisuje od razu, jednym kliknięciem.
     footerHtml = `
       <form class="basenEnrollForm" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}">
-        <div class="basenEnrollRow">
-          <button type="submit" class="primary basenEnrollBtn">Zapisz się</button>
-        </div>
-        ${!isSauna ? `
+        <button type="submit" class="primary basenEnrollBtn">Zapisz się</button>
+      </form>
+    `;
+  } else {
+    // Na starcie TYLKO "Zapisz się" — dopiero klik rozwija kajak/instruktora, żeby
+    // niezapisany slot nie straszył formularzem zanim user w ogóle zdecyduje się
+    // zapisać. Drugi klik (już w rozwiniętym stanie) faktycznie wysyła zapis.
+    footerHtml = `
+      <form class="basenEnrollForm" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}">
+        <button type="button" class="primary basenEnrollRevealBtn">Zapisz się</button>
+        <div class="basenEnrollExpanded hidden">
           <label class="basenCheckLabel">
             <input type="checkbox" class="basenWithInstructorCheck" />
-            Zapisz się z instruktorem
+            Potrzebuję instruktora
           </label>
           <div class="basenInstructorPickerWrap hidden">
             <select class="basenInstructorSelect"><option value="">Ładowanie…</option></select>
           </div>
-          <div class="basenKayakPickerWrap">
-            <button type="button" class="ghost small basenLoadKayaksBtn">Wybierz kajak (opcjonalnie)</button>
+          <div class="row">
+            <label>Kajak (opcjonalnie)</label>
+            <select class="basenKayakSelect">
+              <option value="">Bez kajaka</option>
+              ${(Array.isArray(slot.availableKayaks) ? slot.availableKayaks : []).map((k) => `<option value="${esc(k.id)}">${esc(k.label)}</option>`).join("")}
+            </select>
           </div>
-        ` : ""}
+          <div class="basenEnrollRow">
+            <button type="submit" class="primary basenEnrollBtn">Zapisz się</button>
+            <button type="button" class="ghost basenEnrollCancelBtn">Anuluj</button>
+          </div>
+        </div>
       </form>
     `;
-    if (canBeInstructor) {
-      footerHtml += `<button type="button" class="ghost basenInstructorBtn" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}">Dodaj się jako instruktor</button>`;
-    }
+  }
+  if (!isCancelled && !isInstructorEnrolled && !isParticipantEnrolled && canEnroll && canBeInstructor) {
+    footerHtml += `<button type="button" class="ghost basenInstructorBtn" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}">Dodaj się jako instruktor</button>`;
   }
 
   return `
@@ -219,10 +213,7 @@ function renderSlotCard(sessionId, slotKey, slot, ctx, canEnroll) {
         ${spotsHtml}
       </div>
       ${reservedNote}
-      <details class="basenAttendeesDetails" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}">
-        <summary>Uczestnicy</summary>
-        <div class="basenAttendeesBody" data-attendees-body>${spinnerHtml("Ładowanie…")}</div>
-      </details>
+      ${attendeesHtml}
       <div class="basenSlotFooter">
         ${footerHtml}
       </div>
@@ -256,13 +247,18 @@ async function renderSessionsView(innerEl, ctx, canEnroll) {
   try {
     const data = await apiGetJson({ url: SESSIONS_URL, idToken: ctx.idToken });
     const sessions = Array.isArray(data?.sessions) ? data.sessions : [];
+    const balance = Number(data?.userGodzinyBalance ?? 0);
+    const balanceHtml = canEnroll
+      ? `<div class="basenHint" style="margin-top:8px;">Dostępne godziny basenowe: <strong>${balance}</strong>${balance <= 0 ? " — zapisz się dopiero po dopisaniu godzin przez opiekuna basenu." : ""}</div>`
+      : "";
 
     if (!sessions.length) {
-      innerEl.innerHTML = `<div class="hint" style="margin-top:16px;">Brak nadchodzących terminów basenowych.</div>`;
+      innerEl.innerHTML = balanceHtml + `<div class="hint" style="margin-top:16px;">Brak nadchodzących terminów basenowych.</div>`;
       return;
     }
 
     innerEl.innerHTML = `
+      ${balanceHtml}
       <div class="basenList">
         ${sessions.map((s) => renderSessionCard(s, ctx, canEnroll)).join("")}
       </div>
@@ -280,7 +276,23 @@ async function refreshSessionsView(innerEl, ctx, canEnroll) {
 }
 
 function bindSessionActions(innerEl, ctx, canEnroll) {
-  bindAttendeesDetails(innerEl, ctx);
+  // Klik na kafelek osoby "szukającej instruktora" (widoczny od razu na karcie slotu,
+  // tylko dla widza który sam jest instruktorem na tym slocie) → od razu przypisuje.
+  innerEl.querySelectorAll(".basenClaimTagBtn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const sessionId = btn.getAttribute("data-session-id");
+      const slot = btn.getAttribute("data-slot");
+      const targetUid = btn.getAttribute("data-target-uid");
+      btn.disabled = true;
+      try {
+        await apiPostJson({ url: CLAIM_URL, idToken: ctx.idToken, body: { sessionId, slot, targetUid } });
+        await refreshSessionsView(innerEl, ctx, canEnroll);
+      } catch (e) {
+        btn.disabled = false;
+        alert(e?.message || "Nie udało się przypisać.");
+      }
+    });
+  });
 
   // "Zapisz się z instruktorem" checkbox → lazy-load instructor list
   innerEl.querySelectorAll(".basenWithInstructorCheck").forEach((cb) => {
@@ -300,8 +312,8 @@ function bindSessionActions(innerEl, ctx, canEnroll) {
         const data = await apiGetJson({ url: `${ATTENDEES_URL}?sessionId=${encodeURIComponent(sessionId)}&slot=${encodeURIComponent(slot)}`, idToken: ctx.idToken });
         const instructors = Array.isArray(data?.instructors) ? data.instructors : [];
         select.innerHTML = instructors.length
-          ? instructors.map((i) => `<option value="${esc(i.userUid)}">${esc(i.userDisplayName)}</option>`).join("")
-          : `<option value="">Brak dostępnych instruktorów</option>`;
+          ? `<option value="">Bez wyboru — dopasujemy później</option>${instructors.map((i) => `<option value="${esc(i.userUid)}">${esc(i.userDisplayName)}</option>`).join("")}`
+          : `<option value="">Brak dostępnych instruktorów — zapiszesz się na listę oczekujących</option>`;
         select.setAttribute("data-loaded", "1");
       } catch (e) {
         select.innerHTML = `<option value="">Błąd ładowania</option>`;
@@ -309,26 +321,34 @@ function bindSessionActions(innerEl, ctx, canEnroll) {
     });
   });
 
-  // "Wybierz kajak" → lazy-load kayak select
-  innerEl.querySelectorAll(".basenLoadKayaksBtn").forEach((btn) => {
-    btn.addEventListener("click", async () => {
+  // "Zapisz się" (pierwszy klik) → rozwiń formularz (kajak/instruktor), ukryj przycisk-wyzwalacz
+  innerEl.querySelectorAll(".basenEnrollRevealBtn").forEach((btn) => {
+    btn.addEventListener("click", () => {
       const form = btn.closest(".basenEnrollForm");
-      const wrap = btn.closest(".basenKayakPickerWrap");
-      const sessionId = form.getAttribute("data-session-id");
-      const slot = form.getAttribute("data-slot");
-      btn.disabled = true;
-      btn.textContent = "Ładuję…";
-      try {
-        const data = await apiGetJson({ url: `${KAYAKS_URL}?sessionId=${encodeURIComponent(sessionId)}&slot=${encodeURIComponent(slot)}`, idToken: ctx.idToken });
-        const kayaks = Array.isArray(data?.kayaks) ? data.kayaks : [];
-        const select = document.createElement("select");
-        select.className = "basenKayakSelect";
-        select.innerHTML = `<option value="">Bez kajaka</option>${kayaks.map((k) => `<option value="${esc(k.id)}">${esc(k.label)}</option>`).join("")}`;
-        wrap.innerHTML = "";
-        wrap.appendChild(select);
-      } catch (e) {
-        wrap.innerHTML = `<span class="err">Nie udało się pobrać listy kajaków.</span>`;
-      }
+      const expanded = form?.querySelector(".basenEnrollExpanded");
+      if (!expanded) return;
+      btn.classList.add("hidden");
+      expanded.classList.remove("hidden");
+    });
+  });
+
+  // "Anuluj" w rozwiniętym formularzu → zwiń z powrotem, resetując wybory
+  innerEl.querySelectorAll(".basenEnrollCancelBtn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const form = btn.closest(".basenEnrollForm");
+      if (!form) return;
+      const revealBtn = form.querySelector(".basenEnrollRevealBtn");
+      const expanded = form.querySelector(".basenEnrollExpanded");
+      const check = form.querySelector(".basenWithInstructorCheck");
+      const pickerWrap = form.querySelector(".basenInstructorPickerWrap");
+      const instructorSelect = form.querySelector(".basenInstructorSelect");
+      const kayakSelect = form.querySelector(".basenKayakSelect");
+      if (check) check.checked = false;
+      if (pickerWrap) pickerWrap.classList.add("hidden");
+      if (instructorSelect) instructorSelect.removeAttribute("data-loaded");
+      if (kayakSelect) kayakSelect.value = "";
+      expanded?.classList.add("hidden");
+      revealBtn?.classList.remove("hidden");
     });
   });
 
@@ -343,11 +363,6 @@ function bindSessionActions(innerEl, ctx, canEnroll) {
       const withInstructor = form.querySelector(".basenWithInstructorCheck")?.checked === true;
       const instructorUid = withInstructor ? (form.querySelector(".basenInstructorSelect")?.value || "") : "";
       const kayakId = form.querySelector(".basenKayakSelect")?.value || "";
-
-      if (withInstructor && !instructorUid) {
-        if (msgEl) { msgEl.textContent = "Wybierz instruktora."; msgEl.classList.remove("hidden"); }
-        return;
-      }
 
       const btn = form.querySelector(".basenEnrollBtn");
       btn.disabled = true;
@@ -441,7 +456,8 @@ function bindSessionActions(innerEl, ctx, canEnroll) {
       const slot = btn.getAttribute("data-slot");
       const currentKayakId = btn.getAttribute("data-current-kayak-id") || "";
       const currentInstructorUid = btn.getAttribute("data-current-instructor-uid") || "";
-      openModifyModal(innerEl, ctx, sessionId, slot, {currentKayakId, currentInstructorUid}, () => refreshSessionsView(innerEl, ctx, canEnroll));
+      const currentType = btn.getAttribute("data-current-type") || "";
+      openModifyModal(innerEl, ctx, sessionId, slot, {currentKayakId, currentInstructorUid, currentType}, () => refreshSessionsView(innerEl, ctx, canEnroll));
     });
   });
 
@@ -466,29 +482,19 @@ function renderModifyModalHtml() {
           <button type="button" class="basenModalClose" data-basen-modal-close="modify" aria-label="Zamknij">✕</button>
         </div>
         <div class="basenModalBody">
-          <div class="basenModifySection">
-            <div class="basenModifySectionTitle">Kajak</div>
-            <div class="row">
-              <select class="basenModifyKayakSelect"><option value="">Ładowanie…</option></select>
-            </div>
-            <div class="basenModifySectionMsg hidden err" data-modify-kayak-msg></div>
-            <div class="actions">
-              <button type="button" class="ghost small basenModifyKayakSaveBtn">Zapisz kajak</button>
-            </div>
+          <div class="row">
+            <label for="basenModifyKayakSelect">Kajak</label>
+            <select id="basenModifyKayakSelect"><option value="">Ładowanie…</option></select>
           </div>
-          <div class="basenModifySection">
-            <div class="basenModifySectionTitle">Instruktor</div>
-            <div class="row">
-              <select class="basenModifyInstructorSelect"><option value="">Ładowanie…</option></select>
-            </div>
-            <div class="basenModifySectionMsg hidden err" data-modify-instructor-msg></div>
-            <div class="actions">
-              <button type="button" class="ghost small basenModifyInstructorSaveBtn">Zapisz instruktora</button>
-            </div>
+          <div class="row">
+            <label for="basenModifyInstructorSelect">Instruktor</label>
+            <select id="basenModifyInstructorSelect"><option value="">Ładowanie…</option></select>
           </div>
+          <div id="basenModifyMsg" class="err hidden"></div>
         </div>
         <div class="basenModalActions">
-          <button type="button" class="ghost" data-basen-modal-close="modify">Zamknij</button>
+          <button type="button" class="ghost" data-basen-modal-close="modify">Anuluj</button>
+          <button type="button" class="primary basenModifySaveBtn">Zapisz zmiany</button>
         </div>
       </div>
     </div>
@@ -501,17 +507,17 @@ function openModifyModal(innerEl, ctx, sessionId, slotKey, current, onChanged) {
 
   modal.querySelector("[data-modify-title]").textContent = `Modyfikuj zapis — ${SLOT_LABELS[slotKey] || slotKey}`;
 
-  const kayakSelect = modal.querySelector(".basenModifyKayakSelect");
-  const kayakMsg = modal.querySelector("[data-modify-kayak-msg]");
-  const kayakSaveBtn = modal.querySelector(".basenModifyKayakSaveBtn");
-  kayakSelect.innerHTML = `<option value="">Ładowanie…</option>`;
-  kayakMsg.classList.add("hidden");
+  const kayakSelect = modal.querySelector("#basenModifyKayakSelect");
+  const instructorSelect = modal.querySelector("#basenModifyInstructorSelect");
+  const msgEl = modal.querySelector("#basenModifyMsg");
+  const saveBtn = modal.querySelector(".basenModifySaveBtn");
 
-  const instructorSelect = modal.querySelector(".basenModifyInstructorSelect");
-  const instructorMsg = modal.querySelector("[data-modify-instructor-msg]");
-  const instructorSaveBtn = modal.querySelector(".basenModifyInstructorSaveBtn");
+  kayakSelect.innerHTML = `<option value="">Ładowanie…</option>`;
   instructorSelect.innerHTML = `<option value="">Ładowanie…</option>`;
-  instructorMsg.classList.add("hidden");
+  msgEl.textContent = "";
+  msgEl.classList.add("hidden");
+  saveBtn.disabled = false;
+  saveBtn.textContent = "Zapisz zmiany";
 
   apiGetJson({ url: `${KAYAKS_URL}?sessionId=${encodeURIComponent(sessionId)}&slot=${encodeURIComponent(slotKey)}`, idToken: ctx.idToken })
     .then((data) => {
@@ -521,45 +527,49 @@ function openModifyModal(innerEl, ctx, sessionId, slotKey, current, onChanged) {
     })
     .catch(() => { kayakSelect.innerHTML = `<option value="">Błąd ładowania</option>`; });
 
-  kayakSaveBtn.onclick = async () => {
-    kayakMsg.classList.add("hidden");
-    kayakSaveBtn.disabled = true;
-    kayakSaveBtn.textContent = "Zapisuję…";
-    try {
-      await apiPostJson({ url: SET_KAYAK_URL, idToken: ctx.idToken, body: { sessionId, slot: slotKey, kayakId: kayakSelect.value || null } });
-      closeModifyModal(innerEl);
-      await onChanged();
-    } catch (e) {
-      kayakMsg.textContent = e?.message || "Nie udało się zmienić kajaka.";
-      kayakMsg.classList.remove("hidden");
-    } finally {
-      kayakSaveBtn.disabled = false;
-      kayakSaveBtn.textContent = "Zapisz kajak";
-    }
-  };
+  // Trzy różne stany, nie dwa: "Brak" (zwykły zapis, bez instruktora, koniec tematu),
+  // "Szukam instruktora" (nadal chcę, ale nikt jeszcze nie jest dostępny — dopasujemy
+  // później, przez ten sam modal albo przez instruktora z listy uczestników) i konkretny
+  // instruktor. Bez tego trzeciego stanu nie dało się PO ZAPISIE dołączyć do listy
+  // szukających — jedyna droga była zaznaczenie checkboxa przy samym zapisie.
+  const currentSelectValue = current.currentInstructorUid || (current.currentType === "training" ? SEEKING_SENTINEL : "");
 
   apiGetJson({ url: `${ATTENDEES_URL}?sessionId=${encodeURIComponent(sessionId)}&slot=${encodeURIComponent(slotKey)}`, idToken: ctx.idToken })
     .then((data) => {
       const instructors = Array.isArray(data?.instructors) ? data.instructors : [];
-      instructorSelect.innerHTML = `<option value="">Brak</option>${instructors.map((i) => `<option value="${esc(i.userUid)}">${esc(i.userDisplayName)}</option>`).join("")}`;
-      instructorSelect.value = current.currentInstructorUid || "";
+      instructorSelect.innerHTML = `<option value="">Brak</option><option value="${SEEKING_SENTINEL}">Szukam instruktora (dopasujemy później)</option>${instructors.map((i) => `<option value="${esc(i.userUid)}">${esc(i.userDisplayName)}</option>`).join("")}`;
+      instructorSelect.value = currentSelectValue;
     })
     .catch(() => { instructorSelect.innerHTML = `<option value="">Błąd ładowania</option>`; });
 
-  instructorSaveBtn.onclick = async () => {
-    instructorMsg.classList.add("hidden");
-    instructorSaveBtn.disabled = true;
-    instructorSaveBtn.textContent = "Zapisuję…";
+  saveBtn.onclick = async () => {
+    msgEl.classList.add("hidden");
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Zapisuję…";
     try {
-      await apiPostJson({ url: SET_INSTRUCTOR_URL, idToken: ctx.idToken, body: { sessionId, slot: slotKey, instructorUid: instructorSelect.value || null } });
+      // Wysyłamy tylko realnie zmienione pola — dla "szukam instruktora" (type=training,
+      // instructorUid=null) pole instruktora domyślnie pokazuje "Brak"; wysłanie
+      // instructorUid=null bez zmiany cofnęłoby type do "regular" (patrz
+      // setEnrollmentInstructor), czyli wypisałoby osobę z listy szukających mimo że
+      // nic nie zmieniła.
+      const calls = [];
+      if ((kayakSelect.value || "") !== (current.currentKayakId || "")) {
+        calls.push(apiPostJson({ url: SET_KAYAK_URL, idToken: ctx.idToken, body: { sessionId, slot: slotKey, kayakId: kayakSelect.value || null } }));
+      }
+      if ((instructorSelect.value || "") !== currentSelectValue) {
+        const selected = instructorSelect.value;
+        const seeking = selected === SEEKING_SENTINEL;
+        const instructorUid = seeking ? null : (selected || null);
+        calls.push(apiPostJson({ url: SET_INSTRUCTOR_URL, idToken: ctx.idToken, body: { sessionId, slot: slotKey, instructorUid, seeking } }));
+      }
+      await Promise.all(calls);
       closeModifyModal(innerEl);
       await onChanged();
     } catch (e) {
-      instructorMsg.textContent = e?.message || "Nie udało się zmienić instruktora.";
-      instructorMsg.classList.remove("hidden");
-    } finally {
-      instructorSaveBtn.disabled = false;
-      instructorSaveBtn.textContent = "Zapisz instruktora";
+      msgEl.textContent = e?.message || "Nie udało się zapisać zmian.";
+      msgEl.classList.remove("hidden");
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Zapisz zmiany";
     }
   };
 
@@ -611,11 +621,15 @@ function renderCalendarShellHtml(year, month, sessionsByDate) {
       cells += `<div class="basenCalDay basenCalDay--past"><span class="basenCalDayNum">${day}</span></div>`;
       continue;
     }
-    const hasSession = sessionsByDate.has(dateIso);
+    const session = sessionsByDate.get(dateIso);
+    const isActiveSlot = (s) => Boolean(s) && s.status !== "cancelled";
+    const hasPool = Boolean(session) && (isActiveSlot(session.slots?.H1) || isActiveSlot(session.slots?.H2));
+    const hasSauna = Boolean(session) && isActiveSlot(session.slots?.SAUNA);
+    const hasSession = hasPool || hasSauna;
     cells += `
       <button type="button" class="basenCalDay ${hasSession ? "basenCalDay--has-session" : "basenCalDay--empty"}" data-cal-date="${dateIso}">
         <span class="basenCalDayNum">${day}</span>
-        ${hasSession ? `<span class="basenCalDayDot"></span>` : ""}
+        ${hasSession ? `<span class="basenCalDayIcons">${hasPool ? POOL_ICON_SVG : ""}${hasSauna ? SAUNA_ICON_SVG : ""}</span>` : ""}
       </button>
     `;
   }
@@ -696,13 +710,22 @@ function renderDayDetailModalHtml() {
       <div class="basenModalBackdrop" data-basen-modal-close="dayDetail"></div>
       <div class="basenModalCard" role="dialog" aria-modal="true" aria-label="Szczegóły terminu">
         <div class="basenModalTop">
-          <div class="basenModalTitle" data-day-detail-title>Termin</div>
+          <div class="basenModalTopLeft">
+            <button type="button" class="dangerBtn" id="ddCancelDayBtn">Anuluj basen</button>
+            <div class="basenModalTitle" data-day-detail-title>Termin</div>
+          </div>
           <button type="button" class="basenModalClose" data-basen-modal-close="dayDetail" aria-label="Zamknij">✕</button>
         </div>
-        <div class="basenModalBody" data-day-detail-body></div>
+        <div class="basenModalBody">
+          <div class="row">
+            <label for="ddCancelReason">Powód anulowania (opcjonalnie, trafia w mailu do zapisanych)</label>
+            <input type="text" id="ddCancelReason" maxlength="500" placeholder="np. awaria niecki" />
+          </div>
+          <div data-day-detail-body></div>
+          <div data-add-sauna-wrap></div>
+        </div>
         <div class="basenModalActions">
           <button type="button" class="ghost" data-basen-modal-close="dayDetail">Zamknij</button>
-          <button type="button" class="dangerBtn" id="ddCancelDayBtn">Anuluj cały dzień</button>
         </div>
       </div>
     </div>
@@ -875,7 +898,6 @@ function renderDayDetailSlotHtml(slotKey, slot) {
         <div>Ogólna pula: ${slot.enrolledCount} / ${generalCapacity}</div>
         ${reservedLine}
       </div>
-      ${!isCancelled ? `<button type="button" class="dangerBtn basenDayDetailCancelSlotBtn" data-slot="${esc(slotKey)}">Anuluj ten slot</button>` : ""}
     </div>
   `;
 }
@@ -885,34 +907,41 @@ function openDayDetailModal(innerEl, ctx, session, onChanged) {
   if (!modal) return;
 
   modal.querySelector("[data-day-detail-title]").textContent = formatDate(session.date);
+  const reasonEl = modal.querySelector("#ddCancelReason");
+  reasonEl.value = "";
   const body = modal.querySelector("[data-day-detail-body]");
   body.innerHTML = SLOT_ORDER
     .filter((key) => session.slots?.[key])
     .map((key) => renderDayDetailSlotHtml(key, session.slots[key]))
     .join("");
 
-  body.querySelectorAll(".basenDayDetailCancelSlotBtn").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const slot = btn.getAttribute("data-slot");
-      if (!confirm(`Anulować slot ${slot}? Wszyscy uczestnicy zostaną wypisani.`)) return;
-      btn.disabled = true;
+  const addSaunaWrap = modal.querySelector("[data-add-sauna-wrap]");
+  if (!session.slots?.SAUNA) {
+    addSaunaWrap.innerHTML = `<button type="button" class="ghost" id="ddAddSaunaBtn">Dodaj saunę do tego terminu</button>`;
+    const addSaunaBtn = addSaunaWrap.querySelector("#ddAddSaunaBtn");
+    addSaunaBtn.addEventListener("click", async () => {
+      addSaunaBtn.disabled = true;
+      addSaunaBtn.textContent = "Dodaję…";
       try {
-        await apiPostJson({ url: CANCEL_SESSION_URL, idToken: ctx.idToken, body: { sessionId: session.id, slot } });
+        await apiPostJson({ url: ADD_SAUNA_URL, idToken: ctx.idToken, body: { sessionId: session.id } });
         closeDayDetailModal(innerEl);
         await onChanged();
       } catch (e) {
-        btn.disabled = false;
-        alert(e?.message || "Nie udało się anulować.");
+        addSaunaBtn.disabled = false;
+        addSaunaBtn.textContent = "Dodaj saunę do tego terminu";
+        alert(e?.message || "Nie udało się dodać sauny.");
       }
     });
-  });
+  } else {
+    addSaunaWrap.innerHTML = "";
+  }
 
   const cancelDayBtn = modal.querySelector("#ddCancelDayBtn");
   cancelDayBtn.onclick = async () => {
-    if (!confirm(`Anulować cały dzień ${formatDate(session.date)}? Wszyscy uczestnicy zostaną wypisani.`)) return;
+    if (!confirm(`Anulować basen ${formatDate(session.date)}? Wszyscy uczestnicy zostaną wypisani, a zablokowane godziny wrócą na ich saldo.`)) return;
     cancelDayBtn.disabled = true;
     try {
-      await apiPostJson({ url: CANCEL_SESSION_URL, idToken: ctx.idToken, body: { sessionId: session.id } });
+      await apiPostJson({ url: CANCEL_SESSION_URL, idToken: ctx.idToken, body: { sessionId: session.id, reason: reasonEl.value.trim() || undefined } });
       closeDayDetailModal(innerEl);
       await onChanged();
     } catch (e) {
@@ -932,6 +961,239 @@ function closeDayDetailModal(innerEl) {
   modal.classList.add("hidden");
   modal.setAttribute("aria-hidden", "true");
   document.body.style.overflow = "";
+}
+
+// ─── Płatności (saldo godzin basenowych) ───────────────────────────────────────
+
+function renderAddGodzinyModalHtml() {
+  return `
+    <div id="basenAddGodzinyModal" class="basenModal hidden" aria-hidden="true">
+      <div class="basenModalBackdrop" data-basen-modal-close="addGodziny"></div>
+      <div class="basenModalCard" role="dialog" aria-modal="true" aria-label="Dopisz godziny basenowe">
+        <div class="basenModalTop">
+          <div class="basenModalTitle" data-add-godziny-title>Dopisz godziny</div>
+          <button type="button" class="basenModalClose" data-basen-modal-close="addGodziny" aria-label="Zamknij">✕</button>
+        </div>
+        <div class="basenModalBody">
+          <div class="row">
+            <label for="agAmount">Liczba godzin</label>
+            <input type="number" id="agAmount" min="1" step="1" placeholder="np. 10" />
+          </div>
+          <div class="row">
+            <label for="agReason">Powód (opcjonalnie)</label>
+            <input type="text" id="agReason" maxlength="200" placeholder="np. wpłata 10.09" />
+          </div>
+          <div id="agErr" class="err hidden"></div>
+        </div>
+        <div class="basenModalActions">
+          <button type="button" class="ghost" data-basen-modal-close="addGodziny">Anuluj</button>
+          <button type="button" class="primary" id="agSubmitBtn">Dopisz</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function openAddGodzinyModal(innerEl, ctx, user, onSaved) {
+  const modal = innerEl.querySelector("#basenAddGodzinyModal");
+  if (!modal) return;
+
+  modal.querySelector("[data-add-godziny-title]").textContent = `Dopisz godziny — ${user.userName || user.userNick || user.userEmail}`;
+  const amountEl = modal.querySelector("#agAmount");
+  const reasonEl = modal.querySelector("#agReason");
+  const errEl = modal.querySelector("#agErr");
+  const submitBtn = modal.querySelector("#agSubmitBtn");
+
+  amountEl.value = "";
+  reasonEl.value = "";
+  errEl.textContent = "";
+  errEl.classList.add("hidden");
+  submitBtn.disabled = false;
+  submitBtn.textContent = "Dopisz";
+
+  submitBtn.onclick = async () => {
+    const amount = Number(amountEl.value);
+    if (!amount || amount <= 0) {
+      errEl.textContent = "Podaj liczbę godzin większą od 0.";
+      errEl.classList.remove("hidden");
+      return;
+    }
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Zapisuję…";
+    try {
+      const res = await apiPostJson({
+        url: GODZINY_ADD_URL,
+        idToken: ctx.idToken,
+        body: { userUid: user.userUid, amount, reason: reasonEl.value.trim() || undefined },
+      });
+      modal.classList.add("hidden");
+      modal.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+      await onSaved(res?.newBalance);
+    } catch (e) {
+      errEl.textContent = e?.message || "Nie udało się dopisać godzin.";
+      errEl.classList.remove("hidden");
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Dopisz";
+    }
+  };
+
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function renderGodzinyRow(u) {
+  const name = esc(u.userName || u.userNick || u.userEmail || u.userUid);
+  const nickLine = (u.userNick && u.userName) ? `<div class="basenHint">${esc(u.userNick)}</div>` : "";
+  const balCls = u.balance > 0 ? "basenGodzinyBalance" : "basenGodzinyBalanceZero";
+  return `
+    <div class="basenGodzinyRow" data-uid="${esc(u.userUid)}">
+      <div class="basenGodzinyRowInfo">
+        <div>${name}</div>
+        ${nickLine}
+        <div class="basenHint">${esc(u.userEmail || "")}</div>
+      </div>
+      <div class="${balCls}">${u.balance} h</div>
+      <button type="button" class="ghost small basenAddGodzinyBtn" data-uid="${esc(u.userUid)}">Dopisz godziny</button>
+    </div>
+  `;
+}
+
+async function renderPaymentsTab(innerEl, ctx) {
+  innerEl.innerHTML = spinnerHtml("Ładowanie…");
+
+  let rows;
+  try {
+    const data = await apiGetJson({ url: GODZINY_USERS_URL, idToken: ctx.idToken });
+    rows = Array.isArray(data?.rows) ? data.rows : [];
+  } catch (e) {
+    innerEl.innerHTML = `<div class="err">${esc(e?.message || "Nie udało się pobrać listy użytkowników.")}</div>`;
+    return;
+  }
+
+  const byUid = new Map(rows.map((u) => [u.userUid, u]));
+
+  const draw = () => {
+    innerEl.innerHTML = `
+      <div class="row" style="margin-top:12px;">
+        <label for="paymentsSearch">Szukaj (mail / nazwisko / ksywka)</label>
+        <input type="text" id="paymentsSearch" placeholder="np. jan.kowalski albo Kowalski albo ksywka" autocomplete="off" />
+      </div>
+      <div id="paymentsSummary" class="hint" style="margin:8px 0;"></div>
+      <div id="paymentsContent"></div>
+      ${renderAddGodzinyModalHtml()}
+    `;
+
+    const searchEl = innerEl.querySelector("#paymentsSearch");
+    const summaryEl = innerEl.querySelector("#paymentsSummary");
+    const contentEl = innerEl.querySelector("#paymentsContent");
+
+    const renderList = () => {
+      const q = searchEl.value.trim().toLowerCase();
+      const filtered = q
+        ? rows.filter((u) =>
+            String(u.userEmail || "").toLowerCase().includes(q) ||
+            String(u.userName || "").toLowerCase().includes(q) ||
+            String(u.userNick || "").toLowerCase().includes(q))
+        : rows;
+
+      const withHours = filtered.filter((u) => u.balance > 0);
+      const withoutHours = filtered.filter((u) => u.balance <= 0);
+
+      summaryEl.textContent = `Razem: ${filtered.length} · Mają godziny: ${withHours.length} · Brak godzin: ${withoutHours.length}`;
+
+      let html = "";
+      html += `<div class="basenAttendeesGroupTitle">Mają godziny</div>`;
+      html += `<div class="basenGodzinyList">${withHours.length ? withHours.map(renderGodzinyRow).join("") : `<div class="basenHint">Brak.</div>`}</div>`;
+      html += `<div class="basenAttendeesGroupTitle" style="margin-top:14px;">Brak godzin</div>`;
+      html += `<div class="basenGodzinyList">${withoutHours.length ? withoutHours.map(renderGodzinyRow).join("") : `<div class="basenHint">Brak.</div>`}</div>`;
+      contentEl.innerHTML = html;
+
+      contentEl.querySelectorAll(".basenAddGodzinyBtn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const user = byUid.get(btn.getAttribute("data-uid"));
+          if (!user) return;
+          openAddGodzinyModal(innerEl, ctx, user, async (newBalance) => {
+            if (typeof newBalance === "number") user.balance = newBalance;
+            renderList();
+          });
+        });
+      });
+    };
+
+    searchEl.addEventListener("input", renderList);
+    innerEl.addEventListener("click", (ev) => {
+      if (ev.target?.getAttribute?.("data-basen-modal-close") === "addGodziny") {
+        const modal = innerEl.querySelector("#basenAddGodzinyModal");
+        modal?.classList.add("hidden");
+        modal?.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+      }
+    });
+
+    renderList();
+  };
+
+  draw();
+}
+
+// ─── Moje konto (wyciąg — pełna historia własnych godzin basenowych) ──────────
+
+const GODZINY_TYPE_LABELS = {
+  admin_add: "Dopisane",
+  booking_block: "Wykorzystane",
+  booking_refund: "Zwrot",
+  instructor_reward: "Nagroda za instruktorowanie",
+};
+
+function formatGodzinyDate(iso) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function renderGodzinyLedgerRow(r) {
+  const positive = r.amount > 0;
+  const sign = positive ? "+" : "";
+  const typeLabel = GODZINY_TYPE_LABELS[r.type] || r.type;
+  return `
+    <div class="basenLedgerRow">
+      <div class="basenLedgerMain">
+        <div class="basenLedgerType">${esc(typeLabel)}</div>
+        <div class="basenLedgerReason">${esc(r.reason || "")}</div>
+        <div class="basenLedgerDate">${esc(formatGodzinyDate(r.createdAt))}</div>
+      </div>
+      <div class="${positive ? "basenGodzinyBalance" : "basenGodzinyBalanceZero"}">${sign}${r.amount} h</div>
+    </div>
+  `;
+}
+
+async function renderAccountTab(innerEl, ctx) {
+  innerEl.innerHTML = spinnerHtml("Ładowanie…");
+
+  try {
+    const data = await apiGetJson({ url: GODZINY_MY_URL, idToken: ctx.idToken });
+    const balance = Number(data?.balance ?? 0);
+    const records = Array.isArray(data?.records) ? data.records : [];
+
+    const rowsHtml = records.length
+      ? records.map(renderGodzinyLedgerRow).join("")
+      : `<div class="basenHint">Brak historii — nie masz jeszcze żadnych operacji na godzinach basenowych.</div>`;
+
+    innerEl.innerHTML = `
+      <div class="row" style="margin-top:12px;">
+        <div class="basenAttendeesGroupTitle">Saldo godzin basenowych</div>
+        <div class="${balance > 0 ? "basenGodzinyBalance" : "basenGodzinyBalanceZero"}" style="font-size:20px;">${balance} h</div>
+      </div>
+      <div class="basenAttendeesGroupTitle" style="margin-top:16px;">Historia (wyciąg)</div>
+      <div class="basenLedgerList">${rowsHtml}</div>
+    `;
+  } catch (e) {
+    innerEl.innerHTML = `<div class="err">${esc(e?.message || "Nie udało się pobrać historii godzin.")}</div>`;
+  }
 }
 
 // ─── Module ───────────────────────────────────────────────────────────────────
@@ -957,7 +1219,7 @@ export function createBasenModule({ id, type, label, defaultRoute, order, enable
       const canEnroll = actions.includes("basen.enroll");
 
       const requestedTab = String(routeId || "").trim();
-      const validTabs = ["sessions", ...(isAdmin ? ["calendar", "payments"] : [])];
+      const validTabs = ["sessions", "account", ...(isAdmin ? ["calendar", "payments"] : [])];
       const activeTab = validTabs.includes(requestedTab) ? requestedTab : "sessions";
 
       viewEl.innerHTML = `
@@ -997,7 +1259,9 @@ export function createBasenModule({ id, type, label, defaultRoute, order, enable
       if (activeTab === "calendar" && isAdmin) {
         await renderCalendarTab(innerEl, ctx);
       } else if (activeTab === "payments" && isAdmin) {
-        innerEl.innerHTML = `<div class="hint" style="margin-top:16px;">Wkrótce.</div>`;
+        await renderPaymentsTab(innerEl, ctx);
+      } else if (activeTab === "account") {
+        await renderAccountTab(innerEl, ctx);
       } else {
         await renderSessionsView(innerEl, ctx, canEnroll);
       }

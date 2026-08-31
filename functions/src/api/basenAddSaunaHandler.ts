@@ -1,5 +1,5 @@
 import type {Request, Response} from "express";
-import {setEnrollmentInstructor, BasenSlotLabel} from "../modules/basen/basen_service";
+import {addSaunaToSession, getBasenVars, resolveBasenAdminGrant} from "../modules/basen/basen_service";
 
 type Deps = {
   db: FirebaseFirestore.Firestore;
@@ -8,11 +8,14 @@ type Deps = {
   setCorsHeaders: (req: Request, res: Response) => void;
   corsHandler: (req: Request, res: Response, next: () => void) => void;
   requireIdToken: (req: Request) => Promise<{error: string} | {decoded: any}>;
+  adminRoleKeys: string[];
 };
 
-const VALID_SLOTS: BasenSlotLabel[] = ["H1", "H2"]; // sauna nie ma parowania z instruktorem
-
-export async function handleBasenSetInstructor(req: Request, res: Response, deps: Deps): Promise<void> {
+/**
+ * POST /api/basen/sessions/add-sauna (authenticated, role: zarzad/kr/opiekun basenowy)
+ * Dodaje saunę do istniejącego terminu, który powstał bez niej.
+ */
+export async function handleBasenAddSauna(req: Request, res: Response, deps: Deps): Promise<void> {
   if (deps.sendPreflight(req, res)) return;
   if (!deps.requireAllowedHost(req, res)) return;
   deps.setCorsHeaders(req, res);
@@ -32,28 +35,36 @@ export async function handleBasenSetInstructor(req: Request, res: Response, deps
 
       const uid = tokenCheck.decoded.uid;
 
-      const body = req.body || {};
-      const sessionId = String(body.sessionId || "").trim();
-      const slot = String(body.slot || "").trim() as BasenSlotLabel;
-      const instructorUidRaw = body.instructorUid;
-      const instructorUid = instructorUidRaw === null || instructorUidRaw === undefined || instructorUidRaw === "" ?
-        null :
-        String(instructorUidRaw).trim();
-      const seeking = body.seeking === true;
-
-      if (!sessionId || !VALID_SLOTS.includes(slot)) {
-        res.status(400).json({error: "Brakuje sessionId lub nieprawidłowy slot."});
+      const userSnap = await deps.db.collection("users_active").doc(uid).get();
+      if (!userSnap.exists) {
+        res.status(403).json({error: "User not found"});
         return;
       }
 
-      await setEnrollmentInstructor(deps.db, {sessionId, slot, uid, instructorUid, seeking});
+      const userData = userSnap.data() as any;
+      const roleKey = String(userData?.role_key || "");
+      const email = String(userData?.email || "");
+
+      if (!deps.adminRoleKeys.includes(roleKey) && !(await resolveBasenAdminGrant(deps.db, email))) {
+        res.status(403).json({error: "Brak uprawnień. Wymagana rola: zarząd/KR lub opiekun basenowy."});
+        return;
+      }
+
+      const body = req.body || {};
+      const sessionId = String(body.sessionId || "").trim();
+      if (!sessionId) {
+        res.status(400).json({error: "Brakuje sessionId."});
+        return;
+      }
+
+      const vars = await getBasenVars(deps.db);
+      await addSaunaToSession(deps.db, {sessionId, vars});
 
       res.status(200).json({ok: true});
     } catch (err) {
       const e = err as {message?: string};
       const msg = e?.message || String(err);
-      const clientErrors = ["nie istnieje", "anulowany", "dostępny", "samego siebie", "sam ze sobą", "maksymalną"];
-      const isClient = clientErrors.some((s) => msg.includes(s));
+      const isClient = msg.includes("nie istnieje") || msg.includes("już saunę") || msg.includes("przeszłości");
       res.status(isClient ? 400 : 500).json({error: msg});
     }
   });

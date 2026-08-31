@@ -1,5 +1,5 @@
 import type {Request, Response} from "express";
-import {setEnrollmentInstructor, BasenSlotLabel} from "../modules/basen/basen_service";
+import {claimWaitingStudent, BasenSlotLabel} from "../modules/basen/basen_service";
 
 type Deps = {
   db: FirebaseFirestore.Firestore;
@@ -12,7 +12,13 @@ type Deps = {
 
 const VALID_SLOTS: BasenSlotLabel[] = ["H1", "H2"]; // sauna nie ma parowania z instruktorem
 
-export async function handleBasenSetInstructor(req: Request, res: Response, deps: Deps): Promise<void> {
+/**
+ * POST /api/basen/instructor/claim (authenticated)
+ * Instruktor przypisuje SIEBIE do studenta, który zapisał się "na training" bez
+ * wybranego instruktora (szuka instruktora). Wywołujący musi być aktywnym instruktorem
+ * na tym samym slocie — weryfikowane w claimWaitingStudent.
+ */
+export async function handleBasenClaimWaitingStudent(req: Request, res: Response, deps: Deps): Promise<void> {
   if (deps.sendPreflight(req, res)) return;
   if (!deps.requireAllowedHost(req, res)) return;
   deps.setCorsHeaders(req, res);
@@ -30,29 +36,29 @@ export async function handleBasenSetInstructor(req: Request, res: Response, deps
         return;
       }
 
-      const uid = tokenCheck.decoded.uid;
+      const instructorUid = tokenCheck.decoded.uid;
 
       const body = req.body || {};
       const sessionId = String(body.sessionId || "").trim();
       const slot = String(body.slot || "").trim() as BasenSlotLabel;
-      const instructorUidRaw = body.instructorUid;
-      const instructorUid = instructorUidRaw === null || instructorUidRaw === undefined || instructorUidRaw === "" ?
-        null :
-        String(instructorUidRaw).trim();
-      const seeking = body.seeking === true;
+      const targetUid = String(body.targetUid || "").trim();
 
       if (!sessionId || !VALID_SLOTS.includes(slot)) {
         res.status(400).json({error: "Brakuje sessionId lub nieprawidłowy slot."});
         return;
       }
+      if (!targetUid) {
+        res.status(400).json({error: "Brakuje targetUid."});
+        return;
+      }
 
-      await setEnrollmentInstructor(deps.db, {sessionId, slot, uid, instructorUid, seeking});
+      await claimWaitingStudent(deps.db, {sessionId, slot, instructorUid, targetUid});
 
       res.status(200).json({ok: true});
     } catch (err) {
       const e = err as {message?: string};
       const msg = e?.message || String(err);
-      const clientErrors = ["nie istnieje", "anulowany", "dostępny", "samego siebie", "sam ze sobą", "maksymalną"];
+      const clientErrors = ["nie istnieje", "anulowany", "instruktor", "szuka", "samego siebie", "maksymalną"];
       const isClient = clientErrors.some((s) => msg.includes(s));
       res.status(isClient ? 400 : 500).json({error: msg});
     }

@@ -1,5 +1,6 @@
 import type {Request, Response} from "express";
-import {listUpcomingSessions, getUserEnrollments, computeSlotAvailability, resolveKayakLabel, getBasenVars, sessionSlotDatetimeMs} from "../modules/basen/basen_service";
+import {listUpcomingSessions, getUserEnrollments, computeSlotAvailability, resolveKayakLabel, getBasenVars, sessionSlotDatetimeMs, getAttendeesBySessionSlot, getAvailableKayaksBySessionSlot} from "../modules/basen/basen_service";
+import {getBasenGodzinyRecords, computeBasenGodzinyBalance} from "../modules/basen/basen_godziny_service";
 
 type Deps = {
   db: FirebaseFirestore.Firestore;
@@ -34,11 +35,16 @@ export async function handleGetBasenSessions(req: Request, res: Response, deps: 
       const userData = userSnap.data() as any;
       const isKursant = String(userData?.role_key || "") === "rola_kursant";
 
-      const [sessions, userEnrollments, vars] = await Promise.all([
-        listUpcomingSessions(deps.db),
+      const sessions = await listUpcomingSessions(deps.db);
+
+      const [userEnrollments, vars, godzinyRecords, attendeesByKey, kayaksByKey] = await Promise.all([
         getUserEnrollments(deps.db, uid),
         getBasenVars(deps.db),
+        getBasenGodzinyRecords(deps.db, uid),
+        getAttendeesBySessionSlot(deps.db),
+        getAvailableKayaksBySessionSlot(deps.db, sessions),
       ]);
+      const userGodzinyBalance = computeBasenGodzinyBalance(godzinyRecords);
       const cancellationWindowMs = vars.basen_okno_anulowania_h * 60 * 60 * 1000;
 
       const enrollmentByKey = new Map(userEnrollments.map((e) => [`${e.sessionId}_${e.slot}`, e]));
@@ -81,6 +87,8 @@ export async function handleGetBasenSessions(req: Request, res: Response, deps: 
             userKayakId: enrollment?.kayakId || null,
             userKayakLabel: resolveOwnKayakLabel(enrollment?.kayakId),
             userViaReservedPool: enrollment?.viaReservedPool === true,
+            attendees: attendeesByKey.get(`${s.id}_${label}`) || [],
+            availableKayaks: kayaksByKey.get(`${s.id}_${label}`) || [],
           };
         }
 
@@ -95,6 +103,7 @@ export async function handleGetBasenSessions(req: Request, res: Response, deps: 
       res.status(200).json({
         ok: true,
         sessions: sessionsWithStatus,
+        userGodzinyBalance,
       });
     } catch (err) {
       const e = err as {message?: string};

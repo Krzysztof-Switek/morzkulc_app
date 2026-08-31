@@ -1,5 +1,12 @@
 import * as admin from "firebase-admin";
 import {resolveFunctionRoleEmail} from "../setup/function_roles_service";
+import {computeBasenGodzinyBalance, blockBasenGodzinyInTx, refundBasenGodzinyInTx} from "./basen_godziny_service";
+
+// Maksymalna liczba uczestników jednego instruktora na jednym slocie — ustalone
+// z użytkownikiem: instruktor może dopisać sobie max 2 osoby szukające instruktora
+// (uczestnik z natury rzeczy paruje się z JEDNYM instruktorem — pole instructorUid
+// jest pojedyncze, więc ten kierunek limitu wymuszony jest już przez model danych).
+const MAX_STUDENTS_PER_INSTRUCTOR = 2;
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -19,6 +26,11 @@ export interface BasenVars {
   basen_sauna: boolean;
   basen_sauna_cena: number;
   basen_okno_anulowania_h: number;
+  // Wyłącznie informacyjne (ściągawka cenowa w zakładce Płatności) — nie napędzają
+  // żadnej logiki, saldo godzin basenowych dopisuje admin ręcznie po wpłacie.
+  basen_cena_za_godzine: number;
+  basen_cena_za_karnet: number;
+  basen_ile_wejsc_na_karnet: number;
 }
 
 export interface BasenReservedSpots {
@@ -76,18 +88,16 @@ export interface BasenKayakAllocation {
 }
 
 export interface SlotAttendee {
-  enrollmentId: string;
   userUid: string;
   userDisplayName: string;
-  userEmail: string;
-  kayakId: string | null;
-  kayakLabel: string | null; // nazwa+numer kajaka (patrz resolveKayakLabel), nie surowe ID
 }
 
 export interface SlotAttendeesResult {
+  // JEDYNI konsumenci: dropdown wyboru instruktora przy zapisie i w "Modyfikuj zapis"
+  // (public/modules/basen_module.js) — pełna lista uczestników slotu (kto z kim,
+  // kto szuka instruktora) pokazywana jest OD RAZU na karcie slotu, patrz
+  // getAttendeesBySessionSlot/getBasenSessionsHandler.ts, nie tędy.
   instructors: SlotAttendee[];
-  paired: Array<{ instructorUid: string; instructor: SlotAttendee | null; participants: SlotAttendee[] }>;
-  regular: SlotAttendee[];
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -128,6 +138,9 @@ export async function getBasenVars(db: FirebaseFirestore.Firestore): Promise<Bas
     basen_sauna_cena: Number(parseVarValue(vars["basen_sauna_cena"]) ?? 0),
     // Klucz arkusza to "basen_rezygnacja_za_darmo" (ten sam koncept, inna nazwa historycznie w arkuszu).
     basen_okno_anulowania_h: Number(parseVarValue(vars["basen_rezygnacja_za_darmo"]) ?? 24),
+    basen_cena_za_godzine: Number(parseVarValue(vars["basen_cena_za_godzine"]) ?? 0),
+    basen_cena_za_karnet: Number(parseVarValue(vars["basen_cena_za_karnet"]) ?? 0),
+    basen_ile_wejsc_na_karnet: Number(parseVarValue(vars["basen_ile_wejść_na_karnet"]) ?? 0),
   };
 }
 
@@ -211,6 +224,58 @@ export async function getUserEnrollments(
   return snap.docs.map((d) => ({id: d.id, ...d.data()} as BasenEnrollment));
 }
 
+/**
+ * Kto na KTÓRYM terminie/slocie "szuka instruktora" (type="training", brak
+ * instructorUid) — pogrupowane po `${sessionId}_${slot}`, żeby lista basenów mogła
+ * pokazać to OD RAZU (bez rozwijania "Uczestnicy"), bez osobnego zapytania per slot.
+ * Celowo bez kajaka — niepotrzebny do dopasowania instruktora.
+ */
+export interface SimpleAttendee {
+  userUid: string;
+  displayLabel: string; // ksywka, a jak brak to imię+nazwisko — NIGDY oba naraz (prosta lista)
+  type: EnrollmentType;
+  instructorUid: string | null;
+}
+
+/**
+ * Pełna lista uczestników KAŻDEGO terminu/slotu naraz, pogrupowana po
+ * `${sessionId}_${slot}` — zastępuje osobne zapytanie per slot (dawne
+ * listSlotAttendees + rozwijana lista), żeby "Uczestnicy" mogli być pokazani OD RAZU,
+ * prostą płaską listą, bez klikania w cokolwiek. Bez kajaka — świadomie pominięty,
+ * niepotrzebny do samego zorientowania się kto jest zapisany / kto szuka instruktora.
+ */
+export async function getAttendeesBySessionSlot(
+  db: FirebaseFirestore.Firestore
+): Promise<Map<string, SimpleAttendee[]>> {
+  const snap = await db.collection("basen_enrollments")
+    .where("status", "==", "active")
+    .get();
+
+  const enrollments = snap.docs.map((d) => d.data() as BasenEnrollment);
+
+  const uniqueUids = Array.from(new Set(enrollments.map((e) => e.userUid)));
+  const nicknameByUid = new Map<string, string>();
+  await Promise.all(uniqueUids.map(async (uid) => {
+    const userSnap = await db.collection("users_active").doc(uid).get();
+    const nick = String((userSnap.data() as any)?.profile?.nickname || "").trim();
+    if (nick) nicknameByUid.set(uid, nick);
+  }));
+
+  const byKey = new Map<string, SimpleAttendee[]>();
+  for (const e of enrollments) {
+    const key = `${e.sessionId}_${e.slot}`;
+    const list = byKey.get(key) || [];
+    list.push({
+      userUid: e.userUid,
+      displayLabel: nicknameByUid.get(e.userUid) || e.userDisplayName,
+      type: e.type,
+      instructorUid: e.instructorUid || null,
+    });
+    byKey.set(key, list);
+  }
+  return byKey;
+}
+
 export interface ReservedSpotsInput {
   count: number;
   restrictedToKursant: boolean;
@@ -231,7 +296,12 @@ export async function createSession(
     vars: BasenVars;
   }
 ): Promise<string> {
-  const ref = db.collection("basen_sessions").doc();
+  // ID DETERMINISTYCZNE = data (nie auto-ID) — jedyny sposób żeby Firestore sam
+  // zagwarantował "jeden zestaw basenów na jeden dzień, niezależnie który admin je
+  // dodaje". Bez tego dwaj opiekunowie klikający "Nowy termin" na ten sam dzień
+  // niemal jednocześnie (żaden jeszcze nie widział zapisu drugiego) tworzyli DWA
+  // osobne dokumenty dla tej samej daty — realny incydent na prod (01.09.2026).
+  const ref = db.collection("basen_sessions").doc(args.date);
   const now = admin.firestore.FieldValue.serverTimestamp();
 
   const buildReserved = (r?: ReservedSpotsInput): BasenReservedSpots | undefined =>
@@ -274,17 +344,58 @@ export async function createSession(
     };
   }
 
-  await ref.set({
-    id: ref.id,
-    date: args.date,
-    notes: args.notes,
-    slots,
-    createdBy: args.createdBy,
-    createdAt: now,
-    updatedAt: now,
+  await db.runTransaction(async (tx) => {
+    const existing = await tx.get(ref);
+    if (existing.exists) {
+      throw new Error("Termin na ten dzień już istnieje — odśwież kalendarz i sprawdź istniejący termin zamiast tworzyć nowy.");
+    }
+    tx.set(ref, {
+      id: ref.id,
+      date: args.date,
+      notes: args.notes,
+      slots,
+      createdBy: args.createdBy,
+      createdAt: now,
+      updatedAt: now,
+    });
   });
 
   return ref.id;
+}
+
+/**
+ * Dodaje saunę do JUŻ ISTNIEJĄCEGO terminu, który powstał bez niej (jedyna dziś
+ * dozwolona "modyfikacja" terminu po utworzeniu — reszta parametrów, godziny H1/H2,
+ * jest i pozostaje sztywna z setupu). Te same domyślne wartości co przy tworzeniu
+ * terminu z zaznaczoną sauną (godzina = basen_1_godzina_domyslna, capacity =
+ * basen_limit_uczestnikow).
+ */
+export async function addSaunaToSession(
+  db: FirebaseFirestore.Firestore,
+  args: { sessionId: string; vars: BasenVars }
+): Promise<void> {
+  const sessionRef = db.collection("basen_sessions").doc(args.sessionId);
+  const now = admin.firestore.FieldValue.serverTimestamp();
+
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(sessionRef);
+    if (!snap.exists) throw new Error("Termin nie istnieje.");
+    const session = snap.data() as BasenSession;
+
+    if (session.date < todayIso()) throw new Error("Nie można modyfikować terminu z przeszłości.");
+    if (session.slots?.SAUNA) throw new Error("Ten termin ma już saunę.");
+
+    tx.update(sessionRef, {
+      "slots.SAUNA": {
+        timeStart: args.vars.basen_1_godzina_domyslna,
+        timeEnd: args.vars.basen_1_godzina_domyslna,
+        capacity: args.vars.basen_limit_uczestnikow,
+        enrolledCount: 0,
+        status: "open",
+      },
+      "updatedAt": now,
+    });
+  });
 }
 
 // ─── Enrollments ─────────────────────────────────────────────────────────────
@@ -317,13 +428,25 @@ export async function enrollInSlot(
     db.collection("basen_enrollments").doc(enrollmentId(args.sessionId, args.slot, args.instructorUid)) :
     null;
 
+  const instructorStudentsQuery = args.mode === "training" && args.instructorUid ?
+    db.collection("basen_enrollments")
+      .where("sessionId", "==", args.sessionId)
+      .where("slot", "==", args.slot)
+      .where("instructorUid", "==", args.instructorUid)
+      .where("status", "==", "active") :
+    null;
+
+  const godzinyLedgerRef = db.collection("basen_godziny_ledger").doc();
+
   await db.runTransaction(async (tx) => {
     // ── wszystkie odczyty przed jakimkolwiek zapisem ──
-    const [sessionSnap, existingEnrollSnap, allocationSnap, instructorEnrollSnap] = await Promise.all([
+    const [sessionSnap, existingEnrollSnap, allocationSnap, instructorEnrollSnap, godzinyLedgerSnap, instructorStudentsSnap] = await Promise.all([
       tx.get(sessionRef),
       tx.get(enrollRef),
       allocationRef ? tx.get(allocationRef) : Promise.resolve(null),
       instructorEnrollRef ? tx.get(instructorEnrollRef) : Promise.resolve(null),
+      tx.get(db.collection("basen_godziny_ledger").where("uid", "==", args.uid)),
+      instructorStudentsQuery ? tx.get(instructorStudentsQuery) : Promise.resolve(null),
     ]);
 
     if (!sessionSnap.exists) throw new Error("Termin nie istnieje.");
@@ -343,15 +466,27 @@ export async function enrollInSlot(
     if (args.mode !== "instructor") {
       availability = computeSlotAvailability(slotData, args.isKursant);
       if (availability.isFull) throw new Error("Slot jest już pełny.");
+
+      const godzinyRecords = godzinyLedgerSnap.docs.map((d) => d.data() as any);
+      const balance = computeBasenGodzinyBalance(godzinyRecords);
+      if (balance < 1) {
+        throw new Error("Brak dostępnych godzin basenowych. Skontaktuj się z opiekunem basenu, aby dopisać godziny.");
+      }
     }
 
-    if (args.mode === "training") {
-      if (!args.instructorUid) throw new Error("Brakuje wybranego instruktora.");
+    // instructorUid jest OPCJONALNY dla mode="training": brak instruktora → zapis
+    // powstaje jako "szuka instruktora" (patrz listSlotAttendees: seekingInstructor).
+    // Doparowanie później: sam user przez setEnrollmentInstructor (modyfikacja zapisu)
+    // albo instruktor przez claimWaitingStudent (przypisanie do siebie z listy).
+    if (args.mode === "training" && args.instructorUid) {
       const instrData = instructorEnrollSnap && instructorEnrollSnap.exists ?
         (instructorEnrollSnap.data() as BasenEnrollment) :
         null;
       if (!instrData || instrData.status !== "active" || instrData.type !== "instructor") {
         throw new Error("Wybrany instruktor nie jest już dostępny na ten slot.");
+      }
+      if (instructorStudentsSnap && instructorStudentsSnap.size >= MAX_STUDENTS_PER_INSTRUCTOR) {
+        throw new Error(`Ten instruktor ma już maksymalną liczbę uczestników (${MAX_STUDENTS_PER_INSTRUCTOR}).`);
       }
     }
 
@@ -405,6 +540,16 @@ export async function enrollInSlot(
       createdAt: now,
       updatedAt: now,
     });
+
+    if (args.mode !== "instructor") {
+      blockBasenGodzinyInTx(tx, godzinyLedgerRef, {
+        uid: args.uid,
+        sessionId: args.sessionId,
+        slot: args.slot,
+        enrollmentId: eid,
+        performedBy: args.uid,
+      });
+    }
   });
 
   return {enrollmentId: eid};
@@ -473,6 +618,20 @@ export async function cancelEnrollment(
       tx.delete(allocationRef);
     }
 
+    // Godzina wraca na saldo tylko gdy anulowano na czas (>=okno) lub slot anulował admin
+    // (wasLate zostaje false w tym przypadku — patrz komentarz wyżej). Spóźniona rezygnacja
+    // usera → godzina przepada, żaden nowy rekord ledgera nie powstaje (booking_block zostaje).
+    if (enrollment.type !== "instructor" && !wasLate) {
+      const godzinyLedgerRef = db.collection("basen_godziny_ledger").doc();
+      refundBasenGodzinyInTx(tx, godzinyLedgerRef, {
+        uid: args.uid,
+        sessionId: args.sessionId,
+        slot: args.slot,
+        enrollmentId: eid,
+        performedBy: args.uid,
+      });
+    }
+
     tx.update(enrollRef, {status: "cancelled", cancelledAt: now, updatedAt: now, cancelledLate: wasLate});
   });
 
@@ -489,7 +648,13 @@ export async function setEnrollmentInstructor(
     sessionId: string;
     slot: BasenSlotLabel;
     uid: string;
-    instructorUid: string | null; // null = usuń parowanie (wróć do "regular")
+    instructorUid: string | null;
+    // Rozróżnia DWA różne znaczenia instructorUid=null: false (domyślnie) = user
+    // rezygnuje z parowania całkowicie → "regular". true = user nadal chce instruktora,
+    // ale żaden jeszcze nie jest dostępny → zostaje "training" bez instructorUid
+    // (widoczny w listSlotAttendees jako seekingInstructor, można potem doparować przez
+    // to samo wywołanie z instructorUid ustawionym, albo przez claimWaitingStudent).
+    seeking?: boolean;
   }
 ): Promise<void> {
   const eid = enrollmentId(args.sessionId, args.slot, args.uid);
@@ -500,10 +665,19 @@ export async function setEnrollmentInstructor(
     db.collection("basen_enrollments").doc(enrollmentId(args.sessionId, args.slot, args.instructorUid)) :
     null;
 
+  const instructorStudentsQuery = args.instructorUid ?
+    db.collection("basen_enrollments")
+      .where("sessionId", "==", args.sessionId)
+      .where("slot", "==", args.slot)
+      .where("instructorUid", "==", args.instructorUid)
+      .where("status", "==", "active") :
+    null;
+
   await db.runTransaction(async (tx) => {
-    const [enrollSnap, instructorEnrollSnap] = await Promise.all([
+    const [enrollSnap, instructorEnrollSnap, instructorStudentsSnap] = await Promise.all([
       tx.get(enrollRef),
       instructorEnrollRef ? tx.get(instructorEnrollRef) : Promise.resolve(null),
+      instructorStudentsQuery ? tx.get(instructorStudentsQuery) : Promise.resolve(null),
     ]);
 
     if (!enrollSnap.exists) throw new Error("Zapis nie istnieje.");
@@ -513,6 +687,12 @@ export async function setEnrollmentInstructor(
 
     if (args.instructorUid) {
       if (args.instructorUid === args.uid) throw new Error("Nie możesz wybrać samego siebie jako instruktora.");
+      if (instructorStudentsSnap) {
+        const currentCount = instructorStudentsSnap.docs.filter((d) => d.id !== eid).length;
+        if (currentCount >= MAX_STUDENTS_PER_INSTRUCTOR) {
+          throw new Error(`Ten instruktor ma już maksymalną liczbę uczestników (${MAX_STUDENTS_PER_INSTRUCTOR}).`);
+        }
+      }
       const instrData = instructorEnrollSnap && instructorEnrollSnap.exists ?
         (instructorEnrollSnap.data() as BasenEnrollment) :
         null;
@@ -522,17 +702,20 @@ export async function setEnrollmentInstructor(
     }
 
     tx.update(enrollRef, {
-      type: args.instructorUid ? "training" : "regular",
+      type: args.instructorUid || args.seeking ? "training" : "regular",
       instructorUid: args.instructorUid || null,
       updatedAt: now,
     });
   });
 }
 
+// Basen jest zawsze anulowany W CAŁOŚCI (H1+H2+SAUNA razem, jeśli istnieją) — nigdy
+// pojedynczym slotem osobno. Świadoma decyzja: "anulujemy cały dzień, a nie
+// poszczególne sloty" — kod celowo nie przyjmuje już parametru slot.
 export async function cancelSession(
   db: FirebaseFirestore.Firestore,
   sessionId: string,
-  slot?: BasenSlotLabel
+  performedBy: string
 ): Promise<{ enrollments: BasenEnrollment[] }> {
   const sessionRef = db.collection("basen_sessions").doc(sessionId);
   const now = admin.firestore.FieldValue.serverTimestamp();
@@ -542,15 +725,12 @@ export async function cancelSession(
   const sessionPre = sessionSnapPre.data() as BasenSession;
 
   const allLabels = Object.keys(sessionPre.slots || {}) as BasenSlotLabel[];
-  const targetLabels = slot ? [slot] : allLabels;
 
-  if (slot && !sessionPre.slots?.[slot]) throw new Error("Slot nie istnieje dla tego terminu.");
-  if (slot && sessionPre.slots?.[slot]?.status === "cancelled") throw new Error("Slot jest już anulowany.");
-  if (!slot && allLabels.every((l) => sessionPre.slots?.[l]?.status === "cancelled")) {
+  if (allLabels.every((l) => sessionPre.slots?.[l]?.status === "cancelled")) {
     throw new Error("Termin jest już anulowany.");
   }
 
-  const activeLabels = targetLabels.filter((l) => {
+  const activeLabels = allLabels.filter((l) => {
     const s = sessionPre.slots?.[l];
     return Boolean(s) && s?.status !== "cancelled";
   });
@@ -564,6 +744,15 @@ export async function cancelSession(
   const enrollments = enrollmentsSnap.docs
     .map((d) => ({id: d.id, ...d.data()} as BasenEnrollment))
     .filter((e) => activeLabels.includes(e.slot));
+
+  // Ledger refs utworzone PRZED transakcją (auto-id, jak enrollRef/allocationRef gdzie
+  // indziej) — jeden na każdy zapis, który realnie zablokował godzinę (nie instruktor).
+  const godzinyRefsByEnrollmentId = new Map<string, FirebaseFirestore.DocumentReference>();
+  for (const e of enrollments) {
+    if (e.type !== "instructor") {
+      godzinyRefsByEnrollmentId.set(e.id, db.collection("basen_godziny_ledger").doc());
+    }
+  }
 
   await db.runTransaction(async (tx) => {
     const sessionSnap = await tx.get(sessionRef);
@@ -579,6 +768,20 @@ export async function cancelSession(
 
       if (e.kayakId && e.kayakId !== "PRIVATE") {
         tx.delete(db.collection("basen_kayak_allocations").doc(kayakAllocationId(e.sessionId, e.slot, e.kayakId)));
+      }
+
+      // Anulowanie przez admina — UŻYTKOWNIK NIGDY nie płaci za termin którego nie
+      // odwołał sam (bez względu na to, ile czasu zostało do zajęć). Zawsze pełny
+      // zwrot godziny, w odróżnieniu od cancelEnrollment (gdzie <24h = przepada).
+      const ledgerRef = godzinyRefsByEnrollmentId.get(e.id);
+      if (ledgerRef) {
+        refundBasenGodzinyInTx(tx, ledgerRef, {
+          uid: e.userUid,
+          sessionId: e.sessionId,
+          slot: e.slot,
+          enrollmentId: e.id,
+          performedBy,
+        });
       }
     }
   });
@@ -648,7 +851,10 @@ export async function setEnrollmentKayak(
 function kayakBaseLabel(k: any, fallbackId: string): string {
   const brand = norm(k?.brand);
   const model = norm(k?.model);
-  const number = norm(k?.number || k?.id || fallbackId);
+  // Numer kajaka = kolumna "number" w arkuszu, NIC innego. "id"/fallbackId to primary
+  // key dokumentu (albo surowe ID zapisu), nigdy nie numer — kajaki prywatne legalnie
+  // nie mają numeru i nie mogą dostać sfabrykowanego "nr {id}" zamiast tego.
+  const number = norm(k?.number);
   const color = norm(k?.color);
   // Producent na pierwszym miejscu (najważniejszy), potem model/numer/kolor —
   // wszystko w jednej linii, bez słowa "Kajak" (kontekst już to mówi).
@@ -667,13 +873,11 @@ export async function resolveKayakLabel(db: FirebaseFirestore.Firestore, kayakId
   return kayakBaseLabel(snap.data(), kayakId);
 }
 
-export async function listAvailableBasenKayaks(
-  db: FirebaseFirestore.Firestore,
-  sessionId: string,
-  slot: BasenSlotLabel
-): Promise<Array<{ id: string; label: string; isPrivate: boolean; ownerContact: string | null }>> {
+export interface AvailableKayak { id: string; label: string; isPrivate: boolean; ownerContact: string | null }
+
+async function fetchPoolKayaks(db: FirebaseFirestore.Firestore): Promise<any[]> {
   const kayaksSnap = await db.collection("gear_kayaks").where("isActive", "==", true).get();
-  const poolKayaks = kayaksSnap.docs
+  return kayaksSnap.docs
     .map((d) => {
       const data = d.data() as any;
       return {id: String(data?.id || d.id), ...data};
@@ -685,13 +889,9 @@ export async function listAvailableBasenKayaks(
     // tą listą (nie ma tu żadnej roli), więc go nie proponujemy innym uczestnikom.
     // Wzorem tej samej reguły w module Sprzęt (gear_bundle_service.ts).
     .filter((k) => k?.isPrivate !== true || k?.isPrivateRentable === true);
+}
 
-  const allocSnap = await db.collection("basen_kayak_allocations")
-    .where("sessionId", "==", sessionId)
-    .where("slot", "==", slot)
-    .get();
-  const allocatedIds = new Set(allocSnap.docs.map((d) => String((d.data() as any)?.kayakId || "")));
-
+function buildAvailableKayaksList(poolKayaks: any[], allocatedIds: Set<string>): AvailableKayak[] {
   const available = poolKayaks
     .filter((k) => !allocatedIds.has(k.id))
     .map((k) => {
@@ -712,6 +912,54 @@ export async function listAvailableBasenKayaks(
   return available;
 }
 
+export async function listAvailableBasenKayaks(
+  db: FirebaseFirestore.Firestore,
+  sessionId: string,
+  slot: BasenSlotLabel
+): Promise<AvailableKayak[]> {
+  const poolKayaks = await fetchPoolKayaks(db);
+  const allocSnap = await db.collection("basen_kayak_allocations")
+    .where("sessionId", "==", sessionId)
+    .where("slot", "==", slot)
+    .get();
+  const allocatedIds = new Set(allocSnap.docs.map((d) => String((d.data() as any)?.kayakId || "")));
+  return buildAvailableKayaksList(poolKayaks, allocatedIds);
+}
+
+/**
+ * To samo co listAvailableBasenKayaks, ale dla WIELU sesji/slotów naraz — jeden odczyt
+ * `gear_kayaks` i jeden odczyt CAŁEJ `basen_kayak_allocations` (mała kolekcja, tylko
+ * aktywne alokacje) zamiast N osobnych zapytań. Wybór kajaka pokazywany OD RAZU w
+ * formularzu zapisu (getBasenSessionsHandler.ts), bez osobnego przycisku/zapytania.
+ */
+export async function getAvailableKayaksBySessionSlot(
+  db: FirebaseFirestore.Firestore,
+  sessions: BasenSession[]
+): Promise<Map<string, AvailableKayak[]>> {
+  const [poolKayaks, allocSnap] = await Promise.all([
+    fetchPoolKayaks(db),
+    db.collection("basen_kayak_allocations").get(),
+  ]);
+
+  const allocatedByKey = new Map<string, Set<string>>();
+  allocSnap.docs.forEach((d) => {
+    const a = d.data() as any;
+    const key = `${a.sessionId}_${a.slot}`;
+    const set = allocatedByKey.get(key) || new Set<string>();
+    set.add(String(a.kayakId || ""));
+    allocatedByKey.set(key, set);
+  });
+
+  const result = new Map<string, AvailableKayak[]>();
+  for (const s of sessions) {
+    for (const slotLabel of Object.keys(s.slots || {})) {
+      const key = `${s.id}_${slotLabel}`;
+      result.set(key, buildAvailableKayaksList(poolKayaks, allocatedByKey.get(key) || new Set()));
+    }
+  }
+  return result;
+}
+
 // ─── Lista uczestników slotu ─────────────────────────────────────────────────
 
 export async function listSlotAttendees(
@@ -723,47 +971,66 @@ export async function listSlotAttendees(
     .where("sessionId", "==", sessionId)
     .where("slot", "==", slot)
     .where("status", "==", "active")
+    .where("type", "==", "instructor")
     .get();
 
-  const all = snap.docs.map((d) => ({id: d.id, ...d.data()} as BasenEnrollment));
-
-  const kayakIds = Array.from(new Set(
-    all.map((e) => e.kayakId).filter((id): id is string => Boolean(id) && id !== "PRIVATE")
-  ));
-  const kayakLabels = new Map<string, string>();
-  await Promise.all(kayakIds.map(async (id) => {
-    kayakLabels.set(id, await resolveKayakLabel(db, id));
-  }));
-
-  const toAttendee = (e: BasenEnrollment): SlotAttendee => ({
-    enrollmentId: e.id,
-    userUid: e.userUid,
-    userDisplayName: e.userDisplayName,
-    userEmail: e.userEmail,
-    kayakId: e.kayakId ?? null,
-    kayakLabel: !e.kayakId ? null : e.kayakId === "PRIVATE" ? "Kajak prywatny" : (kayakLabels.get(e.kayakId) || null),
+  const instructors = snap.docs.map((d) => {
+    const e = d.data() as BasenEnrollment;
+    return {userUid: e.userUid, userDisplayName: e.userDisplayName};
   });
 
-  const instructors = all.filter((e) => e.type === "instructor").map(toAttendee);
-  const instructorByUid = new Map(instructors.map((i) => [i.userUid, i]));
+  return {instructors};
+}
 
-  const trainingByInstructor = new Map<string, SlotAttendee[]>();
-  for (const e of all) {
-    if (e.type !== "training") continue;
-    const key = e.instructorUid || "";
-    if (!trainingByInstructor.has(key)) trainingByInstructor.set(key, []);
-    (trainingByInstructor.get(key) as SlotAttendee[]).push(toAttendee(e));
-  }
+/**
+ * Instruktor przypisuje SIEBIE jako parę dla studenta, który zapisał się na "training"
+ * bez wybranego instruktora (szuka instruktora — patrz listSlotAttendees). W
+ * odróżnieniu od setEnrollmentInstructor (który obsługuje samoobsługę właściciela
+ * zapisu), tu wywołujący NIE jest właścicielem modyfikowanego zapisu — musi więc być
+ * zweryfikowany jako aktywny instruktor na tym samym slocie, a cel musi faktycznie
+ * "szukać instruktora" (type="training", instructorUid pusty), żeby nie dało się
+ * przejąć/nadpisać już sparowanego studenta.
+ */
+export async function claimWaitingStudent(
+  db: FirebaseFirestore.Firestore,
+  args: { sessionId: string; slot: BasenSlotLabel; instructorUid: string; targetUid: string }
+): Promise<void> {
+  if (args.instructorUid === args.targetUid) throw new Error("Nie możesz przypisać samego siebie.");
 
-  const paired = Array.from(trainingByInstructor.entries()).map(([instructorUid, participants]) => ({
-    instructorUid,
-    instructor: instructorByUid.get(instructorUid) || null,
-    participants,
-  }));
+  const instructorRef = db.collection("basen_enrollments").doc(enrollmentId(args.sessionId, args.slot, args.instructorUid));
+  const targetRef = db.collection("basen_enrollments").doc(enrollmentId(args.sessionId, args.slot, args.targetUid));
+  const instructorStudentsQuery = db.collection("basen_enrollments")
+    .where("sessionId", "==", args.sessionId)
+    .where("slot", "==", args.slot)
+    .where("instructorUid", "==", args.instructorUid)
+    .where("status", "==", "active");
+  const now = admin.firestore.FieldValue.serverTimestamp();
 
-  const regular = all.filter((e) => e.type === "regular").map(toAttendee);
+  await db.runTransaction(async (tx) => {
+    const [instructorSnap, targetSnap, instructorStudentsSnap] = await Promise.all([
+      tx.get(instructorRef),
+      tx.get(targetRef),
+      tx.get(instructorStudentsQuery),
+    ]);
 
-  return {instructors, paired, regular};
+    const instructorData = instructorSnap.exists ? (instructorSnap.data() as BasenEnrollment) : null;
+    if (!instructorData || instructorData.status !== "active" || instructorData.type !== "instructor") {
+      throw new Error("Nie jesteś zapisany/a jako instruktor na ten slot.");
+    }
+
+    if (!targetSnap.exists) throw new Error("Zapis nie istnieje.");
+    const target = targetSnap.data() as BasenEnrollment;
+    if (target.status !== "active") throw new Error("Zapis jest anulowany.");
+    if (target.type !== "training" || target.instructorUid) {
+      throw new Error("Ta osoba nie szuka już instruktora.");
+    }
+
+    if (instructorStudentsSnap.size >= MAX_STUDENTS_PER_INSTRUCTOR) {
+      throw new Error(`Masz już maksymalną liczbę uczestników (${MAX_STUDENTS_PER_INSTRUCTOR}).`);
+    }
+
+    tx.update(targetRef, {instructorUid: args.instructorUid, updatedAt: now});
+  });
 }
 
 // ─── Uprawnienia panelu "Zarządzanie" ────────────────────────────────────────
