@@ -1,5 +1,5 @@
 import type {Request, Response} from "express";
-import {listUpcomingSessions, getUserEnrollments} from "../modules/basen/basen_service";
+import {listUpcomingSessions, getUserEnrollments, computeSlotAvailability} from "../modules/basen/basen_service";
 
 type Deps = {
   db: FirebaseFirestore.Firestore;
@@ -25,6 +25,15 @@ export async function handleGetBasenSessions(req: Request, res: Response, deps: 
 
       const uid = tokenCheck.decoded.uid;
 
+      const userSnap = await deps.db.collection("users_active").doc(uid).get();
+      if (!userSnap.exists) {
+        res.status(403).json({error: "User not found"});
+        return;
+      }
+
+      const userData = userSnap.data() as any;
+      const isKursant = String(userData?.role_key || "") === "rola_kursant";
+
       const [sessions, userEnrollments] = await Promise.all([
         listUpcomingSessions(deps.db),
         getUserEnrollments(deps.db, uid),
@@ -37,15 +46,20 @@ export async function handleGetBasenSessions(req: Request, res: Response, deps: 
         for (const [label, slot] of Object.entries(s.slots || {})) {
           if (!slot) continue;
           const enrollment = enrollmentByKey.get(`${s.id}_${label}`) || null;
+          const availability = computeSlotAvailability(slot, isKursant);
           slots[label] = {
             timeStart: slot.timeStart,
             timeEnd: slot.timeEnd,
             capacity: slot.capacity,
             enrolledCount: slot.enrolledCount,
             status: slot.status,
+            reservedSpots: slot.reservedSpots || null,
+            remaining: availability.remaining,
+            isFull: availability.isFull,
             userEnrolled: Boolean(enrollment),
             userEnrollmentType: enrollment?.type || null,
             userKayakId: enrollment?.kayakId || null,
+            userViaReservedPool: enrollment?.viaReservedPool === true,
           };
         }
 

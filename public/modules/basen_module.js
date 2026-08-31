@@ -53,10 +53,12 @@ function kayakLabel(kayakId) {
 // ─── Tabs ─────────────────────────────────────────────────────────────────────
 
 function renderTabsHtml(activeTab, isAdmin) {
+  if (!isAdmin) return ""; // brak zakładek dla zwykłych userów — lista terminów jest jedyną zawartością
+
   const tabs = [
-    { id: "sessions", label: "Baseny" },
+    { id: "calendar", label: "Dodaj basen" },
+    { id: "payments", label: "Płatności" },
   ];
-  if (isAdmin) tabs.push({ id: "admin", label: "Zarządzanie" });
 
   return `<div class="modTabs basenTabs">
     ${tabs.map((t) => `
@@ -133,15 +135,19 @@ function bindAttendeesDetails(container, ctx) {
 // ─── Slot card ────────────────────────────────────────────────────────────────
 
 function renderSlotCard(sessionId, slotKey, slot, ctx, canEnroll) {
-  const remaining = slot.capacity - slot.enrolledCount;
+  const remaining = Number(slot.remaining ?? (slot.capacity - slot.enrolledCount));
   const isCancelled = slot.status === "cancelled";
-  const isFull = !isCancelled && remaining <= 0;
+  const isFull = !isCancelled && slot.isFull === true;
   const isSauna = slotKey === "SAUNA";
 
   let spotsHtml;
   if (isCancelled) spotsHtml = `<span class="basenSpotsFull">Odwołane</span>`;
   else if (isFull) spotsHtml = `<span class="basenSpotsFull">Brak miejsc</span>`;
   else spotsHtml = `<span class="basenSpots">${remaining} miejsc wolnych</span>`;
+
+  const reservedNote = (!isSauna && slot.reservedSpots && slot.reservedSpots.count > 0)
+    ? `<div class="basenReservedNote">${slot.reservedSpots.count} miejsc zarezerwowanych${slot.reservedSpots.restrictedToKursant ? " (tylko dla kursantów)" : ""}</div>`
+    : "";
 
   const canBeInstructor = !isSauna && !isCancelled && ctx?.session?.basenInstructor === true;
   const isInstructorEnrolled = slot.userEnrolled && slot.userEnrollmentType === "instructor";
@@ -206,6 +212,7 @@ function renderSlotCard(sessionId, slotKey, slot, ctx, canEnroll) {
         <span class="basenCardTime">${esc(slot.timeStart)} – ${esc(slot.timeEnd)}</span>
         ${spotsHtml}
       </div>
+      ${reservedNote}
       <details class="basenAttendeesDetails" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}">
         <summary>Uczestnicy</summary>
         <div class="basenAttendeesBody" data-attendees-body>${spinnerHtml("Ładowanie…")}</div>
@@ -454,223 +461,362 @@ function bindSessionActions(innerEl, ctx, canEnroll) {
   });
 }
 
-// ─── Admin view ───────────────────────────────────────────────────────────────
+// ─── Kalendarz admina ("Dodaj basen") ──────────────────────────────────────────
 
-function renderAdminView(innerEl, ctx) {
-  innerEl.innerHTML = `
-    <div style="display:flex; flex-direction:column; gap:24px;">
+const POLISH_MONTHS = ["styczeń", "luty", "marzec", "kwiecień", "maj", "czerwiec", "lipiec", "sierpień", "wrzesień", "październik", "listopad", "grudzień"];
+const WEEKDAY_LABELS_PL = ["Pon", "Wt", "Śr", "Czw", "Pt", "So", "Nd"];
 
-      <div class="basenAdminSection">
-        <h3>Utwórz termin</h3>
-        <form id="basenCreateForm" class="basenAdminForm" autocomplete="off">
-          <div class="row">
-            <label for="bDate">Data *</label>
-            <input id="bDate" type="date" min="${todayIso()}" required />
-          </div>
-
-          <div class="basenFormGrid">
-            <div class="row">
-              <label for="bH1Start">H1 — od</label>
-              <input id="bH1Start" type="time" />
-            </div>
-            <div class="row">
-              <label for="bH1End">H1 — do</label>
-              <input id="bH1End" type="time" />
-            </div>
-            <div class="row">
-              <label for="bH1Cap">H1 — limit miejsc</label>
-              <input id="bH1Cap" type="number" min="1" max="100" placeholder="Domyślny" />
-            </div>
-          </div>
-
-          <div class="basenFormGrid">
-            <div class="row">
-              <label for="bH2Start">H2 — od</label>
-              <input id="bH2Start" type="time" />
-            </div>
-            <div class="row">
-              <label for="bH2End">H2 — do</label>
-              <input id="bH2End" type="time" />
-            </div>
-            <div class="row">
-              <label for="bH2Cap">H2 — limit miejsc</label>
-              <input id="bH2Cap" type="number" min="1" max="100" placeholder="Domyślny" />
-            </div>
-          </div>
-
-          <label class="basenCheckLabel">
-            <input id="bSaunaEnabled" type="checkbox" />
-            Sauna
-          </label>
-          <div class="basenFormGrid" id="bSaunaFields" style="display:none;">
-            <div class="row">
-              <label for="bSaunaStart">Sauna — od</label>
-              <input id="bSaunaStart" type="time" />
-            </div>
-            <div class="row">
-              <label for="bSaunaEnd">Sauna — do</label>
-              <input id="bSaunaEnd" type="time" />
-            </div>
-            <div class="row">
-              <label for="bSaunaCap">Sauna — limit miejsc</label>
-              <input id="bSaunaCap" type="number" min="1" max="100" placeholder="Domyślny" />
-            </div>
-          </div>
-
-          <div class="row">
-            <label for="bNotes">Uwagi</label>
-            <textarea id="bNotes" rows="2" maxlength="500"></textarea>
-          </div>
-          <div id="bCreateErr" class="err hidden" style="margin-top:8px;"></div>
-          <div id="bCreateOk" class="ok hidden" style="margin-top:8px;"></div>
-          <div class="actions" style="margin-top:10px;">
-            <button id="bCreateBtn" type="submit" class="primary">Utwórz termin</button>
-          </div>
-        </form>
-      </div>
-
-      <div class="basenAdminSection">
-        <h3>Anuluj termin / slot</h3>
-        <form id="basenCancelSessionForm" class="basenAdminForm" autocomplete="off">
-          <div class="row">
-            <label for="bCancelSessionId">ID terminu</label>
-            <input id="bCancelSessionId" type="text" placeholder="ID z listy terminów" required />
-          </div>
-          <div class="row">
-            <label for="bCancelSlot">Slot</label>
-            <select id="bCancelSlot">
-              <option value="">Cały dzień</option>
-              <option value="H1">I godzina (H1)</option>
-              <option value="H2">II godzina (H2)</option>
-              <option value="SAUNA">Sauna</option>
-            </select>
-          </div>
-          <div id="bCancelErr" class="err hidden" style="margin-top:8px;"></div>
-          <div id="bCancelOk" class="ok hidden" style="margin-top:8px;"></div>
-          <div class="actions" style="margin-top:10px;">
-            <button id="bCancelBtn" type="submit" class="danger">Anuluj</button>
-          </div>
-        </form>
-      </div>
-
-    </div>
-  `;
-
-  bindAdminActions(innerEl, ctx);
+function pad2(n) {
+  return String(n).padStart(2, "0");
 }
 
-function bindAdminActions(innerEl, ctx) {
-  // Sauna toggle
-  const saunaCheck = innerEl.querySelector("#bSaunaEnabled");
-  const saunaFields = innerEl.querySelector("#bSaunaFields");
-  saunaCheck?.addEventListener("change", () => {
-    saunaFields.style.display = saunaCheck.checked ? "" : "none";
+function isoFromParts(year, month, day) {
+  return `${year}-${pad2(month + 1)}-${pad2(day)}`;
+}
+
+function buildSessionsByDate(data) {
+  const sessions = Array.isArray(data?.sessions) ? data.sessions : [];
+  return new Map(sessions.map((s) => [s.date, s]));
+}
+
+function renderCalendarShellHtml(year, month, sessionsByDate) {
+  const first = new Date(year, month, 1);
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  // JS getDay(): 0=Ndz..6=Sob — przesuwamy na tydzień Pon-first (0=Pon..6=Ndz)
+  const leadBlanks = (first.getDay() + 6) % 7;
+  const today = todayIso();
+
+  let cells = "";
+  for (let i = 0; i < leadBlanks; i++) {
+    cells += `<div class="basenCalDay basenCalDay--blank"></div>`;
+  }
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateIso = isoFromParts(year, month, day);
+    if (dateIso < today) {
+      cells += `<div class="basenCalDay basenCalDay--past"><span class="basenCalDayNum">${day}</span></div>`;
+      continue;
+    }
+    const hasSession = sessionsByDate.has(dateIso);
+    cells += `
+      <button type="button" class="basenCalDay ${hasSession ? "basenCalDay--has-session" : "basenCalDay--empty"}" data-cal-date="${dateIso}">
+        <span class="basenCalDayNum">${day}</span>
+        ${hasSession ? `<span class="basenCalDayDot"></span>` : ""}
+      </button>
+    `;
+  }
+
+  return `
+    <div class="basenCalendar">
+      <div class="basenCalendarHead">
+        <button type="button" class="ghost basenCalNavBtn" data-cal-nav="prev">&lsaquo;</button>
+        <div class="basenCalendarTitle">${esc(POLISH_MONTHS[month])} ${year}</div>
+        <button type="button" class="ghost basenCalNavBtn" data-cal-nav="next">&rsaquo;</button>
+      </div>
+      <div class="basenCalendarWeekdays">
+        ${WEEKDAY_LABELS_PL.map((w) => `<div class="basenCalendarWeekday">${w}</div>`).join("")}
+      </div>
+      <div class="basenCalendarGrid">${cells}</div>
+    </div>
+  `;
+}
+
+function renderReservedGroupHtml(prefix, title) {
+  return `
+    <div class="basenReservedGroup" data-reserved-group="${prefix}">
+      <div class="basenReservedGroupTitle">${esc(title)}</div>
+      <div class="row">
+        <label for="cd${prefix}Count">Zarezerwuj N miejsc</label>
+        <input type="number" id="cd${prefix}Count" min="0" step="1" placeholder="0" />
+      </div>
+      <label class="basenCheckLabel basenReservedSub hidden" data-reserved-sub="${prefix}">
+        <input type="checkbox" id="cd${prefix}Kursant" />
+        tylko dla kursantów
+      </label>
+      <div class="row basenReservedSub hidden" data-reserved-label-wrap="${prefix}">
+        <label for="cd${prefix}Label">Etykieta (opcjonalnie)</label>
+        <input type="text" id="cd${prefix}Label" maxlength="100" placeholder="np. grupa X" />
+      </div>
+    </div>
+  `;
+}
+
+function renderCreateDayModalHtml() {
+  return `
+    <div id="basenCreateDayModal" class="basenModal hidden" aria-hidden="true">
+      <div class="basenModalBackdrop" data-basen-modal-close="createDay"></div>
+      <div class="basenModalCard" role="dialog" aria-modal="true" aria-label="Nowy termin basenowy">
+        <div class="basenModalTop">
+          <div class="basenModalTitle" data-create-day-title>Nowy termin</div>
+          <button type="button" class="basenModalClose" data-basen-modal-close="createDay" aria-label="Zamknij">✕</button>
+        </div>
+        <div class="basenModalBody">
+          <form id="basenCreateDayForm" autocomplete="off">
+            <label class="basenCheckLabel">
+              <input type="checkbox" id="cdSauna" />
+              Sauna
+            </label>
+            <div class="basenFormGrid">
+              ${renderReservedGroupHtml("H1", "I godzina (H1)")}
+              ${renderReservedGroupHtml("H2", "II godzina (H2)")}
+            </div>
+            <div class="row">
+              <label for="cdNotes">Uwagi</label>
+              <textarea id="cdNotes" rows="2" maxlength="500"></textarea>
+            </div>
+            <div id="cdErr" class="err hidden"></div>
+          </form>
+        </div>
+        <div class="basenModalActions">
+          <button type="button" class="ghost" data-basen-modal-close="createDay">Anuluj</button>
+          <button type="submit" form="basenCreateDayForm" class="primary" id="cdSubmitBtn">Utwórz termin</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderDayDetailModalHtml() {
+  return `
+    <div id="basenDayDetailModal" class="basenModal hidden" aria-hidden="true">
+      <div class="basenModalBackdrop" data-basen-modal-close="dayDetail"></div>
+      <div class="basenModalCard" role="dialog" aria-modal="true" aria-label="Szczegóły terminu">
+        <div class="basenModalTop">
+          <div class="basenModalTitle" data-day-detail-title>Termin</div>
+          <button type="button" class="basenModalClose" data-basen-modal-close="dayDetail" aria-label="Zamknij">✕</button>
+        </div>
+        <div class="basenModalBody" data-day-detail-body></div>
+        <div class="basenModalActions">
+          <button type="button" class="ghost" data-basen-modal-close="dayDetail">Zamknij</button>
+          <button type="button" class="dangerBtn" id="ddCancelDayBtn">Anuluj cały dzień</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function renderCalendarTab(innerEl, ctx) {
+  innerEl.innerHTML = spinnerHtml("Ładowanie kalendarza…");
+
+  let sessionsByDate;
+  try {
+    const data = await apiGetJson({ url: SESSIONS_URL, idToken: ctx.idToken });
+    sessionsByDate = buildSessionsByDate(data);
+  } catch (e) {
+    innerEl.innerHTML = `<div class="err">${esc(e?.message || "Nie udało się pobrać terminów.")}</div>`;
+    return;
+  }
+
+  const today = new Date();
+  const state = { year: today.getFullYear(), month: today.getMonth() };
+
+  const refresh = async () => {
+    const fresh = await apiGetJson({ url: SESSIONS_URL, idToken: ctx.idToken });
+    sessionsByDate = buildSessionsByDate(fresh);
+    draw();
+  };
+
+  const draw = () => {
+    innerEl.innerHTML = renderCalendarShellHtml(state.year, state.month, sessionsByDate)
+      + renderCreateDayModalHtml() + renderDayDetailModalHtml();
+    bindCalendarNav(innerEl, state, draw);
+    bindCalendarModalCloseDelegation(innerEl);
+    bindReservedFieldToggles(innerEl);
+    bindCalendarDayClicks(innerEl, sessionsByDate, ctx, refresh);
+  };
+
+  draw();
+}
+
+function bindCalendarNav(innerEl, state, draw) {
+  innerEl.querySelector(".basenCalendarHead")?.addEventListener("click", (ev) => {
+    const btn = ev.target.closest("[data-cal-nav]");
+    if (!btn) return;
+    state.month += btn.getAttribute("data-cal-nav") === "next" ? 1 : -1;
+    if (state.month < 0) { state.month = 11; state.year -= 1; }
+    if (state.month > 11) { state.month = 0; state.year += 1; }
+    draw();
   });
+}
 
-  // Create session form
-  const createForm = innerEl.querySelector("#basenCreateForm");
-  const createErr = innerEl.querySelector("#bCreateErr");
-  const createOk = innerEl.querySelector("#bCreateOk");
-  const createBtn = innerEl.querySelector("#bCreateBtn");
+function syncReservedSubFields(innerEl, prefix) {
+  const n = Number(innerEl.querySelector(`#cd${prefix}Count`)?.value || 0);
+  const kursantChecked = innerEl.querySelector(`#cd${prefix}Kursant`)?.checked === true;
+  innerEl.querySelector(`[data-reserved-sub="${prefix}"]`)?.classList.toggle("hidden", !(n > 0));
+  innerEl.querySelector(`[data-reserved-label-wrap="${prefix}"]`)?.classList.toggle("hidden", !(n > 0 && !kursantChecked));
+}
 
-  const setCreateErr = (msg) => {
-    createErr.textContent = msg;
-    createErr.classList.toggle("hidden", !msg);
-    createOk.classList.add("hidden");
-  };
-  const setCreateOk = (msg) => {
-    createOk.textContent = msg;
-    createOk.classList.toggle("hidden", !msg);
-    createErr.classList.add("hidden");
-  };
+function bindReservedFieldToggles(innerEl) {
+  ["H1", "H2"].forEach((prefix) => {
+    const sync = () => syncReservedSubFields(innerEl, prefix);
+    innerEl.querySelector(`#cd${prefix}Count`)?.addEventListener("input", sync);
+    innerEl.querySelector(`#cd${prefix}Kursant`)?.addEventListener("change", sync);
+    sync();
+  });
+}
 
-  createForm?.addEventListener("submit", async (ev) => {
+function bindCalendarModalCloseDelegation(innerEl) {
+  innerEl.addEventListener("click", (ev) => {
+    const key = ev.target?.getAttribute?.("data-basen-modal-close");
+    if (key === "createDay") closeCreateDayModal(innerEl);
+    if (key === "dayDetail") closeDayDetailModal(innerEl);
+  });
+}
+
+function bindCalendarDayClicks(innerEl, sessionsByDate, ctx, onChanged) {
+  innerEl.querySelectorAll(".basenCalDay[data-cal-date]").forEach((cell) => {
+    cell.addEventListener("click", () => {
+      const date = cell.getAttribute("data-cal-date");
+      const session = sessionsByDate.get(date);
+      if (session) openDayDetailModal(innerEl, ctx, session, onChanged);
+      else openCreateDayModal(innerEl, ctx, date, onChanged);
+    });
+  });
+}
+
+function openCreateDayModal(innerEl, ctx, date, onChanged) {
+  const modal = innerEl.querySelector("#basenCreateDayModal");
+  if (!modal) return;
+
+  const form = modal.querySelector("#basenCreateDayForm");
+  form.reset();
+  ["H1", "H2"].forEach((prefix) => syncReservedSubFields(innerEl, prefix));
+  const errEl = modal.querySelector("#cdErr");
+  errEl.textContent = "";
+  errEl.classList.add("hidden");
+  modal.querySelector("[data-create-day-title]").textContent = `Nowy termin — ${formatDate(date)}`;
+
+  const submitBtn = modal.querySelector("#cdSubmitBtn");
+
+  form.onsubmit = async (ev) => {
     ev.preventDefault();
-    setCreateErr("");
-    setCreateOk("");
+    errEl.classList.add("hidden");
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Tworzę…";
 
-    const date = innerEl.querySelector("#bDate")?.value || "";
-    if (!date) { setCreateErr("Wypełnij datę."); return; }
-
-    const h1 = {
-      timeStart: innerEl.querySelector("#bH1Start")?.value || "",
-      timeEnd: innerEl.querySelector("#bH1End")?.value || "",
-      capacity: Number(innerEl.querySelector("#bH1Cap")?.value || 0) || undefined,
+    const buildReserved = (prefix) => {
+      const count = Number(modal.querySelector(`#cd${prefix}Count`)?.value || 0);
+      if (!count) return undefined;
+      const restrictedToKursant = modal.querySelector(`#cd${prefix}Kursant`)?.checked === true;
+      const label = restrictedToKursant ? undefined : (String(modal.querySelector(`#cd${prefix}Label`)?.value || "").trim() || undefined);
+      return { count, restrictedToKursant, label };
     };
-    const h2 = {
-      timeStart: innerEl.querySelector("#bH2Start")?.value || "",
-      timeEnd: innerEl.querySelector("#bH2End")?.value || "",
-      capacity: Number(innerEl.querySelector("#bH2Cap")?.value || 0) || undefined,
-    };
-    const saunaEnabled = innerEl.querySelector("#bSaunaEnabled")?.checked === true;
-    const sauna = saunaEnabled ? {
-      enabled: true,
-      timeStart: innerEl.querySelector("#bSaunaStart")?.value || "",
-      timeEnd: innerEl.querySelector("#bSaunaEnd")?.value || "",
-      capacity: Number(innerEl.querySelector("#bSaunaCap")?.value || 0) || undefined,
-    } : undefined;
-    const notes = String(innerEl.querySelector("#bNotes")?.value || "").trim();
-
-    createBtn.disabled = true;
-    createBtn.textContent = "Tworzę…";
 
     try {
-      const data = await apiPostJson({
+      await apiPostJson({
         url: CREATE_SESSION_URL,
         idToken: ctx.idToken,
-        body: { date, h1, h2, sauna, notes },
+        body: {
+          date,
+          saunaEnabled: modal.querySelector("#cdSauna")?.checked === true,
+          h1Reserved: buildReserved("H1"),
+          h2Reserved: buildReserved("H2"),
+          notes: String(modal.querySelector("#cdNotes")?.value || "").trim(),
+        },
       });
-      setCreateOk(`Termin utworzony (ID: ${data.sessionId})`);
-      createForm.reset();
-      if (saunaFields) saunaFields.style.display = "none";
+      closeCreateDayModal(innerEl);
+      await onChanged();
     } catch (e) {
-      setCreateErr(e?.message || "Nie udało się utworzyć terminu.");
+      errEl.textContent = e?.message || "Nie udało się utworzyć terminu.";
+      errEl.classList.remove("hidden");
     } finally {
-      createBtn.disabled = false;
-      createBtn.textContent = "Utwórz termin";
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Utwórz termin";
     }
+  };
+
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function closeCreateDayModal(innerEl) {
+  const modal = innerEl.querySelector("#basenCreateDayModal");
+  if (!modal) return;
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+}
+
+function renderDayDetailSlotHtml(slotKey, slot) {
+  const generalCapacity = slot.capacity - (slot.reservedSpots?.count || 0);
+  const isCancelled = slot.status === "cancelled";
+
+  let reservedLine = "";
+  if (slot.reservedSpots) {
+    const rs = slot.reservedSpots;
+    reservedLine = rs.restrictedToKursant
+      ? `<div>Zarezerwowane: ${rs.count} (tylko kursanci, wykorzystano ${rs.usedCount}/${rs.count})</div>`
+      : `<div>Zarezerwowane: ${rs.count}${rs.label ? ` — ${esc(rs.label)}` : ""}</div>`;
+  }
+
+  return `
+    <div class="basenDayDetailSlot">
+      <div class="basenDayDetailSlotHead">
+        <span class="basenSlotLabel">${esc(SLOT_LABELS[slotKey] || slotKey)}</span>
+        <span class="basenCardTime">${esc(slot.timeStart)} – ${esc(slot.timeEnd)}</span>
+        ${isCancelled ? `<span class="basenSpotsFull">Odwołane</span>` : ""}
+      </div>
+      <div class="basenDayDetailSlotStats">
+        <div>Ogólna pula: ${slot.enrolledCount} / ${generalCapacity}</div>
+        ${reservedLine}
+      </div>
+      ${!isCancelled ? `<button type="button" class="dangerBtn basenDayDetailCancelSlotBtn" data-slot="${esc(slotKey)}">Anuluj ten slot</button>` : ""}
+    </div>
+  `;
+}
+
+function openDayDetailModal(innerEl, ctx, session, onChanged) {
+  const modal = innerEl.querySelector("#basenDayDetailModal");
+  if (!modal) return;
+
+  modal.querySelector("[data-day-detail-title]").textContent = formatDate(session.date);
+  const body = modal.querySelector("[data-day-detail-body]");
+  body.innerHTML = SLOT_ORDER
+    .filter((key) => session.slots?.[key])
+    .map((key) => renderDayDetailSlotHtml(key, session.slots[key]))
+    .join("");
+
+  body.querySelectorAll(".basenDayDetailCancelSlotBtn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const slot = btn.getAttribute("data-slot");
+      if (!confirm(`Anulować slot ${slot}? Wszyscy uczestnicy zostaną wypisani.`)) return;
+      btn.disabled = true;
+      try {
+        await apiPostJson({ url: CANCEL_SESSION_URL, idToken: ctx.idToken, body: { sessionId: session.id, slot } });
+        closeDayDetailModal(innerEl);
+        await onChanged();
+      } catch (e) {
+        btn.disabled = false;
+        alert(e?.message || "Nie udało się anulować.");
+      }
+    });
   });
 
-  // Cancel session/slot form
-  const cancelSessionForm = innerEl.querySelector("#basenCancelSessionForm");
-  const cancelErr = innerEl.querySelector("#bCancelErr");
-  const cancelOk = innerEl.querySelector("#bCancelOk");
-  const cancelBtn = innerEl.querySelector("#bCancelBtn");
-
-  const setCancelErr = (msg) => {
-    cancelErr.textContent = msg;
-    cancelErr.classList.toggle("hidden", !msg);
-    cancelOk.classList.add("hidden");
-  };
-  const setCancelOk = (msg) => {
-    cancelOk.textContent = msg;
-    cancelOk.classList.toggle("hidden", !msg);
-    cancelErr.classList.add("hidden");
-  };
-
-  cancelSessionForm?.addEventListener("submit", async (ev) => {
-    ev.preventDefault();
-    const sessionId = String(innerEl.querySelector("#bCancelSessionId")?.value || "").trim();
-    const slot = String(innerEl.querySelector("#bCancelSlot")?.value || "").trim();
-    if (!sessionId) { setCancelErr("Podaj ID terminu."); return; }
-    if (!confirm(`Anulować ${slot ? `slot ${slot}` : "cały termin"} (${sessionId})? Wszyscy uczestnicy zostaną wypisani.`)) return;
-
-    cancelBtn.disabled = true;
-    cancelBtn.textContent = "Anuluję…";
-    setCancelErr("");
-    setCancelOk("");
-
+  const cancelDayBtn = modal.querySelector("#ddCancelDayBtn");
+  cancelDayBtn.onclick = async () => {
+    if (!confirm(`Anulować cały dzień ${formatDate(session.date)}? Wszyscy uczestnicy zostaną wypisani.`)) return;
+    cancelDayBtn.disabled = true;
     try {
-      const data = await apiPostJson({ url: CANCEL_SESSION_URL, idToken: ctx.idToken, body: { sessionId, slot: slot || undefined } });
-      setCancelOk(`Anulowano. Wypisano ${data.cancelledEnrollments} uczestników.`);
-      cancelSessionForm.reset();
+      await apiPostJson({ url: CANCEL_SESSION_URL, idToken: ctx.idToken, body: { sessionId: session.id } });
+      closeDayDetailModal(innerEl);
+      await onChanged();
     } catch (e) {
-      setCancelErr(e?.message || "Nie udało się anulować.");
-    } finally {
-      cancelBtn.disabled = false;
-      cancelBtn.textContent = "Anuluj";
+      cancelDayBtn.disabled = false;
+      alert(e?.message || "Nie udało się anulować.");
     }
-  });
+  };
+
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function closeDayDetailModal(innerEl) {
+  const modal = innerEl.querySelector("#basenDayDetailModal");
+  if (!modal) return;
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
 }
 
 // ─── Module ───────────────────────────────────────────────────────────────────
@@ -696,7 +842,7 @@ export function createBasenModule({ id, type, label, defaultRoute, order, enable
       const canEnroll = actions.includes("basen.enroll");
 
       const requestedTab = String(routeId || "").trim();
-      const validTabs = ["sessions", ...(isAdmin ? ["admin"] : [])];
+      const validTabs = ["sessions", ...(isAdmin ? ["calendar", "payments"] : [])];
       const activeTab = validTabs.includes(requestedTab) ? requestedTab : "sessions";
 
       viewEl.innerHTML = `
@@ -733,8 +879,10 @@ export function createBasenModule({ id, type, label, defaultRoute, order, enable
         window.location.hash = `#${id}/${tab}`;
       });
 
-      if (activeTab === "admin" && isAdmin) {
-        renderAdminView(innerEl, ctx);
+      if (activeTab === "calendar" && isAdmin) {
+        await renderCalendarTab(innerEl, ctx);
+      } else if (activeTab === "payments" && isAdmin) {
+        innerEl.innerHTML = `<div class="hint" style="margin-top:16px;">Wkrótce.</div>`;
       } else {
         await renderSessionsView(innerEl, ctx, canEnroll);
       }

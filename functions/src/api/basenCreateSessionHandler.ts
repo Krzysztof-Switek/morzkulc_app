@@ -1,5 +1,5 @@
 import type {Request, Response} from "express";
-import {createSession, getBasenVars, resolveBasenAdminGrant} from "../modules/basen/basen_service";
+import {createSession, getBasenVars, resolveBasenAdminGrant, ReservedSpotsInput} from "../modules/basen/basen_service";
 
 type Deps = {
   db: FirebaseFirestore.Firestore;
@@ -11,11 +11,20 @@ type Deps = {
   adminRoleKeys: string[];
 };
 
-function readTimeBlock(raw: any, fallback: {timeStart: string; timeEnd: string}, defaultCapacity: number) {
-  const timeStart = String(raw?.timeStart || "").trim() || fallback.timeStart;
-  const timeEnd = String(raw?.timeEnd || "").trim() || fallback.timeEnd;
-  const capacity = Number(raw?.capacity || 0) || defaultCapacity;
-  return {timeStart, timeEnd, capacity};
+function readReserved(raw: any, label: string, maxCount: number): {ok: true; value?: ReservedSpotsInput} | {ok: false; error: string} {
+  if (!raw || typeof raw !== "object" || !(Number(raw.count) > 0)) return {ok: true, value: undefined};
+
+  const count = Math.floor(Number(raw.count));
+  if (!Number.isFinite(count) || count < 1 || count > maxCount) {
+    return {ok: false, error: `${label}: liczba zarezerwowanych miejsc musi być między 1 a ${maxCount}.`};
+  }
+
+  const restrictedToKursant = raw.restrictedToKursant === true;
+  const rawLabel = String(raw.label || "").trim().slice(0, 100);
+  return {
+    ok: true,
+    value: {count, restrictedToKursant, label: !restrictedToKursant && rawLabel ? rawLabel : undefined},
+  };
 }
 
 export async function handleBasenCreateSession(req: Request, res: Response, deps: Deps): Promise<void> {
@@ -38,17 +47,16 @@ export async function handleBasenCreateSession(req: Request, res: Response, deps
 
       const uid = tokenCheck.decoded.uid;
 
-      const userSnap = await deps.db.collection("users_active").doc(uid).get();
-      if (!userSnap.exists) {
+      const adminSnap = await deps.db.collection("users_active").doc(uid).get();
+      if (!adminSnap.exists) {
         res.status(403).json({error: "User not found"});
         return;
       }
 
-      const userData = userSnap.data() as any;
-      const roleKey = String(userData?.role_key || "");
-      const email = String(userData?.email || "");
-
-      if (!deps.adminRoleKeys.includes(roleKey) && !(await resolveBasenAdminGrant(deps.db, email))) {
+      const adminData = adminSnap.data() as any;
+      const adminRoleKey = String(adminData?.role_key || "");
+      const adminEmail = String(adminData?.email || "");
+      if (!deps.adminRoleKeys.includes(adminRoleKey) && !(await resolveBasenAdminGrant(deps.db, adminEmail))) {
         res.status(403).json({error: "Brak uprawnień. Wymagana rola: zarząd/KR lub opiekun basenowy."});
         return;
       }
@@ -68,31 +76,28 @@ export async function handleBasenCreateSession(req: Request, res: Response, deps
       }
 
       const vars = await getBasenVars(deps.db);
-      const h1 = readTimeBlock(body.h1, {timeStart: vars.basen_1_godzina_domyslna, timeEnd: vars.basen_1_godzina_domyslna}, vars.basen_limit_uczestnikow);
-      const h2 = readTimeBlock(body.h2, {timeStart: vars.basen_2_godzina_domyslna, timeEnd: vars.basen_2_godzina_domyslna}, vars.basen_limit_uczestnikow);
 
-      if (!h1.timeStart || !h1.timeEnd || !h2.timeStart || !h2.timeEnd) {
-        res.status(400).json({error: "Wymagane godziny H1 i H2."});
+      const h1Result = readReserved(body.h1Reserved, "H1", vars.basen_limit_uczestnikow);
+      if (!h1Result.ok) {
+        res.status(400).json({error: h1Result.error});
+        return;
+      }
+      const h2Result = readReserved(body.h2Reserved, "H2", vars.basen_limit_uczestnikow);
+      if (!h2Result.ok) {
+        res.status(400).json({error: h2Result.error});
         return;
       }
 
-      const saunaRaw = body.sauna || {};
-      const sauna = saunaRaw?.enabled === true ?
-        {
-          enabled: true,
-          timeStart: String(saunaRaw?.timeStart || "").trim() || h1.timeStart,
-          timeEnd: String(saunaRaw?.timeEnd || "").trim() || h1.timeEnd,
-          capacity: Number(saunaRaw?.capacity || 0) || vars.basen_limit_uczestnikow,
-        } :
-        undefined;
+      const saunaEnabled = body.saunaEnabled === true;
 
       const sessionId = await createSession(deps.db, {
         date,
-        h1,
-        h2,
-        sauna,
+        saunaEnabled,
+        h1Reserved: h1Result.value,
+        h2Reserved: h2Result.value,
         notes,
         createdBy: uid,
+        vars,
       });
 
       res.status(200).json({ok: true, sessionId});

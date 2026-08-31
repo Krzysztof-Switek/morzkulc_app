@@ -1076,7 +1076,7 @@ async function buildHomeBasenSection(ctx) {
       const dayName = days[d.getDay()] || "";
       const m = String(s.date || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
       const dateStr = m ? `${m[3]}.${m[2]} (${dayName})` : String(s.date || "");
-      const spotsLeft = s.capacity - s.enrolledCount;
+      const spotsLeft = Number(s.remaining ?? 0);
       const spotsLabel = s.userEnrolled
         ? "Zapisany/a"
         : spotsLeft > 0 ? `${spotsLeft} miejsc` : "Brak miejsc";

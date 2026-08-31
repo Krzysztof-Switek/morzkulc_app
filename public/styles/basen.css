@@ -1,9 +1,10 @@
 /* public/styles/basen.css */
 /* ================= BASEN ================= */
 
-/* Zakładki modułu (Baseny / Zarządzanie) — reużywają współdzielone .modTabs/.modTab
-   z base.css (były niemal identyczną duplikacją); .basenTabs/.basenTab zostają jako
-   marker klasy dla JS (querySelector/event delegation), bez własnego CSS. */
+/* Zakładki modułu — tylko dla admina ("Dodaj basen" / "Płatności"), reużywają
+   współdzielone .modTabs/.modTab z base.css; .basenTabs/.basenTab zostają jako
+   marker klasy dla JS (querySelector/event delegation), bez własnego CSS. Zwykli
+   userzy nie mają zakładek — lista terminów jest jedyną zawartością modułu. */
 
 /* ─── Session cards ─── */
 
@@ -116,32 +117,7 @@
   color: var(--text-muted, #888);
 }
 
-/* ─── Admin section ─── */
-
-.basenAdminSection {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px;
-  background: rgba(255, 255, 255, 0.03);
-}
-
-:root[data-theme="light"] .basenAdminSection {
-  background: rgba(12, 18, 32, 0.02);
-}
-
-.basenAdminSection h3 {
-  margin: 0 0 12px;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.basenAdminForm {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-width: 540px;
-}
+/* ─── Formularze (reużywane w modalach kalendarza) ─── */
 
 .basenFormGrid {
   display: grid;
@@ -276,4 +252,233 @@
 .basenAttendeePairInstructor {
   font-weight: 600;
   color: var(--text);
+}
+
+/* ─── Modal (kalendarz: tworzenie terminu / szczegóły dnia) ───────────────────
+   Zduplikowane z .gearModal* (gear.css) zamiast promowane do współdzielonego
+   komponentu — basen_module.js nie ładuje dziś gear.css, a duplikacja tych kilku
+   reguł jest tańsza/bezpieczniejsza niż tworzenie zależności między modułami. */
+
+.basenModal {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  padding: var(--space-3);
+}
+
+.basenModalBackdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+}
+
+.basenModalCard {
+  position: relative;
+  width: min(640px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, rgba(16, 24, 40, 0.92), rgba(16, 24, 40, 0.82));
+  box-shadow: var(--shadow-2);
+}
+
+:root[data-theme="light"] .basenModalCard {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.basenModalTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--border);
+}
+
+.basenModalTitle {
+  font-weight: 900;
+}
+
+.basenModalClose {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+}
+
+.basenModalBody {
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.basenModalActions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+  padding: var(--space-3);
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+/* ─── Kalendarz miesięczny ("Dodaj basen") ─── */
+
+.basenCalendar {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.basenCalendarHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.basenCalendarTitle {
+  font-size: 15px;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.basenCalNavBtn {
+  padding: 6px 14px;
+}
+
+.basenCalendarWeekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.basenCalendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.basenCalDay {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+:root[data-theme="light"] .basenCalDay {
+  background: rgba(12, 18, 32, 0.03);
+}
+
+.basenCalDay--blank {
+  visibility: hidden;
+  border: none;
+  background: transparent;
+  cursor: default;
+}
+
+.basenCalDay--past {
+  opacity: 0.35;
+  cursor: not-allowed;
+  background: transparent;
+}
+
+.basenCalDay--empty:hover {
+  border-color: var(--primary);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.basenCalDay--has-session {
+  border-color: var(--primary);
+  background: rgba(138, 180, 255, 0.14);
+  font-weight: 700;
+}
+
+.basenCalDay--has-session:hover {
+  background: rgba(138, 180, 255, 0.22);
+}
+
+.basenCalDayNum {
+  line-height: 1;
+}
+
+.basenCalDayDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
+/* ─── Formularz rezerwacji miejsc (w modalu tworzenia) ─── */
+
+.basenReservedGroup {
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.basenReservedGroupTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.basenReservedSub {
+  margin-left: 4px;
+}
+
+.basenReservedNote {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ─── Panel szczegółów dnia (modal anulowania) ─── */
+
+.basenDayDetailSlot {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.basenDayDetailSlotHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.basenDayDetailSlotStats {
+  font-size: 13px;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }

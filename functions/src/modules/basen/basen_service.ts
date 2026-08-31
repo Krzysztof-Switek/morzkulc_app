@@ -21,12 +21,20 @@ export interface BasenVars {
   basen_okno_anulowania_h: number;
 }
 
+export interface BasenReservedSpots {
+  count: number;
+  restrictedToKursant: boolean; // false = blokada ogólna, true = pula wyłącznie dla rola_kursant
+  label?: string; // tylko dla blokady ogólnej — notatka admina, np. "grupa X"
+  usedCount: number; // tylko dla restrictedToKursant — ile z puli kursanckiej zajęte
+}
+
 export interface BasenSlot {
   timeStart: string;
   timeEnd: string;
   capacity: number;
-  enrolledCount: number;
+  enrolledCount: number; // WYŁĄCZNIE pula ogólna — bez zmian znaczenia dla slotów bez reservedSpots
   status: SlotStatus;
+  reservedSpots?: BasenReservedSpots; // tylko H1/H2, nigdy SAUNA
 }
 
 export interface BasenSession {
@@ -49,6 +57,7 @@ export interface BasenEnrollment {
   type: EnrollmentType;
   instructorUid?: string | null; // uid sparowanego instruktora, tylko dla type="training"
   kayakId?: string | null; // id z gear_kayaks lub sentinel "PRIVATE"
+  viaReservedPool?: boolean; // true tylko gdy zapis poszedł przez pulę kursancką (reservedSpots.restrictedToKursant)
   status: EnrollmentStatus;
   cancelledAt?: any;
   createdAt: any;
@@ -132,6 +141,32 @@ export function sessionSlotDatetimeMs(
   }
 }
 
+export interface SlotAvailability {
+  remaining: number; // dla TEGO widza — z puli kursanckiej gdy dotyczy, inaczej z puli ogólnej
+  isFull: boolean;
+  viaReservedPool: boolean; // true = ten widz rezerwuje/rezerwowałby z puli kursanckiej
+  generalCapacity: number; // capacity - (reservedSpots?.count ?? 0)
+  generalRemaining: number;
+}
+
+// Matematyka dostępności slotu, zależna od roli widza — kursant na slocie z
+// reservedSpots.restrictedToKursant rezerwuje WYŁĄCZNIE z własnej puli, nigdy z
+// ogólnej (potwierdzone przez użytkownika — inaczej niż standardowo, gdzie kursant
+// ma pełne prawa członka). Dla slotu bez reservedSpots kolapsuje do dzisiejszego
+// capacity - enrolledCount, zero regresji. Współdzielone przez enrollInSlot
+// (walidacja) i getBasenSessionsHandler (odpowiedź) — jedno źródło rozgałęzień.
+export function computeSlotAvailability(slot: BasenSlot, isKursant: boolean): SlotAvailability {
+  const reserved = slot.reservedSpots;
+  const generalCapacity = Math.max(0, slot.capacity - (reserved?.count ?? 0));
+  const generalRemaining = Math.max(0, generalCapacity - slot.enrolledCount);
+
+  if (isKursant && reserved && reserved.restrictedToKursant === true) {
+    const remaining = Math.max(0, reserved.count - reserved.usedCount);
+    return {remaining, isFull: remaining <= 0, viaReservedPool: true, generalCapacity, generalRemaining};
+  }
+  return {remaining: generalRemaining, isFull: generalRemaining <= 0, viaReservedPool: false, generalCapacity, generalRemaining};
+}
+
 function kayakAllocationId(sessionId: string, slot: BasenSlotLabel, kayakId: string): string {
   return `${sessionId}_${slot}_${kayakId}`;
 }
@@ -174,30 +209,64 @@ export async function getUserEnrollments(
   return snap.docs.map((d) => ({id: d.id, ...d.data()} as BasenEnrollment));
 }
 
+export interface ReservedSpotsInput {
+  count: number;
+  restrictedToKursant: boolean;
+  label?: string;
+}
+
+// Godziny i capacity ZAWSZE z setupu (basen_1/2_godzina_domyslna, basen_limit_uczestnikow)
+// — klient nie nadpisuje ich per termin (zmiana godzin = zmiana w arkuszu, nie w aplikacji).
 export async function createSession(
   db: FirebaseFirestore.Firestore,
   args: {
     date: string;
-    h1: { timeStart: string; timeEnd: string; capacity: number };
-    h2: { timeStart: string; timeEnd: string; capacity: number };
-    sauna?: { enabled: boolean; timeStart?: string; timeEnd?: string; capacity?: number };
+    saunaEnabled: boolean;
+    h1Reserved?: ReservedSpotsInput;
+    h2Reserved?: ReservedSpotsInput;
     notes: string;
     createdBy: string;
+    vars: BasenVars;
   }
 ): Promise<string> {
   const ref = db.collection("basen_sessions").doc();
   const now = admin.firestore.FieldValue.serverTimestamp();
 
+  const buildReserved = (r?: ReservedSpotsInput): BasenReservedSpots | undefined =>
+    r && r.count > 0 ? {
+      count: r.count,
+      restrictedToKursant: r.restrictedToKursant === true,
+      label: r.restrictedToKursant ? undefined : (r.label || undefined),
+      usedCount: 0,
+    } : undefined;
+
+  const h1Reserved = buildReserved(args.h1Reserved);
+  const h2Reserved = buildReserved(args.h2Reserved);
+
   const slots: Partial<Record<BasenSlotLabel, BasenSlot>> = {
-    H1: {timeStart: args.h1.timeStart, timeEnd: args.h1.timeEnd, capacity: args.h1.capacity, enrolledCount: 0, status: "open"},
-    H2: {timeStart: args.h2.timeStart, timeEnd: args.h2.timeEnd, capacity: args.h2.capacity, enrolledCount: 0, status: "open"},
+    H1: {
+      timeStart: args.vars.basen_1_godzina_domyslna,
+      timeEnd: args.vars.basen_1_godzina_domyslna,
+      capacity: args.vars.basen_limit_uczestnikow,
+      enrolledCount: 0,
+      status: "open",
+      ...(h1Reserved ? {reservedSpots: h1Reserved} : {}),
+    },
+    H2: {
+      timeStart: args.vars.basen_2_godzina_domyslna,
+      timeEnd: args.vars.basen_2_godzina_domyslna,
+      capacity: args.vars.basen_limit_uczestnikow,
+      enrolledCount: 0,
+      status: "open",
+      ...(h2Reserved ? {reservedSpots: h2Reserved} : {}),
+    },
   };
 
-  if (args.sauna?.enabled) {
+  if (args.saunaEnabled) {
     slots.SAUNA = {
-      timeStart: args.sauna.timeStart || args.h1.timeStart,
-      timeEnd: args.sauna.timeEnd || args.h1.timeEnd,
-      capacity: args.sauna.capacity || args.h1.capacity,
+      timeStart: args.vars.basen_1_godzina_domyslna,
+      timeEnd: args.vars.basen_1_godzina_domyslna,
+      capacity: args.vars.basen_limit_uczestnikow,
       enrolledCount: 0,
       status: "open",
     };
@@ -229,6 +298,7 @@ export async function enrollInSlot(
     mode: "regular" | "training" | "instructor";
     instructorUid?: string;
     kayakId?: string; // id z gear_kayaks lub "PRIVATE"
+    isKursant: boolean;
   }
 ): Promise<{ enrollmentId: string }> {
   const sessionRef = db.collection("basen_sessions").doc(args.sessionId);
@@ -267,8 +337,10 @@ export async function enrollInSlot(
       if (existing.status === "active") throw new Error("Jesteś już zapisany/a na ten slot.");
     }
 
+    let availability: SlotAvailability | null = null;
     if (args.mode !== "instructor") {
-      if (slotData.enrolledCount >= slotData.capacity) throw new Error("Slot jest już pełny.");
+      availability = computeSlotAvailability(slotData, args.isKursant);
+      if (availability.isFull) throw new Error("Slot jest już pełny.");
     }
 
     if (args.mode === "training") {
@@ -286,14 +358,22 @@ export async function enrollInSlot(
     }
 
     // ── zapisy ──
-    if (args.mode !== "instructor") {
-      const newCount = slotData.enrolledCount + 1;
-      const newStatus: SlotStatus = newCount >= slotData.capacity ? "full" : "open";
-      tx.update(sessionRef, {
-        [`slots.${args.slot}.enrolledCount`]: newCount,
-        [`slots.${args.slot}.status`]: newStatus,
-        updatedAt: now,
-      });
+    if (args.mode !== "instructor" && availability) {
+      if (availability.viaReservedPool) {
+        const newUsed = (slotData.reservedSpots?.usedCount ?? 0) + 1;
+        tx.update(sessionRef, {
+          [`slots.${args.slot}.reservedSpots.usedCount`]: newUsed,
+          updatedAt: now,
+        }); // status ogólny NIE dotykany — odzwierciedla wyłącznie pulę ogólną
+      } else {
+        const newCount = slotData.enrolledCount + 1;
+        const newStatus: SlotStatus = newCount >= availability.generalCapacity ? "full" : "open";
+        tx.update(sessionRef, {
+          [`slots.${args.slot}.enrolledCount`]: newCount,
+          [`slots.${args.slot}.status`]: newStatus,
+          updatedAt: now,
+        });
+      }
     }
 
     if (allocationRef) {
@@ -318,6 +398,7 @@ export async function enrollInSlot(
       type: args.mode,
       instructorUid: args.mode === "training" ? (args.instructorUid || null) : null,
       kayakId: args.kayakId || null,
+      viaReservedPool: (args.mode !== "instructor" && availability?.viaReservedPool) === true,
       status: "active",
       createdAt: now,
       updatedAt: now,
@@ -363,13 +444,22 @@ export async function cancelEnrollment(
 
     // ── zapisy ──
     if (slotData && slotData.status !== "cancelled" && enrollment.type !== "instructor") {
-      const newCount = Math.max(0, slotData.enrolledCount - 1);
-      const newStatus: SlotStatus = newCount < slotData.capacity ? "open" : "full";
-      tx.update(sessionRef, {
-        [`slots.${args.slot}.enrolledCount`]: newCount,
-        [`slots.${args.slot}.status`]: newStatus,
-        updatedAt: now,
-      });
+      if (enrollment.viaReservedPool) {
+        const newUsed = Math.max(0, (slotData.reservedSpots?.usedCount ?? 0) - 1);
+        tx.update(sessionRef, {
+          [`slots.${args.slot}.reservedSpots.usedCount`]: newUsed,
+          updatedAt: now,
+        });
+      } else {
+        const newCount = Math.max(0, slotData.enrolledCount - 1);
+        const generalCapacity = Math.max(0, slotData.capacity - (slotData.reservedSpots?.count ?? 0));
+        const newStatus: SlotStatus = newCount < generalCapacity ? "open" : "full";
+        tx.update(sessionRef, {
+          [`slots.${args.slot}.enrolledCount`]: newCount,
+          [`slots.${args.slot}.status`]: newStatus,
+          updatedAt: now,
+        });
+      }
     }
 
     if (enrollment.kayakId && enrollment.kayakId !== "PRIVATE") {

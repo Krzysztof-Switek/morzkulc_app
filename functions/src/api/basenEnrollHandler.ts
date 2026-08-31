@@ -76,6 +76,8 @@ export async function handleBasenEnroll(req: Request, res: Response, deps: Deps)
         return;
       }
 
+      const isKursant = roleKey === "rola_kursant";
+
       const profile = userData?.profile || {};
       const firstName = String(profile?.firstName || "").trim();
       const lastName = String(profile?.lastName || "").trim();
@@ -116,6 +118,7 @@ export async function handleBasenEnroll(req: Request, res: Response, deps: Deps)
         mode,
         instructorUid: mode === "training" ? instructorUid : undefined,
         kayakId: kayakId || undefined,
+        isKursant,
       });
 
       res.status(200).json({ok: true, enrollmentId});
