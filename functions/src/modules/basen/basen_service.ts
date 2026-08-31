@@ -7,17 +7,12 @@ export type BasenSlotLabel = "H1" | "H2" | "SAUNA";
 export type SlotStatus = "open" | "full" | "cancelled";
 export type EnrollmentStatus = "active" | "cancelled";
 export type EnrollmentType = "regular" | "training" | "instructor";
-export type KarnetStatus = "pending" | "active" | "exhausted" | "expired";
-export type PaymentType = "karnet" | "jednorazowe";
 
 export interface BasenVars {
   // E-maile "opiekunów basenowych" — ci sami ludzie mają dostęp do zakładki Zarządzanie
   // co zarząd/KR (patrz registerUserHandler.ts::resolveBasenAdminGrant), niezależnie od
   // swojej roli klubowej. Zakładka Vars_BASEN, lista rozdzielona przecinkami.
   basen_admin_mail: string[];
-  basen_cena_za_godzine: number;
-  basen_cena_za_karnet: number;
-  basen_ile_wejsc_na_karnet: number;
   basen_limit_uczestnikow: number;
   basen_1_godzina_domyslna: string;
   basen_2_godzina_domyslna: string;
@@ -52,25 +47,10 @@ export interface BasenEnrollment {
   userEmail: string;
   userDisplayName: string;
   type: EnrollmentType;
-  paymentType: PaymentType | null; // null dla type="instructor"
-  karnetId?: string | null;
   instructorUid?: string | null; // uid sparowanego instruktora, tylko dla type="training"
   kayakId?: string | null; // id z gear_kayaks lub sentinel "PRIVATE"
   status: EnrollmentStatus;
   cancelledAt?: any;
-  createdAt: any;
-  updatedAt: any;
-}
-
-export interface BasenKarnet {
-  id: string;
-  userUid: string;
-  userEmail: string;
-  userDisplayName: string;
-  totalEntries: number;
-  usedEntries: number;
-  status: KarnetStatus;
-  grantedBy?: string;
   createdAt: any;
   updatedAt: any;
 }
@@ -90,7 +70,6 @@ export interface SlotAttendee {
   userUid: string;
   userDisplayName: string;
   userEmail: string;
-  paymentType: PaymentType | null;
   kayakId: string | null;
 }
 
@@ -130,9 +109,6 @@ export async function getBasenVars(db: FirebaseFirestore.Firestore): Promise<Bas
 
   return {
     basen_admin_mail: splitEmails(parseVarValue(vars["basen_admin_mail"])),
-    basen_cena_za_godzine: Number(parseVarValue(vars["basen_cena_za_godzine"]) ?? 0),
-    basen_cena_za_karnet: Number(parseVarValue(vars["basen_cena_za_karnet"]) ?? 0),
-    basen_ile_wejsc_na_karnet: Number(parseVarValue(vars["basen_ile_wejsc_na_karnet"]) ?? 10),
     // Klucz arkusza ma polskie znaki ("uczestników") — kod dostosowany do arkusza, nie odwrotnie.
     basen_limit_uczestnikow: Number(parseVarValue(vars["basen_limit_uczestników"]) ?? 15),
     basen_1_godzina_domyslna: String(parseVarValue(vars["basen_1_godzina_domyslna"]) ?? "19:00"),
@@ -252,8 +228,6 @@ export async function enrollInSlot(
     displayName: string;
     mode: "regular" | "training" | "instructor";
     instructorUid?: string;
-    paymentType?: PaymentType;
-    karnetId?: string;
     kayakId?: string; // id z gear_kayaks lub "PRIVATE"
   }
 ): Promise<{ enrollmentId: string }> {
@@ -271,16 +245,13 @@ export async function enrollInSlot(
     db.collection("basen_enrollments").doc(enrollmentId(args.sessionId, args.slot, args.instructorUid)) :
     null;
 
-  const karnetRef = args.karnetId ? db.collection("basen_karnety").doc(args.karnetId) : null;
-
   await db.runTransaction(async (tx) => {
     // ── wszystkie odczyty przed jakimkolwiek zapisem ──
-    const [sessionSnap, existingEnrollSnap, allocationSnap, instructorEnrollSnap, karnetSnap] = await Promise.all([
+    const [sessionSnap, existingEnrollSnap, allocationSnap, instructorEnrollSnap] = await Promise.all([
       tx.get(sessionRef),
       tx.get(enrollRef),
       allocationRef ? tx.get(allocationRef) : Promise.resolve(null),
       instructorEnrollRef ? tx.get(instructorEnrollRef) : Promise.resolve(null),
-      karnetRef ? tx.get(karnetRef) : Promise.resolve(null),
     ]);
 
     if (!sessionSnap.exists) throw new Error("Termin nie istnieje.");
@@ -314,15 +285,6 @@ export async function enrollInSlot(
       throw new Error("Ten kajak jest już zajęty dla tej godziny.");
     }
 
-    let karnet: BasenKarnet | null = null;
-    if (args.paymentType === "karnet") {
-      if (!karnetSnap || !karnetSnap.exists) throw new Error("Karnet nie istnieje.");
-      karnet = karnetSnap.data() as BasenKarnet;
-      if (karnet.status !== "active") throw new Error("Karnet nie jest aktywny.");
-      if (karnet.userUid !== args.uid) throw new Error("Karnet nie należy do Ciebie.");
-      if (karnet.totalEntries - karnet.usedEntries <= 0) throw new Error("Karnet nie ma już wejść.");
-    }
-
     // ── zapisy ──
     if (args.mode !== "instructor") {
       const newCount = slotData.enrolledCount + 1;
@@ -332,12 +294,6 @@ export async function enrollInSlot(
         [`slots.${args.slot}.status`]: newStatus,
         updatedAt: now,
       });
-    }
-
-    if (karnetRef && karnet) {
-      const newUsed = karnet.usedEntries + 1;
-      const newKarnetStatus: KarnetStatus = newUsed >= karnet.totalEntries ? "exhausted" : "active";
-      tx.update(karnetRef, {usedEntries: newUsed, status: newKarnetStatus, updatedAt: now});
     }
 
     if (allocationRef) {
@@ -360,8 +316,6 @@ export async function enrollInSlot(
       userEmail: args.email,
       userDisplayName: args.displayName,
       type: args.mode,
-      paymentType: args.mode === "instructor" ? null : (args.paymentType || null),
-      karnetId: args.karnetId || null,
       instructorUid: args.mode === "training" ? (args.instructorUid || null) : null,
       kayakId: args.kayakId || null,
       status: "active",
@@ -407,19 +361,7 @@ export async function cancelEnrollment(
       }
     }
 
-    const karnetRef = enrollment.paymentType === "karnet" && enrollment.karnetId ?
-      db.collection("basen_karnety").doc(enrollment.karnetId) :
-      null;
-    const karnetSnap = karnetRef ? await tx.get(karnetRef) : null;
-
     // ── zapisy ──
-    if (karnetRef && karnetSnap && karnetSnap.exists) {
-      const karnet = karnetSnap.data() as BasenKarnet;
-      const newUsed = Math.max(0, karnet.usedEntries - 1);
-      const newStatus: KarnetStatus = karnet.status === "exhausted" ? "active" : karnet.status;
-      tx.update(karnetRef, {usedEntries: newUsed, status: newStatus, updatedAt: now});
-    }
-
     if (slotData && slotData.status !== "cancelled" && enrollment.type !== "instructor") {
       const newCount = Math.max(0, slotData.enrolledCount - 1);
       const newStatus: SlotStatus = newCount < slotData.capacity ? "open" : "full";
@@ -480,15 +422,6 @@ export async function cancelSession(
     const sessionSnap = await tx.get(sessionRef);
     if (!sessionSnap.exists) throw new Error("Termin nie istnieje.");
 
-    const karnetIds = Array.from(new Set(
-      enrollments.filter((e) => e.paymentType === "karnet" && e.karnetId).map((e) => e.karnetId as string)
-    ));
-    const karnetRefs = new Map(karnetIds.map((kid) => [kid, db.collection("basen_karnety").doc(kid)]));
-    const karnetSnaps = new Map<string, FirebaseFirestore.DocumentSnapshot>();
-    for (const [kid, ref] of karnetRefs) {
-      karnetSnaps.set(kid, await tx.get(ref));
-    }
-
     // ── zapisy ──
     const slotUpdate: Record<string, any> = {updatedAt: now};
     for (const l of activeLabels) slotUpdate[`slots.${l}.status`] = "cancelled";
@@ -496,17 +429,6 @@ export async function cancelSession(
 
     for (const e of enrollments) {
       tx.update(db.collection("basen_enrollments").doc(e.id), {status: "cancelled", cancelledAt: now, updatedAt: now});
-
-      if (e.paymentType === "karnet" && e.karnetId) {
-        const karnetSnap = karnetSnaps.get(e.karnetId);
-        const karnetRef = karnetRefs.get(e.karnetId);
-        if (karnetSnap && karnetSnap.exists && karnetRef) {
-          const karnet = karnetSnap.data() as BasenKarnet;
-          const newUsed = Math.max(0, karnet.usedEntries - 1);
-          const newStatus: KarnetStatus = karnet.status === "exhausted" ? "active" : karnet.status;
-          tx.update(karnetRef, {usedEntries: newUsed, status: newStatus, updatedAt: now});
-        }
-      }
 
       if (e.kayakId && e.kayakId !== "PRIVATE") {
         tx.delete(db.collection("basen_kayak_allocations").doc(kayakAllocationId(e.sessionId, e.slot, e.kayakId)));
@@ -643,7 +565,6 @@ export async function listSlotAttendees(
     userUid: e.userUid,
     userDisplayName: e.userDisplayName,
     userEmail: e.userEmail,
-    paymentType: e.paymentType ?? null,
     kayakId: e.kayakId ?? null,
   });
 
@@ -669,66 +590,6 @@ export async function listSlotAttendees(
   return {instructors, paired, regular};
 }
 
-// ─── Karnety ─────────────────────────────────────────────────────────────────
-
-export async function getUserKarnety(
-  db: FirebaseFirestore.Firestore,
-  userUid: string
-): Promise<BasenKarnet[]> {
-  const snap = await db
-    .collection("basen_karnety")
-    .where("userUid", "==", userUid)
-    .orderBy("createdAt", "desc")
-    .get();
-
-  return snap.docs.map((d) => ({id: d.id, ...d.data()} as BasenKarnet));
-}
-
-export async function getActiveKarnet(
-  db: FirebaseFirestore.Firestore,
-  userUid: string
-): Promise<BasenKarnet | null> {
-  const snap = await db
-    .collection("basen_karnety")
-    .where("userUid", "==", userUid)
-    .where("status", "==", "active")
-    .limit(1)
-    .get();
-
-  if (snap.empty) return null;
-  const d = snap.docs[0];
-  return {id: d.id, ...d.data()} as BasenKarnet;
-}
-
-export async function grantKarnet(
-  db: FirebaseFirestore.Firestore,
-  args: {
-    userUid: string;
-    userEmail: string;
-    userDisplayName: string;
-    totalEntries: number;
-    grantedBy: string;
-  }
-): Promise<string> {
-  const ref = db.collection("basen_karnety").doc();
-  const now = admin.firestore.FieldValue.serverTimestamp();
-
-  await ref.set({
-    id: ref.id,
-    userUid: args.userUid,
-    userEmail: args.userEmail,
-    userDisplayName: args.userDisplayName,
-    totalEntries: args.totalEntries,
-    usedEntries: 0,
-    status: "active",
-    grantedBy: args.grantedBy,
-    createdAt: now,
-    updatedAt: now,
-  });
-
-  return ref.id;
-}
-
 // ─── Uprawnienia panelu "Zarządzanie" ────────────────────────────────────────
 
 /**
@@ -740,8 +601,8 @@ export async function grantKarnet(
  *
  * Używane w dwóch miejscach: registerUserHandler.ts (żeby dopisać "basen.admin" do
  * allowed_actions przy logowaniu, dla frontendu) i w handlerach basenCreateSession/
- * basenCancelSession/basenGrantKarnet (żeby faktycznie WPUŚCIĆ tę osobę do akcji, nie
- * tylko pokazać jej zakładkę).
+ * basenCancelSession (żeby faktycznie WPUŚCIĆ tę osobę do akcji, nie tylko pokazać
+ * jej zakładkę).
  */
 export async function resolveBasenAdminGrant(db: FirebaseFirestore.Firestore, email: string): Promise<boolean> {
   const normalizedEmail = String(email || "").trim().toLowerCase();

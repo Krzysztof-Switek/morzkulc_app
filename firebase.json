@@ -333,13 +333,6 @@
         }
       },
       {
-        "source": "/api/basen/karnety",
-        "function": {
-          "functionId": "getBasenKarnety",
-          "region": "us-central1"
-        }
-      },
-      {
         "source": "/api/basen/sessions/create",
         "function": {
           "functionId": "basenCreateSession",
@@ -350,13 +343,6 @@
         "source": "/api/basen/sessions/cancel",
         "function": {
           "functionId": "basenCancelSession",
-          "region": "us-central1"
-        }
-      },
-      {
-        "source": "/api/basen/karnety/grant",
-        "function": {
-          "functionId": "basenGrantKarnet",
           "region": "us-central1"
         }
       },

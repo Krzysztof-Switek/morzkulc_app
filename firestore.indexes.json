@@ -100,22 +100,6 @@
       ]
     },
     {
-      "collectionGroup": "basen_karnety",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "userUid", "order": "ASCENDING" },
-        { "fieldPath": "status", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "basen_karnety",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "userUid", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
       "collectionGroup": "km_logs",
       "queryScope": "COLLECTION",
       "fields": [

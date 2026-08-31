@@ -53,8 +53,6 @@ export const basenNotifySessionCancelledTask: ServiceTask<Payload> = {
       "",
       `Termin: ${sessionDesc}`,
       "",
-      "Jeśli byłeś/aś zapisany/a z karnetu, wejście zostało automatycznie zwrócone.",
-      "",
       "SKK Morzkulc",
     ].join("\n");
 

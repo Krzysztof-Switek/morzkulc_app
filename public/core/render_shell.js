@@ -2,7 +2,6 @@
 import { canSeeModule } from "/core/access_control.js";
 import { setHash, parseHash } from "/core/router.js";
 import { apiPostJson, apiGetJson } from "/core/api_client.js";
-import { isSwUpdatePending, hardReloadApp } from "/core/sw_update.js";
 import { formatFreeText } from "/core/text_format.js";
 
 export function spinnerHtml(text = "Morzkulc myśli") {
@@ -161,12 +160,6 @@ async function renderHomeDashboard({ viewEl, ctx }) {
   // Render struktury natychmiast — rezerwacje ładujemy asynchronicznie
   viewEl.innerHTML = `
     <div class="dashboard dashboardStart">
-      ${isSwUpdatePending() ? `
-      <div class="swUpdateBannerHome">
-        <span>Dostępna nowa wersja aplikacji.</span>
-        <button type="button" class="primary" id="swUpdateReloadBtnHome">Odśwież teraz</button>
-      </div>
-      ` : ""}
       <section class="startTop">
         <div class="startHero">
           <h2>Cześć${helloName ? `, ${escapeHtml(helloName)}` : ""}</h2>
@@ -315,14 +308,13 @@ async function renderHomeDashboard({ viewEl, ctx }) {
         </div>
 
         <div class="startList" id="homeBasenList">
-          ${spinnerHtml("Ładowanie sesji...")}
+          ${spinnerHtml("Ładowanie zajęć...")}
         </div>
       </section>
 
     </div>
   `;
 
-  viewEl.querySelector("#swUpdateReloadBtnHome")?.addEventListener("click", () => hardReloadApp());
 
   // Kafelek „Imprezy" oraz „Zobacz wszystkie" w sekcji wydarzeń → lista imprez.
   viewEl.querySelectorAll("[data-home-action='events-list'], [data-home-action='all-events']").forEach((btn) => {
@@ -474,7 +466,7 @@ async function renderHomeDashboard({ viewEl, ctx }) {
       if (listEl) listEl.innerHTML = html;
     }).catch(() => {
       const listEl = viewEl.querySelector("#homeBasenList");
-      if (listEl) listEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać sesji.</div></div></div>`;
+      if (listEl) listEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać zajęć.</div></div></div>`;
     });
   }
 

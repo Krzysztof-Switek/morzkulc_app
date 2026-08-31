@@ -1,5 +1,5 @@
 import type {Request, Response} from "express";
-import {listUpcomingSessions, getUserEnrollments, getActiveKarnet, getUserKarnety} from "../modules/basen/basen_service";
+import {listUpcomingSessions, getUserEnrollments} from "../modules/basen/basen_service";
 
 type Deps = {
   db: FirebaseFirestore.Firestore;
@@ -25,11 +25,9 @@ export async function handleGetBasenSessions(req: Request, res: Response, deps: 
 
       const uid = tokenCheck.decoded.uid;
 
-      const [sessions, userEnrollments, activeKarnet, karnety] = await Promise.all([
+      const [sessions, userEnrollments] = await Promise.all([
         listUpcomingSessions(deps.db),
         getUserEnrollments(deps.db, uid),
-        getActiveKarnet(deps.db, uid),
-        getUserKarnety(deps.db, uid),
       ]);
 
       const enrollmentByKey = new Map(userEnrollments.map((e) => [`${e.sessionId}_${e.slot}`, e]));
@@ -47,7 +45,6 @@ export async function handleGetBasenSessions(req: Request, res: Response, deps: 
             status: slot.status,
             userEnrolled: Boolean(enrollment),
             userEnrollmentType: enrollment?.type || null,
-            userPaymentType: enrollment?.paymentType || null,
             userKayakId: enrollment?.kayakId || null,
           };
         }
@@ -63,16 +60,6 @@ export async function handleGetBasenSessions(req: Request, res: Response, deps: 
       res.status(200).json({
         ok: true,
         sessions: sessionsWithStatus,
-        activeKarnet: activeKarnet ?
-          {
-            id: activeKarnet.id,
-            totalEntries: activeKarnet.totalEntries,
-            usedEntries: activeKarnet.usedEntries,
-            remaining: activeKarnet.totalEntries - activeKarnet.usedEntries,
-            status: activeKarnet.status,
-          } :
-          null,
-        karnetyCount: karnety.filter((k) => k.status === "active").length,
       });
     } catch (err) {
       const e = err as {message?: string};

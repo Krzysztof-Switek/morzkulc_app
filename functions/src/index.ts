@@ -37,10 +37,8 @@ import {handleSubmitEvent} from "./api/submitEventHandler";
 import {handleGetBasenSessions} from "./api/getBasenSessionsHandler";
 import {handleBasenEnroll} from "./api/basenEnrollHandler";
 import {handleBasenCancelEnrollment} from "./api/basenCancelEnrollmentHandler";
-import {handleGetBasenKarnety} from "./api/getBasenKarnetyHandler";
 import {handleBasenCreateSession} from "./api/basenCreateSessionHandler";
 import {handleBasenCancelSession} from "./api/basenCancelSessionHandler";
-import {handleBasenGrantKarnet} from "./api/basenGrantKarnetHandler";
 import {handleBasenSetKayak} from "./api/basenSetKayakHandler";
 import {handleGetBasenKayaks} from "./api/getBasenKayaksHandler";
 import {handleGetBasenAttendees} from "./api/getBasenAttendeesHandler";
@@ -1272,20 +1270,6 @@ export const basenCancelEnrollment = onRequest({invoker: "private"}, async (req,
 });
 
 /**
- * GET /api/basen/karnety (authenticated)
- */
-export const getBasenKarnety = onRequest({invoker: "private"}, async (req, res) => {
-  return handleGetBasenKarnety(req, res, {
-    db,
-    sendPreflight,
-    requireAllowedHost,
-    setCorsHeaders,
-    corsHandler,
-    requireIdToken,
-  });
-});
-
-/**
  * POST /api/basen/sessions/create (authenticated, role: zarzad/kr)
  */
 export const basenCreateSession = onRequest({invoker: "private"}, async (req, res) => {
@@ -1312,21 +1296,6 @@ export const basenCancelSession = onRequest({invoker: "private"}, async (req, re
     corsHandler,
     requireIdToken,
     enqueueBasenSessionCancelledNotify,
-    adminRoleKeys,
-  });
-});
-
-/**
- * POST /api/basen/karnety/grant (authenticated, role: zarzad/kr)
- */
-export const basenGrantKarnet = onRequest({invoker: "private"}, async (req, res) => {
-  return handleBasenGrantKarnet(req, res, {
-    db,
-    sendPreflight,
-    requireAllowedHost,
-    setCorsHeaders,
-    corsHandler,
-    requireIdToken,
     adminRoleKeys,
   });
 });

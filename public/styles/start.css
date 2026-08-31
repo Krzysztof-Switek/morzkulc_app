@@ -252,24 +252,6 @@
 .startEventDetailRow a:hover { text-decoration: underline; }
 .startEventDetailRow--desc { white-space: pre-line; overflow-wrap: anywhere; word-break: break-word; }
 
-/* ── Baner "nowa wersja aplikacji" — góra ekranu głównego, widoczny od razu po wejściu ── */
-.swUpdateBannerHome {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 14px;
-  padding: 12px 16px;
-  border-radius: 12px;
-  border: 1px solid var(--ok, #4ade80);
-  background: rgba(74, 222, 128, 0.15);
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text);
-  text-align: left;
-}
-
 /* ── Profil: jedna spójna karta (staż, opiekunowie, popover roli) ── */
 .profileChipsWrap { position: relative; }
 .profileBlock { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); text-align: left; }

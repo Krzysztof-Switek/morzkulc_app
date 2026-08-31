@@ -9,12 +9,26 @@ import {
 import { apiPostJson, apiGetJson, setApiTokenGetter } from "/core/api_client.js";
 import { buildModulesFromSetup } from "/core/modules_registry.js";
 import { renderNav, renderView, spinnerHtml } from "/core/render_shell.js";
-import { setSwUpdatePending, hardReloadApp } from "/core/sw_update.js";
-import { parseHash } from "/core/router.js";
+import { hardReloadApp } from "/core/sw_update.js";
+
+const SW_UPDATE_CHECK_INTERVAL_MS = 20 * 60 * 1000; // 20 min — patrz komentarz przy setInterval
 
 // ── Service Worker registration + nasłuch aktualizacji ───────────────────────
 let swUpdatePending = false;
 let swRegistration = null;
+
+const swUpdateBannerEl = document.getElementById("swUpdateBanner");
+const swUpdateReloadBtn = document.getElementById("swUpdateReloadBtn");
+swUpdateReloadBtn?.addEventListener("click", () => hardReloadApp());
+
+// Baner leci w headerze (poza #appRoot) — widoczny na każdym module/route, ale
+// tylko gdy appRoot jest odkryty (user zalogowany). SW_UPDATED może przyjść
+// zanim user się zaloguje (rejestracja SW nie zależy od auth) — wtedy baner
+// czeka aż appRoot się pokaże (wołane też z authOnChange/hardResetUi niżej).
+function updateSwBannerVisibility() {
+  const show = swUpdatePending && !appRoot.classList.contains("hidden");
+  swUpdateBannerEl?.classList.toggle("hidden", !show);
+}
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/sw.js").then((reg) => {
@@ -27,14 +41,7 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.addEventListener("message", (event) => {
     if (event.data?.type === "SW_UPDATED") {
       swUpdatePending = true;
-      setSwUpdatePending(true);
-
-      // Jeśli użytkownik jest już na ekranie głównym, odśwież go od razu, żeby
-      // baner pojawił się natychmiast — nie dopiero po nawigacji gdzie indziej i z powrotem.
-      const { moduleId, routeId } = parseHash();
-      if (moduleId === "home" && routeId !== "profile") {
-        renderView({ viewEl, ctx }).catch(() => { /* najwyżej zobaczy baner po nawigacji */ });
-      }
+      updateSwBannerVisibility();
     }
   });
 
@@ -46,6 +53,13 @@ if ("serviceWorker" in navigator) {
       swRegistration?.update().catch(() => { /* brak sieci — nieistotne */ });
     }
   });
+
+  // Karta bywa też trzymana otwarta i widoczna bez przerwy (visibilitychange
+  // się wtedy nie odpali) — cykliczny check ogranicza maksymalne opóźnienie
+  // wykrycia nowej wersji do SW_UPDATE_CHECK_INTERVAL_MS.
+  setInterval(() => {
+    swRegistration?.update().catch(() => { /* brak sieci — nieistotne */ });
+  }, SW_UPDATE_CHECK_INTERVAL_MS);
 }
 
 const REGISTER_URL = "/api/register";
@@ -136,6 +150,7 @@ const SESSION_MAX_MS = 24 * 60 * 60 * 1000; // 24 godziny
   logoutBtn.classList.remove("hidden");
   profileBtn?.classList.remove("hidden");
   appRoot.classList.remove("hidden");
+  updateSwBannerVisibility();
 
   ctx.user = user;
   window.__APP_CTX__ = ctx;
@@ -246,6 +261,7 @@ function hardResetUi() {
   logoutBtn.classList.add("hidden");
   profileBtn?.classList.add("hidden");
   appRoot.classList.add("hidden");
+  updateSwBannerVisibility();
 
   navEl.innerHTML = "";
   viewEl.innerHTML = "";

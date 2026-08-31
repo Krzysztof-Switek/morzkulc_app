@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-29T21:09:40",
+  "generated_at": "2026-08-31T08:19:46",
   "project_root": "C:\\Users\\kswitek\\Documents\\morzkulc_app",
   "settings": {
     "excluded_dirs": [
@@ -64,9 +64,9 @@
     {
       "path": ".claude_context/context_backend.md",
       "extension": ".md",
-      "size_bytes": 43181,
+      "size_bytes": 40740,
       "line_count": 2442,
-      "sha1_short": "ec262c7ee8",
+      "sha1_short": "103cdfe1c0",
       "kind": "markdown",
       "module_aliases": [],
       "imports": [],
@@ -182,9 +182,9 @@
     {
       "path": ".claude_context/context_config.md",
       "extension": ".md",
-      "size_bytes": 3519395,
+      "size_bytes": 3326716,
       "line_count": null,
-      "sha1_short": "fd4636b511",
+      "sha1_short": "e414cafab3",
       "kind": "markdown",
       "module_aliases": [],
       "imports": [],
@@ -201,9 +201,9 @@
     {
       "path": ".claude_context/context_dependencies.json",
       "extension": ".json",
-      "size_bytes": 1789704,
+      "size_bytes": 1751019,
       "line_count": null,
-      "sha1_short": "8a6406e637",
+      "sha1_short": "3035d6a42b",
       "kind": "config",
       "module_aliases": [],
       "imports": [],
@@ -220,9 +220,9 @@
     {
       "path": ".claude_context/context_files.json",
       "extension": ".json",
-      "size_bytes": 8082036,
+      "size_bytes": 7708118,
       "line_count": null,
-      "sha1_short": "0e5e1795df",
+      "sha1_short": "9726209997",
       "kind": "config",
       "module_aliases": [],
       "imports": [],
@@ -298,9 +298,9 @@
     {
       "path": ".claude_context/context_keywords.md",
       "extension": ".md",
-      "size_bytes": 1217789,
+      "size_bytes": 1200081,
       "line_count": 17709,
-      "sha1_short": "f3c70e27ba",
+      "sha1_short": "d2cd47ebd1",
       "kind": "markdown",
       "module_aliases": [],
       "imports": [],
@@ -345,9 +345,9 @@
     {
       "path": ".claude_context/context_routes.md",
       "extension": ".md",
-      "size_bytes": 12852,
+      "size_bytes": 12440,
       "line_count": 413,
-      "sha1_short": "1ee4c129f7",
+      "sha1_short": "5174ad1275",
       "kind": "markdown",
       "module_aliases": [],
       "imports": [],
@@ -404,9 +404,9 @@
     {
       "path": ".claude_context/context_tests.md",
       "extension": ".md",
-      "size_bytes": 135252,
+      "size_bytes": 128232,
       "line_count": 7021,
-      "sha1_short": "3b0c403f9c",
+      "sha1_short": "7d490fefb3",
       "kind": "markdown",
       "module_aliases": [],
       "imports": [],
@@ -522,9 +522,9 @@
     {
       "path": ".claude_context/README.md",
       "extension": ".md",
-      "size_bytes": 114288,
+      "size_bytes": 112917,
       "line_count": 1372,
-      "sha1_short": "f3a35601d3",
+      "sha1_short": "edcddd5484",
       "kind": "markdown",
       "module_aliases": [],
       "imports": [],
@@ -597,9 +597,9 @@
     {
       "path": "ai_full_audit_report.json",
       "extension": ".json",
-      "size_bytes": 526017,
+      "size_bytes": 507412,
       "line_count": 18606,
-      "sha1_short": "baeb7f17ee",
+      "sha1_short": "42ec3e9b71",
       "kind": "config",
       "module_aliases": [],
       "imports": [],
@@ -653,9 +653,9 @@
     {
       "path": "ai_full_audit_report.txt",
       "extension": ".txt",
-      "size_bytes": 90908,
+      "size_bytes": 88991,
       "line_count": 1918,
-      "sha1_short": "55713c766e",
+      "sha1_short": "58f9088941",
       "kind": "text",
       "module_aliases": [],
       "imports": [],
@@ -804,9 +804,9 @@
     {
       "path": "appscript/2_Członkowie Godzinki Imprezy/api_router",
       "extension": "",
-      "size_bytes": 7649,
+      "size_bytes": 7928,
       "line_count": 280,
-      "sha1_short": "f8060d8781",
+      "sha1_short": "f6fbc7c97c",
       "kind": "text",
       "module_aliases": [],
       "imports": [],
@@ -821,9 +821,9 @@
     {
       "path": "appscript/2_Członkowie Godzinki Imprezy/appsscript.json",
       "extension": ".json",
-      "size_bytes": 419,
+      "size_bytes": 432,
       "line_count": 14,
-      "sha1_short": "5944b35859",
+      "sha1_short": "a8a5c63f83",
       "kind": "config",
       "module_aliases": [],
       "imports": [],
@@ -1014,6 +1014,23 @@
           "doc": null
         }
       ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "appscript/2_Członkowie Godzinki Imprezy/env_config.gs",
+      "extension": ".gs",
+      "size_bytes": 2542,
+      "line_count": 67,
+      "sha1_short": "a3061003bd",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
       "top_level_symbols": [],
       "headings": [],
       "config_keys": [],
@@ -1252,9 +1269,9 @@
     {
       "path": "appscript/3_Sprzęt/appsscript.json",
       "extension": ".json",
-      "size_bytes": 370,
+      "size_bytes": 382,
       "line_count": 13,
-      "sha1_short": "568e4153ed",
+      "sha1_short": "a2d4fe4558",
       "kind": "config",
       "module_aliases": [],
       "imports": [],
@@ -1330,9 +1347,9 @@
     {
       "path": "appscript/3_Sprzęt/menu.gs",
       "extension": ".gs",
-      "size_bytes": 162,
+      "size_bytes": 169,
       "line_count": 8,
-      "sha1_short": "fb06cb00bf",
+      "sha1_short": "c01034b169",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -1657,6 +1674,23 @@
           "doc": null
         }
       ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "appscript/5_kilometrówka_archiwum 2025/env_config.gs",
+      "extension": ".gs",
+      "size_bytes": 1234,
+      "line_count": 41,
+      "sha1_short": "b963c20b81",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
       "top_level_symbols": [],
       "headings": [],
       "config_keys": [],
@@ -2014,6 +2048,23 @@
           "doc": null
         }
       ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "appscript/kurs/env_config.gs",
+      "extension": ".gs",
+      "size_bytes": 1196,
+      "line_count": 42,
+      "sha1_short": "5b3a362d44",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
       "top_level_symbols": [],
       "headings": [],
       "config_keys": [],
@@ -3628,6 +3679,76 @@
       "notes": []
     },
     {
+      "path": "DOCS/Sessions & TO DOs/29.08_basen_wdrozenie_i_start_demo.md",
+      "extension": ".md",
+      "size_bytes": 22412,
+      "line_count": 355,
+      "sha1_short": "edb6a6adc8",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# Moduł Basen — podsumowanie wdrożenia + jak uruchomić tryb demo",
+        "## 1. Co zostało zrobione w kodzie",
+        "### Backend — nowy model danych i endpointy",
+        "### Uprawnienia",
+        "### Integracja ze Sprzętem",
+        "### Frontend",
+        "## 2. Jak to przetestowano",
+        "### 2a. Pierwszy przebieg (bez emulatora — patrz 2b, potem odpalony naprawdę)",
+        "### 2b. Drugi przebieg — poprosiłeś o Javę 21 i prawdziwy emulator, więc to zrobiłem",
+        "### 2c. Trzeci przebieg — poprosiłeś o naprawę firebase-functions, więc spróbowałem",
+        "### 2d. Kajaki prywatne na liście wyboru — dodane po Twojej weryfikacji arkusza",
+        "### 2e. `basen_admin_mail` vs `basen_opiekunowie` — uproszczone po rozmowie",
+        "### 2f. Prawdziwy emulator znalazł realnego buga — naprawiony i zweryfikowany",
+        "## 3. Co musisz zrobić Ty, krok po kroku, żeby uruchomić tryb demo",
+        "### Krok 1 — Arkusz sprzętowy: dodaj demo-kajaki",
+        "### Krok 2 — Arkusz App_SETUP: dodaj testerów do `modul_6`",
+        "### Krok 3 — Deploy",
+        "### Krok 4 — Testuj",
+        "### Krok 5 — Cutover na pełną produkcję (dopiero po udanym demo)",
+        "## 4. Stan środowiska lokalnego po tej sesji",
+        "## 5. Pliki zmienione w tej sesji"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "DOCS/Sessions & TO DOs/31.08_basen_deploy_prod_i_diagnostyka.md",
+      "extension": ".md",
+      "size_bytes": 9050,
+      "line_count": 180,
+      "sha1_short": "e0a04ac773",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# Moduł Basen — wdrożenie na produkcję, naprawa deployu, pierwsza diagnostyka demo",
+        "## 1. Deploy na produkcję — trzy nieudane próby, czwarta udana",
+        "### 1a. Nieprawidłowy indeks Firestore",
+        "### 1b. Martwe funkcje blokujące deploy",
+        "### 1c. Zepsuty lockfile — `npm ci` w Cloud Build",
+        "## 2. Cloud Run invoker — 3 nowe funkcje wymagały ręcznego przełączenia",
+        "## 3. Sync arkuszy Google — wykonany, ale bez niezależnej weryfikacji",
+        "## 4. Pierwsze zgłoszenia z testów demo",
+        "### 4a. Admin/opiekun basenowy nie widział modułu wcale",
+        "### 4b. Nazewnictwo w interfejsie — poprawione",
+        "## 5. Ograniczenie środowiska: brak weryfikacji Firestore z tej maszyny",
+        "## 6. Git — problem z push rozwiązany",
+        "## 7. Co zostało do zrobienia"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "DOCS/Sessions & TO DOs/AUDIT_MAP.md",
       "extension": ".md",
       "size_bytes": 11997,
@@ -4956,9 +5077,9 @@
     {
       "path": "firebase.json",
       "extension": ".json",
-      "size_bytes": 12269,
+      "size_bytes": 12250,
       "line_count": 492,
-      "sha1_short": "cde5cf7932",
+      "sha1_short": "027db1cf56",
       "kind": "config",
       "module_aliases": [],
       "imports": [],
@@ -4968,6 +5089,7 @@
       "top_level_symbols": [],
       "headings": [],
       "config_keys": [
+        "emulators",
         "firestore",
         "functions",
         "hosting"
@@ -4977,9 +5099,9 @@
     {
       "path": "firestore.indexes.json",
       "extension": ".json",
-      "size_bytes": 4641,
-      "line_count": 161,
-      "sha1_short": "f9de7c5068",
+      "size_bytes": 4417,
+      "line_count": 153,
+      "sha1_short": "1b0de0dddc",
       "kind": "config",
       "module_aliases": [],
       "imports": [],
@@ -5029,11 +5151,121 @@
       "notes": []
     },
     {
+      "path": "functions/lib/api/adminApprovalHandler.js",
+      "extension": ".js",
+      "size_bytes": 10802,
+      "line_count": 232,
+      "sha1_short": "3914cae49a",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/hours/godzinki_service",
+          "module": "../modules/hours/godzinki_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../modules/hours/godzinki_vars",
+          "module": "../modules/hours/godzinki_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-functions/v2",
+          "module": "firebase-functions/v2",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/hours/godzinki_service.js",
+        "functions/lib/modules/hours/godzinki_vars.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "authorizeAdmin",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "enqueueJob",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "handleAdminApprove",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "handleAdminReject",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "parseKindId",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/lib/api/adminEventsSyncCalendarHandler.js",
       "extension": ".js",
-      "size_bytes": 3724,
-      "line_count": 84,
-      "sha1_short": "052af11811",
+      "size_bytes": 4474,
+      "line_count": 94,
+      "sha1_short": "ea034b4d54",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -5056,7 +5288,82 @@
       "classes": [],
       "functions": [
         {
+          "name": "enqueue",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "handleAdminEventsSyncCalendar",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/api/adminGearReservationCancelHandler.js",
+      "extension": ".js",
+      "size_bytes": 4241,
+      "line_count": 101,
+      "sha1_short": "e258508e95",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/equipment/kayaks/gear_kayaks_service",
+          "module": "../modules/equipment/kayaks/gear_kayaks_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/equipment/kayaks/gear_kayaks_service.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "enqueueJob",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "handleAdminGearReservationCancel",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -5292,9 +5599,9 @@
     {
       "path": "functions/lib/api/basenEnrollHandler.js",
       "extension": ".js",
-      "size_bytes": 4529,
-      "line_count": 89,
-      "sha1_short": "e17cf5038d",
+      "size_bytes": 4634,
+      "line_count": 90,
+      "sha1_short": "287e23359a",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -5374,11 +5681,260 @@
       "notes": []
     },
     {
+      "path": "functions/lib/api/checkNicknameAvailabilityHandler.js",
+      "extension": ".js",
+      "size_bytes": 2507,
+      "line_count": 55,
+      "sha1_short": "6080eeac29",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require firebase-functions/v2",
+          "module": "firebase-functions/v2",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "handleCheckNicknameAvailability",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "normalizeNicknameKey",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/api/DELETE_getModulesHandler.js",
+      "extension": ".js",
+      "size_bytes": 8305,
+      "line_count": 224,
+      "sha1_short": "bf9795aae8",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require cors",
+          "module": "cors",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-functions/v2",
+          "module": "firebase-functions/v2",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-functions/v2/https",
+          "module": "firebase-functions/v2/https",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "deny",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getRequestHost",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getRequestOrigin",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getSetupApp",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isAllowedForRole",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isAllowedHost",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "normalizeHost",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "normalizeOrigin",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "requireAllowedHost",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "requireIdToken",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "sendPreflight",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "setCorsHeaders",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/api/eventInterestToggleHandler.js",
+      "extension": ".js",
+      "size_bytes": 3596,
+      "line_count": 87,
+      "sha1_short": "b304d0bd25",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "handleEventInterestToggle",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/lib/api/gearBundleReservationCreateHandler.js",
       "extension": ".js",
-      "size_bytes": 4181,
-      "line_count": 93,
-      "sha1_short": "0dc1776de3",
+      "size_bytes": 4487,
+      "line_count": 96,
+      "sha1_short": "e1de61ec54",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -5610,9 +6166,9 @@
     {
       "path": "functions/lib/api/gearReservationCreateHandler.js",
       "extension": ".js",
-      "size_bytes": 3702,
-      "line_count": 79,
-      "sha1_short": "a0ba5c7479",
+      "size_bytes": 4513,
+      "line_count": 88,
+      "sha1_short": "18553d2a03",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -5624,8 +6180,8 @@
           "type": "script_import"
         },
         {
-          "raw": "import/require ../modules/equipment/kayaks/gear_kayaks_service",
-          "module": "../modules/equipment/kayaks/gear_kayaks_service",
+          "raw": "import/require ../modules/equipment/bundle/gear_bundle_service",
+          "module": "../modules/equipment/bundle/gear_bundle_service",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -5647,7 +6203,7 @@
       ],
       "internal_dependencies": [
         "functions/lib/modules/calendar/calendar_utils.js",
-        "functions/lib/modules/equipment/kayaks/gear_kayaks_service.js",
+        "functions/lib/modules/equipment/bundle/gear_bundle_service.js",
         "functions/lib/modules/users/userStatusCheck.js"
       ],
       "classes": [],
@@ -5745,14 +6301,557 @@
       "notes": []
     },
     {
-      "path": "functions/lib/api/getAdminPendingHandler.js",
+      "path": "functions/lib/api/getAdminGearRentalsHandler.js",
       "extension": ".js",
-      "size_bytes": 12217,
-      "line_count": 232,
-      "sha1_short": "1984420160",
+      "size_bytes": 8728,
+      "line_count": 202,
+      "sha1_short": "06b5a8c877",
       "kind": "script",
       "module_aliases": [],
       "imports": [
+        {
+          "raw": "import/require firebase-functions/v2",
+          "module": "firebase-functions/v2",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "dateUTCToIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "fullName",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "handleGetAdminGearRentals",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isIsoDate",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isoToDateUTC",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "minusDays",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "minusMonths",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "nickname",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "resolveRange",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "todayWarsawIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/api/getAdminGearTopRentalsHandler.js",
+      "extension": ".js",
+      "size_bytes": 10635,
+      "line_count": 231,
+      "sha1_short": "0d34ac712c",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/calendar/calendar_utils",
+          "module": "../modules/calendar/calendar_utils",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-functions/v2",
+          "module": "firebase-functions/v2",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/calendar/calendar_utils.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "dateUTCToIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "fullName",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "handleGetAdminGearTopRentals",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isIsoDate",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isoToDateUTC",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "minusMonths",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "nickname",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "resolveRange",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "todayWarsawIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/api/getAdminMemberActivityHandler.js",
+      "extension": ".js",
+      "size_bytes": 7631,
+      "line_count": 173,
+      "sha1_short": "580fa07089",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require firebase-functions/v2",
+          "module": "firebase-functions/v2",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "dateUTCToIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "fullName",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "handleGetAdminMemberActivity",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isIsoDate",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isRegistered",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isoToDateUTC",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "minusDays",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "minusMonths",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "nickname",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "resolveRange",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "todayWarsawIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/api/getAdminMemberDuesHandler.js",
+      "extension": ".js",
+      "size_bytes": 6304,
+      "line_count": 130,
+      "sha1_short": "5d9d258852",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/hours/godzinki_service",
+          "module": "../modules/hours/godzinki_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-functions/v2",
+          "module": "firebase-functions/v2",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/hours/godzinki_service.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "fullName",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "handleGetAdminMemberDues",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isRegistered",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "nickname",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "parseContrib",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "todayWarsawIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/api/getAdminPendingHandler.js",
+      "extension": ".js",
+      "size_bytes": 24932,
+      "line_count": 395,
+      "sha1_short": "52713ab115",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/equipment/bundle/gear_bundle_service",
+          "module": "../modules/equipment/bundle/gear_bundle_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../modules/hours/godzinki_service",
+          "module": "../modules/hours/godzinki_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../modules/hours/godzinki_vars",
+          "module": "../modules/hours/godzinki_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
         {
           "raw": "import/require ../service/service_config",
           "module": "../service/service_config",
@@ -5769,10 +6868,33 @@
         }
       ],
       "internal_dependencies": [
+        "functions/lib/modules/equipment/bundle/gear_bundle_service.js",
+        "functions/lib/modules/hours/godzinki_service.js",
+        "functions/lib/modules/hours/godzinki_vars.js",
         "functions/lib/service/service_config.js"
       ],
       "classes": [],
       "functions": [
+        {
+          "name": "docsOf",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "errorOf",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
         {
           "name": "handleGetAdminPending",
           "type": "function",
@@ -5794,7 +6916,192 @@
           "doc": null
         },
         {
+          "name": "snapOf",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "tsToIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/api/getAdminUserActivityHandler.js",
+      "extension": ".js",
+      "size_bytes": 9052,
+      "line_count": 192,
+      "sha1_short": "28cbd60172",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/hours/godzinki_service",
+          "module": "../modules/hours/godzinki_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-functions/v2",
+          "module": "firebase-functions/v2",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/hours/godzinki_service.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "dateUTCToIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "fullName",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "handleGetAdminUserActivity",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isIsoDate",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isoToDateUTC",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "matchesQuery",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "minusDays",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "minusMonths",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "nickname",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "resolveRange",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "serialize",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "todayWarsawIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "tsIso",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -5909,6 +7216,34 @@
       "functions": [
         {
           "name": "handleGetBasenSessions",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/api/getEventInterestsHandler.js",
+      "extension": ".js",
+      "size_bytes": 1576,
+      "line_count": 36,
+      "sha1_short": "68462c2fa4",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "handleGetEventInterests",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -6110,9 +7445,9 @@
     {
       "path": "functions/lib/api/getGearKayaksHandler.js",
       "extension": ".js",
-      "size_bytes": 6736,
-      "line_count": 130,
-      "sha1_short": "e3ead98967",
+      "size_bytes": 6421,
+      "line_count": 126,
+      "sha1_short": "a1b696b220",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -6205,9 +7540,9 @@
     {
       "path": "functions/lib/api/getGodzinkiHandler.js",
       "extension": ".js",
-      "size_bytes": 6145,
-      "line_count": 125,
-      "sha1_short": "9210735e18",
+      "size_bytes": 7631,
+      "line_count": 145,
+      "sha1_short": "6a0a662958",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -6305,11 +7640,77 @@
       "notes": []
     },
     {
+      "path": "functions/lib/api/getKlubInfoHandler.js",
+      "extension": ".js",
+      "size_bytes": 10909,
+      "line_count": 176,
+      "sha1_short": "ee5c0b90cc",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require firebase-functions/v2",
+          "module": "firebase-functions/v2",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "financeAmount",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "fullNameFromUser",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "handleGetKlubInfo",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "singleEmail",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/lib/api/getKursantStatsHandler.js",
       "extension": ".js",
-      "size_bytes": 6050,
-      "line_count": 100,
-      "sha1_short": "1c2f8c75f5",
+      "size_bytes": 5840,
+      "line_count": 95,
+      "sha1_short": "392b81b128",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -6406,17 +7807,191 @@
       "notes": []
     },
     {
+      "path": "functions/lib/api/getModulesHandler.js",
+      "extension": ".js",
+      "size_bytes": 8298,
+      "line_count": 224,
+      "sha1_short": "5337ef2f6f",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require cors",
+          "module": "cors",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-functions/v2",
+          "module": "firebase-functions/v2",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-functions/v2/https",
+          "module": "firebase-functions/v2/https",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "deny",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getRequestHost",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getRequestOrigin",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getSetupApp",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isAllowedForRole",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isAllowedHost",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "normalizeHost",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "normalizeOrigin",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "requireAllowedHost",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "requireIdToken",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "sendPreflight",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "setCorsHeaders",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/lib/api/godzinkiPurchaseHandler.js",
       "extension": ".js",
-      "size_bytes": 3300,
-      "line_count": 73,
-      "sha1_short": "59f97825b8",
+      "size_bytes": 3944,
+      "line_count": 82,
+      "sha1_short": "8acbec5d5a",
       "kind": "script",
       "module_aliases": [],
       "imports": [
         {
           "raw": "import/require ../modules/hours/godzinki_service",
           "module": "../modules/hours/godzinki_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../modules/hours/godzinki_vars",
+          "module": "../modules/hours/godzinki_vars",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -6431,6 +8006,7 @@
       ],
       "internal_dependencies": [
         "functions/lib/modules/hours/godzinki_service.js",
+        "functions/lib/modules/hours/godzinki_vars.js",
         "functions/lib/modules/users/userStatusCheck.js"
       ],
       "classes": [],
@@ -6820,29 +8396,118 @@
       "notes": []
     },
     {
-      "path": "functions/lib/api/registerUserHandler.js",
+      "path": "functions/lib/api/notificationPrefsHandler.js",
       "extension": ".js",
-      "size_bytes": 23307,
-      "line_count": 478,
-      "sha1_short": "fe65d30863",
+      "size_bytes": 3085,
+      "line_count": 65,
+      "sha1_short": "1ef1f130ae",
       "kind": "script",
       "module_aliases": [],
       "imports": [
         {
-          "raw": "import/require ../modules/hours/godzinki_service",
-          "module": "../modules/hours/godzinki_service",
+          "raw": "import/require ../modules/setup/events_vars",
+          "module": "../modules/setup/events_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-functions/v2",
+          "module": "firebase-functions/v2",
           "names": [],
           "level": 0,
           "type": "script_import"
         }
       ],
       "internal_dependencies": [
-        "functions/lib/modules/hours/godzinki_service.js"
+        "functions/lib/modules/setup/events_vars.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "handleNotificationPrefs",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/api/registerUserHandler.js",
+      "extension": ".js",
+      "size_bytes": 38760,
+      "line_count": 717,
+      "sha1_short": "67df6f32fd",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/equipment/bundle/gear_bundle_service",
+          "module": "../modules/equipment/bundle/gear_bundle_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../modules/hours/godzinki_service",
+          "module": "../modules/hours/godzinki_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../modules/hours/godzinki_vars",
+          "module": "../modules/hours/godzinki_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../modules/hours/opening_balance_fields",
+          "module": "../modules/hours/opening_balance_fields",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/equipment/bundle/gear_bundle_service.js",
+        "functions/lib/modules/hours/godzinki_service.js",
+        "functions/lib/modules/hours/godzinki_vars.js",
+        "functions/lib/modules/hours/opening_balance_fields.js"
       ],
       "classes": [],
       "functions": [
         {
           "name": "computeRoleKeyFromOpeningBalance",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "emailExistsInOtherObRow",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "enqueueGodzinkiHistMerge",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -6862,7 +8527,7 @@
           "doc": null
         },
         {
-          "name": "findOpeningBalance",
+          "name": "findNicknameOwnerUid",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -6872,7 +8537,7 @@
           "doc": null
         },
         {
-          "name": "getObHours",
+          "name": "findOpeningBalance",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -6942,6 +8607,16 @@
           "doc": null
         },
         {
+          "name": "normalizeNicknameKey",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "normalizePhone",
           "type": "function",
           "line_start": null,
@@ -6982,6 +8657,36 @@
           "doc": null
         },
         {
+          "name": "resolveKursantEligibility",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "resolveSzkoleniowiec",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "updateObEmail",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "validateIncomingProfile",
           "type": "function",
           "line_start": null,
@@ -7000,9 +8705,9 @@
     {
       "path": "functions/lib/api/submitEventHandler.js",
       "extension": ".js",
-      "size_bytes": 3638,
-      "line_count": 77,
-      "sha1_short": "e06d02cb48",
+      "size_bytes": 4961,
+      "line_count": 97,
+      "sha1_short": "21f590c53c",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -7063,9 +8768,9 @@
     {
       "path": "functions/lib/api/submitGodzinkiHandler.js",
       "extension": ".js",
-      "size_bytes": 4476,
-      "line_count": 98,
-      "sha1_short": "b64a92a717",
+      "size_bytes": 7707,
+      "line_count": 145,
+      "sha1_short": "e0ec9c8553",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -7084,6 +8789,20 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ../modules/hours/godzinki_vars",
+          "module": "../modules/hours/godzinki_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../modules/shared/text_utils",
+          "module": "../modules/shared/text_utils",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ../modules/users/userStatusCheck",
           "module": "../modules/users/userStatusCheck",
           "names": [],
@@ -7094,6 +8813,8 @@
       "internal_dependencies": [
         "functions/lib/modules/calendar/calendar_utils.js",
         "functions/lib/modules/hours/godzinki_service.js",
+        "functions/lib/modules/hours/godzinki_vars.js",
+        "functions/lib/modules/shared/text_utils.js",
         "functions/lib/modules/users/userStatusCheck.js"
       ],
       "classes": [],
@@ -7109,7 +8830,7 @@
           "doc": null
         },
         {
-          "name": "norm",
+          "name": "isTooOldGrantedAt",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -7127,9 +8848,9 @@
     {
       "path": "functions/lib/api/userWeightHandler.js",
       "extension": ".js",
-      "size_bytes": 3359,
-      "line_count": 67,
-      "sha1_short": "72922b67be",
+      "size_bytes": 3159,
+      "line_count": 65,
+      "sha1_short": "0f84d2a6f9",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -7163,15 +8884,29 @@
     {
       "path": "functions/lib/index.js",
       "extension": ".js",
-      "size_bytes": 42999,
-      "line_count": 1098,
-      "sha1_short": "83929db471",
+      "size_bytes": 70391,
+      "line_count": 1615,
+      "sha1_short": "51a8372c84",
       "kind": "script",
       "module_aliases": [],
       "imports": [
         {
+          "raw": "import/require ./api/adminApprovalHandler",
+          "module": "./api/adminApprovalHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ./api/adminEventsSyncCalendarHandler",
           "module": "./api/adminEventsSyncCalendarHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/adminGearReservationCancelHandler",
+          "module": "./api/adminGearReservationCancelHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -7233,6 +8968,20 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ./api/checkNicknameAvailabilityHandler",
+          "module": "./api/checkNicknameAvailabilityHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/eventInterestToggleHandler",
+          "module": "./api/eventInterestToggleHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ./api/gearBundleReservationCreateHandler",
           "module": "./api/gearBundleReservationCreateHandler",
           "names": [],
@@ -7275,8 +9024,43 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ./api/getAdminGearRentalsHandler",
+          "module": "./api/getAdminGearRentalsHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/getAdminGearTopRentalsHandler",
+          "module": "./api/getAdminGearTopRentalsHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/getAdminMemberActivityHandler",
+          "module": "./api/getAdminMemberActivityHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/getAdminMemberDuesHandler",
+          "module": "./api/getAdminMemberDuesHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ./api/getAdminPendingHandler",
           "module": "./api/getAdminPendingHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/getAdminUserActivityHandler",
+          "module": "./api/getAdminUserActivityHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -7298,6 +9082,13 @@
         {
           "raw": "import/require ./api/getBasenSessionsHandler",
           "module": "./api/getBasenSessionsHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/getEventInterestsHandler",
+          "module": "./api/getEventInterestsHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -7347,6 +9138,13 @@
         {
           "raw": "import/require ./api/getKayakReservationsHandler",
           "module": "./api/getKayakReservationsHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/getKlubInfoHandler",
+          "module": "./api/getKlubInfoHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -7429,6 +9227,13 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ./api/notificationPrefsHandler",
+          "module": "./api/notificationPrefsHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ./api/registerUserHandler",
           "module": "./api/registerUserHandler",
           "names": [],
@@ -7457,6 +9262,13 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ./modules/equipment/bundle/gear_bundle_service",
+          "module": "./modules/equipment/bundle/gear_bundle_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ./service/admin/adminRunTask",
           "module": "./service/admin/adminRunTask",
           "names": [],
@@ -7473,6 +9285,13 @@
         {
           "raw": "import/require ./service/service_config",
           "module": "./service/service_config",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./service/triggers/onEventApproved",
+          "module": "./service/triggers/onEventApproved",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -7535,7 +9354,9 @@
         }
       ],
       "internal_dependencies": [
+        "functions/lib/api/adminApprovalHandler.js",
         "functions/lib/api/adminEventsSyncCalendarHandler.js",
+        "functions/lib/api/adminGearReservationCancelHandler.js",
         "functions/lib/api/basenAdminAddGodzinyHandler.js",
         "functions/lib/api/basenAdminCorrectGodzinyHandler.js",
         "functions/lib/api/basenAdminSearchUsersHandler.js",
@@ -7544,16 +9365,24 @@
         "functions/lib/api/basenCreateSessionHandler.js",
         "functions/lib/api/basenEnrollHandler.js",
         "functions/lib/api/basenGrantKarnetHandler.js",
+        "functions/lib/api/checkNicknameAvailabilityHandler.js",
+        "functions/lib/api/eventInterestToggleHandler.js",
         "functions/lib/api/gearBundleReservationCreateHandler.js",
         "functions/lib/api/gearFavoriteToggleHandler.js",
         "functions/lib/api/gearMyReservationsHandler.js",
         "functions/lib/api/gearReservationCancelHandler.js",
         "functions/lib/api/gearReservationCreateHandler.js",
         "functions/lib/api/gearReservationUpdateHandler.js",
+        "functions/lib/api/getAdminGearRentalsHandler.js",
+        "functions/lib/api/getAdminGearTopRentalsHandler.js",
+        "functions/lib/api/getAdminMemberActivityHandler.js",
+        "functions/lib/api/getAdminMemberDuesHandler.js",
         "functions/lib/api/getAdminPendingHandler.js",
+        "functions/lib/api/getAdminUserActivityHandler.js",
         "functions/lib/api/getBasenGodzinyHandler.js",
         "functions/lib/api/getBasenKarnetyHandler.js",
         "functions/lib/api/getBasenSessionsHandler.js",
+        "functions/lib/api/getEventInterestsHandler.js",
         "functions/lib/api/getEventsHandler.js",
         "functions/lib/api/getGearFavoritesHandler.js",
         "functions/lib/api/getGearItemAvailabilityHandler.js",
@@ -7561,6 +9390,7 @@
         "functions/lib/api/getGearKayaksHandler.js",
         "functions/lib/api/getGodzinkiHandler.js",
         "functions/lib/api/getKayakReservationsHandler.js",
+        "functions/lib/api/getKlubInfoHandler.js",
         "functions/lib/api/getKursInfoHandler.js",
         "functions/lib/api/getKursantStatsHandler.js",
         "functions/lib/api/godzinkiPurchaseHandler.js",
@@ -7572,19 +9402,32 @@
         "functions/lib/api/kmMyStatsHandler.js",
         "functions/lib/api/kmPlacesHandler.js",
         "functions/lib/api/kmRankingsHandler.js",
+        "functions/lib/api/notificationPrefsHandler.js",
         "functions/lib/api/registerUserHandler.js",
         "functions/lib/api/submitEventHandler.js",
         "functions/lib/api/submitGodzinkiHandler.js",
         "functions/lib/api/userWeightHandler.js",
+        "functions/lib/modules/equipment/bundle/gear_bundle_service.js",
         "functions/lib/service/admin/adminRunTask.js",
         "functions/lib/service/runner.js",
         "functions/lib/service/service_config.js",
+        "functions/lib/service/triggers/onEventApproved.js",
         "functions/lib/service/triggers/onUsersActiveCreated.js",
         "functions/lib/service/worker/fallbackDailyWorker.js",
         "functions/lib/service/worker/onJobCreatedWorker.js"
       ],
       "classes": [],
       "functions": [
+        {
+          "name": "buildAppsScriptSyncSummary",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
         {
           "name": "computeAllowedActions",
           "type": "function",
@@ -7656,6 +9499,16 @@
           "doc": null
         },
         {
+          "name": "enqueueWorkspaceGroupsRoleSync",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "filterSetupForUser",
           "type": "function",
           "line_start": null,
@@ -7707,6 +9560,16 @@
         },
         {
           "name": "isAllowedHost",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "n",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -7777,6 +9640,16 @@
         },
         {
           "name": "setCorsHeaders",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "verifyGoogleAccessToken",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -7860,9 +9733,9 @@
     {
       "path": "functions/lib/modules/basen/basen_service.js",
       "extension": ".js",
-      "size_bytes": 14978,
-      "line_count": 337,
-      "sha1_short": "2cde698773",
+      "size_bytes": 15197,
+      "line_count": 339,
+      "sha1_short": "a7ef45b726",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -8026,9 +9899,9 @@
     {
       "path": "functions/lib/modules/calendar/calendar_utils.js",
       "extension": ".js",
-      "size_bytes": 2112,
-      "line_count": 55,
-      "sha1_short": "106c78c3bf",
+      "size_bytes": 2305,
+      "line_count": 57,
+      "sha1_short": "5386d74eb2",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -8076,7 +9949,7 @@
           "doc": null
         },
         {
-          "name": "maxEndIsoByWeeks",
+          "name": "maxStartIsoByWeeks",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -8124,9 +9997,9 @@
     {
       "path": "functions/lib/modules/calendar/events_service.js",
       "extension": ".js",
-      "size_bytes": 3318,
-      "line_count": 90,
-      "sha1_short": "2bc060179a",
+      "size_bytes": 3751,
+      "line_count": 97,
+      "sha1_short": "e01599c4e4",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -8202,9 +10075,9 @@
     {
       "path": "functions/lib/modules/equipment/bundle/gear_bundle_service.js",
       "extension": ".js",
-      "size_bytes": 34919,
-      "line_count": 686,
-      "sha1_short": "261077eeed",
+      "size_bytes": 49292,
+      "line_count": 936,
+      "sha1_short": "e895df5c4d",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -8256,11 +10129,19 @@
           "names": [],
           "level": 0,
           "type": "script_import"
+        },
+        {
+          "raw": "import/require ../shared/reservation_limits",
+          "module": "../shared/reservation_limits",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
         }
       ],
       "internal_dependencies": [
         "functions/lib/modules/calendar/calendar_utils.js",
         "functions/lib/modules/equipment/kayaks/gear_kayaks_service.js",
+        "functions/lib/modules/equipment/shared/reservation_limits.js",
         "functions/lib/modules/hours/godzinki_service.js",
         "functions/lib/modules/hours/godzinki_vars.js",
         "functions/lib/modules/hours/hours_quote.js",
@@ -8269,6 +10150,16 @@
       ],
       "classes": [],
       "functions": [
+        {
+          "name": "assertKursantRentalAllowed",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
         {
           "name": "buildCostReason",
           "type": "function",
@@ -8320,16 +10211,6 @@
           "doc": null
         },
         {
-          "name": "countMyOverlappingBundleItems",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
           "name": "createBundleReservation",
           "type": "function",
           "line_start": null,
@@ -8360,7 +10241,47 @@
           "doc": null
         },
         {
+          "name": "formatShortRange",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "getItemsWithAvailability",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getKursWindowEndDay",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getKursWindowEndSuffix",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getKursWypozyczaFlag",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -8381,6 +10302,16 @@
         },
         {
           "name": "getUserRole",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isFreeRentalExempt",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -8411,6 +10342,26 @@
         },
         {
           "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "parseSchoolYear",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "resolveSchoolYear",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -8458,9 +10409,9 @@
     {
       "path": "functions/lib/modules/equipment/kayaks/gear_kayaks_service.js",
       "extension": ".js",
-      "size_bytes": 16021,
-      "line_count": 334,
-      "sha1_short": "8d84ae1aab",
+      "size_bytes": 15399,
+      "line_count": 284,
+      "sha1_short": "74e611b712",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -8505,10 +10456,18 @@
           "names": [],
           "level": 0,
           "type": "script_import"
+        },
+        {
+          "raw": "import/require ../shared/reservation_limits",
+          "module": "../shared/reservation_limits",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
         }
       ],
       "internal_dependencies": [
         "functions/lib/modules/calendar/calendar_utils.js",
+        "functions/lib/modules/equipment/shared/reservation_limits.js",
         "functions/lib/modules/hours/godzinki_service.js",
         "functions/lib/modules/hours/godzinki_vars.js",
         "functions/lib/modules/hours/hours_quote.js",
@@ -8518,27 +10477,17 @@
       "classes": [],
       "functions": [
         {
+          "name": "adminCancelReservation",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "cancelReservation",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "countMyOverlappingItems",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "createReservation",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -8598,16 +10547,6 @@
           "doc": null
         },
         {
-          "name": "uniq",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
           "name": "updateReservationDates",
           "type": "function",
           "line_start": null,
@@ -8626,9 +10565,9 @@
     {
       "path": "functions/lib/modules/equipment/shared/gear_catalog_service.js",
       "extension": ".js",
-      "size_bytes": 5686,
-      "line_count": 131,
-      "sha1_short": "f461122bce",
+      "size_bytes": 5420,
+      "line_count": 129,
+      "sha1_short": "5540895c24",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -8712,11 +10651,79 @@
       "notes": []
     },
     {
+      "path": "functions/lib/modules/equipment/shared/reservation_limits.js",
+      "extension": ".js",
+      "size_bytes": 4172,
+      "line_count": 88,
+      "sha1_short": "5a456e397d",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../../calendar/calendar_utils",
+          "module": "../../calendar/calendar_utils",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/calendar/calendar_utils.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "countItemsByCategory",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "countMyOverlappingItemsByCategory",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "findCategoryOverLimit",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/lib/modules/hours/godzinki_service.js",
       "extension": ".js",
-      "size_bytes": 24787,
-      "line_count": 599,
-      "sha1_short": "9d51a350e8",
+      "size_bytes": 42904,
+      "line_count": 936,
+      "sha1_short": "af83449ad8",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -8742,7 +10749,37 @@
           "doc": null
         },
         {
+          "name": "computeEarnedTotal",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "computeNegativeBalances",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "computeNextExpiry",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "creditApprovedEarn",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -8773,6 +10810,16 @@
         },
         {
           "name": "deductHours",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "deductHoursInTx",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -8822,7 +10869,7 @@
           "doc": null
         },
         {
-          "name": "getRecentEarnings",
+          "name": "markApprovalRejected",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -8843,6 +10890,26 @@
         },
         {
           "name": "refundHoursForReservation",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "refundHoursForReservationInTx",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "reverseDeductHoursInTx",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -8890,6 +10957,16 @@
           "decorators": [],
           "returns": null,
           "doc": null
+        },
+        {
+          "name": "writeWaivedSpendInTx",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
         }
       ],
       "top_level_symbols": [],
@@ -8900,9 +10977,9 @@
     {
       "path": "functions/lib/modules/hours/godzinki_vars.js",
       "extension": ".js",
-      "size_bytes": 816,
-      "line_count": 20,
-      "sha1_short": "4648d590eb",
+      "size_bytes": 1637,
+      "line_count": 32,
+      "sha1_short": "8815cf0563",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -8930,6 +11007,16 @@
           "doc": null
         },
         {
+          "name": "toDateUtc",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "toNumber",
           "type": "function",
           "line_start": null,
@@ -8948,9 +11035,9 @@
     {
       "path": "functions/lib/modules/hours/hours_quote.js",
       "extension": ".js",
-      "size_bytes": 703,
-      "line_count": 16,
-      "sha1_short": "08aa50029b",
+      "size_bytes": 1068,
+      "line_count": 20,
+      "sha1_short": "01cb7ddfe4",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -8969,6 +11056,94 @@
       "functions": [
         {
           "name": "quoteKayaksCostHours",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/modules/hours/opening_balance_fields.js",
+      "extension": ".js",
+      "size_bytes": 4329,
+      "line_count": 97,
+      "sha1_short": "bafddc24f6",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "buildOpeningBalanceAdminPatch",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getObHours",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "normObKey",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "obBool",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "obEmailKey",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "obValueByPrefix",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "obValueExact",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -9165,9 +11340,9 @@
     {
       "path": "functions/lib/modules/km/km_vars.js",
       "extension": ".js",
-      "size_bytes": 1252,
+      "size_bytes": 1206,
       "line_count": 33,
-      "sha1_short": "27d8cffd61",
+      "sha1_short": "6b07a1e5ae",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -9211,11 +11386,117 @@
       "notes": []
     },
     {
+      "path": "functions/lib/modules/setup/app_vars.js",
+      "extension": ".js",
+      "size_bytes": 1126,
+      "line_count": 26,
+      "sha1_short": "10f64ee092",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "getAppVars",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getVar",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "toNumber",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "toStr",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/modules/setup/events_vars.js",
+      "extension": ".js",
+      "size_bytes": 750,
+      "line_count": 18,
+      "sha1_short": "06a802b7e3",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "getEventsVars",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getVar",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "toNumber",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/lib/modules/setup/setup_gear_vars.js",
       "extension": ".js",
-      "size_bytes": 2271,
-      "line_count": 57,
-      "sha1_short": "d9ed5f5799",
+      "size_bytes": 2821,
+      "line_count": 66,
+      "sha1_short": "6e451facd0",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -9274,6 +11555,34 @@
         },
         {
           "name": "toNumber",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/modules/shared/text_utils.js",
+      "extension": ".js",
+      "size_bytes": 350,
+      "line_count": 11,
+      "sha1_short": "30b3c4be73",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "norm",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -9453,9 +11762,9 @@
     {
       "path": "functions/lib/service/providers/googleCalendarProvider.js",
       "extension": ".js",
-      "size_bytes": 2210,
-      "line_count": 58,
-      "sha1_short": "a2de3f7bca",
+      "size_bytes": 3080,
+      "line_count": 76,
+      "sha1_short": "18850fd3d5",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -9518,9 +11827,9 @@
     {
       "path": "functions/lib/service/providers/googleSheetsProvider.js",
       "extension": ".js",
-      "size_bytes": 11986,
-      "line_count": 267,
-      "sha1_short": "ccce3e5d6a",
+      "size_bytes": 21764,
+      "line_count": 469,
+      "sha1_short": "2d022d7275",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -9565,6 +11874,16 @@
           "doc": null
         },
         {
+          "name": "buildLooseRowGetter",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "buildRowValues",
           "type": "function",
           "line_start": null,
@@ -9575,7 +11894,37 @@
           "doc": null
         },
         {
+          "name": "buildRowValuesForUpsert",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "canonicalHeader",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "columnToA1",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "findFirstEmptySlotIndex",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -9613,9 +11962,9 @@
     {
       "path": "functions/lib/service/providers/googleWorkspaceProvider.js",
       "extension": ".js",
-      "size_bytes": 17372,
-      "line_count": 387,
-      "sha1_short": "1cdd1c811e",
+      "size_bytes": 20675,
+      "line_count": 459,
+      "sha1_short": "9260d5b069",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -9688,15 +12037,43 @@
     {
       "path": "functions/lib/service/registry.js",
       "extension": ".js",
-      "size_bytes": 2560,
-      "line_count": 49,
-      "sha1_short": "e8aee1e4a2",
+      "size_bytes": 4695,
+      "line_count": 79,
+      "sha1_short": "0794630731",
       "kind": "script",
       "module_aliases": [],
       "imports": [
         {
+          "raw": "import/require ./tasks/adminApprovalWriteBack",
+          "module": "./tasks/adminApprovalWriteBack",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./tasks/adminNotifyPendingApprovals",
+          "module": "./tasks/adminNotifyPendingApprovals",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ./tasks/basenNotifySessionCancelled",
           "module": "./tasks/basenNotifySessionCancelled",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./tasks/eventsNotifyNew",
+          "module": "./tasks/eventsNotifyNew",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./tasks/eventsNotifyUpcoming",
+          "module": "./tasks/eventsNotifyUpcoming",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -9716,6 +12093,13 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ./tasks/gearNotifyReservationCancelledByAdmin",
+          "module": "./tasks/gearNotifyReservationCancelledByAdmin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ./tasks/gearPrivateStorage",
           "module": "./tasks/gearPrivateStorage",
           "names": [],
@@ -9723,8 +12107,36 @@
           "type": "script_import"
         },
         {
-          "raw": "import/require ./tasks/gearSyncKayaksFromSheet",
-          "module": "./tasks/gearSyncKayaksFromSheet",
+          "raw": "import/require ./tasks/gearSyncAllFromSheet",
+          "module": "./tasks/gearSyncAllFromSheet",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./tasks/godzinkiArchiveSheetRows",
+          "module": "./tasks/godzinkiArchiveSheetRows",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./tasks/godzinkiImportTransitionFromSheet",
+          "module": "./tasks/godzinkiImportTransitionFromSheet",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./tasks/godzinkiMergeHistoricalUser",
+          "module": "./tasks/godzinkiMergeHistoricalUser",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./tasks/godzinkiMonthlyBalanceReview",
+          "module": "./tasks/godzinkiMonthlyBalanceReview",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -9732,6 +12144,13 @@
         {
           "raw": "import/require ./tasks/godzinkiSyncFromSheet",
           "module": "./tasks/godzinkiSyncFromSheet",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./tasks/groupsDiagnose",
+          "module": "./tasks/groupsDiagnose",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -9793,6 +12212,41 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ./tasks/reconcileOpeningBalance",
+          "module": "./tasks/reconcileOpeningBalance",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./tasks/reconcileWorkspaceGroups",
+          "module": "./tasks/reconcileWorkspaceGroups",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./tasks/setupSyncFromSheet",
+          "module": "./tasks/setupSyncFromSheet",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./tasks/usersNotifyAkademikAccessChanged",
+          "module": "./tasks/usersNotifyAkademikAccessChanged",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./tasks/usersSyncFieldsFromSheet",
+          "module": "./tasks/usersSyncFieldsFromSheet",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ./tasks/usersSyncFunctionRolesFromSetup",
           "module": "./tasks/usersSyncFunctionRolesFromSetup",
           "names": [],
@@ -9808,12 +12262,22 @@
         }
       ],
       "internal_dependencies": [
+        "functions/lib/service/tasks/adminApprovalWriteBack.js",
+        "functions/lib/service/tasks/adminNotifyPendingApprovals.js",
         "functions/lib/service/tasks/basenNotifySessionCancelled.js",
+        "functions/lib/service/tasks/eventsNotifyNew.js",
+        "functions/lib/service/tasks/eventsNotifyUpcoming.js",
         "functions/lib/service/tasks/eventsSyncCalendar.js",
         "functions/lib/service/tasks/eventsSyncFromSheet.js",
+        "functions/lib/service/tasks/gearNotifyReservationCancelledByAdmin.js",
         "functions/lib/service/tasks/gearPrivateStorage.js",
-        "functions/lib/service/tasks/gearSyncKayaksFromSheet.js",
+        "functions/lib/service/tasks/gearSyncAllFromSheet.js",
+        "functions/lib/service/tasks/godzinkiArchiveSheetRows.js",
+        "functions/lib/service/tasks/godzinkiImportTransitionFromSheet.js",
+        "functions/lib/service/tasks/godzinkiMergeHistoricalUser.js",
+        "functions/lib/service/tasks/godzinkiMonthlyBalanceReview.js",
         "functions/lib/service/tasks/godzinkiSyncFromSheet.js",
+        "functions/lib/service/tasks/groupsDiagnose.js",
         "functions/lib/service/tasks/kmMergeHistoricalUser.js",
         "functions/lib/service/tasks/kmRebuildMapData.js",
         "functions/lib/service/tasks/kmRebuildRankings.js",
@@ -9822,6 +12286,11 @@
         "functions/lib/service/tasks/listaEnforcePostingPolicy.js",
         "functions/lib/service/tasks/membersSyncToSheet.js",
         "functions/lib/service/tasks/onUserRegisteredWelcome.js",
+        "functions/lib/service/tasks/reconcileOpeningBalance.js",
+        "functions/lib/service/tasks/reconcileWorkspaceGroups.js",
+        "functions/lib/service/tasks/setupSyncFromSheet.js",
+        "functions/lib/service/tasks/usersNotifyAkademikAccessChanged.js",
+        "functions/lib/service/tasks/usersSyncFieldsFromSheet.js",
         "functions/lib/service/tasks/usersSyncFunctionRolesFromSetup.js",
         "functions/lib/service/tasks/usersSyncRolesFromSheet.js"
       ],
@@ -9927,9 +12396,9 @@
     {
       "path": "functions/lib/service/service_config.js",
       "extension": ".js",
-      "size_bytes": 13107,
-      "line_count": 254,
-      "sha1_short": "3ce0688bad",
+      "size_bytes": 13500,
+      "line_count": 261,
+      "sha1_short": "b06d6dcdd0",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -9946,6 +12415,123 @@
       "functions": [
         {
           "name": "getServiceConfig",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/service/tasks/adminApprovalWriteBack.js",
+      "extension": ".js",
+      "size_bytes": 3579,
+      "line_count": 61,
+      "sha1_short": "c7c4cb1bed",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../providers/googleSheetsProvider",
+          "module": "../providers/googleSheetsProvider",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../service_config",
+          "module": "../service_config",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/service/providers/googleSheetsProvider.js",
+        "functions/lib/service/service_config.js"
+      ],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/service/tasks/adminNotifyPendingApprovals.js",
+      "extension": ".js",
+      "size_bytes": 10248,
+      "line_count": 192,
+      "sha1_short": "11c5e326f1",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../../modules/hours/godzinki_vars",
+          "module": "../../modules/hours/godzinki_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../../modules/setup/app_vars",
+          "module": "../../modules/setup/app_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../../modules/shared/text_utils",
+          "module": "../../modules/shared/text_utils",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../service_config",
+          "module": "../service_config",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/hours/godzinki_vars.js",
+        "functions/lib/modules/setup/app_vars.js",
+        "functions/lib/modules/shared/text_utils.js",
+        "functions/lib/service/service_config.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "ageDaysFrom",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "buildPendingDigest",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "resolveDisplayName",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -9999,11 +12585,166 @@
       "notes": []
     },
     {
+      "path": "functions/lib/service/tasks/eventsNotifyNew.js",
+      "extension": ".js",
+      "size_bytes": 4298,
+      "line_count": 85,
+      "sha1_short": "3945f538b3",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../../modules/setup/app_vars",
+          "module": "../../modules/setup/app_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../../modules/shared/text_utils",
+          "module": "../../modules/shared/text_utils",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/setup/app_vars.js",
+        "functions/lib/modules/shared/text_utils.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "buildNewEventEmail",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "dateRange",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/service/tasks/eventsNotifyUpcoming.js",
+      "extension": ".js",
+      "size_bytes": 9781,
+      "line_count": 180,
+      "sha1_short": "3bd26efdee",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../../modules/calendar/calendar_utils",
+          "module": "../../modules/calendar/calendar_utils",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../../modules/setup/app_vars",
+          "module": "../../modules/setup/app_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../../modules/setup/events_vars",
+          "module": "../../modules/setup/events_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../../modules/shared/text_utils",
+          "module": "../../modules/shared/text_utils",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/calendar/calendar_utils.js",
+        "functions/lib/modules/setup/app_vars.js",
+        "functions/lib/modules/setup/events_vars.js",
+        "functions/lib/modules/shared/text_utils.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "buildUpcomingEventEmail",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "dateRange",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "daysUntilIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "selectNewRecipientUids",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/lib/service/tasks/eventsSyncCalendar.js",
       "extension": ".js",
-      "size_bytes": 5176,
-      "line_count": 102,
-      "sha1_short": "2011a3c741",
+      "size_bytes": 8660,
+      "line_count": 176,
+      "sha1_short": "01c14f71f1",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -10017,6 +12758,13 @@
         {
           "raw": "import/require ../service_config",
           "module": "../service_config",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -10047,12 +12795,19 @@
     {
       "path": "functions/lib/service/tasks/eventsSyncFromSheet.js",
       "extension": ".js",
-      "size_bytes": 12449,
-      "line_count": 265,
-      "sha1_short": "fe41de7932",
+      "size_bytes": 25575,
+      "line_count": 479,
+      "sha1_short": "b8300c31ed",
       "kind": "script",
       "module_aliases": [],
       "imports": [
+        {
+          "raw": "import/require ../../modules/shared/text_utils",
+          "module": "../../modules/shared/text_utils",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
         {
           "raw": "import/require ../providers/googleCalendarProvider",
           "module": "../providers/googleCalendarProvider",
@@ -10083,6 +12838,7 @@
         }
       ],
       "internal_dependencies": [
+        "functions/lib/modules/shared/text_utils.js",
         "functions/lib/service/providers/googleCalendarProvider.js",
         "functions/lib/service/providers/googleSheetsProvider.js",
         "functions/lib/service/service_config.js"
@@ -10090,7 +12846,7 @@
       "classes": [],
       "functions": [
         {
-          "name": "isApproved",
+          "name": "buildEventRowPatch",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -10100,7 +12856,17 @@
           "doc": null
         },
         {
-          "name": "norm",
+          "name": "findHeaderCaseInsensitive",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isApproved",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -10118,6 +12884,84 @@
           "decorators": [],
           "returns": null,
           "doc": null
+        },
+        {
+          "name": "shouldScrapAbsentEvent",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/service/tasks/gearNotifyReservationCancelledByAdmin.js",
+      "extension": ".js",
+      "size_bytes": 7171,
+      "line_count": 152,
+      "sha1_short": "a6d75a6f65",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../../modules/setup/app_vars",
+          "module": "../../modules/setup/app_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/setup/app_vars.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "describeItems",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "displayNameOf",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "formatDatePL",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
         }
       ],
       "top_level_symbols": [],
@@ -10128,9 +12972,9 @@
     {
       "path": "functions/lib/service/tasks/gearPrivateStorage.js",
       "extension": ".js",
-      "size_bytes": 13681,
-      "line_count": 286,
-      "sha1_short": "e1d1883786",
+      "size_bytes": 16102,
+      "line_count": 345,
+      "sha1_short": "616cb9909b",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -10156,6 +13000,13 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ../../modules/shared/text_utils",
+          "module": "../../modules/shared/text_utils",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require firebase-admin",
           "module": "firebase-admin",
           "names": [],
@@ -10166,7 +13017,8 @@
       "internal_dependencies": [
         "functions/lib/modules/hours/godzinki_service.js",
         "functions/lib/modules/hours/godzinki_vars.js",
-        "functions/lib/modules/setup/setup_gear_vars.js"
+        "functions/lib/modules/setup/setup_gear_vars.js",
+        "functions/lib/modules/shared/text_utils.js"
       ],
       "classes": [],
       "functions": [
@@ -10191,7 +13043,27 @@
           "doc": null
         },
         {
-          "name": "norm",
+          "name": "processKayakChargeForMonth",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "readPrivateSinceIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "readStorage",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -10202,6 +13074,179 @@
         },
         {
           "name": "toYearMonth",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "tsToIsoYmd",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/service/tasks/gearSyncAllFromSheet.js",
+      "extension": ".js",
+      "size_bytes": 22493,
+      "line_count": 428,
+      "sha1_short": "fd6113492c",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../providers/googleSheetsProvider",
+          "module": "../providers/googleSheetsProvider",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../service_config",
+          "module": "../service_config",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/service/providers/googleSheetsProvider.js",
+        "functions/lib/service/service_config.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "buildDoc",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "classifyGearRows",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "cleanCell",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "flush",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isRealRow",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "parseBool",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "parseNumber",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "parseSheetDate",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "rowNumberLabel",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "sflush",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "syncCategory",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -10290,11 +13335,75 @@
       "notes": []
     },
     {
-      "path": "functions/lib/service/tasks/godzinkiSyncFromSheet.js",
+      "path": "functions/lib/service/tasks/godzinkiArchiveSheetRows.js",
       "extension": ".js",
-      "size_bytes": 10429,
-      "line_count": 212,
-      "sha1_short": "fb4969a3ff",
+      "size_bytes": 3699,
+      "line_count": 75,
+      "sha1_short": "a00b0ee7a6",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../../modules/hours/godzinki_vars",
+          "module": "../../modules/hours/godzinki_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../providers/googleSheetsProvider",
+          "module": "../providers/googleSheetsProvider",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../service_config",
+          "module": "../service_config",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/hours/godzinki_vars.js",
+        "functions/lib/service/providers/googleSheetsProvider.js",
+        "functions/lib/service/service_config.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "isIsoDate",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "selectRowsToArchive",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/service/tasks/godzinkiImportTransitionFromSheet.js",
+      "extension": ".js",
+      "size_bytes": 8915,
+      "line_count": 169,
+      "sha1_short": "319964adb3",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -10308,6 +13417,220 @@
         {
           "raw": "import/require ../../modules/hours/godzinki_vars",
           "module": "../../modules/hours/godzinki_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../../modules/shared/text_utils",
+          "module": "../../modules/shared/text_utils",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../providers/googleSheetsProvider",
+          "module": "../providers/googleSheetsProvider",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../service_config",
+          "module": "../service_config",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/hours/godzinki_service.js",
+        "functions/lib/modules/hours/godzinki_vars.js",
+        "functions/lib/modules/shared/text_utils.js",
+        "functions/lib/service/providers/googleSheetsProvider.js",
+        "functions/lib/service/service_config.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "isApproved",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isIsoDate",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "parseHours",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/service/tasks/godzinkiMergeHistoricalUser.js",
+      "extension": ".js",
+      "size_bytes": 6137,
+      "line_count": 131,
+      "sha1_short": "c16af5bbed",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/service/tasks/godzinkiMonthlyBalanceReview.js",
+      "extension": ".js",
+      "size_bytes": 8560,
+      "line_count": 167,
+      "sha1_short": "f4c3b83064",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../../modules/hours/godzinki_service",
+          "module": "../../modules/hours/godzinki_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../../modules/hours/godzinki_vars",
+          "module": "../../modules/hours/godzinki_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../../modules/setup/app_vars",
+          "module": "../../modules/setup/app_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/hours/godzinki_service.js",
+        "functions/lib/modules/hours/godzinki_vars.js",
+        "functions/lib/modules/setup/app_vars.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "creditBoardMonthlyBonus",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "fmtBalance",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "monthKeyOf",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/service/tasks/godzinkiSyncFromSheet.js",
+      "extension": ".js",
+      "size_bytes": 21384,
+      "line_count": 440,
+      "sha1_short": "26dcd030ee",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../../modules/hours/godzinki_service",
+          "module": "../../modules/hours/godzinki_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../../modules/hours/godzinki_vars",
+          "module": "../../modules/hours/godzinki_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../../modules/shared/text_utils",
+          "module": "../../modules/shared/text_utils",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -10337,11 +13660,32 @@
       "internal_dependencies": [
         "functions/lib/modules/hours/godzinki_service.js",
         "functions/lib/modules/hours/godzinki_vars.js",
+        "functions/lib/modules/shared/text_utils.js",
         "functions/lib/service/providers/googleSheetsProvider.js",
         "functions/lib/service/service_config.js"
       ],
       "classes": [],
       "functions": [
+        {
+          "name": "buildLedgerRowPatch",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "buildPendingCorrection",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
         {
           "name": "isApproved",
           "type": "function",
@@ -10353,7 +13697,27 @@
           "doc": null
         },
         {
-          "name": "norm",
+          "name": "isIsoDate",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "readUserName",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "tsToIsoDate",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -10363,6 +13727,23 @@
           "doc": null
         }
       ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/service/tasks/groupsDiagnose.js",
+      "extension": ".js",
+      "size_bytes": 4853,
+      "line_count": 99,
+      "sha1_short": "3856170617",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
       "top_level_symbols": [],
       "headings": [],
       "config_keys": [],
@@ -10719,13 +14100,23 @@
     {
       "path": "functions/lib/service/tasks/onUserRegisteredWelcome.js",
       "extension": ".js",
-      "size_bytes": 13250,
-      "line_count": 255,
-      "sha1_short": "a4cfa29859",
+      "size_bytes": 13122,
+      "line_count": 249,
+      "sha1_short": "d2cd254060",
       "kind": "script",
       "module_aliases": [],
-      "imports": [],
-      "internal_dependencies": [],
+      "imports": [
+        {
+          "raw": "import/require ../workspaceGroupSync",
+          "module": "../workspaceGroupSync",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/service/workspaceGroupSync.js"
+      ],
       "classes": [],
       "functions": [
         {
@@ -10747,9 +14138,490 @@
           "decorators": [],
           "returns": null,
           "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/service/tasks/reconcileOpeningBalance.js",
+      "extension": ".js",
+      "size_bytes": 12275,
+      "line_count": 233,
+      "sha1_short": "0486bbc08a",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../../modules/hours/godzinki_service",
+          "module": "../../modules/hours/godzinki_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
         },
         {
-          "name": "listaRoleForUserRole",
+          "raw": "import/require ../../modules/hours/godzinki_vars",
+          "module": "../../modules/hours/godzinki_vars",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../../modules/hours/opening_balance_fields",
+          "module": "../../modules/hours/opening_balance_fields",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/hours/godzinki_service.js",
+        "functions/lib/modules/hours/godzinki_vars.js",
+        "functions/lib/modules/hours/opening_balance_fields.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "lower",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/service/tasks/reconcileWorkspaceGroups.js",
+      "extension": ".js",
+      "size_bytes": 9453,
+      "line_count": 191,
+      "sha1_short": "aa2719c872",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../workspaceGroupSync",
+          "module": "../workspaceGroupSync",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/service/workspaceGroupSync.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "enforceTargetStateForUser",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "targetListaRoleFor",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "targetManagedGroupsFor",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/service/tasks/setupSyncFromSheet.js",
+      "extension": ".js",
+      "size_bytes": 16570,
+      "line_count": 362,
+      "sha1_short": "989f2eba80",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../providers/googleSheetsProvider",
+          "module": "../providers/googleSheetsProvider",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../service_config",
+          "module": "../service_config",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/service/providers/googleSheetsProvider.js",
+        "functions/lib/service/service_config.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "g",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "headerMap",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "normalizeHeader",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "parseSetupValue",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "readAppSetupModules",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "readAppSetupRoles",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "readSetupVars",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "rolesAllowedFromFlags",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "splitList",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "toBool",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "toNumberOrNull",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/service/tasks/usersNotifyAkademikAccessChanged.js",
+      "extension": ".js",
+      "size_bytes": 3176,
+      "line_count": 54,
+      "sha1_short": "42772420cb",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/service/tasks/usersSyncFieldsFromSheet.js",
+      "extension": ".js",
+      "size_bytes": 26106,
+      "line_count": 519,
+      "sha1_short": "b1712bfdf3",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../../modules/equipment/bundle/gear_bundle_service",
+          "module": "../../modules/equipment/bundle/gear_bundle_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../providers/googleSheetsProvider",
+          "module": "../providers/googleSheetsProvider",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../service_config",
+          "module": "../service_config",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/equipment/bundle/gear_bundle_service.js",
+        "functions/lib/service/providers/googleSheetsProvider.js",
+        "functions/lib/service/service_config.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "g",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getPath",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "headerMap",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "mapRoleDisplayToKey",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "mapStatusDisplayToKey",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "normalizeBoolish",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "normalizeDateString",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "normalizeHeader",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "toNumberOrNull",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "valuesEqual",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -10767,9 +14639,9 @@
     {
       "path": "functions/lib/service/tasks/usersSyncFunctionRolesFromSetup.js",
       "extension": ".js",
-      "size_bytes": 23071,
-      "line_count": 470,
-      "sha1_short": "4f9c1b324a",
+      "size_bytes": 23320,
+      "line_count": 472,
+      "sha1_short": "2fc9da9ae9",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -10883,9 +14755,9 @@
     {
       "path": "functions/lib/service/tasks/usersSyncRolesFromSheet.js",
       "extension": ".js",
-      "size_bytes": 19617,
-      "line_count": 390,
-      "sha1_short": "b8b21f0b1c",
+      "size_bytes": 15403,
+      "line_count": 290,
+      "sha1_short": "c084101579",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -10911,6 +14783,13 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ../workspaceGroupSync",
+          "module": "../workspaceGroupSync",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require firebase-admin",
           "module": "firebase-admin",
           "names": [],
@@ -10921,22 +14800,13 @@
       "internal_dependencies": [
         "functions/lib/service/providers/googleSheetsProvider.js",
         "functions/lib/service/providers/googleWorkspaceProvider.js",
-        "functions/lib/service/service_config.js"
+        "functions/lib/service/service_config.js",
+        "functions/lib/service/workspaceGroupSync.js"
       ],
       "classes": [],
       "functions": [
         {
           "name": "buildInvertedLabelMap",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "listaRoleForUserRole",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -10954,9 +14824,51 @@
           "decorators": [],
           "returns": null,
           "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/service/triggers/onEventApproved.js",
+      "extension": ".js",
+      "size_bytes": 3973,
+      "line_count": 86,
+      "sha1_short": "27616d7f03",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../service_config",
+          "module": "../service_config",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
         },
         {
-          "name": "syncWorkspaceGroupsForUser",
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require firebase-functions/v2/firestore",
+          "module": "firebase-functions/v2/firestore",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/service/service_config.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "jobIdForNotifyNew",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -11197,11 +15109,79 @@
       "notes": []
     },
     {
+      "path": "functions/lib/service/workspaceGroupSync.js",
+      "extension": ".js",
+      "size_bytes": 5721,
+      "line_count": 132,
+      "sha1_short": "3e5ca50976",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "listaRoleForUserRole",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "syncAllWorkspaceGroupsForRoleChange",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "syncListaGroupForUser",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "syncWorkspaceGroupsForUser",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/package-lock.json",
       "extension": ".json",
-      "size_bytes": 394869,
-      "line_count": 11105,
-      "sha1_short": "612df18c43",
+      "size_bytes": 412121,
+      "line_count": 11556,
+      "sha1_short": "8d797c39b1",
       "kind": "config",
       "module_aliases": [],
       "imports": [],
@@ -11223,7 +15203,7 @@
       "extension": ".json",
       "size_bytes": 982,
       "line_count": 36,
-      "sha1_short": "4cac0de067",
+      "sha1_short": "15a13a3137",
       "kind": "config",
       "module_aliases": [],
       "imports": [],
@@ -11364,7 +15344,9 @@
           "type": "script_import"
         }
       ],
-      "internal_dependencies": [],
+      "internal_dependencies": [
+        "functions/lib/api/getAdminGearRentalsHandler.js"
+      ],
       "classes": [],
       "functions": [
         {
@@ -11407,7 +15389,9 @@
           "type": "script_import"
         }
       ],
-      "internal_dependencies": [],
+      "internal_dependencies": [
+        "functions/lib/api/getKlubInfoHandler.js"
+      ],
       "classes": [],
       "functions": [
         {
@@ -11460,7 +15444,9 @@
           "type": "script_import"
         }
       ],
-      "internal_dependencies": [],
+      "internal_dependencies": [
+        "functions/lib/api/getAdminMemberActivityHandler.js"
+      ],
       "classes": [],
       "functions": [
         {
@@ -12019,9 +16005,9 @@
     {
       "path": "functions/scripts/printFnUrls.js",
       "extension": ".js",
-      "size_bytes": 1016,
+      "size_bytes": 1017,
       "line_count": 19,
-      "sha1_short": "373860dc9b",
+      "sha1_short": "f6ab745060",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -12336,7 +16322,9 @@
           "type": "script_import"
         }
       ],
-      "internal_dependencies": [],
+      "internal_dependencies": [
+        "functions/lib/service/tasks/reconcileOpeningBalance.js"
+      ],
       "classes": [],
       "functions": [],
       "top_level_symbols": [],
@@ -12675,137 +16663,11 @@
       "notes": []
     },
     {
-      "path": "functions/src/api/basenAdminAddGodzinyHandler.ts",
-      "extension": ".ts",
-      "size_bytes": 2819,
-      "line_count": 85,
-      "sha1_short": "3035860621",
-      "kind": "script",
-      "module_aliases": [],
-      "imports": [
-        {
-          "raw": "import/require ../modules/basen/basen_godziny_service",
-          "module": "../modules/basen/basen_godziny_service",
-          "names": [],
-          "level": 0,
-          "type": "script_import"
-        },
-        {
-          "raw": "import/require express",
-          "module": "express",
-          "names": [],
-          "level": 0,
-          "type": "script_import"
-        }
-      ],
-      "internal_dependencies": [
-        "functions/src/modules/basen/basen_godziny_service.ts"
-      ],
-      "classes": [],
-      "functions": [
-        {
-          "name": "handleBasenAdminAddGodziny",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        }
-      ],
-      "top_level_symbols": [],
-      "headings": [],
-      "config_keys": [],
-      "notes": []
-    },
-    {
-      "path": "functions/src/api/basenAdminCorrectGodzinyHandler.ts",
-      "extension": ".ts",
-      "size_bytes": 2958,
-      "line_count": 86,
-      "sha1_short": "50569056f3",
-      "kind": "script",
-      "module_aliases": [],
-      "imports": [
-        {
-          "raw": "import/require ../modules/basen/basen_godziny_service",
-          "module": "../modules/basen/basen_godziny_service",
-          "names": [],
-          "level": 0,
-          "type": "script_import"
-        },
-        {
-          "raw": "import/require express",
-          "module": "express",
-          "names": [],
-          "level": 0,
-          "type": "script_import"
-        }
-      ],
-      "internal_dependencies": [
-        "functions/src/modules/basen/basen_godziny_service.ts"
-      ],
-      "classes": [],
-      "functions": [
-        {
-          "name": "handleBasenAdminCorrectGodziny",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        }
-      ],
-      "top_level_symbols": [],
-      "headings": [],
-      "config_keys": [],
-      "notes": []
-    },
-    {
-      "path": "functions/src/api/basenAdminSearchUsersHandler.ts",
-      "extension": ".ts",
-      "size_bytes": 2900,
-      "line_count": 87,
-      "sha1_short": "aa59ca3fd2",
-      "kind": "script",
-      "module_aliases": [],
-      "imports": [
-        {
-          "raw": "import/require express",
-          "module": "express",
-          "names": [],
-          "level": 0,
-          "type": "script_import"
-        }
-      ],
-      "internal_dependencies": [],
-      "classes": [],
-      "functions": [
-        {
-          "name": "handleBasenAdminSearchUsers",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        }
-      ],
-      "top_level_symbols": [],
-      "headings": [],
-      "config_keys": [],
-      "notes": []
-    },
-    {
       "path": "functions/src/api/basenCancelEnrollmentHandler.ts",
       "extension": ".ts",
-      "size_bytes": 1942,
-      "line_count": 59,
-      "sha1_short": "8563c10b2c",
+      "size_bytes": 2117,
+      "line_count": 63,
+      "sha1_short": "5f947279a1",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -12848,9 +16710,9 @@
     {
       "path": "functions/src/api/basenCancelSessionHandler.ts",
       "extension": ".ts",
-      "size_bytes": 2452,
-      "line_count": 73,
-      "sha1_short": "3faff963a5",
+      "size_bytes": 2999,
+      "line_count": 82,
+      "sha1_short": "51a8c5e72f",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -12893,9 +16755,9 @@
     {
       "path": "functions/src/api/basenCreateSessionHandler.ts",
       "extension": ".ts",
-      "size_bytes": 2899,
-      "line_count": 87,
-      "sha1_short": "ad7a8b1ccf",
+      "size_bytes": 3824,
+      "line_count": 105,
+      "sha1_short": "2bc8d7f7d0",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -12928,6 +16790,16 @@
           "decorators": [],
           "returns": null,
           "doc": null
+        },
+        {
+          "name": "readTimeBlock",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
         }
       ],
       "top_level_symbols": [],
@@ -12938,9 +16810,9 @@
     {
       "path": "functions/src/api/basenEnrollHandler.ts",
       "extension": ".ts",
-      "size_bytes": 4044,
-      "line_count": 112,
-      "sha1_short": "c625e14509",
+      "size_bytes": 5908,
+      "line_count": 157,
+      "sha1_short": "7378eba6cd",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -12991,9 +16863,9 @@
     {
       "path": "functions/src/api/basenGrantKarnetHandler.ts",
       "extension": ".ts",
-      "size_bytes": 2976,
-      "line_count": 85,
-      "sha1_short": "9b14d05744",
+      "size_bytes": 3171,
+      "line_count": 87,
+      "sha1_short": "be72d9d199",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -13019,6 +16891,51 @@
       "functions": [
         {
           "name": "handleBasenGrantKarnet",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/src/api/basenSetKayakHandler.ts",
+      "extension": ".ts",
+      "size_bytes": 2096,
+      "line_count": 58,
+      "sha1_short": "5b342f2480",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/basen/basen_service",
+          "module": "../modules/basen/basen_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require express",
+          "module": "express",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/src/modules/basen/basen_service.ts"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "handleBasenSetKayak",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -14388,17 +18305,17 @@
       "notes": []
     },
     {
-      "path": "functions/src/api/getBasenGodzinyHandler.ts",
+      "path": "functions/src/api/getBasenAttendeesHandler.ts",
       "extension": ".ts",
-      "size_bytes": 2235,
-      "line_count": 62,
-      "sha1_short": "6e57b03617",
+      "size_bytes": 1638,
+      "line_count": 45,
+      "sha1_short": "8ab7343992",
       "kind": "script",
       "module_aliases": [],
       "imports": [
         {
-          "raw": "import/require ../modules/basen/basen_godziny_service",
-          "module": "../modules/basen/basen_godziny_service",
+          "raw": "import/require ../modules/basen/basen_service",
+          "module": "../modules/basen/basen_service",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -14412,12 +18329,12 @@
         }
       ],
       "internal_dependencies": [
-        "functions/src/modules/basen/basen_godziny_service.ts"
+        "functions/src/modules/basen/basen_service.ts"
       ],
       "classes": [],
       "functions": [
         {
-          "name": "handleGetBasenGodziny",
+          "name": "handleGetBasenAttendees",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -14478,11 +18395,56 @@
       "notes": []
     },
     {
+      "path": "functions/src/api/getBasenKayaksHandler.ts",
+      "extension": ".ts",
+      "size_bytes": 1640,
+      "line_count": 45,
+      "sha1_short": "91b45f0f7e",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/basen/basen_service",
+          "module": "../modules/basen/basen_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require express",
+          "module": "express",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/src/modules/basen/basen_service.ts"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "handleGetBasenKayaks",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/src/api/getBasenSessionsHandler.ts",
       "extension": ".ts",
-      "size_bytes": 2706,
-      "line_count": 75,
-      "sha1_short": "1e6535a7ae",
+      "size_bytes": 2950,
+      "line_count": 83,
+      "sha1_short": "daf6e6ec98",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -15718,12 +19680,19 @@
     {
       "path": "functions/src/api/registerUserHandler.ts",
       "extension": ".ts",
-      "size_bytes": 35430,
-      "line_count": 903,
-      "sha1_short": "19fbc09d3d",
+      "size_bytes": 36045,
+      "line_count": 916,
+      "sha1_short": "2225ff91cb",
       "kind": "script",
       "module_aliases": [],
       "imports": [
+        {
+          "raw": "import/require ../modules/basen/basen_service",
+          "module": "../modules/basen/basen_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
         {
           "raw": "import/require ../modules/equipment/bundle/gear_bundle_service",
           "module": "../modules/equipment/bundle/gear_bundle_service",
@@ -15768,6 +19737,7 @@
         }
       ],
       "internal_dependencies": [
+        "functions/src/modules/basen/basen_service.ts",
         "functions/src/modules/equipment/bundle/gear_bundle_service.ts",
         "functions/src/modules/hours/godzinki_service.ts",
         "functions/src/modules/hours/godzinki_vars.ts",
@@ -16194,9 +20164,9 @@
     {
       "path": "functions/src/index.ts",
       "extension": ".ts",
-      "size_bytes": 59912,
-      "line_count": 1782,
-      "sha1_short": "a6401274ad",
+      "size_bytes": 59337,
+      "line_count": 1762,
+      "sha1_short": "7ea6182a50",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -16217,27 +20187,6 @@
         {
           "raw": "import/require ./api/adminGearReservationCancelHandler",
           "module": "./api/adminGearReservationCancelHandler",
-          "names": [],
-          "level": 0,
-          "type": "script_import"
-        },
-        {
-          "raw": "import/require ./api/basenAdminAddGodzinyHandler",
-          "module": "./api/basenAdminAddGodzinyHandler",
-          "names": [],
-          "level": 0,
-          "type": "script_import"
-        },
-        {
-          "raw": "import/require ./api/basenAdminCorrectGodzinyHandler",
-          "module": "./api/basenAdminCorrectGodzinyHandler",
-          "names": [],
-          "level": 0,
-          "type": "script_import"
-        },
-        {
-          "raw": "import/require ./api/basenAdminSearchUsersHandler",
-          "module": "./api/basenAdminSearchUsersHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -16273,6 +20222,13 @@
         {
           "raw": "import/require ./api/basenGrantKarnetHandler",
           "module": "./api/basenGrantKarnetHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/basenSetKayakHandler",
+          "module": "./api/basenSetKayakHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -16376,8 +20332,8 @@
           "type": "script_import"
         },
         {
-          "raw": "import/require ./api/getBasenGodzinyHandler",
-          "module": "./api/getBasenGodzinyHandler",
+          "raw": "import/require ./api/getBasenAttendeesHandler",
+          "module": "./api/getBasenAttendeesHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -16385,6 +20341,13 @@
         {
           "raw": "import/require ./api/getBasenKarnetyHandler",
           "module": "./api/getBasenKarnetyHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/getBasenKayaksHandler",
+          "module": "./api/getBasenKayaksHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -16674,14 +20637,12 @@
         "functions/src/api/adminApprovalHandler.ts",
         "functions/src/api/adminEventsSyncCalendarHandler.ts",
         "functions/src/api/adminGearReservationCancelHandler.ts",
-        "functions/src/api/basenAdminAddGodzinyHandler.ts",
-        "functions/src/api/basenAdminCorrectGodzinyHandler.ts",
-        "functions/src/api/basenAdminSearchUsersHandler.ts",
         "functions/src/api/basenCancelEnrollmentHandler.ts",
         "functions/src/api/basenCancelSessionHandler.ts",
         "functions/src/api/basenCreateSessionHandler.ts",
         "functions/src/api/basenEnrollHandler.ts",
         "functions/src/api/basenGrantKarnetHandler.ts",
+        "functions/src/api/basenSetKayakHandler.ts",
         "functions/src/api/checkNicknameAvailabilityHandler.ts",
         "functions/src/api/eventInterestToggleHandler.ts",
         "functions/src/api/gearBundleReservationCreateHandler.ts",
@@ -16696,8 +20657,9 @@
         "functions/src/api/getAdminMemberDuesHandler.ts",
         "functions/src/api/getAdminPendingHandler.ts",
         "functions/src/api/getAdminUserActivityHandler.ts",
-        "functions/src/api/getBasenGodzinyHandler.ts",
+        "functions/src/api/getBasenAttendeesHandler.ts",
         "functions/src/api/getBasenKarnetyHandler.ts",
+        "functions/src/api/getBasenKayaksHandler.ts",
         "functions/src/api/getBasenSessionsHandler.ts",
         "functions/src/api/getEventInterestsHandler.ts",
         "functions/src/api/getEventsHandler.ts",
@@ -16982,80 +20944,21 @@
       "notes": []
     },
     {
-      "path": "functions/src/modules/basen/basen_godziny_service.ts",
-      "extension": ".ts",
-      "size_bytes": 3320,
-      "line_count": 99,
-      "sha1_short": "60f3328bb9",
-      "kind": "script",
-      "module_aliases": [],
-      "imports": [
-        {
-          "raw": "import/require firebase-admin",
-          "module": "firebase-admin",
-          "names": [],
-          "level": 0,
-          "type": "script_import"
-        }
-      ],
-      "internal_dependencies": [],
-      "classes": [],
-      "functions": [
-        {
-          "name": "adminAddBasenGodziny",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "adminCorrectBasenGodziny",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "computeBasenGodzinyBalance",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "getBasenGodzinyRecords",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        }
-      ],
-      "top_level_symbols": [],
-      "headings": [],
-      "config_keys": [],
-      "notes": []
-    },
-    {
       "path": "functions/src/modules/basen/basen_service.ts",
       "extension": ".ts",
-      "size_bytes": 14781,
-      "line_count": 456,
-      "sha1_short": "cd2f2305e0",
+      "size_bytes": 29165,
+      "line_count": 758,
+      "sha1_short": "3eb70c9bdd",
       "kind": "script",
       "module_aliases": [],
       "imports": [
+        {
+          "raw": "import/require ../setup/function_roles_service",
+          "module": "../setup/function_roles_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
         {
           "raw": "import/require firebase-admin",
           "module": "firebase-admin",
@@ -17064,7 +20967,9 @@
           "type": "script_import"
         }
       ],
-      "internal_dependencies": [],
+      "internal_dependencies": [
+        "functions/src/modules/setup/function_roles_service.ts"
+      ],
       "classes": [],
       "functions": [
         {
@@ -17098,7 +21003,17 @@
           "doc": null
         },
         {
-          "name": "enrollInSession",
+          "name": "enrollInSlot",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "enrollmentId",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -17158,6 +21073,36 @@
           "doc": null
         },
         {
+          "name": "kayakAllocationId",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "listAvailableBasenKayaks",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "listSlotAttendees",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "listUpcomingSessions",
           "type": "function",
           "line_start": null,
@@ -17188,7 +21133,37 @@
           "doc": null
         },
         {
-          "name": "sessionDatetimeMs",
+          "name": "resolveBasenAdminGrant",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "sessionSlotDatetimeMs",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "setEnrollmentKayak",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "splitEmails",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -17392,9 +21367,9 @@
     {
       "path": "functions/src/modules/equipment/bundle/gear_bundle_service.ts",
       "extension": ".ts",
-      "size_bytes": 44279,
-      "line_count": 1113,
-      "sha1_short": "07b33577c9",
+      "size_bytes": 45149,
+      "line_count": 1129,
+      "sha1_short": "3cebcbea59",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -18834,6 +22809,44 @@
       "notes": []
     },
     {
+      "path": "functions/src/modules/setup/function_roles_service.ts",
+      "extension": ".ts",
+      "size_bytes": 1335,
+      "line_count": 34,
+      "sha1_short": "1e2b69892a",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "resolveFunctionRoleEmail",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "singleEmail",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/src/modules/setup/setup_gear_vars.ts",
       "extension": ".ts",
       "size_bytes": 3165,
@@ -19744,9 +23757,9 @@
     {
       "path": "functions/src/service/service_config.ts",
       "extension": ".ts",
-      "size_bytes": 13477,
-      "line_count": 365,
-      "sha1_short": "155e2f69dc",
+      "size_bytes": 13322,
+      "line_count": 356,
+      "sha1_short": "e3d8e9a52a",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -19913,9 +23926,9 @@
     {
       "path": "functions/src/service/tasks/basenNotifySessionCancelled.ts",
       "extension": ".ts",
-      "size_bytes": 3023,
-      "line_count": 103,
-      "sha1_short": "c807587269",
+      "size_bytes": 3267,
+      "line_count": 97,
+      "sha1_short": "8aa5cddc2e",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -21984,9 +25997,9 @@
     {
       "path": "functions/src/service/tasks/usersSyncFieldsFromSheet.ts",
       "extension": ".ts",
-      "size_bytes": 22485,
-      "line_count": 532,
-      "sha1_short": "002dbc82dc",
+      "size_bytes": 22815,
+      "line_count": 538,
+      "sha1_short": "c867975299",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -23198,9 +27211,9 @@
     {
       "path": "project_context.py",
       "extension": ".py",
-      "size_bytes": 33030,
+      "size_bytes": 34173,
       "line_count": 1144,
-      "sha1_short": "b2a4d6c779",
+      "sha1_short": "7510201f16",
       "kind": "python",
       "module_aliases": [
         "project_context"
@@ -23821,9 +27834,9 @@
     {
       "path": "public/core/app_shell.js",
       "extension": ".js",
-      "size_bytes": 8664,
-      "line_count": 268,
-      "sha1_short": "fe6df0e712",
+      "size_bytes": 9108,
+      "line_count": 276,
+      "sha1_short": "0fda52f191",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -23844,6 +27857,13 @@
         {
           "raw": "import/require /core/render_shell.js",
           "module": "/core/render_shell.js",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require /core/router.js",
+          "module": "/core/router.js",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -24208,9 +28228,9 @@
     {
       "path": "public/core/render_shell.js",
       "extension": ".js",
-      "size_bytes": 77685,
-      "line_count": 1747,
-      "sha1_short": "52e1ef6433",
+      "size_bytes": 78248,
+      "line_count": 1761,
+      "sha1_short": "376cb4ee55",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -25222,9 +29242,9 @@
     {
       "path": "public/modules/basen_module.js",
       "extension": ".js",
-      "size_bytes": 24162,
-      "line_count": 620,
-      "sha1_short": "ffe5d100b9",
+      "size_bytes": 36796,
+      "line_count": 902,
+      "sha1_short": "fb2aaca372",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -25241,6 +29261,16 @@
       "functions": [
         {
           "name": "bindAdminActions",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "bindAttendeesDetails",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -25300,7 +29330,37 @@
           "doc": null
         },
         {
+          "name": "kayakLabel",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "refreshSessionsView",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "renderAdminView",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "renderAttendeesBody",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -25331,6 +29391,16 @@
         },
         {
           "name": "renderSessionsView",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "renderSlotCard",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -25438,9 +29508,9 @@
     {
       "path": "public/modules/gear_module.js",
       "extension": ".js",
-      "size_bytes": 98252,
-      "line_count": 2320,
-      "sha1_short": "0edb6cd777",
+      "size_bytes": 99156,
+      "line_count": 2335,
+      "sha1_short": "7e249c726b",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -28117,9 +32187,9 @@
     {
       "path": "public/styles/basen.css",
       "extension": ".css",
-      "size_bytes": 4666,
-      "line_count": 266,
-      "sha1_short": "14e629a12c",
+      "size_bytes": 6398,
+      "line_count": 367,
+      "sha1_short": "27590cdd78",
       "kind": "text",
       "module_aliases": [],
       "imports": [],
@@ -28236,9 +32306,9 @@
     {
       "path": "public/styles/start.css",
       "extension": ".css",
-      "size_bytes": 11504,
-      "line_count": 310,
-      "sha1_short": "0ef81676a8",
+      "size_bytes": 11613,
+      "line_count": 312,
+      "sha1_short": "cd0281fc69",
       "kind": "text",
       "module_aliases": [],
       "imports": [],
@@ -28255,7 +32325,7 @@
       "extension": ".js",
       "size_bytes": 5447,
       "line_count": 157,
-      "sha1_short": "ca1bcfe237",
+      "sha1_short": "fcbf945828",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -28339,9 +32409,9 @@
     {
       "path": "tests/e2e/.gitignore",
       "extension": "",
-      "size_bytes": 141,
+      "size_bytes": 142,
       "line_count": 11,
-      "sha1_short": "17f1fd5290",
+      "sha1_short": "aa79bd3387",
       "kind": "text",
       "module_aliases": [],
       "imports": [],
@@ -29898,6 +33968,25 @@
       "notes": []
     },
     {
+      "path": "tests/e2e/oauth_client.json",
+      "extension": ".json",
+      "size_bytes": 403,
+      "line_count": 1,
+      "sha1_short": "8ec31dd2a5",
+      "kind": "config",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [
+        "installed"
+      ],
+      "notes": []
+    },
+    {
       "path": "tests/e2e/phase0_sheet_fixes.py",
       "extension": ".py",
       "size_bytes": 3801,
@@ -30987,6 +35076,224 @@
       "top_level_symbols": [
         "_HERE"
       ],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "tests/e2e/reports/e2e_prod_20260409_100718.json",
+      "extension": ".json",
+      "size_bytes": 3161,
+      "line_count": 101,
+      "sha1_short": "ad87f8bfaa",
+      "kind": "config",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [
+        "duration_s",
+        "env",
+        "failed",
+        "passed",
+        "phases",
+        "skipped",
+        "timestamp",
+        "total"
+      ],
+      "notes": []
+    },
+    {
+      "path": "tests/e2e/reports/e2e_prod_20260409_100718.md",
+      "extension": ".md",
+      "size_bytes": 1758,
+      "line_count": 34,
+      "sha1_short": "57a5f4eb3c",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# E2E Test Report — PROD",
+        "## Phases"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "tests/e2e/reports/e2e_prod_20260409_120139.json",
+      "extension": ".json",
+      "size_bytes": 2921,
+      "line_count": 103,
+      "sha1_short": "2d94ab91d2",
+      "kind": "config",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [
+        "duration_s",
+        "env",
+        "failed",
+        "passed",
+        "phases",
+        "skipped",
+        "timestamp",
+        "total"
+      ],
+      "notes": []
+    },
+    {
+      "path": "tests/e2e/reports/e2e_prod_20260409_120139.md",
+      "extension": ".md",
+      "size_bytes": 1500,
+      "line_count": 21,
+      "sha1_short": "3ee473fd3f",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# E2E Test Report — PROD",
+        "## Phases"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "tests/e2e/reports/e2e_prod_20260409_120535.json",
+      "extension": ".json",
+      "size_bytes": 3695,
+      "line_count": 117,
+      "sha1_short": "fbb5b3beae",
+      "kind": "config",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [
+        "duration_s",
+        "env",
+        "failed",
+        "passed",
+        "phases",
+        "skipped",
+        "timestamp",
+        "total"
+      ],
+      "notes": []
+    },
+    {
+      "path": "tests/e2e/reports/e2e_prod_20260409_120535.md",
+      "extension": ".md",
+      "size_bytes": 1750,
+      "line_count": 21,
+      "sha1_short": "10b142bbf7",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# E2E Test Report — PROD",
+        "## Phases"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "tests/e2e/reports/e2e_prod_20260409_144924.json",
+      "extension": ".json",
+      "size_bytes": 3563,
+      "line_count": 114,
+      "sha1_short": "d1cc576ff8",
+      "kind": "config",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [
+        "duration_s",
+        "env",
+        "failed",
+        "passed",
+        "phases",
+        "skipped",
+        "timestamp",
+        "total"
+      ],
+      "notes": []
+    },
+    {
+      "path": "tests/e2e/reports/e2e_prod_20260409_144924.md",
+      "extension": ".md",
+      "size_bytes": 1716,
+      "line_count": 21,
+      "sha1_short": "e72481ae63",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# E2E Test Report — PROD",
+        "## Phases"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "tests/e2e/reports/events_e2e_run.txt",
+      "extension": ".txt",
+      "size_bytes": 8703,
+      "line_count": 110,
+      "sha1_short": "a147fbb682",
+      "kind": "text",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "tests/e2e/reports/godzinki_e2e_run.txt",
+      "extension": ".txt",
+      "size_bytes": 5149,
+      "line_count": 57,
+      "sha1_short": "8069a2c2ca",
+      "kind": "text",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
       "headings": [],
       "config_keys": [],
       "notes": []

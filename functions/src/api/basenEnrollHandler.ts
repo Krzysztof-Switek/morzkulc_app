@@ -1,5 +1,5 @@
 import type {Request, Response} from "express";
-import {enrollInSlot, getActiveKarnet, getBasenVars, BasenSlotLabel} from "../modules/basen/basen_service";
+import {enrollInSlot, getBasenVars, BasenSlotLabel} from "../modules/basen/basen_service";
 import {isUserStatusBlocked} from "../modules/users/userStatusCheck";
 
 type Deps = {
@@ -104,30 +104,6 @@ export async function handleBasenEnroll(req: Request, res: Response, deps: Deps)
         return;
       }
 
-      let paymentType: "karnet" | "jednorazowe" | undefined;
-      let karnetId: string | undefined;
-
-      if (mode !== "instructor") {
-        paymentType = String(body.paymentType || "").trim() as "karnet" | "jednorazowe";
-        if (!["karnet", "jednorazowe"].includes(paymentType)) {
-          res.status(400).json({error: "paymentType musi być 'karnet' lub 'jednorazowe'."});
-          return;
-        }
-
-        if (paymentType === "karnet") {
-          const activeKarnet = await getActiveKarnet(deps.db, uid);
-          if (!activeKarnet) {
-            res.status(400).json({error: "Nie masz aktywnego karnetu."});
-            return;
-          }
-          if (activeKarnet.totalEntries - activeKarnet.usedEntries <= 0) {
-            res.status(400).json({error: "Karnet nie ma już dostępnych wejść."});
-            return;
-          }
-          karnetId = activeKarnet.id;
-        }
-      }
-
       // Waliduje istnienie configu (spójne z dotychczasowym zachowaniem).
       await getBasenVars(deps.db);
 
@@ -139,8 +115,6 @@ export async function handleBasenEnroll(req: Request, res: Response, deps: Deps)
         displayName: userDisplayName,
         mode,
         instructorUid: mode === "training" ? instructorUid : undefined,
-        paymentType,
-        karnetId,
         kayakId: kayakId || undefined,
       });
 
@@ -148,7 +122,7 @@ export async function handleBasenEnroll(req: Request, res: Response, deps: Deps)
     } catch (err) {
       const e = err as {message?: string};
       const msg = e?.message || String(err);
-      const clientPatterns = ["pełny", "anulowan", "już zapisany", "nie istnieje", "zajęty", "dostępny", "wejść", "aktywny", "należy"];
+      const clientPatterns = ["pełny", "anulowan", "już zapisany", "nie istnieje", "zajęty", "dostępny"];
       const status = clientPatterns.some((p) => msg.includes(p)) ? 400 : 500;
       res.status(status).json({error: msg});
     }

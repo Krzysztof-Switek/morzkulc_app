@@ -7,10 +7,8 @@ const NAV_HOME_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height=
 const SESSIONS_URL = "/api/basen/sessions";
 const ENROLL_URL = "/api/basen/enroll";
 const CANCEL_ENROLL_URL = "/api/basen/cancel-enrollment";
-const KARNETY_URL = "/api/basen/karnety";
 const CREATE_SESSION_URL = "/api/basen/sessions/create";
 const CANCEL_SESSION_URL = "/api/basen/sessions/cancel";
-const GRANT_KARNET_URL = "/api/basen/karnety/grant";
 const SET_KAYAK_URL = "/api/basen/kayak";
 const KAYAKS_URL = "/api/basen/kayaks";
 const ATTENDEES_URL = "/api/basen/attendees";
@@ -46,16 +44,6 @@ function formatDate(iso) {
   return `${m[3]}.${m[2]}.${m[1]} (${dayName})`;
 }
 
-function karnetStatusLabel(status) {
-  switch (status) {
-  case "active": return "Aktywny";
-  case "exhausted": return "Wykorzystany";
-  case "expired": return "Wygasły";
-  case "pending": return "Oczekuje";
-  default: return status;
-  }
-}
-
 function kayakLabel(kayakId) {
   if (!kayakId) return "Brak";
   if (kayakId === "PRIVATE") return "Kajak prywatny";
@@ -67,7 +55,6 @@ function kayakLabel(kayakId) {
 function renderTabsHtml(activeTab, isAdmin) {
   const tabs = [
     { id: "sessions", label: "Baseny" },
-    { id: "karnet", label: "Mój karnet" },
   ];
   if (isAdmin) tabs.push({ id: "admin", label: "Zarządzanie" });
 
@@ -171,10 +158,9 @@ function renderSlotCard(sessionId, slotKey, slot, ctx, canEnroll) {
     `;
   } else if (isParticipantEnrolled) {
     const typeLabel = slot.userEnrollmentType === "training" ? "z instruktorem" : "";
-    const paymentLabel = slot.userPaymentType === "karnet" ? "karnet" : "jednorazowe";
     footerHtml = `
       <div class="basenEnrolledInfo">
-        <div class="basenEnrolledBadge">Zapisany/a ${esc(typeLabel)} (${esc(paymentLabel)})</div>
+        <div class="basenEnrolledBadge">Zapisany/a${typeLabel ? ` ${esc(typeLabel)}` : ""}</div>
         ${!isSauna ? `<div class="basenKayakRow">Kajak: <strong data-kayak-current>${esc(kayakLabel(slot.userKayakId))}</strong>
           <button type="button" class="ghost small basenChangeKayakBtn" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}">Zmień</button>
         </div>` : ""}
@@ -192,10 +178,6 @@ function renderSlotCard(sessionId, slotKey, slot, ctx, canEnroll) {
     footerHtml = `
       <form class="basenEnrollForm" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}">
         <div class="basenEnrollRow">
-          <select class="basenPaymentSelect">
-            <option value="karnet">Karnet</option>
-            <option value="jednorazowe">Jednorazowe</option>
-          </select>
           <button type="submit" class="primary basenEnrollBtn">Zapisz się</button>
         </div>
         ${!isSauna ? `
@@ -261,7 +243,6 @@ async function renderSessionsView(innerEl, ctx, canEnroll) {
   try {
     const data = await apiGetJson({ url: SESSIONS_URL, idToken: ctx.idToken });
     const sessions = Array.isArray(data?.sessions) ? data.sessions : [];
-    const activeKarnet = data?.activeKarnet || null;
 
     if (!sessions.length) {
       innerEl.innerHTML = `<div class="hint" style="margin-top:16px;">Brak nadchodzących terminów basenowych.</div>`;
@@ -269,11 +250,6 @@ async function renderSessionsView(innerEl, ctx, canEnroll) {
     }
 
     innerEl.innerHTML = `
-      ${activeKarnet ? `
-        <div class="basenKarnetBanner">
-          Aktywny karnet: <strong>${activeKarnet.remaining} z ${activeKarnet.totalEntries} wejść</strong>
-        </div>
-      ` : ""}
       <div class="basenList">
         ${sessions.map((s) => renderSessionCard(s, ctx, canEnroll)).join("")}
       </div>
@@ -350,7 +326,6 @@ function bindSessionActions(innerEl, ctx, canEnroll) {
       const slot = form.getAttribute("data-slot");
       const cardEl = form.closest(".basenSlotCard");
       const msgEl = cardEl?.querySelector("[data-slot-msg]");
-      const paymentType = form.querySelector(".basenPaymentSelect")?.value || "jednorazowe";
       const withInstructor = form.querySelector(".basenWithInstructorCheck")?.checked === true;
       const instructorUid = withInstructor ? (form.querySelector(".basenInstructorSelect")?.value || "") : "";
       const kayakId = form.querySelector(".basenKayakSelect")?.value || "";
@@ -374,7 +349,6 @@ function bindSessionActions(innerEl, ctx, canEnroll) {
             slot,
             mode: withInstructor ? "training" : "regular",
             instructorUid: withInstructor ? instructorUid : undefined,
-            paymentType,
             kayakId: kayakId || undefined,
           },
         });
@@ -480,76 +454,6 @@ function bindSessionActions(innerEl, ctx, canEnroll) {
   });
 }
 
-// ─── Karnet view ──────────────────────────────────────────────────────────────
-
-async function renderKarnetView(innerEl, ctx) {
-  innerEl.innerHTML = spinnerHtml("Ładowanie karnetu…");
-
-  try {
-    const data = await apiGetJson({ url: KARNETY_URL, idToken: ctx.idToken });
-    const karnety = Array.isArray(data?.karnety) ? data.karnety : [];
-    const cfg = data?.config || {};
-
-    const active = karnety.filter((k) => k.status === "active");
-    const others = karnety.filter((k) => k.status !== "active");
-
-    let html = "";
-
-    if (cfg.cenaZaKarnet || cfg.ileWejsc || cfg.cenaZaGodzine) {
-      html += `
-        <div class="basenKarnetInfo">
-          ${cfg.ileWejsc ? `<div>Karnet: <strong>${cfg.ileWejsc} wejść</strong></div>` : ""}
-          ${cfg.cenaZaKarnet ? `<div>Cena karnetu: <strong>${cfg.cenaZaKarnet} zł</strong></div>` : ""}
-          ${cfg.cenaZaGodzine ? `<div>Jednorazowe: <strong>${cfg.cenaZaGodzine} zł</strong></div>` : ""}
-        </div>
-      `;
-    }
-
-    if (!karnety.length) {
-      html += `<div class="hint" style="margin-top:16px;">Nie masz żadnego karnetu. Skontaktuj się z zarządem lub KR, aby zakupić karnet.</div>`;
-    } else {
-      if (active.length) {
-        html += `<h3 style="margin:16px 0 8px;">Aktywne karnety</h3>`;
-        html += active.map((k) => `
-          <div class="basenKarnetCard basenKarnetActive">
-            <div class="basenKarnetRow">
-              <span>Wejścia:</span>
-              <strong>${k.usedEntries} / ${k.totalEntries} wykorzystanych</strong>
-            </div>
-            <div class="basenKarnetProgress">
-              <div class="basenKarnetBar" style="width:${Math.round((k.usedEntries / k.totalEntries) * 100)}%"></div>
-            </div>
-            <div class="basenKarnetRow">
-              <span>Pozostało:</span>
-              <strong>${k.remaining} wejść</strong>
-            </div>
-          </div>
-        `).join("");
-      }
-
-      if (others.length) {
-        html += `<h3 style="margin:16px 0 8px;">Historia</h3>`;
-        html += others.map((k) => `
-          <div class="basenKarnetCard">
-            <div class="basenKarnetRow">
-              <span>Status:</span>
-              <strong>${esc(karnetStatusLabel(k.status))}</strong>
-            </div>
-            <div class="basenKarnetRow">
-              <span>Wejścia:</span>
-              <strong>${k.usedEntries} / ${k.totalEntries}</strong>
-            </div>
-          </div>
-        `).join("");
-      }
-    }
-
-    innerEl.innerHTML = html;
-  } catch (e) {
-    innerEl.innerHTML = `<div class="err">${esc(e?.message || "Nie udało się załadować karnetu.")}</div>`;
-  }
-}
-
 // ─── Admin view ───────────────────────────────────────────────────────────────
 
 function renderAdminView(innerEl, ctx) {
@@ -645,25 +549,6 @@ function renderAdminView(innerEl, ctx) {
           <div id="bCancelOk" class="ok hidden" style="margin-top:8px;"></div>
           <div class="actions" style="margin-top:10px;">
             <button id="bCancelBtn" type="submit" class="danger">Anuluj</button>
-          </div>
-        </form>
-      </div>
-
-      <div class="basenAdminSection">
-        <h3>Nadaj karnet</h3>
-        <form id="basenGrantForm" class="basenAdminForm" autocomplete="off">
-          <div class="row">
-            <label for="bGrantUid">UID użytkownika *</label>
-            <input id="bGrantUid" type="text" required placeholder="Firebase UID" />
-          </div>
-          <div class="row">
-            <label for="bGrantEntries">Liczba wejść (0 = domyślna z konfiguracji)</label>
-            <input id="bGrantEntries" type="number" min="0" max="100" value="0" />
-          </div>
-          <div id="bGrantErr" class="err hidden" style="margin-top:8px;"></div>
-          <div id="bGrantOk" class="ok hidden" style="margin-top:8px;"></div>
-          <div class="actions" style="margin-top:10px;">
-            <button id="bGrantBtn" type="submit" class="primary">Nadaj karnet</button>
           </div>
         </form>
       </div>
@@ -768,7 +653,7 @@ function bindAdminActions(innerEl, ctx) {
     const sessionId = String(innerEl.querySelector("#bCancelSessionId")?.value || "").trim();
     const slot = String(innerEl.querySelector("#bCancelSlot")?.value || "").trim();
     if (!sessionId) { setCancelErr("Podaj ID terminu."); return; }
-    if (!confirm(`Anulować ${slot ? `slot ${slot}` : "cały termin"} (${sessionId})? Wszyscy uczestnicy zostaną wypisani, karnety zwrócone.`)) return;
+    if (!confirm(`Anulować ${slot ? `slot ${slot}` : "cały termin"} (${sessionId})? Wszyscy uczestnicy zostaną wypisani.`)) return;
 
     cancelBtn.disabled = true;
     cancelBtn.textContent = "Anuluję…";
@@ -784,47 +669,6 @@ function bindAdminActions(innerEl, ctx) {
     } finally {
       cancelBtn.disabled = false;
       cancelBtn.textContent = "Anuluj";
-    }
-  });
-
-  // Grant karnet form
-  const grantForm = innerEl.querySelector("#basenGrantForm");
-  const grantErr = innerEl.querySelector("#bGrantErr");
-  const grantOk = innerEl.querySelector("#bGrantOk");
-  const grantBtn = innerEl.querySelector("#bGrantBtn");
-
-  const setGrantErr = (msg) => {
-    grantErr.textContent = msg;
-    grantErr.classList.toggle("hidden", !msg);
-    grantOk.classList.add("hidden");
-  };
-  const setGrantOk = (msg) => {
-    grantOk.textContent = msg;
-    grantOk.classList.toggle("hidden", !msg);
-    grantErr.classList.add("hidden");
-  };
-
-  grantForm?.addEventListener("submit", async (ev) => {
-    ev.preventDefault();
-    const userUid = String(innerEl.querySelector("#bGrantUid")?.value || "").trim();
-    const totalEntries = Number(innerEl.querySelector("#bGrantEntries")?.value || 0);
-
-    if (!userUid) { setGrantErr("Podaj UID użytkownika."); return; }
-
-    grantBtn.disabled = true;
-    grantBtn.textContent = "Nadaję…";
-    setGrantErr("");
-    setGrantOk("");
-
-    try {
-      const data = await apiPostJson({ url: GRANT_KARNET_URL, idToken: ctx.idToken, body: { userUid, totalEntries } });
-      setGrantOk(`Karnet nadany (ID: ${data.karnetId})`);
-      grantForm.reset();
-    } catch (e) {
-      setGrantErr(e?.message || "Nie udało się nadać karnetu.");
-    } finally {
-      grantBtn.disabled = false;
-      grantBtn.textContent = "Nadaj karnet";
     }
   });
 }
@@ -852,7 +696,7 @@ export function createBasenModule({ id, type, label, defaultRoute, order, enable
       const canEnroll = actions.includes("basen.enroll");
 
       const requestedTab = String(routeId || "").trim();
-      const validTabs = ["sessions", "karnet", ...(isAdmin ? ["admin"] : [])];
+      const validTabs = ["sessions", ...(isAdmin ? ["admin"] : [])];
       const activeTab = validTabs.includes(requestedTab) ? requestedTab : "sessions";
 
       viewEl.innerHTML = `
@@ -889,9 +733,7 @@ export function createBasenModule({ id, type, label, defaultRoute, order, enable
         window.location.hash = `#${id}/${tab}`;
       });
 
-      if (activeTab === "karnet") {
-        await renderKarnetView(innerEl, ctx);
-      } else if (activeTab === "admin" && isAdmin) {
+      if (activeTab === "admin" && isAdmin) {
         renderAdminView(innerEl, ctx);
       } else {
         await renderSessionsView(innerEl, ctx, canEnroll);

@@ -180,6 +180,23 @@ header .headerActions {
   gap: var(--space-2);
 }
 
+/* ── Baner "nowa wersja aplikacji" w headerze — widoczny na każdym ekranie po zalogowaniu ── */
+.swUpdateBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: var(--space-2);
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(74, 222, 128, 0.35);
+  background: var(--ok-2);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
 /* --- Buttons --- */
 button {
   appearance: none;

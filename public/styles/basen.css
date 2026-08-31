@@ -1,9 +1,9 @@
 /* public/styles/basen.css */
 /* ================= BASEN ================= */
 
-/* Zakładki modułu (Sesje / Mój karnet / Zarządzanie) — reużywają współdzielone
-   .modTabs/.modTab z base.css (były niemal identyczną duplikacją); .basenTabs/.basenTab
-   zostają jako marker klasy dla JS (querySelector/event delegation), bez własnego CSS. */
+/* Zakładki modułu (Baseny / Zarządzanie) — reużywają współdzielone .modTabs/.modTab
+   z base.css (były niemal identyczną duplikacją); .basenTabs/.basenTab zostają jako
+   marker klasy dla JS (querySelector/event delegation), bez własnego CSS. */
 
 /* ─── Session cards ─── */
 
@@ -101,20 +101,6 @@
   flex-wrap: wrap;
 }
 
-.basenPaymentSelect {
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--surface, #1a2035);
-  color: var(--text);
-  font-size: 13px;
-  cursor: pointer;
-}
-
-:root[data-theme="light"] .basenPaymentSelect {
-  background: #fff;
-}
-
 .basenEnrolledBadge {
   display: inline-block;
   padding: 4px 10px;
@@ -128,80 +114,6 @@
 .basenHint {
   font-size: 13px;
   color: var(--text-muted, #888);
-}
-
-/* ─── Karnet banner ─── */
-
-.basenKarnetBanner {
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: rgba(59, 130, 246, 0.12);
-  border: 1px solid rgba(59, 130, 246, 0.25);
-  font-size: 14px;
-  color: var(--text);
-  margin-bottom: 4px;
-}
-
-/* ─── Karnet cards ─── */
-
-.basenKarnetInfo {
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.03);
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-  font-size: 14px;
-  color: var(--text-muted, #888);
-  margin-bottom: 4px;
-}
-
-:root[data-theme="light"] .basenKarnetInfo {
-  background: rgba(12, 18, 32, 0.02);
-}
-
-.basenKarnetCard {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px 16px;
-  background: rgba(255, 255, 255, 0.03);
-  margin-bottom: 8px;
-}
-
-:root[data-theme="light"] .basenKarnetCard {
-  background: rgba(12, 18, 32, 0.02);
-}
-
-.basenKarnetActive {
-  border-color: rgba(34, 197, 94, 0.4);
-}
-
-.basenKarnetRow {
-  display: flex;
-  justify-content: space-between;
-  font-size: 14px;
-  color: var(--text);
-  margin-bottom: 6px;
-}
-
-.basenKarnetProgress {
-  height: 8px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.08);
-  margin: 4px 0 10px;
-  overflow: hidden;
-}
-
-:root[data-theme="light"] .basenKarnetProgress {
-  background: rgba(12, 18, 32, 0.1);
-}
-
-.basenKarnetBar {
-  height: 100%;
-  border-radius: 4px;
-  background: var(--accent, #3b82f6);
-  transition: width 0.3s;
 }
 
 /* ─── Admin section ─── */
