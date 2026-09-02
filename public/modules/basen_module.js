@@ -22,11 +22,23 @@ const KAYAKS_URL = "/api/basen/kayaks";
 const ATTENDEES_URL = "/api/basen/attendees";
 const GODZINY_USERS_URL = "/api/basen/admin/godziny/users";
 const GODZINY_ADD_URL = "/api/basen/admin/godziny/add";
+const GODZINY_HISTORY_URL = "/api/basen/admin/godziny/history";
 const GODZINY_MY_URL = "/api/basen/godziny/my";
 
 const SLOT_ORDER = ["H1", "H2", "SAUNA"];
 const SLOT_LABELS = { H1: "I godzina", H2: "II godzina", SAUNA: "Sauna" };
 const SEEKING_SENTINEL = "__SEEKING__";
+
+// Pełny tekst na desktopie, skrócony na mobile (przełącznik czysto CSS-owy przez
+// media query, patrz .basenBtnTextFull/.basenBtnTextShort w basen.css) — żeby obok
+// "Edytuj" zmieściło się w jednym rzędzie na wąskim ekranie.
+const CANCEL_BTN_HTML = `<span class="basenBtnTextFull">Zrezygnuj z basenu</span><span class="basenBtnTextShort">Zrezygnuj</span>`;
+
+// Musi być identyczny z render_shell.js::HOME_BASEN_SCROLL_TARGET_KEY — kalendarz
+// basenowy na stronie głównej zapisuje tu docelową datę przed nawigacją (router.js
+// obsługuje tylko jeden segment ścieżki, sessionStorage to najprostszy handoff).
+// ID karty dnia = data sesji (basen_sessions/{date} ma deterministyczne ID = data).
+const HOME_SCROLL_TARGET_KEY = "basenHomeScrollTarget";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -54,13 +66,6 @@ function formatDate(iso) {
   const d = new Date(`${iso}T12:00:00`);
   const dayName = days[d.getDay()] || "";
   return `${m[3]}.${m[2]}.${m[1]} (${dayName})`;
-}
-
-function kayakLabel(kayakId, resolvedLabel) {
-  if (!kayakId) return "Brak";
-  if (resolvedLabel) return resolvedLabel;
-  if (kayakId === "PRIVATE") return "Kajak prywatny";
-  return `Kajak (nr ${esc(kayakId)})`; // fallback gdy backend nie zwrócił etykiety
 }
 
 // ─── Tabs ─────────────────────────────────────────────────────────────────────
@@ -103,7 +108,7 @@ function renderSlotCard(sessionId, slotKey, slot, ctx, canEnroll) {
   else spotsHtml = `<span class="basenSpots">${remaining} miejsc wolnych</span>`;
 
   const reservedNote = (!isSauna && slot.reservedSpots && slot.reservedSpots.count > 0)
-    ? `<div class="basenReservedNote">${slot.reservedSpots.count} miejsc zarezerwowanych${slot.reservedSpots.restrictedToKursant ? " (tylko dla kursantów)" : ""}</div>`
+    ? `<div class="basenReservedNote">${slot.reservedSpots.count} miejsc zarezerwowanych${slot.reservedSpots.restrictedToKursant ? " dla kursantów" : ""}</div>`
     : "";
 
   const canBeInstructor = !isSauna && !isCancelled && ctx?.session?.basenInstructor === true;
@@ -112,31 +117,44 @@ function renderSlotCard(sessionId, slotKey, slot, ctx, canEnroll) {
 
   // Prosta, zawsze widoczna lista uczestników — bez rozwijania, bez kajaka. Ksywka,
   // a jak brak to imię+nazwisko. Instruktorzy zawsze na górze (lekka kreska oddziela
-  // ich od reszty), sparowany uczestnik (training + instructorUid) pokazany razem
-  // z instruktorem w jednym niebieskim kaflu. Osoba szukająca instruktora dostaje
-  // klikalny kafelek (zamiast osobnego przycisku) TYLKO dla widza, który sam jest
-  // instruktorem na ten slot — klik od razu go do niej przypisuje.
+  // ich od reszty), sparowany uczestnik (training + instructorUid) pokazany zwyczajnie
+  // obok niebieskiego kafelka z imieniem przypisanego instruktora. Osoba szukająca
+  // instruktora dostaje klikalny kafelek (zamiast osobnego przycisku) TYLKO dla widza,
+  // który sam jest instruktorem na ten slot — klik od razu go do niej przypisuje.
   const attendeesList = Array.isArray(slot.attendees) ? slot.attendees : [];
   const instructorAttendees = attendeesList.filter((a) => a.type === "instructor");
   const otherAttendees = attendeesList.filter((a) => a.type !== "instructor");
   const instructorLabelByUid = new Map(instructorAttendees.map((a) => [a.userUid, a.displayLabel]));
+
+  // Własny kajak (skrócona etykieta: model, kolor, nr — bez marki) dopisywany TYLKO
+  // przy własnym wierszu na liście uczestników — cudze kajaki nikogo nie interesują
+  // (patrz komentarz przy .basenOwnKayakTag w basen.css: obcina się wielokropkiem,
+  // żeby zawsze zmieścić się w jednym wierszu na mobile).
+  const myUid = ctx?.session?.uid || "";
+  const ownKayakTagHtml = (!isSauna && slot.userKayakId && slot.userKayakCompactLabel)
+    ? ` <span class="basenOwnKayakTag" title="${esc(slot.userKayakLabel || "")}">${esc(slot.userKayakCompactLabel)}</span>`
+    : "";
+
   const renderOtherAttendeeRow = (a) => {
     const label = esc(a.displayLabel);
+    const ownKayakSuffix = a.userUid === myUid ? ownKayakTagHtml : "";
     if (a.type === "training" && a.instructorUid) {
+      // Uczestnik zwyczajnie (bez niebieskiego tła, bez "+") — niebieski kafelek
+      // zostaje TYLKO na przypisanym instruktorze, spójnie z listą instruktorów wyżej.
       const instructorLabel = instructorLabelByUid.get(a.instructorUid);
-      return `<div class="basenAttendeeRow"><span class="basenAttendeeTag">${label}${instructorLabel ? ` + ${esc(instructorLabel)}` : ""}</span></div>`;
+      return `<div class="basenAttendeeRow">${label}${instructorLabel ? ` <span class="basenAttendeeTag">${esc(instructorLabel)}</span>` : ""}${ownKayakSuffix}</div>`;
     }
     if (a.type === "training" && !a.instructorUid) {
       return isInstructorEnrolled
         ? `<button type="button" class="basenAttendeeTag basenClaimTagBtn" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}" data-target-uid="${esc(a.userUid)}" title="Kliknij, aby przypisać siebie jako instruktora">${label} — potrzebuje instruktora</button>`
-        : `<div class="basenAttendeeRow">${label} <span class="basenAttendeeTag">potrzebuje instruktora</span></div>`;
+        : `<div class="basenAttendeeRow">${label} <span class="basenAttendeeTag">potrzebuje instruktora</span>${ownKayakSuffix}</div>`;
     }
-    return `<div class="basenAttendeeRow">${label}</div>`;
+    return `<div class="basenAttendeeRow">${label}${ownKayakSuffix}</div>`;
   };
   const attendeesHtml = !isCancelled && attendeesList.length ? `
     <div class="basenAttendeesSimple">
       <div class="basenAttendeesSimpleTitle">Uczestnicy</div>
-      ${instructorAttendees.map((a) => `<div class="basenAttendeeRow">${esc(a.displayLabel)} <span class="basenAttendeeTag">instruktor</span></div>`).join("")}
+      ${instructorAttendees.map((a) => `<div class="basenAttendeeRow">${esc(a.displayLabel)} <span class="basenAttendeeTag">instruktor</span>${a.userUid === myUid ? ownKayakTagHtml : ""}</div>`).join("")}
       ${instructorAttendees.length && otherAttendees.length ? `<div class="basenAttendeeDivider"></div>` : ""}
       ${otherAttendees.map(renderOtherAttendeeRow).join("")}
     </div>
@@ -144,28 +162,41 @@ function renderSlotCard(sessionId, slotKey, slot, ctx, canEnroll) {
 
   let footerHtml = "";
 
+  // "Będę instruktorem" — kolor/waga wizualna wyraźnie inna niż .ghost (ta znikała
+  // w ciemnym motywie) i inna niż .primary ("Zapisz się"), żeby dwa różne działania
+  // w jednym rzędzie dało się od razu odróżnić. Wstrzykiwane w tym samym rzędzie co
+  // "Zapisz się" gdy oba są realną opcją (slot ma miejsca); w pozostałych gałęziach
+  // (pełny/brak uprawnień/odwołany) zostaje dopisywane osobno, tak jak dotychczas —
+  // instruktor może zapisać się nawet gdy pula uczestnicka jest pełna.
+  const instructorBtnHtml = (!isCancelled && !isInstructorEnrolled && !isParticipantEnrolled && canEnroll && canBeInstructor)
+    ? `<button type="button" class="basenInstructorBtn basenBtnAccent" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}">Będę instruktorem</button>`
+    : "";
+  let instructorBtnEmbedded = false;
+
   if (isCancelled) {
     footerHtml = `<span class="basenHint">Ten slot został odwołany.</span>`;
   } else if (isInstructorEnrolled) {
+    // Bez zielonej/tekstowej plakietki "Zapisany/a..." — status "jestem tu zapisany"
+    // pokazuje sama ramka karty (patrz basenSlotCard--mine/--instructing niżej).
+    // "Edytuj" tu = dopisz sobie osobę szukającą instruktora (do 2 naraz, wyłącznie
+    // decyzja instruktora — patrz claimWaitingStudent). Ten sam kafelek jest też
+    // klikalny bezpośrednio na liście uczestników (.basenClaimTagBtn); ten przycisk
+    // to bardziej odkrywalna, jawna droga do tego samego.
     footerHtml = `
-      <div class="basenEnrolledBadge">Zapisany/a jako instruktor</div>
-      <button type="button" class="ghost basenCancelBtn" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}">Zrezygnuj</button>
+      <div class="basenEnrolledActions">
+        <button type="button" class="ghost basenClaimEditBtn" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}">Edytuj</button>
+        <button type="button" class="dangerBtn basenCancelBtn" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}">${CANCEL_BTN_HTML}</button>
+      </div>
     `;
   } else if (isParticipantEnrolled) {
-    const typeLabel = slot.userEnrollmentType === "training"
-      ? (slot.userInstructorUid ? "z instruktorem" : "szukam instruktora")
-      : "";
-    const kayakLine = (!isSauna && slot.userKayakId)
-      ? `<div class="basenKayakRow">${esc(kayakLabel(slot.userKayakId, slot.userKayakLabel))}</div>`
-      : "";
+    // Bez "z instruktorem"/"szukam instruktora" ani pełnej nazwy kajaka tutaj — oba
+    // powielały dokładnie to, co już widać na liście "Uczestnicy" wyżej (mój wiersz +
+    // tag instruktora/"potrzebuje instruktora" + skrócona nazwa kajaka), tylko robiły
+    // bałagan.
     footerHtml = `
-      <div class="basenEnrolledInfo">
-        <div class="basenEnrolledBadge">Zapisany/a${typeLabel ? ` ${esc(typeLabel)}` : ""}</div>
-        ${kayakLine}
-      </div>
       <div class="basenEnrolledActions">
-        ${!isSauna ? `<button type="button" class="ghost basenModifyBtn" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}" data-current-kayak-id="${esc(slot.userKayakId || "")}" data-current-instructor-uid="${esc(slot.userInstructorUid || "")}" data-current-type="${esc(slot.userEnrollmentType || "")}">Modyfikuj zapis</button>` : ""}
-        <button type="button" class="ghost basenCancelBtn" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}" data-within-window="${slot.isWithinCancellationWindow ? "1" : "0"}">Anuluj zapis</button>
+        ${!isSauna ? `<button type="button" class="ghost basenModifyBtn" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}" data-current-kayak-id="${esc(slot.userKayakId || "")}" data-current-instructor-uid="${esc(slot.userInstructorUid || "")}" data-current-type="${esc(slot.userEnrollmentType || "")}">Edytuj</button>` : ""}
+        <button type="button" class="dangerBtn basenCancelBtn" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}" data-within-window="${slot.isWithinCancellationWindow ? "1" : "0"}">${CANCEL_BTN_HTML}</button>
       </div>
     `;
   } else if (!canEnroll) {
@@ -174,19 +205,25 @@ function renderSlotCard(sessionId, slotKey, slot, ctx, canEnroll) {
     footerHtml = `<span class="basenHint">Slot jest pełny.</span>`;
   } else if (isSauna) {
     // Sauna nie ma kajaka ani parowania z instruktorem — nic do rozwinięcia,
-    // "Zapisz się" zapisuje od razu, jednym kliknięciem.
+    // "Zapisz się" zapisuje od razu, jednym kliknięciem. Sauna też nie ma opcji
+    // "Będę instruktorem" (canBeInstructor już to wyklucza), więc rząd nie jest tu potrzebny.
     footerHtml = `
       <form class="basenEnrollForm" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}">
         <button type="submit" class="primary basenEnrollBtn">Zapisz się</button>
       </form>
     `;
   } else {
-    // Na starcie TYLKO "Zapisz się" — dopiero klik rozwija kajak/instruktora, żeby
-    // niezapisany slot nie straszył formularzem zanim user w ogóle zdecyduje się
-    // zapisać. Drugi klik (już w rozwiniętym stanie) faktycznie wysyła zapis.
+    // Na starcie TYLKO "Zapisz się" (+ "Będę instruktorem" obok, w jednym rzędzie) —
+    // dopiero klik "Zapisz się" rozwija kajak/instruktora, żeby niezapisany slot nie
+    // straszył formularzem zanim user w ogóle zdecyduje się zapisać. Drugi klik (już
+    // w rozwiniętym stanie) faktycznie wysyła zapis.
+    instructorBtnEmbedded = true;
     footerHtml = `
       <form class="basenEnrollForm" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}">
-        <button type="button" class="primary basenEnrollRevealBtn">Zapisz się</button>
+        <div class="basenPrimaryActions">
+          <button type="button" class="primary basenEnrollRevealBtn">Zapisz się</button>
+          ${instructorBtnHtml}
+        </div>
         <div class="basenEnrollExpanded hidden">
           <label class="basenCheckLabel">
             <input type="checkbox" class="basenWithInstructorCheck" />
@@ -210,12 +247,14 @@ function renderSlotCard(sessionId, slotKey, slot, ctx, canEnroll) {
       </form>
     `;
   }
-  if (!isCancelled && !isInstructorEnrolled && !isParticipantEnrolled && canEnroll && canBeInstructor) {
-    footerHtml += `<button type="button" class="ghost basenInstructorBtn" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}">Dodaj się jako instruktor</button>`;
+  if (!instructorBtnEmbedded) {
+    footerHtml += instructorBtnHtml;
   }
 
+  const cardStateClass = isInstructorEnrolled ? " basenSlotCard--instructing" : isParticipantEnrolled ? " basenSlotCard--mine" : "";
+
   return `
-    <div class="basenSlotCard${isCancelled ? " basenSlotCancelled" : ""}" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}">
+    <div class="basenSlotCard${isCancelled ? " basenSlotCancelled" : ""}${cardStateClass}" data-session-id="${esc(sessionId)}" data-slot="${esc(slotKey)}">
       <div class="basenSlotHead">
         <span class="basenSlotLabel">${esc(SLOT_LABELS[slotKey] || slotKey)}</span>
         <span class="basenCardTime">${esc(slot.timeStart)}</span>
@@ -257,7 +296,12 @@ async function renderSessionsView(innerEl, ctx, canEnroll) {
     const data = await apiGetJson({ url: SESSIONS_URL, idToken: ctx.idToken });
     const sessions = Array.isArray(data?.sessions) ? data.sessions : [];
     const balance = Number(data?.userGodzinyBalance ?? 0);
-    const balanceHtml = canEnroll
+    // Kursant z definicji nie ma i nie kupuje godzin basenowych — saldo (zawsze 0)
+    // jest dla niego mylące, samo tylko rodzi zbędne pytania. Backend i tak poprawnie
+    // blokuje mu zapis na slot spoza puli kursanckiej (enrollInSlot::isFreeForKursant),
+    // więc brak wyświetlania salda nie otwiera żadnej luki — po prostu tego nie widzi.
+    const isKursant = ctx?.session?.role_key === "rola_kursant";
+    const balanceHtml = canEnroll && !isKursant
       ? `<div class="basenHint" style="margin-top:8px;">Dostępne godziny basenowe: <strong>${balance}</strong>${balance <= 0 ? " — zapisz się dopiero po dopisaniu godzin przez opiekuna basenu." : ""}</div>`
       : "";
 
@@ -272,19 +316,41 @@ async function renderSessionsView(innerEl, ctx, canEnroll) {
         ${sessions.map((s) => renderSessionCard(s, ctx, canEnroll)).join("")}
       </div>
       ${renderModifyModalHtml()}
+      ${renderClaimStudentModalHtml()}
     `;
 
-    bindSessionActions(innerEl, ctx, canEnroll);
+    bindSessionActions(innerEl, ctx, canEnroll, sessions);
+    scrollToHomeTarget(innerEl);
   } catch (e) {
     innerEl.innerHTML = `<div class="err">${esc(e?.message || "Nie udało się załadować terminów.")}</div>`;
   }
+}
+
+// Przewija i podświetla kartę dnia, na którą użytkownik kliknął w kalendarzu na
+// stronie głównej. Klucz konsumowany raz — kolejne odświeżenia tego widoku (np.
+// po zapisie/anulowaniu) już nie przewijają ponownie.
+function scrollToHomeTarget(innerEl) {
+  let target;
+  try {
+    target = sessionStorage.getItem(HOME_SCROLL_TARGET_KEY);
+    if (target) sessionStorage.removeItem(HOME_SCROLL_TARGET_KEY);
+  } catch {
+    return;
+  }
+  if (!target || !/^\d{4}-\d{2}-\d{2}$/.test(target)) return;
+
+  const card = innerEl.querySelector(`.basenDayCard[data-session-id="${target}"]`);
+  if (!card) return;
+  card.scrollIntoView({ behavior: "smooth", block: "start" });
+  card.classList.add("basenDayCardHighlight");
+  setTimeout(() => card.classList.remove("basenDayCardHighlight"), 2200);
 }
 
 async function refreshSessionsView(innerEl, ctx, canEnroll) {
   await renderSessionsView(innerEl, ctx, canEnroll);
 }
 
-function bindSessionActions(innerEl, ctx, canEnroll) {
+function bindSessionActions(innerEl, ctx, canEnroll, sessions) {
   // Klik na kafelek osoby "szukającej instruktora" (widoczny od razu na karcie slotu,
   // tylko dla widza który sam jest instruktorem na tym slocie) → od razu przypisuje.
   innerEl.querySelectorAll(".basenClaimTagBtn").forEach((btn) => {
@@ -300,6 +366,20 @@ function bindSessionActions(innerEl, ctx, canEnroll) {
         btn.disabled = false;
         alert(e?.message || "Nie udało się przypisać.");
       }
+    });
+  });
+
+  // "Edytuj" na karcie instruktora — bardziej odkrywalna droga do tego samego co
+  // .basenClaimTagBtn wyżej (klikalny kafelek na liście), przez osobny modal z
+  // wyborem osoby szukającej instruktora na ten slot.
+  innerEl.querySelectorAll(".basenClaimEditBtn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const sessionId = btn.getAttribute("data-session-id");
+      const slot = btn.getAttribute("data-slot");
+      const session = (sessions || []).find((s) => s.id === sessionId);
+      const attendees = Array.isArray(session?.slots?.[slot]?.attendees) ? session.slots[slot].attendees : [];
+      const waitingStudents = attendees.filter((a) => a.type === "training" && !a.instructorUid);
+      openClaimStudentModal(innerEl, ctx, sessionId, slot, waitingStudents, () => refreshSessionsView(innerEl, ctx, canEnroll));
     });
   });
 
@@ -418,7 +498,7 @@ function bindSessionActions(innerEl, ctx, canEnroll) {
         await refreshSessionsView(innerEl, ctx, canEnroll);
       } catch (e) {
         btn.disabled = false;
-        btn.textContent = "Dodaj się jako instruktor";
+        btn.textContent = "Będę instruktorem";
         if (msgEl) {
           msgEl.textContent = e?.message || "Nie udało się zapisać.";
           msgEl.classList.remove("hidden");
@@ -449,7 +529,7 @@ function bindSessionActions(innerEl, ctx, canEnroll) {
         await refreshSessionsView(innerEl, ctx, canEnroll);
       } catch (e) {
         btn.disabled = false;
-        btn.textContent = "Anuluj zapis";
+        btn.innerHTML = CANCEL_BTN_HTML;
         if (msgEl) {
           msgEl.textContent = e?.message || "Nie udało się anulować.";
           msgEl.classList.remove("hidden");
@@ -469,13 +549,13 @@ function bindSessionActions(innerEl, ctx, canEnroll) {
       openModifyModal(innerEl, ctx, sessionId, slot, {currentKayakId, currentInstructorUid, currentType}, () => refreshSessionsView(innerEl, ctx, canEnroll));
     });
   });
-
-  bindModalCloseDelegation(innerEl);
 }
 
 function bindModalCloseDelegation(innerEl) {
   innerEl.addEventListener("click", (ev) => {
-    if (ev.target?.getAttribute?.("data-basen-modal-close") === "modify") closeModifyModal(innerEl);
+    const key = ev.target?.getAttribute?.("data-basen-modal-close");
+    if (key === "modify") closeModifyModal(innerEl);
+    if (key === "claim") closeClaimStudentModal(innerEl);
   });
 }
 
@@ -589,6 +669,90 @@ function openModifyModal(innerEl, ctx, sessionId, slotKey, current, onChanged) {
 
 function closeModifyModal(innerEl) {
   const modal = innerEl.querySelector("#basenModifyModal");
+  if (!modal) return;
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+}
+
+// ─── Modal "Edytuj" instruktora (dopisz osobę szukającą instruktora) ─────────
+// Instruktor decyduje sam, czy bierze 1 czy 2 osoby naraz (limit egzekwowany przez
+// backend — claimWaitingStudent/MAX_STUDENTS_PER_INSTRUCTOR) — uczestnik NIE może
+// samodzielnie dopisać się jako druga osoba do już zajętego instruktora.
+
+function renderClaimStudentModalHtml() {
+  return `
+    <div id="basenClaimModal" class="basenModal hidden" aria-hidden="true">
+      <div class="basenModalBackdrop" data-basen-modal-close="claim"></div>
+      <div class="basenModalCard" role="dialog" aria-modal="true" aria-label="Dopisz uczestnika">
+        <div class="basenModalTop">
+          <div class="basenModalTitle" data-claim-title>Dopisz uczestnika</div>
+          <button type="button" class="basenModalClose" data-basen-modal-close="claim" aria-label="Zamknij">✕</button>
+        </div>
+        <div class="basenModalBody">
+          <div id="basenClaimBody"></div>
+          <div id="basenClaimMsg" class="err hidden"></div>
+        </div>
+        <div class="basenModalActions">
+          <button type="button" class="ghost" data-basen-modal-close="claim">Zamknij</button>
+          <button type="button" class="primary basenClaimSaveBtn hidden">Przypisz</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function openClaimStudentModal(innerEl, ctx, sessionId, slotKey, waitingStudents, onChanged) {
+  const modal = innerEl.querySelector("#basenClaimModal");
+  if (!modal) return;
+
+  modal.querySelector("[data-claim-title]").textContent = `Dopisz uczestnika — ${SLOT_LABELS[slotKey] || slotKey}`;
+  const body = modal.querySelector("#basenClaimBody");
+  const msgEl = modal.querySelector("#basenClaimMsg");
+  const saveBtn = modal.querySelector(".basenClaimSaveBtn");
+  msgEl.textContent = "";
+  msgEl.classList.add("hidden");
+
+  if (!waitingStudents.length) {
+    body.innerHTML = `<p class="basenHint">Brak osób szukających instruktora na ten slot.</p>`;
+    saveBtn.classList.add("hidden");
+  } else {
+    body.innerHTML = `
+      <div class="row">
+        <label for="basenClaimSelect">Uczestnik</label>
+        <select id="basenClaimSelect">
+          ${waitingStudents.map((s) => `<option value="${esc(s.userUid)}">${esc(s.displayLabel)}</option>`).join("")}
+        </select>
+      </div>
+    `;
+    saveBtn.classList.remove("hidden");
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Przypisz";
+    saveBtn.onclick = async () => {
+      const targetUid = modal.querySelector("#basenClaimSelect")?.value;
+      if (!targetUid) return;
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Zapisuję…";
+      try {
+        await apiPostJson({ url: CLAIM_URL, idToken: ctx.idToken, body: { sessionId, slot: slotKey, targetUid } });
+        closeClaimStudentModal(innerEl);
+        await onChanged();
+      } catch (e) {
+        msgEl.textContent = e?.message || "Nie udało się przypisać.";
+        msgEl.classList.remove("hidden");
+        saveBtn.disabled = false;
+        saveBtn.textContent = "Przypisz";
+      }
+    };
+  }
+
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function closeClaimStudentModal(innerEl) {
+  const modal = innerEl.querySelector("#basenClaimModal");
   if (!modal) return;
   modal.classList.add("hidden");
   modal.setAttribute("aria-hidden", "true");
@@ -766,7 +930,6 @@ async function renderCalendarTab(innerEl, ctx) {
     innerEl.innerHTML = renderCalendarShellHtml(state.year, state.month, sessionsByDate)
       + renderCreateDayModalHtml() + renderDayDetailModalHtml();
     bindCalendarNav(innerEl, state, draw);
-    bindCalendarModalCloseDelegation(innerEl);
     bindReservedFieldToggles(innerEl);
     bindCalendarDayClicks(innerEl, sessionsByDate, ctx, refresh);
   };
@@ -1052,6 +1215,69 @@ function openAddGodzinyModal(innerEl, ctx, user, onSaved) {
   document.body.style.overflow = "hidden";
 }
 
+function renderGodzinyHistoryModalHtml() {
+  return `
+    <div id="basenGodzinyHistoryModal" class="basenModal hidden" aria-hidden="true">
+      <div class="basenModalBackdrop" data-basen-modal-close="history"></div>
+      <div class="basenModalCard" role="dialog" aria-modal="true" aria-label="Historia godzin basenowych">
+        <div class="basenModalTop">
+          <div class="basenModalTitle" data-history-title>Historia godzin</div>
+          <button type="button" class="basenModalClose" data-basen-modal-close="history" aria-label="Zamknij">✕</button>
+        </div>
+        <div class="basenModalBody">
+          <div id="basenGodzinyHistoryBody"></div>
+        </div>
+        <div class="basenModalActions">
+          <button type="button" class="ghost" data-basen-modal-close="history">Zamknij</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Ten sam "wyciąg bankowy" co zakładka "Moje konto" (renderGodzinyLedgerRow/formatGodzinyDate
+// zdefiniowane niżej w tym pliku) — tylko dla WSKAZANEGO usera zamiast requestera.
+function openGodzinyHistoryModal(innerEl, ctx, user) {
+  const modal = innerEl.querySelector("#basenGodzinyHistoryModal");
+  if (!modal) return;
+
+  modal.querySelector("[data-history-title]").textContent = `Historia godzin — ${user.userName || user.userNick || user.userEmail}`;
+  const body = modal.querySelector("#basenGodzinyHistoryBody");
+  body.innerHTML = spinnerHtml("Ładowanie…");
+
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+
+  apiGetJson({ url: `${GODZINY_HISTORY_URL}?userUid=${encodeURIComponent(user.userUid)}`, idToken: ctx.idToken })
+    .then((data) => {
+      const balance = Number(data?.balance ?? 0);
+      const records = Array.isArray(data?.records) ? data.records : [];
+      const rowsHtml = records.length
+        ? records.map(renderGodzinyLedgerRow).join("")
+        : `<div class="basenHint">Brak historii — brak operacji na godzinach basenowych.</div>`;
+      body.innerHTML = `
+        <div class="row">
+          <div class="basenAttendeesGroupTitle">Saldo</div>
+          <div class="${balance > 0 ? "basenGodzinyBalance" : "basenGodzinyBalanceZero"}" style="font-size:20px;">${balance} h</div>
+        </div>
+        <div class="basenAttendeesGroupTitle" style="margin-top:14px;">Historia</div>
+        <div class="basenLedgerList">${rowsHtml}</div>
+      `;
+    })
+    .catch((e) => {
+      body.innerHTML = `<div class="err">${esc(e?.message || "Nie udało się pobrać historii.")}</div>`;
+    });
+}
+
+function closeGodzinyHistoryModal(innerEl) {
+  const modal = innerEl.querySelector("#basenGodzinyHistoryModal");
+  if (!modal) return;
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+}
+
 function renderGodzinyRow(u) {
   const name = esc(u.userName || u.userNick || u.userEmail || u.userUid);
   const nickLine = (u.userNick && u.userName) ? `<div class="basenHint">${esc(u.userNick)}</div>` : "";
@@ -1064,7 +1290,10 @@ function renderGodzinyRow(u) {
         <div class="basenHint">${esc(u.userEmail || "")}</div>
       </div>
       <div class="${balCls}">${u.balance} h</div>
-      <button type="button" class="ghost small basenAddGodzinyBtn" data-uid="${esc(u.userUid)}">Dopisz godziny</button>
+      <div class="basenGodzinyRowActions">
+        <button type="button" class="ghost small basenAddGodzinyBtn" data-uid="${esc(u.userUid)}">Dopisz godziny</button>
+        <button type="button" class="ghost small basenShowHistoryBtn" data-uid="${esc(u.userUid)}">Pokaż historię</button>
+      </div>
     </div>
   `;
 }
@@ -1089,9 +1318,11 @@ async function renderPaymentsTab(innerEl, ctx) {
         <label for="paymentsSearch">Szukaj (mail / nazwisko / ksywka)</label>
         <input type="text" id="paymentsSearch" placeholder="np. jan.kowalski albo Kowalski albo ksywka" autocomplete="off" />
       </div>
+      <div class="basenHint">Lista pokazuje tylko osoby aktywne w basenie (zapis albo ruch na koncie godzin) w ostatnich 4 miesiącach.</div>
       <div id="paymentsSummary" class="hint" style="margin:8px 0;"></div>
       <div id="paymentsContent"></div>
       ${renderAddGodzinyModalHtml()}
+      ${renderGodzinyHistoryModalHtml()}
     `;
 
     const searchEl = innerEl.querySelector("#paymentsSearch");
@@ -1129,16 +1360,26 @@ async function renderPaymentsTab(innerEl, ctx) {
           });
         });
       });
+
+      contentEl.querySelectorAll(".basenShowHistoryBtn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const user = byUid.get(btn.getAttribute("data-uid"));
+          if (!user) return;
+          openGodzinyHistoryModal(innerEl, ctx, user);
+        });
+      });
     };
 
     searchEl.addEventListener("input", renderList);
     innerEl.addEventListener("click", (ev) => {
-      if (ev.target?.getAttribute?.("data-basen-modal-close") === "addGodziny") {
+      const key = ev.target?.getAttribute?.("data-basen-modal-close");
+      if (key === "addGodziny") {
         const modal = innerEl.querySelector("#basenAddGodzinyModal");
         modal?.classList.add("hidden");
         modal?.setAttribute("aria-hidden", "true");
         document.body.style.overflow = "";
       }
+      if (key === "history") closeGodzinyHistoryModal(innerEl);
     });
 
     renderList();
@@ -1164,6 +1405,14 @@ function formatGodzinyDate(iso) {
   return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+// Kilka zapisanych w Firestore "reason" jest za długich na jeden wiersz na mobile —
+// skracane tylko na wyświetlaniu (bez migracji danych), wzorem shortenReason w
+// godzinki_module.js.
+function shortenBasenReason(reason) {
+  if (reason === "Zwrot godziny — anulowanie zapisu na basen") return "Zwrot — anulowanie basenu";
+  return reason || "";
+}
+
 function renderGodzinyLedgerRow(r) {
   const positive = r.amount > 0;
   const sign = positive ? "+" : "";
@@ -1172,7 +1421,7 @@ function renderGodzinyLedgerRow(r) {
     <div class="basenLedgerRow">
       <div class="basenLedgerMain">
         <div class="basenLedgerType">${esc(typeLabel)}</div>
-        <div class="basenLedgerReason">${esc(r.reason || "")}</div>
+        <div class="basenLedgerReason">${esc(shortenBasenReason(r.reason))}</div>
         <div class="basenLedgerDate">${esc(formatGodzinyDate(r.createdAt))}</div>
       </div>
       <div class="${positive ? "basenGodzinyBalance" : "basenGodzinyBalanceZero"}">${sign}${r.amount} h</div>
@@ -1246,6 +1495,17 @@ export function createBasenModule({ id, type, label, defaultRoute, order, enable
       `;
 
       const innerEl = viewEl.querySelector("#basenInner");
+
+      // Delegacja kliknięć na zamykanie modali — bindowana RAZ na cały czas życia tego
+      // #basenInner (świeży węzeł DOM przy każdym wejściu do modułu, patrz viewEl.innerHTML
+      // wyżej). Wcześniej wołane wewnątrz bindSessionActions/draw(), czyli PRZY KAŻDYM
+      // odświeżeniu widoku (każdy zapis/anulowanie/nawigacja miesiąca) — #basenInner samo
+      // w sobie nigdy nie jest zastępowane (tylko jego innerHTML), więc nasłuchiwacze się
+      // mnożyły z każdą akcją w tej samej sesji (realny incydent: spowolnienie/zawieszenie
+      // po serii zapisów). Funkcje close* i tak robią świeże querySelector przy każdym
+      // kliknięciu, więc jednorazowe bindowanie tutaj jest w pełni bezpieczne.
+      bindModalCloseDelegation(innerEl);
+      bindCalendarModalCloseDelegation(innerEl);
 
       viewEl.querySelector("[data-mod-home]")?.addEventListener("click", () => {
         window.location.hash = "#home/home";

@@ -2,7 +2,7 @@
 import { canSeeModule } from "/core/access_control.js";
 import { setHash, parseHash } from "/core/router.js";
 import { apiPostJson, apiGetJson } from "/core/api_client.js";
-import { formatFreeText } from "/core/text_format.js";
+import { formatFreeText, isUrlOnly } from "/core/text_format.js";
 
 export function spinnerHtml(text = "Morzkulc myśli") {
   return `<div class="thinking">${escapeHtml(text)}<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></div>`;
@@ -461,16 +461,12 @@ async function renderHomeDashboard({ viewEl, ctx }) {
     const basenSection = viewEl.querySelector("#homeBasenSection");
     if (basenSection) basenSection.style.display = "";
 
-    buildHomeBasenSection(ctx).then((html) => {
-      const listEl = viewEl.querySelector("#homeBasenList");
-      if (listEl) {
-        listEl.innerHTML = html;
-        bindHomeBasenRows(listEl, ctx);
-      }
-    }).catch(() => {
-      const listEl = viewEl.querySelector("#homeBasenList");
-      if (listEl) listEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać zajęć.</div></div></div>`;
-    });
+    const basenListEl = viewEl.querySelector("#homeBasenList");
+    if (basenListEl) {
+      renderHomeBasenCalendar(basenListEl, ctx, dash.isKursant).catch(() => {
+        basenListEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać zajęć.</div></div></div>`;
+      });
+    }
   }
 
   // Ładuj imprezy kursowe — tylko dla kursanta
@@ -998,6 +994,8 @@ async function buildHomeEventsSection(ctx) {
       const end = formatDatePL(String(ev?.endDate || ""));
       const dateRange = ev.startDate === ev.endDate ? start : `${start} – ${end}`;
       const loc = String(ev?.location || "");
+      const locIsLink = isUrlOnly(loc);
+      const mapLinkUrl = String(ev?.mapLink || "").trim() || (locIsLink ? loc : "");
       const desc = String(ev?.description || "");
       const contact = String(ev?.contact || "");
       const link = String(ev?.link || "");
@@ -1005,7 +1003,8 @@ async function buildHomeEventsSection(ctx) {
       const isInterested = interestedSet.has(eventId);
 
       const detailRows = [
-        loc ? `<div class="startEventDetailRow"><strong>Miejsce:</strong> ${formatFreeText(loc)}</div>` : "",
+        loc && !locIsLink ? `<div class="startEventDetailRow"><strong>Miejsce:</strong> ${formatFreeText(loc)}</div>` : "",
+        mapLinkUrl ? `<div class="startEventDetailRow"><a href="${escapeHtml(mapLinkUrl)}" target="_blank" rel="noopener noreferrer">📍 Zobacz na mapie</a></div>` : "",
         desc ? `<div class="startEventDetailRow startEventDetailRow--desc">${formatFreeText(desc)}</div>` : "",
         contact ? `<div class="startEventDetailRow"><strong>Kontakt:</strong> ${formatFreeText(contact)}</div>` : "",
         link ? `<div class="startEventDetailRow"><a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Strona / zgłoszenia →</a></div>` : "",
@@ -1016,7 +1015,7 @@ async function buildHomeEventsSection(ctx) {
           <summary class="startListItem startEventSummary">
             <div class="startListMain">
               <div class="startListTitle">${escapeHtml(String(ev?.name || "Impreza"))}</div>
-              <div class="startListMeta">${escapeHtml(loc)}${loc ? " · " : ""}${escapeHtml(dateRange)}</div>
+              <div class="startListMeta">${locIsLink ? "" : escapeHtml(loc)}${loc && !locIsLink ? " · " : ""}${escapeHtml(dateRange)}</div>
             </div>
             <div class="startEventSide">
               <div class="imprezaInterest">
@@ -1040,76 +1039,205 @@ async function buildHomeEventsSection(ctx) {
   }
 }
 
-async function buildHomeBasenSection(ctx) {
-  if (!ctx?.idToken) {
-    return `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Brak sesji.</div></div></div>`;
-  }
+// Ikonki basen/sauna — zduplikowane z basen_module.js (2 małe stałe SVG) zamiast
+// współdzielony import: core/ świadomie nie importuje z modules/ (patrz CLAUDE.md,
+// moduły są ładowane dynamicznie przez rejestr, nie przez core).
+const HOME_BASEN_POOL_ICON_SVG = `<svg class="basenCalIcon basenCalIconPool" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 17c1.5-2 3.5-2 5 0s3.5 2 5 0 3.5-2 5 0 3.5 2 5 0"/><path d="M2 12c1.5-2 3.5-2 5 0s3.5 2 5 0 3.5-2 5 0 3.5 2 5 0"/></svg>`;
+const HOME_BASEN_SAUNA_ICON_SVG = `<svg class="basenCalIcon basenCalIconSauna" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c1 3-3 4-3 8a3 3 0 0 0 6 0c0-1-1-2-1-2 2 1 3 3 3 5a5 5 0 0 1-10 0c0-5 5-6 5-11z"/></svg>`;
 
+const HOME_BASEN_POLISH_MONTHS = ["styczeń", "luty", "marzec", "kwiecień", "maj", "czerwiec", "lipiec", "sierpień", "wrzesień", "październik", "listopad", "grudzień"];
+const HOME_BASEN_WEEKDAY_LABELS = ["Pon", "Wt", "Śr", "Czw", "Pt", "So", "Nd"];
+
+// Klucz musi być identyczny z basen_module.js (renderSessionsView konsumuje tę
+// wartość po nawigacji) — ID karty dnia w zakładce "Baseny" to data sesji
+// (basen_sessions/{date} ma deterministyczne ID = data), więc pasuje 1:1.
+const HOME_BASEN_SCROLL_TARGET_KEY = "basenHomeScrollTarget";
+
+function homeBasenPad2(n) {
+  return String(n).padStart(2, "0");
+}
+
+function homeBasenIsoFromParts(year, month, day) {
+  return `${year}-${homeBasenPad2(month + 1)}-${homeBasenPad2(day)}`;
+}
+
+// Lokalna data (nie UTC) — wzorem godzinki_module.js::todayIso, żeby uniknąć tego
+// samego błędu "tuż po północy czasu PL toISOString() pokazuje wczorajszą datę".
+function homeBasenTodayIso() {
+  const d = new Date();
+  return homeBasenIsoFromParts(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function homeBasenSlotLabel(slotKey, slot) {
+  // Godzina sauny bywa różna/niepewna — pokazujemy samo "Sauna", bez czasu (w
+  // odróżnieniu od H1/H2, gdzie godzina jest sztywna z setupu i zawsze pewna).
+  const base = slotKey === "SAUNA" ? "Sauna" : `${slotKey === "H1" ? "I godzina" : "II godzina"} (${slot.timeStart})`;
+  // Ważne rozróżnienie: instruktor na danym slocie MUSI tam być (przypisany kursant),
+  // więc fizycznie nie może być jednocześnie zapisany np. na saunie — bez tego dopisku
+  // "zapisany na 2 baseny + saunę" wygląda mylnie tak samo jak zwykły potrójny zapis.
+  const roleTag = slot.userEnrollmentType === "instructor" ? " — instruktor" : "";
+  return `${base}${roleTag}`;
+}
+
+/**
+ * Kalendarz basenowy na stronie głównej — czysta warstwa nawigacyjno-wizualna,
+ * WSZYSTKA logika zapisu/edycji/anulowania zostaje w zakładce "Baseny"
+ * (basen_module.js::renderSessionsView). Klik dnia:
+ *  - "mój" dzień (zapisany/a) → panel na miejscu: godzina + link "Edytuj zapis"
+ *  - inny dzień z basenem → od razu do karty tego dnia w zakładce "Baseny"
+ * Dla kursanta w siatce w ogóle nie pojawiają się dni bez puli kursowej
+ * (reservedSpots.restrictedToKursant) — wyglądają jak zwykłe puste dni.
+ */
+async function renderHomeBasenCalendar(containerEl, ctx, isKursant) {
+  containerEl.innerHTML = spinnerHtml("Ładowanie kalendarza…");
+
+  let sessions;
   try {
     const data = await apiGetJson({ url: BASEN_SESSIONS_URL, idToken: ctx.idToken });
-    const sessions = Array.isArray(data?.sessions) ? data.sessions : [];
+    sessions = Array.isArray(data?.sessions) ? data.sessions : [];
+  } catch {
+    containerEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać zajęć.</div></div></div>`;
+    return;
+  }
 
-    // Jeden dzień = jeden wiersz (nie jeden slot). Godzina basenu = tylko start
-    // (H1/H2 mają dziś zawsze timeStart===timeEnd, bo czasy są sztywne z setupu —
-    // podawanie "20:00–20:00" wyglądałoby jak błąd). Sauna pomijana tutaj celowo —
-    // widoczna dopiero w module przy samym zapisie, nie w tym skrócie.
-    const days = sessions
-      .map((s) => {
-        const activeSlots = ["H1", "H2"]
-          .map((key) => s?.slots?.[key])
-          .filter((slot) => slot && slot.status !== "cancelled");
-        return {
-          date: s.date,
-          starts: activeSlots.map((slot) => slot.timeStart).filter(Boolean),
-          anyEnrolled: activeSlots.some((slot) => slot.userEnrolled),
-        };
-      })
-      .filter((d) => d.starts.length > 0)
-      .slice(0, 3);
+  const isActiveSlot = (s) => Boolean(s) && s.status !== "cancelled";
+  const isKursowySlot = (s) => isActiveSlot(s) && s.reservedSpots?.restrictedToKursant === true;
 
-    if (!days.length) {
-      return `
-        <div class="startListItem">
-          <div class="startListMain">
-            <div class="startListTitle">Brak nadchodzących zajęć</div>
-          </div>
-        </div>
+  const anyKursowy = sessions.some((s) => isKursowySlot(s.slots?.H1) || isKursowySlot(s.slots?.H2));
+  if (!sessions.length || (isKursant && !anyKursowy)) {
+    containerEl.innerHTML = `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Brak nadchodzących zajęć${isKursant ? " dla kursantów" : ""}</div></div></div>`;
+    return;
+  }
+
+  const sessionsByDate = new Map(sessions.map((s) => [s.date, s]));
+  const today = new Date();
+  const state = { year: today.getFullYear(), month: today.getMonth(), selectedDate: null };
+  const basenTarget = getModuleRouteByType(ctx, "basen");
+
+  function dayInfo(dateIso) {
+    const session = sessionsByDate.get(dateIso);
+    if (!session) return null;
+    const h1 = session.slots?.H1;
+    const h2 = session.slots?.H2;
+    const sauna = session.slots?.SAUNA;
+    const hasPool = isActiveSlot(h1) || isActiveSlot(h2);
+    const hasSauna = isActiveSlot(sauna);
+    if (!hasPool && !hasSauna) return null;
+
+    const isKursowy = isKursowySlot(h1) || isKursowySlot(h2);
+    if (isKursant && !isKursowy) return null;
+
+    const enrolledSlots = ["H1", "H2", "SAUNA"]
+      .map((key) => ({ key, slot: session.slots?.[key] }))
+      .filter(({ slot }) => isActiveSlot(slot) && slot.userEnrolled);
+
+    return { hasPool, hasSauna, isKursowy, isMine: enrolledSlots.length > 0, enrolledSlots };
+  }
+
+  function goToSessionCard(dateIso) {
+    try { sessionStorage.setItem(HOME_BASEN_SCROLL_TARGET_KEY, dateIso); } catch { /* ignore */ }
+    setHash(basenTarget.moduleId, basenTarget.routeId);
+  }
+
+  function showDayPreview(dateIso, info) {
+    const panel = containerEl.querySelector("#homeBasenDayPreview");
+    if (!panel) return;
+    if (state.selectedDate === dateIso && !panel.hidden) {
+      panel.hidden = true;
+      state.selectedDate = null;
+      return;
+    }
+    state.selectedDate = dateIso;
+    const rows = info.enrolledSlots
+      .map(({ key, slot }) => `<div class="basenHomeDayPreviewRow">${escapeHtml(homeBasenSlotLabel(key, slot))}</div>`)
+      .join("");
+    panel.innerHTML = `
+      <div class="basenHomeDayPreviewTitle">Zapisany/a — ${escapeHtml(formatDatePL(dateIso))}</div>
+      ${rows}
+      <button type="button" class="ghost small" data-day-preview-edit>Edytuj zapis</button>
+    `;
+    panel.hidden = false;
+    panel.querySelector("[data-day-preview-edit]")?.addEventListener("click", () => goToSessionCard(dateIso));
+  }
+
+  function bindDayClicks() {
+    containerEl.querySelectorAll(".basenCalDay[data-cal-date]").forEach((cell) => {
+      cell.addEventListener("click", () => {
+        const dateIso = cell.getAttribute("data-cal-date");
+        const info = dayInfo(dateIso);
+        if (!info) return;
+        if (info.isMine) showDayPreview(dateIso, info);
+        else goToSessionCard(dateIso);
+      });
+    });
+  }
+
+  function bindNav() {
+    containerEl.querySelector(".basenCalendarHead")?.addEventListener("click", (ev) => {
+      const btn = ev.target.closest("[data-cal-nav]");
+      if (!btn) return;
+      state.month += btn.getAttribute("data-cal-nav") === "next" ? 1 : -1;
+      if (state.month < 0) { state.month = 11; state.year -= 1; }
+      if (state.month > 11) { state.month = 0; state.year += 1; }
+      state.selectedDate = null;
+      draw();
+    });
+  }
+
+  function draw() {
+    const { year, month } = state;
+    const first = new Date(year, month, 1);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const leadBlanks = (first.getDay() + 6) % 7;
+    const todayIsoStr = homeBasenTodayIso();
+
+    let cells = "";
+    for (let i = 0; i < leadBlanks; i++) cells += `<div class="basenCalDay basenCalDay--blank"></div>`;
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateIso = homeBasenIsoFromParts(year, month, day);
+      if (dateIso < todayIsoStr) {
+        cells += `<div class="basenCalDay basenCalDay--past"><span class="basenCalDayNum">${day}</span></div>`;
+        continue;
+      }
+      const info = dayInfo(dateIso);
+      if (!info) {
+        cells += `<div class="basenCalDay basenCalDay--none"><span class="basenCalDayNum">${day}</span></div>`;
+        continue;
+      }
+      const borderClass = info.isMine ? "basenCalDay--mine" : info.isKursowy ? "basenCalDay--kursowy" : "basenCalDay--has-session";
+      cells += `
+        <button type="button" class="basenCalDay ${borderClass}" data-cal-date="${dateIso}">
+          <span class="basenCalDayNum">${day}</span>
+          <span class="basenCalDayIcons">${info.hasPool ? HOME_BASEN_POOL_ICON_SVG : ""}${info.hasSauna ? HOME_BASEN_SAUNA_ICON_SVG : ""}</span>
+        </button>
       `;
     }
 
-    const dayNames = ["niedziela", "poniedziałek", "wtorek", "środa", "czwartek", "piątek", "sobota"];
-
-    return days.map((d) => {
-      const dt = new Date(`${d.date}T12:00:00`);
-      const dayName = dayNames[dt.getDay()] || "";
-      const m = String(d.date || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
-      const dateStr = m ? `${m[3]}.${m[2]} (${dayName})` : String(d.date || "");
-
-      return `
-        <div class="startListItem startListItem--clickable${d.anyEnrolled ? " startListItem--enrolled" : ""}" data-home-action="basen">
-          <div class="startListMain">
-            <div class="startListTitle">${escapeHtml(dateStr)} · ${escapeHtml(d.starts.join(" i "))}</div>
-          </div>
-          ${d.anyEnrolled ? `<div class="startListSide startListEnrolledTag">Zapisana/y</div>` : ""}
+    containerEl.innerHTML = `
+      <div class="basenCalLegend">
+        <span class="basenCalLegendItem">${HOME_BASEN_POOL_ICON_SVG} Basen</span>
+        <span class="basenCalLegendItem">${HOME_BASEN_SAUNA_ICON_SVG} Sauna</span>
+        <span class="basenCalLegendItem"><span class="basenCalLegendSwatch basenCalLegendSwatch--mine"></span>Mój basen</span>
+        <span class="basenCalLegendItem"><span class="basenCalLegendSwatch basenCalLegendSwatch--kursowy"></span>Basen kursowy</span>
+      </div>
+      <div class="basenCalendar">
+        <div class="basenCalendarHead">
+          <button type="button" class="ghost basenCalNavBtn" data-cal-nav="prev">&lsaquo;</button>
+          <div class="basenCalendarTitle">${escapeHtml(HOME_BASEN_POLISH_MONTHS[month])} ${year}</div>
+          <button type="button" class="ghost basenCalNavBtn" data-cal-nav="next">&rsaquo;</button>
         </div>
-      `;
-    }).join("");
-  } catch {
-    return `<div class="startListItem"><div class="startListMain"><div class="startListTitle">Nie udało się pobrać zajęć.</div></div></div>`;
-  }
-}
+        <div class="basenCalendarWeekdays">${HOME_BASEN_WEEKDAY_LABELS.map((w) => `<div class="basenCalendarWeekday">${w}</div>`).join("")}</div>
+        <div class="basenCalendarGrid">${cells}</div>
+      </div>
+      <div id="homeBasenDayPreview" class="basenHomeDayPreview" hidden></div>
+    `;
 
-// Wiersze dnia dopisywane asynchronicznie (po buildHomeBasenSection) — wstrzyknięte
-// PO tym jak statyczne data-home-action='basen' zostały już zbindowane wyżej
-// (ten sam querySelectorAll ich jeszcze nie widział), więc wiążemy je osobno tutaj,
-// wzorem bindHomeEventInterestButtons.
-function bindHomeBasenRows(listEl, ctx) {
-  listEl.querySelectorAll("[data-home-action='basen']").forEach((row) => {
-    row.addEventListener("click", () => {
-      const basenTarget = getModuleRouteByType(ctx, "basen");
-      setHash(basenTarget.moduleId, basenTarget.routeId);
-    });
-  });
+    bindNav();
+    bindDayClicks();
+  }
+
+  draw();
 }
 
 async function buildHomeKursEventsSection(ctx) {
@@ -1478,19 +1606,20 @@ function renderProfileForm({ viewEl, ctx }) {
       ctx.session = session;
       location.reload();
     } catch (e) {
-      const msg = String(e?.message || e);
-      const json = tryParseJsonFromHttpError(msg);
-
-      if (json?.code === "validation_failed" && json?.fields) {
-        const lines = Object.entries(json.fields).map(([k, v]) => fieldErrorToPl(k, v));
+      // e.code/e.fields — doczepiane przez api_client.js::buildApiError. Wcześniej ten
+      // catch próbował wyłuskać JSON z tekstu komunikatu (tryParseJsonFromHttpError) —
+      // martwe od czasu, gdy backend zaczął zwracać walidację jako {code,fields} BEZ
+      // pola message (żaden tekst do wyłuskania nie trafiał nigdy do err.message).
+      if (e?.code === "validation_failed" && e?.fields) {
+        const lines = Object.entries(e.fields).map(([k, v]) => fieldErrorToPl(k, v));
         setErr("Błąd walidacji: " + lines.join("; "));
-      } else if (json?.code === "kursant_not_found") {
+      } else if (e?.code === "kursant_not_found") {
         setErr(
           "Twój adres e-mail nie figuruje na liście kursantów. " +
           "Jeśli to błąd, skontaktuj się z zarządem: zarzad@morzkulc.pl"
         );
       } else {
-        setErr("Błąd zapisu: " + msg);
+        setErr("Błąd zapisu: " + (e?.message || String(e)));
       }
     } finally {
       btn.disabled = false;
@@ -1694,17 +1823,6 @@ function isPhoneValid(v) {
 
 function isIsoDateYYYYMMDD(v) {
   return /^\d{4}-\d{2}-\d{2}$/.test(String(v || "").trim());
-}
-
-function tryParseJsonFromHttpError(msg) {
-  const idx = msg.indexOf(":");
-  if (idx < 0) return null;
-  const tail = msg.slice(idx + 1).trim();
-  try {
-    return JSON.parse(tail);
-  } catch {
-    return null;
-  }
 }
 
 function fieldErrorToPl(field, code) {

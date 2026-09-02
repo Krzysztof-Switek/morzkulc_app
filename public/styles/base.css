@@ -505,7 +505,7 @@ textarea {
 .kluczeDash { color: var(--text-muted); }
 
 /* --- Wymuszone anulowanie rezerwacji (raport Wypożyczenia sprzętu) --- */
-.dangerBtn { border-color: rgba(255, 107, 107, 0.4); color: var(--danger); background: transparent; font-size: 12px; padding: 6px 10px; white-space: nowrap; }
+.dangerBtn { border-color: var(--danger); color: var(--danger); background: transparent; font-size: 12px; padding: 6px 10px; white-space: nowrap; }
 .dangerBtn:hover { background: var(--danger-2); }
 .cancelForm { display: flex; flex-direction: column; gap: 6px; min-width: 200px; }
 .cancelReasonInput { padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 13px; }

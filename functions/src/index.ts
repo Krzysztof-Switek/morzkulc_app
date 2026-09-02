@@ -44,6 +44,7 @@ import {handleBasenSetInstructor} from "./api/basenSetInstructorHandler";
 import {handleBasenClaimWaitingStudent} from "./api/basenClaimWaitingStudentHandler";
 import {handleBasenAddSauna} from "./api/basenAddSaunaHandler";
 import {handleGetBasenAdminGodzinyUsers} from "./api/getBasenAdminGodzinyUsersHandler";
+import {handleGetBasenAdminGodzinyHistory} from "./api/getBasenAdminGodzinyHistoryHandler";
 import {handleGetBasenMyGodziny} from "./api/getBasenMyGodzinyHandler";
 import {handleBasenAdminAddGodziny} from "./api/basenAdminAddGodzinyHandler";
 import {handleGetBasenKayaks} from "./api/getBasenKayaksHandler";
@@ -1388,6 +1389,23 @@ export const getBasenMyGodziny = onRequest({invoker: "private"}, async (req, res
  */
 export const getBasenAdminGodzinyUsers = onRequest({invoker: "private"}, async (req, res) => {
   return handleGetBasenAdminGodzinyUsers(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
+    adminRoleKeys,
+  });
+});
+
+/**
+ * GET /api/basen/admin/godziny/history?userUid=... (authenticated, role: zarzad/kr/opiekun basenowy)
+ * Pełna historia godzin basenowych wskazanego usera — dla przycisku "Pokaż historię"
+ * w zakładce "Płatności".
+ */
+export const getBasenAdminGodzinyHistory = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGetBasenAdminGodzinyHistory(req, res, {
     db,
     sendPreflight,
     requireAllowedHost,

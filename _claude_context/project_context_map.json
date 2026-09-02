@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-31T08:19:46",
+  "generated_at": "2026-09-01T11:01:59",
   "project_root": "C:\\Users\\kswitek\\Documents\\morzkulc_app",
   "settings": {
     "excluded_dirs": [
@@ -3749,6 +3749,33 @@
       "notes": []
     },
     {
+      "path": "DOCS/Sessions & TO DOs/31.08_basen_runda6_zapis_dwuklikowy_i_diagnostyka_goska.md",
+      "extension": ".md",
+      "size_bytes": 8527,
+      "line_count": 162,
+      "sha1_short": "f300b8a29d",
+      "kind": "markdown",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [
+        "# Basen — formularz zapisu na 2 kliki, grupowanie uczestników, diagnostyka zgłoszenia (Goska Witczak)",
+        "## 1. Formularz zapisu: 2 kliki zamiast wszystkiego naraz — WDROŻONE",
+        "## 2. Lista uczestników: instruktorzy na górze + kreska + sparowany student — WDROŻONE",
+        "## 3. Weryfikacja live na prod — wykonana",
+        "### Gotcha (ponownie potwierdzony, już wcześniej znany problem)",
+        "## 4. Zgłoszenie: goska.witczak@gmail.com nie widzi/nie może dodać się jako instruktor",
+        "### Przebieg",
+        "### Wniosek",
+        "## 5. Stan środowiska po tej sesji"
+      ],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "DOCS/Sessions & TO DOs/AUDIT_MAP.md",
       "extension": ".md",
       "size_bytes": 11997,
@@ -5077,9 +5104,9 @@
     {
       "path": "firebase.json",
       "extension": ".json",
-      "size_bytes": 12250,
-      "line_count": 492,
-      "sha1_short": "027db1cf56",
+      "size_bytes": 12982,
+      "line_count": 520,
+      "sha1_short": "0800b548f3",
       "kind": "config",
       "module_aliases": [],
       "imports": [],
@@ -5099,9 +5126,9 @@
     {
       "path": "firestore.indexes.json",
       "extension": ".json",
-      "size_bytes": 4417,
-      "line_count": 153,
-      "sha1_short": "1b0de0dddc",
+      "size_bytes": 3955,
+      "line_count": 137,
+      "sha1_short": "a79d286315",
       "kind": "config",
       "module_aliases": [],
       "imports": [],
@@ -5379,11 +5406,49 @@
       "notes": []
     },
     {
+      "path": "functions/lib/api/basenAddSaunaHandler.js",
+      "extension": ".js",
+      "size_bytes": 2659,
+      "line_count": 57,
+      "sha1_short": "f37f803bfb",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/basen/basen_service",
+          "module": "../modules/basen/basen_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/basen/basen_service.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "handleBasenAddSauna",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/lib/api/basenAdminAddGodzinyHandler.js",
       "extension": ".js",
-      "size_bytes": 2967,
-      "line_count": 69,
-      "sha1_short": "20549755b7",
+      "size_bytes": 3541,
+      "line_count": 74,
+      "sha1_short": "a7b8b40ece",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -5393,10 +5458,18 @@
           "names": [],
           "level": 0,
           "type": "script_import"
+        },
+        {
+          "raw": "import/require ../modules/basen/basen_service",
+          "module": "../modules/basen/basen_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
         }
       ],
       "internal_dependencies": [
-        "functions/lib/modules/basen/basen_godziny_service.js"
+        "functions/lib/modules/basen/basen_godziny_service.js",
+        "functions/lib/modules/basen/basen_service.js"
       ],
       "classes": [],
       "functions": [
@@ -5485,9 +5558,9 @@
     {
       "path": "functions/lib/api/basenCancelEnrollmentHandler.js",
       "extension": ".js",
-      "size_bytes": 1935,
-      "line_count": 46,
-      "sha1_short": "03473ed1ee",
+      "size_bytes": 2082,
+      "line_count": 49,
+      "sha1_short": "8c222481b3",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -5523,9 +5596,9 @@
     {
       "path": "functions/lib/api/basenCancelSessionHandler.js",
       "extension": ".js",
-      "size_bytes": 2436,
-      "line_count": 55,
-      "sha1_short": "d45bd654b2",
+      "size_bytes": 2997,
+      "line_count": 62,
+      "sha1_short": "97f1445fa0",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -5559,11 +5632,49 @@
       "notes": []
     },
     {
+      "path": "functions/lib/api/basenClaimWaitingStudentHandler.js",
+      "extension": ".js",
+      "size_bytes": 2478,
+      "line_count": 54,
+      "sha1_short": "4a4e5956f2",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/basen/basen_service",
+          "module": "../modules/basen/basen_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/basen/basen_service.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "handleBasenClaimWaitingStudent",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/lib/api/basenCreateSessionHandler.js",
       "extension": ".js",
-      "size_bytes": 3067,
-      "line_count": 69,
-      "sha1_short": "f47c2f134e",
+      "size_bytes": 4156,
+      "line_count": 91,
+      "sha1_short": "d0abf213f1",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -5589,6 +5700,16 @@
           "decorators": [],
           "returns": null,
           "doc": null
+        },
+        {
+          "name": "readReserved",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
         }
       ],
       "top_level_symbols": [],
@@ -5599,9 +5720,9 @@
     {
       "path": "functions/lib/api/basenEnrollHandler.js",
       "extension": ".js",
-      "size_bytes": 4634,
-      "line_count": 90,
-      "sha1_short": "287e23359a",
+      "size_bytes": 6157,
+      "line_count": 112,
+      "sha1_short": "f3a5cfe7da",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -5666,6 +5787,82 @@
       "functions": [
         {
           "name": "handleBasenGrantKarnet",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/api/basenSetInstructorHandler.js",
+      "extension": ".js",
+      "size_bytes": 2256,
+      "line_count": 48,
+      "sha1_short": "dc606837b5",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/basen/basen_service",
+          "module": "../modules/basen/basen_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/basen/basen_service.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "handleBasenSetInstructor",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/api/basenSetKayakHandler.js",
+      "extension": ".js",
+      "size_bytes": 1988,
+      "line_count": 45,
+      "sha1_short": "f87365f071",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/basen/basen_service",
+          "module": "../modules/basen/basen_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/basen/basen_service.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "handleBasenSetKayak",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -7117,6 +7314,130 @@
       "notes": []
     },
     {
+      "path": "functions/lib/api/getBasenAdminGodzinyUsersHandler.js",
+      "extension": ".js",
+      "size_bytes": 4543,
+      "line_count": 98,
+      "sha1_short": "ec57f6e753",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/basen/basen_godziny_service",
+          "module": "../modules/basen/basen_godziny_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../modules/basen/basen_service",
+          "module": "../modules/basen/basen_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/basen/basen_godziny_service.js",
+        "functions/lib/modules/basen/basen_service.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "fullName",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "handleGetBasenAdminGodzinyUsers",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isRegistered",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "nickname",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/api/getBasenAttendeesHandler.js",
+      "extension": ".js",
+      "size_bytes": 1491,
+      "line_count": 34,
+      "sha1_short": "185ffbbb8e",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/basen/basen_service",
+          "module": "../modules/basen/basen_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/basen/basen_service.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "handleGetBasenAttendees",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/lib/api/getBasenGodzinyHandler.js",
       "extension": ".js",
       "size_bytes": 2298,
@@ -7193,11 +7514,11 @@
       "notes": []
     },
     {
-      "path": "functions/lib/api/getBasenSessionsHandler.js",
+      "path": "functions/lib/api/getBasenKayaksHandler.js",
       "extension": ".js",
-      "size_bytes": 3051,
-      "line_count": 65,
-      "sha1_short": "13f0ccd693",
+      "size_bytes": 1465,
+      "line_count": 34,
+      "sha1_short": "df27540b70",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -7215,7 +7536,101 @@
       "classes": [],
       "functions": [
         {
+          "name": "handleGetBasenKayaks",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/api/getBasenMyGodzinyHandler.js",
+      "extension": ".js",
+      "size_bytes": 2792,
+      "line_count": 58,
+      "sha1_short": "8cf30ad0bd",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/basen/basen_godziny_service",
+          "module": "../modules/basen/basen_godziny_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/basen/basen_godziny_service.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "handleGetBasenMyGodziny",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/api/getBasenSessionsHandler.js",
+      "extension": ".js",
+      "size_bytes": 5560,
+      "line_count": 99,
+      "sha1_short": "27cd5975cc",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/basen/basen_godziny_service",
+          "module": "../modules/basen/basen_godziny_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../modules/basen/basen_service",
+          "module": "../modules/basen/basen_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/lib/modules/basen/basen_godziny_service.js",
+        "functions/lib/modules/basen/basen_service.js"
+      ],
+      "classes": [],
+      "functions": [
+        {
           "name": "handleGetBasenSessions",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "resolveOwnKayakLabel",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -8443,12 +8858,19 @@
     {
       "path": "functions/lib/api/registerUserHandler.js",
       "extension": ".js",
-      "size_bytes": 38760,
-      "line_count": 717,
-      "sha1_short": "67df6f32fd",
+      "size_bytes": 39628,
+      "line_count": 730,
+      "sha1_short": "c7554885f8",
       "kind": "script",
       "module_aliases": [],
       "imports": [
+        {
+          "raw": "import/require ../modules/basen/basen_service",
+          "module": "../modules/basen/basen_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
         {
           "raw": "import/require ../modules/equipment/bundle/gear_bundle_service",
           "module": "../modules/equipment/bundle/gear_bundle_service",
@@ -8479,6 +8901,7 @@
         }
       ],
       "internal_dependencies": [
+        "functions/lib/modules/basen/basen_service.js",
         "functions/lib/modules/equipment/bundle/gear_bundle_service.js",
         "functions/lib/modules/hours/godzinki_service.js",
         "functions/lib/modules/hours/godzinki_vars.js",
@@ -8884,9 +9307,9 @@
     {
       "path": "functions/lib/index.js",
       "extension": ".js",
-      "size_bytes": 70391,
-      "line_count": 1615,
-      "sha1_short": "51a8372c84",
+      "size_bytes": 73033,
+      "line_count": 1670,
+      "sha1_short": "fe73e89a89",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -8912,22 +9335,15 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ./api/basenAddSaunaHandler",
+          "module": "./api/basenAddSaunaHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ./api/basenAdminAddGodzinyHandler",
           "module": "./api/basenAdminAddGodzinyHandler",
-          "names": [],
-          "level": 0,
-          "type": "script_import"
-        },
-        {
-          "raw": "import/require ./api/basenAdminCorrectGodzinyHandler",
-          "module": "./api/basenAdminCorrectGodzinyHandler",
-          "names": [],
-          "level": 0,
-          "type": "script_import"
-        },
-        {
-          "raw": "import/require ./api/basenAdminSearchUsersHandler",
-          "module": "./api/basenAdminSearchUsersHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -8947,6 +9363,13 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ./api/basenClaimWaitingStudentHandler",
+          "module": "./api/basenClaimWaitingStudentHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ./api/basenCreateSessionHandler",
           "module": "./api/basenCreateSessionHandler",
           "names": [],
@@ -8961,8 +9384,15 @@
           "type": "script_import"
         },
         {
-          "raw": "import/require ./api/basenGrantKarnetHandler",
-          "module": "./api/basenGrantKarnetHandler",
+          "raw": "import/require ./api/basenSetInstructorHandler",
+          "module": "./api/basenSetInstructorHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/basenSetKayakHandler",
+          "module": "./api/basenSetKayakHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -9066,15 +9496,29 @@
           "type": "script_import"
         },
         {
-          "raw": "import/require ./api/getBasenGodzinyHandler",
-          "module": "./api/getBasenGodzinyHandler",
+          "raw": "import/require ./api/getBasenAdminGodzinyUsersHandler",
+          "module": "./api/getBasenAdminGodzinyUsersHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
         },
         {
-          "raw": "import/require ./api/getBasenKarnetyHandler",
-          "module": "./api/getBasenKarnetyHandler",
+          "raw": "import/require ./api/getBasenAttendeesHandler",
+          "module": "./api/getBasenAttendeesHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/getBasenKayaksHandler",
+          "module": "./api/getBasenKayaksHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/getBasenMyGodzinyHandler",
+          "module": "./api/getBasenMyGodzinyHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -9357,14 +9801,15 @@
         "functions/lib/api/adminApprovalHandler.js",
         "functions/lib/api/adminEventsSyncCalendarHandler.js",
         "functions/lib/api/adminGearReservationCancelHandler.js",
+        "functions/lib/api/basenAddSaunaHandler.js",
         "functions/lib/api/basenAdminAddGodzinyHandler.js",
-        "functions/lib/api/basenAdminCorrectGodzinyHandler.js",
-        "functions/lib/api/basenAdminSearchUsersHandler.js",
         "functions/lib/api/basenCancelEnrollmentHandler.js",
         "functions/lib/api/basenCancelSessionHandler.js",
+        "functions/lib/api/basenClaimWaitingStudentHandler.js",
         "functions/lib/api/basenCreateSessionHandler.js",
         "functions/lib/api/basenEnrollHandler.js",
-        "functions/lib/api/basenGrantKarnetHandler.js",
+        "functions/lib/api/basenSetInstructorHandler.js",
+        "functions/lib/api/basenSetKayakHandler.js",
         "functions/lib/api/checkNicknameAvailabilityHandler.js",
         "functions/lib/api/eventInterestToggleHandler.js",
         "functions/lib/api/gearBundleReservationCreateHandler.js",
@@ -9379,8 +9824,10 @@
         "functions/lib/api/getAdminMemberDuesHandler.js",
         "functions/lib/api/getAdminPendingHandler.js",
         "functions/lib/api/getAdminUserActivityHandler.js",
-        "functions/lib/api/getBasenGodzinyHandler.js",
-        "functions/lib/api/getBasenKarnetyHandler.js",
+        "functions/lib/api/getBasenAdminGodzinyUsersHandler.js",
+        "functions/lib/api/getBasenAttendeesHandler.js",
+        "functions/lib/api/getBasenKayaksHandler.js",
+        "functions/lib/api/getBasenMyGodzinyHandler.js",
         "functions/lib/api/getBasenSessionsHandler.js",
         "functions/lib/api/getEventInterestsHandler.js",
         "functions/lib/api/getEventsHandler.js",
@@ -9667,9 +10114,9 @@
     {
       "path": "functions/lib/modules/basen/basen_godziny_service.js",
       "extension": ".js",
-      "size_bytes": 4003,
-      "line_count": 90,
-      "sha1_short": "ef514310a3",
+      "size_bytes": 5512,
+      "line_count": 137,
+      "sha1_short": "815d7f158c",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -9695,7 +10142,7 @@
           "doc": null
         },
         {
-          "name": "adminCorrectBasenGodziny",
+          "name": "blockBasenGodzinyInTx",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -9715,7 +10162,37 @@
           "doc": null
         },
         {
+          "name": "getAllInstructorRewardEnrollmentIds",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "getBasenGodzinyRecords",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "grantInstructorReward",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "refundBasenGodzinyInTx",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -9733,12 +10210,26 @@
     {
       "path": "functions/lib/modules/basen/basen_service.js",
       "extension": ".js",
-      "size_bytes": 15197,
-      "line_count": 339,
-      "sha1_short": "a7ef45b726",
+      "size_bytes": 43993,
+      "line_count": 825,
+      "sha1_short": "25d6b0ec40",
       "kind": "script",
       "module_aliases": [],
       "imports": [
+        {
+          "raw": "import/require ../setup/function_roles_service",
+          "module": "../setup/function_roles_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./basen_godziny_service",
+          "module": "./basen_godziny_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
         {
           "raw": "import/require firebase-admin",
           "module": "firebase-admin",
@@ -9747,9 +10238,42 @@
           "type": "script_import"
         }
       ],
-      "internal_dependencies": [],
+      "internal_dependencies": [
+        "functions/lib/modules/basen/basen_godziny_service.js",
+        "functions/lib/modules/setup/function_roles_service.js"
+      ],
       "classes": [],
       "functions": [
+        {
+          "name": "addSaunaToSession",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "buildAvailableKayaksList",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "buildReserved",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
         {
           "name": "cancelEnrollment",
           "type": "function",
@@ -9771,6 +10295,26 @@
           "doc": null
         },
         {
+          "name": "claimWaitingStudent",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "computeSlotAvailability",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "createSession",
           "type": "function",
           "line_start": null,
@@ -9781,7 +10325,7 @@
           "doc": null
         },
         {
-          "name": "enrollInSession",
+          "name": "enrollInSlot",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -9791,7 +10335,37 @@
           "doc": null
         },
         {
-          "name": "getActiveKarnet",
+          "name": "enrollmentId",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "fetchPoolKayaks",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getAttendeesBySessionSlot",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getAvailableKayaksBySessionSlot",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -9821,7 +10395,7 @@
           "doc": null
         },
         {
-          "name": "getUserKarnety",
+          "name": "kayakAllocationId",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -9831,7 +10405,27 @@
           "doc": null
         },
         {
-          "name": "grantKarnet",
+          "name": "kayakBaseLabel",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "listAvailableBasenKayaks",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "listSlotAttendees",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -9871,7 +10465,57 @@
           "doc": null
         },
         {
-          "name": "sessionDatetimeMs",
+          "name": "resolveBasenAdminGrant",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "resolveKayakLabel",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "sessionSlotDatetimeMs",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "setEnrollmentInstructor",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "setEnrollmentKayak",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "splitEmails",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -10075,9 +10719,9 @@
     {
       "path": "functions/lib/modules/equipment/bundle/gear_bundle_service.js",
       "extension": ".js",
-      "size_bytes": 49292,
-      "line_count": 936,
-      "sha1_short": "e895df5c4d",
+      "size_bytes": 50341,
+      "line_count": 951,
+      "sha1_short": "0510de99f8",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -11492,6 +12136,44 @@
       "notes": []
     },
     {
+      "path": "functions/lib/modules/setup/function_roles_service.js",
+      "extension": ".js",
+      "size_bytes": 1718,
+      "line_count": 33,
+      "sha1_short": "97d03ab196",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "resolveFunctionRoleEmail",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "singleEmail",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/lib/modules/setup/setup_gear_vars.js",
       "extension": ".js",
       "size_bytes": 2821,
@@ -12037,9 +12719,9 @@
     {
       "path": "functions/lib/service/registry.js",
       "extension": ".js",
-      "size_bytes": 4695,
-      "line_count": 79,
-      "sha1_short": "0794630731",
+      "size_bytes": 4848,
+      "line_count": 81,
+      "sha1_short": "a77e898a02",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -12053,6 +12735,13 @@
         {
           "raw": "import/require ./tasks/adminNotifyPendingApprovals",
           "module": "./tasks/adminNotifyPendingApprovals",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./tasks/basenGrantInstructorRewards",
+          "module": "./tasks/basenGrantInstructorRewards",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -12264,6 +12953,7 @@
       "internal_dependencies": [
         "functions/lib/service/tasks/adminApprovalWriteBack.js",
         "functions/lib/service/tasks/adminNotifyPendingApprovals.js",
+        "functions/lib/service/tasks/basenGrantInstructorRewards.js",
         "functions/lib/service/tasks/basenNotifySessionCancelled.js",
         "functions/lib/service/tasks/eventsNotifyNew.js",
         "functions/lib/service/tasks/eventsNotifyUpcoming.js",
@@ -12396,9 +13086,9 @@
     {
       "path": "functions/lib/service/service_config.js",
       "extension": ".js",
-      "size_bytes": 13500,
-      "line_count": 261,
-      "sha1_short": "b06d6dcdd0",
+      "size_bytes": 13407,
+      "line_count": 258,
+      "sha1_short": "5411bc595b",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -12547,25 +13237,53 @@
       "notes": []
     },
     {
-      "path": "functions/lib/service/tasks/basenNotifySessionCancelled.js",
+      "path": "functions/lib/service/tasks/basenGrantInstructorRewards.js",
       "extension": ".js",
-      "size_bytes": 3817,
-      "line_count": 86,
-      "sha1_short": "81f1f1a372",
+      "size_bytes": 3800,
+      "line_count": 82,
+      "sha1_short": "eaa8a8e9bd",
       "kind": "script",
       "module_aliases": [],
       "imports": [
         {
-          "raw": "import/require ../../modules/basen/basen_service",
-          "module": "../../modules/basen/basen_service",
+          "raw": "import/require ../../modules/basen/basen_godziny_service",
+          "module": "../../modules/basen/basen_godziny_service",
           "names": [],
           "level": 0,
           "type": "script_import"
         }
       ],
       "internal_dependencies": [
-        "functions/lib/modules/basen/basen_service.js"
+        "functions/lib/modules/basen/basen_godziny_service.js"
       ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "todayIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/lib/service/tasks/basenNotifySessionCancelled.js",
+      "extension": ".js",
+      "size_bytes": 3282,
+      "line_count": 75,
+      "sha1_short": "a068bbdfaa",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [],
+      "internal_dependencies": [],
       "classes": [],
       "functions": [
         {
@@ -14478,9 +15196,9 @@
     {
       "path": "functions/lib/service/tasks/usersSyncFieldsFromSheet.js",
       "extension": ".js",
-      "size_bytes": 26106,
-      "line_count": 519,
-      "sha1_short": "b1712bfdf3",
+      "size_bytes": 26460,
+      "line_count": 524,
+      "sha1_short": "3fff2da458",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -15594,6 +16312,31 @@
       "notes": []
     },
     {
+      "path": "functions/scripts/deleteOrphanedBasenKarnety.js",
+      "extension": ".js",
+      "size_bytes": 1434,
+      "line_count": 36,
+      "sha1_short": "62b2d93186",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/scripts/deleteStuckJob.js",
       "extension": ".js",
       "size_bytes": 799,
@@ -16663,11 +17406,109 @@
       "notes": []
     },
     {
+      "path": "functions/src/api/basenAddSaunaHandler.ts",
+      "extension": ".ts",
+      "size_bytes": 2573,
+      "line_count": 72,
+      "sha1_short": "0882ae0116",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/basen/basen_service",
+          "module": "../modules/basen/basen_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require express",
+          "module": "express",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/src/modules/basen/basen_service.ts"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "handleBasenAddSauna",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/src/api/basenAdminAddGodzinyHandler.ts",
+      "extension": ".ts",
+      "size_bytes": 3291,
+      "line_count": 90,
+      "sha1_short": "f1e38eb5d8",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/basen/basen_godziny_service",
+          "module": "../modules/basen/basen_godziny_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../modules/basen/basen_service",
+          "module": "../modules/basen/basen_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require express",
+          "module": "express",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/src/modules/basen/basen_godziny_service.ts",
+        "functions/src/modules/basen/basen_service.ts"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "handleBasenAdminAddGodziny",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/src/api/basenCancelEnrollmentHandler.ts",
       "extension": ".ts",
-      "size_bytes": 2117,
+      "size_bytes": 2126,
       "line_count": 63,
-      "sha1_short": "5f947279a1",
+      "sha1_short": "b2f107722d",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -16710,9 +17551,9 @@
     {
       "path": "functions/src/api/basenCancelSessionHandler.ts",
       "extension": ".ts",
-      "size_bytes": 2999,
-      "line_count": 82,
-      "sha1_short": "51a8c5e72f",
+      "size_bytes": 2968,
+      "line_count": 80,
+      "sha1_short": "44d4a99b59",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -16753,11 +17594,56 @@
       "notes": []
     },
     {
+      "path": "functions/src/api/basenClaimWaitingStudentHandler.ts",
+      "extension": ".ts",
+      "size_bytes": 2530,
+      "line_count": 67,
+      "sha1_short": "106e6c8d7c",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/basen/basen_service",
+          "module": "../modules/basen/basen_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require express",
+          "module": "express",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/src/modules/basen/basen_service.ts"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "handleBasenClaimWaitingStudent",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/src/api/basenCreateSessionHandler.ts",
       "extension": ".ts",
-      "size_bytes": 3824,
-      "line_count": 105,
-      "sha1_short": "2bc8d7f7d0",
+      "size_bytes": 3948,
+      "line_count": 112,
+      "sha1_short": "5e22dd798b",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -16792,7 +17678,7 @@
           "doc": null
         },
         {
-          "name": "readTimeBlock",
+          "name": "readReserved",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -16810,9 +17696,9 @@
     {
       "path": "functions/src/api/basenEnrollHandler.ts",
       "extension": ".ts",
-      "size_bytes": 5908,
-      "line_count": 157,
-      "sha1_short": "7378eba6cd",
+      "size_bytes": 5357,
+      "line_count": 136,
+      "sha1_short": "a45f084b9f",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -16861,11 +17747,11 @@
       "notes": []
     },
     {
-      "path": "functions/src/api/basenGrantKarnetHandler.ts",
+      "path": "functions/src/api/basenSetInstructorHandler.ts",
       "extension": ".ts",
-      "size_bytes": 3171,
-      "line_count": 87,
-      "sha1_short": "be72d9d199",
+      "size_bytes": 2332,
+      "line_count": 61,
+      "sha1_short": "416999ff2c",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -16890,7 +17776,7 @@
       "classes": [],
       "functions": [
         {
-          "name": "handleBasenGrantKarnet",
+          "name": "handleBasenSetInstructor",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -18305,6 +19191,99 @@
       "notes": []
     },
     {
+      "path": "functions/src/api/getBasenAdminGodzinyUsersHandler.ts",
+      "extension": ".ts",
+      "size_bytes": 4119,
+      "line_count": 110,
+      "sha1_short": "11e837c726",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/basen/basen_godziny_service",
+          "module": "../modules/basen/basen_godziny_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ../modules/basen/basen_service",
+          "module": "../modules/basen/basen_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require express",
+          "module": "express",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/src/modules/basen/basen_godziny_service.ts",
+        "functions/src/modules/basen/basen_service.ts"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "fullName",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "handleGetBasenAdminGodzinyUsers",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isRegistered",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "nickname",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "norm",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/src/api/getBasenAttendeesHandler.ts",
       "extension": ".ts",
       "size_bytes": 1638,
@@ -18335,51 +19314,6 @@
       "functions": [
         {
           "name": "handleGetBasenAttendees",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        }
-      ],
-      "top_level_symbols": [],
-      "headings": [],
-      "config_keys": [],
-      "notes": []
-    },
-    {
-      "path": "functions/src/api/getBasenKarnetyHandler.ts",
-      "extension": ".ts",
-      "size_bytes": 1813,
-      "line_count": 55,
-      "sha1_short": "c0d91f9765",
-      "kind": "script",
-      "module_aliases": [],
-      "imports": [
-        {
-          "raw": "import/require ../modules/basen/basen_service",
-          "module": "../modules/basen/basen_service",
-          "names": [],
-          "level": 0,
-          "type": "script_import"
-        },
-        {
-          "raw": "import/require express",
-          "module": "express",
-          "names": [],
-          "level": 0,
-          "type": "script_import"
-        }
-      ],
-      "internal_dependencies": [
-        "functions/src/modules/basen/basen_service.ts"
-      ],
-      "classes": [],
-      "functions": [
-        {
-          "name": "handleGetBasenKarnety",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -18440,14 +19374,66 @@
       "notes": []
     },
     {
-      "path": "functions/src/api/getBasenSessionsHandler.ts",
+      "path": "functions/src/api/getBasenMyGodzinyHandler.ts",
       "extension": ".ts",
-      "size_bytes": 2950,
-      "line_count": 83,
-      "sha1_short": "daf6e6ec98",
+      "size_bytes": 2311,
+      "line_count": 65,
+      "sha1_short": "ae6b4b9efd",
       "kind": "script",
       "module_aliases": [],
       "imports": [
+        {
+          "raw": "import/require ../modules/basen/basen_godziny_service",
+          "module": "../modules/basen/basen_godziny_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require express",
+          "module": "express",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
+        "functions/src/modules/basen/basen_godziny_service.ts"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "handleGetBasenMyGodziny",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/src/api/getBasenSessionsHandler.ts",
+      "extension": ".ts",
+      "size_bytes": 4828,
+      "line_count": 114,
+      "sha1_short": "300656a44a",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../modules/basen/basen_godziny_service",
+          "module": "../modules/basen/basen_godziny_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
         {
           "raw": "import/require ../modules/basen/basen_service",
           "module": "../modules/basen/basen_service",
@@ -18464,6 +19450,7 @@
         }
       ],
       "internal_dependencies": [
+        "functions/src/modules/basen/basen_godziny_service.ts",
         "functions/src/modules/basen/basen_service.ts"
       ],
       "classes": [],
@@ -20164,9 +21151,9 @@
     {
       "path": "functions/src/index.ts",
       "extension": ".ts",
-      "size_bytes": 59337,
-      "line_count": 1762,
-      "sha1_short": "7ea6182a50",
+      "size_bytes": 62216,
+      "line_count": 1844,
+      "sha1_short": "21d450dd45",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -20192,6 +21179,20 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ./api/basenAddSaunaHandler",
+          "module": "./api/basenAddSaunaHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/basenAdminAddGodzinyHandler",
+          "module": "./api/basenAdminAddGodzinyHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ./api/basenCancelEnrollmentHandler",
           "module": "./api/basenCancelEnrollmentHandler",
           "names": [],
@@ -20201,6 +21202,13 @@
         {
           "raw": "import/require ./api/basenCancelSessionHandler",
           "module": "./api/basenCancelSessionHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./api/basenClaimWaitingStudentHandler",
+          "module": "./api/basenClaimWaitingStudentHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -20220,8 +21228,8 @@
           "type": "script_import"
         },
         {
-          "raw": "import/require ./api/basenGrantKarnetHandler",
-          "module": "./api/basenGrantKarnetHandler",
+          "raw": "import/require ./api/basenSetInstructorHandler",
+          "module": "./api/basenSetInstructorHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -20332,6 +21340,13 @@
           "type": "script_import"
         },
         {
+          "raw": "import/require ./api/getBasenAdminGodzinyUsersHandler",
+          "module": "./api/getBasenAdminGodzinyUsersHandler",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
           "raw": "import/require ./api/getBasenAttendeesHandler",
           "module": "./api/getBasenAttendeesHandler",
           "names": [],
@@ -20339,15 +21354,15 @@
           "type": "script_import"
         },
         {
-          "raw": "import/require ./api/getBasenKarnetyHandler",
-          "module": "./api/getBasenKarnetyHandler",
+          "raw": "import/require ./api/getBasenKayaksHandler",
+          "module": "./api/getBasenKayaksHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
         },
         {
-          "raw": "import/require ./api/getBasenKayaksHandler",
-          "module": "./api/getBasenKayaksHandler",
+          "raw": "import/require ./api/getBasenMyGodzinyHandler",
+          "module": "./api/getBasenMyGodzinyHandler",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -20637,11 +21652,14 @@
         "functions/src/api/adminApprovalHandler.ts",
         "functions/src/api/adminEventsSyncCalendarHandler.ts",
         "functions/src/api/adminGearReservationCancelHandler.ts",
+        "functions/src/api/basenAddSaunaHandler.ts",
+        "functions/src/api/basenAdminAddGodzinyHandler.ts",
         "functions/src/api/basenCancelEnrollmentHandler.ts",
         "functions/src/api/basenCancelSessionHandler.ts",
+        "functions/src/api/basenClaimWaitingStudentHandler.ts",
         "functions/src/api/basenCreateSessionHandler.ts",
         "functions/src/api/basenEnrollHandler.ts",
-        "functions/src/api/basenGrantKarnetHandler.ts",
+        "functions/src/api/basenSetInstructorHandler.ts",
         "functions/src/api/basenSetKayakHandler.ts",
         "functions/src/api/checkNicknameAvailabilityHandler.ts",
         "functions/src/api/eventInterestToggleHandler.ts",
@@ -20657,9 +21675,10 @@
         "functions/src/api/getAdminMemberDuesHandler.ts",
         "functions/src/api/getAdminPendingHandler.ts",
         "functions/src/api/getAdminUserActivityHandler.ts",
+        "functions/src/api/getBasenAdminGodzinyUsersHandler.ts",
         "functions/src/api/getBasenAttendeesHandler.ts",
-        "functions/src/api/getBasenKarnetyHandler.ts",
         "functions/src/api/getBasenKayaksHandler.ts",
+        "functions/src/api/getBasenMyGodzinyHandler.ts",
         "functions/src/api/getBasenSessionsHandler.ts",
         "functions/src/api/getEventInterestsHandler.ts",
         "functions/src/api/getEventsHandler.ts",
@@ -20944,17 +21963,120 @@
       "notes": []
     },
     {
+      "path": "functions/src/modules/basen/basen_godziny_service.ts",
+      "extension": ".ts",
+      "size_bytes": 5065,
+      "line_count": 145,
+      "sha1_short": "9cffb025f3",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require firebase-admin",
+          "module": "firebase-admin",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [],
+      "classes": [],
+      "functions": [
+        {
+          "name": "adminAddBasenGodziny",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "blockBasenGodzinyInTx",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "computeBasenGodzinyBalance",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getAllInstructorRewardEnrollmentIds",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getBasenGodzinyRecords",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "grantInstructorReward",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "refundBasenGodzinyInTx",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
       "path": "functions/src/modules/basen/basen_service.ts",
       "extension": ".ts",
-      "size_bytes": 29165,
-      "line_count": 758,
-      "sha1_short": "3eb70c9bdd",
+      "size_bytes": 44870,
+      "line_count": 1062,
+      "sha1_short": "2b5fb03a70",
       "kind": "script",
       "module_aliases": [],
       "imports": [
         {
           "raw": "import/require ../setup/function_roles_service",
           "module": "../setup/function_roles_service",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./basen_godziny_service",
+          "module": "./basen_godziny_service",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -20968,10 +22090,31 @@
         }
       ],
       "internal_dependencies": [
+        "functions/src/modules/basen/basen_godziny_service.ts",
         "functions/src/modules/setup/function_roles_service.ts"
       ],
       "classes": [],
       "functions": [
+        {
+          "name": "addSaunaToSession",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "buildAvailableKayaksList",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
         {
           "name": "cancelEnrollment",
           "type": "function",
@@ -20984,6 +22127,26 @@
         },
         {
           "name": "cancelSession",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "claimWaitingStudent",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "computeSlotAvailability",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -21023,7 +22186,27 @@
           "doc": null
         },
         {
-          "name": "getActiveKarnet",
+          "name": "fetchPoolKayaks",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getAttendeesBySessionSlot",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "getAvailableKayaksBySessionSlot",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -21053,27 +22236,17 @@
           "doc": null
         },
         {
-          "name": "getUserKarnety",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "grantKarnet",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
           "name": "kayakAllocationId",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "kayakBaseLabel",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -21143,7 +22316,27 @@
           "doc": null
         },
         {
+          "name": "resolveKayakLabel",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "sessionSlotDatetimeMs",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "setEnrollmentInstructor",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -23382,9 +24575,9 @@
     {
       "path": "functions/src/service/registry.ts",
       "extension": ".ts",
-      "size_bytes": 3797,
-      "line_count": 78,
-      "sha1_short": "7b970b75a8",
+      "size_bytes": 3919,
+      "line_count": 80,
+      "sha1_short": "d05fad28e9",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -23398,6 +24591,13 @@
         {
           "raw": "import/require ./tasks/adminNotifyPendingApprovals",
           "module": "./tasks/adminNotifyPendingApprovals",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        },
+        {
+          "raw": "import/require ./tasks/basenGrantInstructorRewards",
+          "module": "./tasks/basenGrantInstructorRewards",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -23616,6 +24816,7 @@
       "internal_dependencies": [
         "functions/src/service/tasks/adminApprovalWriteBack.ts",
         "functions/src/service/tasks/adminNotifyPendingApprovals.ts",
+        "functions/src/service/tasks/basenGrantInstructorRewards.ts",
         "functions/src/service/tasks/basenNotifySessionCancelled.ts",
         "functions/src/service/tasks/eventsNotifyNew.ts",
         "functions/src/service/tasks/eventsNotifyUpcoming.ts",
@@ -23924,17 +25125,17 @@
       "notes": []
     },
     {
-      "path": "functions/src/service/tasks/basenNotifySessionCancelled.ts",
+      "path": "functions/src/service/tasks/basenGrantInstructorRewards.ts",
       "extension": ".ts",
-      "size_bytes": 3267,
-      "line_count": 97,
-      "sha1_short": "8aa5cddc2e",
+      "size_bytes": 3173,
+      "line_count": 93,
+      "sha1_short": "f8b84741f2",
       "kind": "script",
       "module_aliases": [],
       "imports": [
         {
-          "raw": "import/require ../../modules/basen/basen_service",
-          "module": "../../modules/basen/basen_service",
+          "raw": "import/require ../../modules/basen/basen_godziny_service",
+          "module": "../../modules/basen/basen_godziny_service",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -23948,7 +25149,45 @@
         }
       ],
       "internal_dependencies": [
-        "functions/src/modules/basen/basen_service.ts",
+        "functions/src/modules/basen/basen_godziny_service.ts",
+        "functions/src/service/types.ts"
+      ],
+      "classes": [],
+      "functions": [
+        {
+          "name": "todayIso",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        }
+      ],
+      "top_level_symbols": [],
+      "headings": [],
+      "config_keys": [],
+      "notes": []
+    },
+    {
+      "path": "functions/src/service/tasks/basenNotifySessionCancelled.ts",
+      "extension": ".ts",
+      "size_bytes": 2777,
+      "line_count": 90,
+      "sha1_short": "f8c734a67b",
+      "kind": "script",
+      "module_aliases": [],
+      "imports": [
+        {
+          "raw": "import/require ../types",
+          "module": "../types",
+          "names": [],
+          "level": 0,
+          "type": "script_import"
+        }
+      ],
+      "internal_dependencies": [
         "functions/src/service/types.ts"
       ],
       "classes": [],
@@ -25997,9 +27236,9 @@
     {
       "path": "functions/src/service/tasks/usersSyncFieldsFromSheet.ts",
       "extension": ".ts",
-      "size_bytes": 22815,
+      "size_bytes": 22808,
       "line_count": 538,
-      "sha1_short": "c867975299",
+      "sha1_short": "51e4e603a0",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -27834,9 +29073,9 @@
     {
       "path": "public/core/app_shell.js",
       "extension": ".js",
-      "size_bytes": 9108,
-      "line_count": 276,
-      "sha1_short": "0fda52f191",
+      "size_bytes": 9870,
+      "line_count": 292,
+      "sha1_short": "b6e6ebbf9b",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -27857,13 +29096,6 @@
         {
           "raw": "import/require /core/render_shell.js",
           "module": "/core/render_shell.js",
-          "names": [],
-          "level": 0,
-          "type": "script_import"
-        },
-        {
-          "raw": "import/require /core/router.js",
-          "module": "/core/router.js",
           "names": [],
           "level": 0,
           "type": "script_import"
@@ -27891,6 +29123,16 @@
         },
         {
           "name": "showAuthError",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "updateSwBannerVisibility",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -28228,9 +29470,9 @@
     {
       "path": "public/core/render_shell.js",
       "extension": ".js",
-      "size_bytes": 78248,
-      "line_count": 1761,
-      "sha1_short": "376cb4ee55",
+      "size_bytes": 78566,
+      "line_count": 1769,
+      "sha1_short": "fc7f452499",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -28256,13 +29498,6 @@
           "type": "script_import"
         },
         {
-          "raw": "import/require /core/sw_update.js",
-          "module": "/core/sw_update.js",
-          "names": [],
-          "level": 0,
-          "type": "script_import"
-        },
-        {
           "raw": "import/require /core/text_format.js",
           "module": "/core/text_format.js",
           "names": [],
@@ -28273,6 +29508,16 @@
       "internal_dependencies": [],
       "classes": [],
       "functions": [
+        {
+          "name": "bindHomeBasenRows",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
         {
           "name": "bindHomeEventInterestButtons",
           "type": "function",
@@ -28850,9 +30095,9 @@
     {
       "path": "public/core/sw_update.js",
       "extension": ".js",
-      "size_bytes": 1307,
-      "line_count": 37,
-      "sha1_short": "e749a5938c",
+      "size_bytes": 972,
+      "line_count": 24,
+      "sha1_short": "b8fe927bc6",
       "kind": "script",
       "module_aliases": [],
       "imports": [],
@@ -28861,26 +30106,6 @@
       "functions": [
         {
           "name": "hardReloadApp",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "isSwUpdatePending",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "setSwUpdatePending",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -29072,9 +30297,9 @@
     {
       "path": "public/index.html",
       "extension": ".html",
-      "size_bytes": 2129,
-      "line_count": 52,
-      "sha1_short": "f796eecd8d",
+      "size_bytes": 2344,
+      "line_count": 56,
+      "sha1_short": "8c73077b5d",
       "kind": "text",
       "module_aliases": [],
       "imports": [],
@@ -29242,9 +30467,9 @@
     {
       "path": "public/modules/basen_module.js",
       "extension": ".js",
-      "size_bytes": 36796,
-      "line_count": 902,
-      "sha1_short": "fb2aaca372",
+      "size_bytes": 56331,
+      "line_count": 1280,
+      "sha1_short": "96f7c622a3",
       "kind": "script",
       "module_aliases": [],
       "imports": [
@@ -29260,7 +30485,7 @@
       "classes": [],
       "functions": [
         {
-          "name": "bindAdminActions",
+          "name": "bindCalendarDayClicks",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -29270,7 +30495,37 @@
           "doc": null
         },
         {
-          "name": "bindAttendeesDetails",
+          "name": "bindCalendarModalCloseDelegation",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "bindCalendarNav",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "bindModalCloseDelegation",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "bindReservedFieldToggles",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -29290,7 +30545,67 @@
           "doc": null
         },
         {
+          "name": "buildReserved",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "buildSessionsByDate",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "closeCreateDayModal",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "closeDayDetailModal",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "closeModifyModal",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "createBasenModule",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "draw",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -29320,7 +30635,27 @@
           "doc": null
         },
         {
-          "name": "karnetStatusLabel",
+          "name": "formatGodzinyDate",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isActiveSlot",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "isoFromParts",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -29340,6 +30675,76 @@
           "doc": null
         },
         {
+          "name": "openAddGodzinyModal",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "openCreateDayModal",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "openDayDetailModal",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "openModifyModal",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "pad",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "pad2",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "refresh",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
           "name": "refreshSessionsView",
           "type": "function",
           "line_start": null,
@@ -29350,7 +30755,7 @@
           "doc": null
         },
         {
-          "name": "renderAdminView",
+          "name": "renderAccountTab",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -29360,7 +30765,7 @@
           "doc": null
         },
         {
-          "name": "renderAttendeesBody",
+          "name": "renderAddGodzinyModalHtml",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -29370,7 +30775,117 @@
           "doc": null
         },
         {
-          "name": "renderKarnetView",
+          "name": "renderCalendarShellHtml",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "renderCalendarTab",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "renderCreateDayModalHtml",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "renderDayDetailModalHtml",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "renderDayDetailSlotHtml",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "renderGodzinyLedgerRow",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "renderGodzinyRow",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "renderList",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "renderModifyModalHtml",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "renderOtherAttendeeRow",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "renderPaymentsTab",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "renderReservedGroupHtml",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -29420,67 +30935,27 @@
           "doc": null
         },
         {
-          "name": "setCancelErr",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "setCancelOk",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "setCreateErr",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "setCreateOk",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "setGrantErr",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
-          "name": "setGrantOk",
-          "type": "function",
-          "line_start": null,
-          "line_end": null,
-          "signature": null,
-          "decorators": [],
-          "returns": null,
-          "doc": null
-        },
-        {
           "name": "spinnerHtml",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "sync",
+          "type": "function",
+          "line_start": null,
+          "line_end": null,
+          "signature": null,
+          "decorators": [],
+          "returns": null,
+          "doc": null
+        },
+        {
+          "name": "syncReservedSubFields",
           "type": "function",
           "line_start": null,
           "line_end": null,
@@ -32170,9 +33645,9 @@
     {
       "path": "public/styles/base.css",
       "extension": ".css",
-      "size_bytes": 16935,
-      "line_count": 556,
-      "sha1_short": "d92793bdc3",
+      "size_bytes": 17379,
+      "line_count": 573,
+      "sha1_short": "299220afbe",
       "kind": "text",
       "module_aliases": [],
       "imports": [],
@@ -32187,9 +33662,9 @@
     {
       "path": "public/styles/basen.css",
       "extension": ".css",
-      "size_bytes": 6398,
-      "line_count": 367,
-      "sha1_short": "27590cdd78",
+      "size_bytes": 12156,
+      "line_count": 642,
+      "sha1_short": "cc86558321",
       "kind": "text",
       "module_aliases": [],
       "imports": [],
@@ -32306,9 +33781,9 @@
     {
       "path": "public/styles/start.css",
       "extension": ".css",
-      "size_bytes": 11613,
-      "line_count": 312,
-      "sha1_short": "cd0281fc69",
+      "size_bytes": 11871,
+      "line_count": 324,
+      "sha1_short": "7a63f969c0",
       "kind": "text",
       "module_aliases": [],
       "imports": [],
@@ -32325,7 +33800,7 @@
       "extension": ".js",
       "size_bytes": 5447,
       "line_count": 157,
-      "sha1_short": "fcbf945828",
+      "sha1_short": "e6803132b1",
       "kind": "script",
       "module_aliases": [],
       "imports": [],

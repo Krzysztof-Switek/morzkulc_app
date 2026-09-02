@@ -12,6 +12,7 @@
  */
 
 import { apiGetJson, apiPostJson } from "/core/api_client.js";
+import { isUrlOnly } from "/core/text_format.js";
 
 const KM_ADD_LOG_URL = "/api/km/log/add";
 const KM_MY_LOGS_URL = "/api/km/logs";
@@ -112,37 +113,46 @@ function infoTip(text) {
 
 // ─── popover tooltip ──────────────────────────────────────────────────────────
 
-function attachInfoTips(container) {
-  let activePopover = null;
+// Stan modułowy (nie per-wywołanie) — attachInfoTips jest wołane przy KAŻDYM
+// renderKmView (każda zmiana zakładki w Kilometrówce robi pełny re-render). Wcześniej
+// każde wywołanie dopinało NOWY `document.addEventListener("click", ..., {capture:true})`
+// — nigdy nie usuwany (deklarowany cleanup `container.__closeKmPopover` nigdzie nie był
+// odczytywany) — więc z każdą zmianą zakładki przybywał kolejny globalny nasłuchiwacz
+// przechwytujący KAŻDE kliknięcie w całej aplikacji, nie tylko w tym module. Naprawione
+// przez związanie delegacji do `document` RAZ na cały czas życia strony.
+let kmActivePopover = null;
+let kmPopoverDelegationBound = false;
 
-  function closePopover() {
-    if (activePopover) {
-      activePopover.remove();
-      activePopover = null;
-    }
+function closeKmActivePopover() {
+  if (kmActivePopover) {
+    kmActivePopover.remove();
+    kmActivePopover = null;
   }
+}
 
+function attachInfoTips(container) {
   container.querySelectorAll("[data-km-tip]").forEach(btn => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
       const tip = btn.dataset.kmTip;
-      if (activePopover && activePopover.dataset.srcBtn === btn) {
-        closePopover();
+      if (kmActivePopover && kmActivePopover.dataset.srcBtn === btn) {
+        closeKmActivePopover();
         return;
       }
-      closePopover();
+      closeKmActivePopover();
       const pop = document.createElement("div");
       pop.className = "kmPopover";
       pop.dataset.srcBtn = btn;
       pop.textContent = tip;
       btn.parentNode.insertBefore(pop, btn.nextSibling);
-      activePopover = pop;
+      kmActivePopover = pop;
     });
   });
 
-  document.addEventListener("click", closePopover, { once: false, capture: true });
-  // Usuń listenera przy wyjściu z modułu
-  container.__closeKmPopover = closePopover;
+  if (!kmPopoverDelegationBound) {
+    kmPopoverDelegationBound = true;
+    document.addEventListener("click", closeKmActivePopover, { capture: true });
+  }
 }
 
 // ─── dynamiczne ładowanie zasobów ────────────────────────────────────────────
@@ -1265,7 +1275,7 @@ async function renderEventStatsView(inner, ctx) {
                 <div class="kmEventCardInfo">
                   <span class="kmEventCardName">${esc(ev.name)}</span>
                   <span class="kmEventCardDate">${esc(dateRange)}</span>
-                  ${ev.location ? `<span class="kmEventCardLoc">${esc(ev.location)}</span>` : ""}
+                  ${ev.location && !isUrlOnly(ev.location) ? `<span class="kmEventCardLoc">${esc(ev.location)}</span>` : ""}
                 </div>
                 <button class="kmEventStatsBtn" type="button">Statystyki</button>
               </div>

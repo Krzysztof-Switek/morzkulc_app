@@ -25,6 +25,7 @@ export async function handleGetBasenKayaks(req: Request, res: Response, deps: De
         return;
       }
 
+      const uid = tokenCheck.decoded.uid;
       const sessionId = String(req.query.sessionId || "").trim();
       const slot = String(req.query.slot || "").trim() as BasenSlotLabel;
 
@@ -33,7 +34,7 @@ export async function handleGetBasenKayaks(req: Request, res: Response, deps: De
         return;
       }
 
-      const kayaks = await listAvailableBasenKayaks(deps.db, sessionId, slot);
+      const kayaks = await listAvailableBasenKayaks(deps.db, sessionId, slot, uid);
 
       res.status(200).json({ok: true, kayaks});
     } catch (err) {

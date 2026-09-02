@@ -102,21 +102,37 @@
   flex-wrap: wrap;
 }
 
+/* "Zapisz się" + "Będę instruktorem" w jednym, równie widocznym rzędzie */
+.basenPrimaryActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Wyraźnie inny kolor niż .primary (Zapisz się) i .dangerBtn (Zrezygnuj) — widoczny
+   też w ciemnym motywie, w odróżnieniu od dawnego .ghost, który się w nim gubił. */
+button.basenBtnAccent {
+  border-color: rgba(167, 139, 250, 0.55);
+  background: linear-gradient(180deg, rgba(167, 139, 250, 0.24), rgba(167, 139, 250, 0.13));
+  color: #a78bfa;
+  font-weight: 700;
+}
+
+button.basenBtnAccent:hover {
+  background: linear-gradient(180deg, rgba(167, 139, 250, 0.34), rgba(167, 139, 250, 0.19));
+  border-color: rgba(167, 139, 250, 0.7);
+}
+
+:root[data-theme="light"] button.basenBtnAccent {
+  color: #7c3aed;
+}
+
 .basenEnrollExpanded {
   display: flex;
   flex-direction: column;
   gap: 8px;
   width: 100%;
-}
-
-.basenEnrolledBadge {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 6px;
-  background: rgba(34, 197, 94, 0.15);
-  color: #22c55e;
-  font-size: 13px;
-  font-weight: 600;
 }
 
 .basenHint {
@@ -170,6 +186,17 @@
   opacity: 0.6;
 }
 
+/* Zamiast tekstowej plakietki "Zapisany/a..." — ramka karty od razu pokazuje status:
+   zielona = zwykły uczestnik, niebieska = jestem tu instruktorem (ta sama "niebieska
+   = instruktor" konwencja co .basenAttendeeTag w liście uczestników). */
+.basenSlotCard--mine {
+  border-color: #22c55e;
+}
+
+.basenSlotCard--instructing {
+  border-color: var(--primary);
+}
+
 .basenSlotHead {
   display: flex;
   align-items: baseline;
@@ -197,17 +224,18 @@
   font-size: 13px;
   color: var(--text-muted, #888);
   cursor: pointer;
+  flex-wrap: wrap;
 }
 
-.basenEnrolledInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.basenKayakRow {
-  font-size: 13px;
-  color: var(--text-muted, #888);
+/* Bez tego natywny checkbox nie miał wymuszonego rozmiaru — na części przeglądarek
+   mobilnych renderował się jako duży okrąg, a tekst etykiety ("Potrzebuję instruktora")
+   wylewał się poza kartę zamiast zawijać. Ten sam wzorzec co .reportCats w base.css. */
+.basenCheckLabel input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin: 0;
+  accent-color: var(--primary);
 }
 
 .basenSlotFooter .small {
@@ -215,22 +243,31 @@
   font-size: 12px;
 }
 
-/* ─── Akcje przy aktywnym zapisie (Modyfikuj/Anuluj) ─── */
-
+/* ─── Akcje przy aktywnym zapisie (Edytuj/Zrezygnuj) ─── */
+/* Celowo BEZ wymuszania flex-direction:column na mobile — "Edytuj" + "Zrezygnuj"
+   (skrócone na wąskim ekranie przez .basenBtnTextShort) mają zostać w jednym rzędzie. */
 .basenEnrolledActions {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  align-items: center;
   margin-top: 4px;
 }
 
+/* Pełny/skrócony wariant tekstu przycisku — przełącznik czysto CSS-owy przez media
+   query, żeby "Zrezygnuj z basenu" zmieściło się obok "Edytuj" w jednym rzędzie na
+   wąskim ekranie zamiast zawijać się do drugiej linii. */
+.basenBtnTextShort {
+  display: none;
+}
+
 @media (max-width: 480px) {
-  .basenEnrolledActions {
-    flex-direction: column;
+  .basenBtnTextFull {
+    display: none;
   }
 
-  .basenEnrolledActions button {
-    width: 100%;
+  .basenBtnTextShort {
+    display: inline;
   }
 }
 
@@ -260,6 +297,21 @@
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+/* Własny kajak przy własnym wierszu na liście uczestników — obcinany wielokropkiem
+   zamiast zawijany, żeby priorytetowo zmieścić się w jednym wierszu obok imienia na
+   wąskim ekranie (numer w skróconej etykiecie jest więc "opcjonalny" właśnie przez
+   to obcięcie, nie przez logikę backendu). */
+.basenOwnKayakTag {
+  color: var(--text-muted, #888);
+  font-size: 11px;
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  max-width: 55%;
 }
 
 .basenAttendeeDivider {
@@ -480,6 +532,121 @@ button.basenClaimTagBtn:disabled {
   background: rgba(138, 180, 255, 0.22);
 }
 
+/* Dzień bez basenu w kalendarzu strony głównej (albo bez basenu kursowego, dla
+   widza-kursanta) — wygląda jak zwykły pusty dzień, nieklikalny, bez hover-affordance
+   (w odróżnieniu od .basenCalDay--empty używanego przez admina do tworzenia terminu). */
+.basenCalDay--none {
+  opacity: 0.35;
+  cursor: default;
+  background: transparent;
+}
+
+/* Kalendarz strony głównej: mój dzień (zielona ramka, priorytet nad żółtą) i dzień
+   z pulą kursową (żółta ramka) — .basenCalDay--has-session zostaje jako fallback
+   dla dnia z basenem, który nie jest ani moim, ani kursowym. */
+.basenCalDay--mine {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.14);
+  font-weight: 700;
+}
+
+.basenCalDay--mine:hover {
+  background: rgba(34, 197, 94, 0.22);
+}
+
+.basenCalDay--kursowy {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.14);
+  font-weight: 700;
+}
+
+.basenCalDay--kursowy:hover {
+  background: rgba(245, 158, 11, 0.22);
+}
+
+/* ─── Legenda kalendarza strony głównej ─── */
+
+.basenCalLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--text-muted, #888);
+}
+
+.basenCalLegendItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.basenCalLegendItem .basenCalIcon {
+  width: 15px;
+  height: 15px;
+}
+
+.basenCalLegendSwatch {
+  width: 13px;
+  height: 13px;
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.basenCalLegendSwatch--mine {
+  border-color: #22c55e;
+}
+
+.basenCalLegendSwatch--kursowy {
+  border-color: #f59e0b;
+}
+
+/* ─── Panel podglądu "mój dzień" (kalendarz strony głównej) ─── */
+
+.basenHomeDayPreview {
+  margin-top: 4px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(34, 197, 94, 0.06);
+}
+
+.basenHomeDayPreviewTitle {
+  font-weight: 700;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.basenHomeDayPreviewRow {
+  font-size: 13px;
+  color: var(--text-muted, #888);
+}
+
+.basenHomeDayPreview .basenHomeDayPreviewTitle + .basenHomeDayPreviewRow {
+  margin-top: -2px;
+}
+
+.basenHomeDayPreview button {
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+/* ─── Podświetlenie karty dnia po skoku z kalendarza strony głównej ─── */
+
+@keyframes basenDayCardPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(138, 180, 255, 0); }
+  50% { box-shadow: 0 0 0 4px rgba(138, 180, 255, 0.45); }
+}
+
+.basenDayCardHighlight {
+  animation: basenDayCardPulse 1.1s ease-in-out 2;
+  border-color: var(--primary);
+}
+
 .basenCalDayNum {
   line-height: 1;
 }
@@ -588,6 +755,12 @@ button.basenClaimTagBtn:disabled {
 .basenGodzinyRowInfo {
   flex: 1;
   min-width: 160px;
+}
+
+.basenGodzinyRowActions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .basenGodzinyBalance {

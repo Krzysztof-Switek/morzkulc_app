@@ -109,6 +109,7 @@ export async function handleSubmitEvent(req: Request, res: Response, deps: Submi
         description: norm(body.description),
         contact: norm(body.contact),
         link: norm(body.link),
+        mapLink: norm(body.mapLink),
       });
 
       if (!out.ok) {

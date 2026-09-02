@@ -35,6 +35,16 @@ function stripTrailingPunct(match) {
   return {url: m[1], trailing: m[2]};
 }
 
+// Pole "Miejsce" imprez ma być nazwą miejsca, nie linkiem — użytkownicy notorycznie
+// wklejają tam cały link do mapy zamiast nazwy. Używane zarówno do walidacji przy
+// zgłaszaniu, jak i do wyświetlania (stare wpisy z linkiem w "Miejsce" pokazujemy
+// jako "Zobacz na mapie", a nie jako brzydki surowy URL podpisany "Miejsce:").
+export function isUrlOnly(text) {
+  const t = String(text || "").trim();
+  if (!t) return false;
+  return /^(https?:\/\/|www\.)\S+$/i.test(t);
+}
+
 export function formatFreeText(raw) {
   const normalized = normalizeBlankLines(raw);
   if (!normalized) return "";

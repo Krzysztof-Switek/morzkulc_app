@@ -1,5 +1,5 @@
 import { apiGetJson, apiPostJson } from "/core/api_client.js";
-import { formatFreeText } from "/core/text_format.js";
+import { formatFreeText, isUrlOnly } from "/core/text_format.js";
 
 const EVENTS_URL = "/api/events";
 const SUBMIT_URL = "/api/events/submit";
@@ -35,6 +35,17 @@ function spinnerHtml(text = "Ładowanie…") {
   return `<div class="thinking">${esc(text)}<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></div>`;
 }
 
+const DESC_TRUNCATE_LIMIT = 220;
+
+function truncateText(text, limit) {
+  const t = String(text || "");
+  if (t.length <= limit) return { short: t, isTruncated: false };
+  const cut = t.slice(0, limit);
+  const lastSpace = cut.lastIndexOf(" ");
+  const safeCut = lastSpace > limit * 0.6 ? cut.slice(0, lastSpace) : cut;
+  return { short: safeCut.trim(), isTruncated: true };
+}
+
 // ─── render funkcje ───────────────────────────────────────────────────────────
 
 function renderTabsHtml(activeTab, canSubmit) {
@@ -62,6 +73,11 @@ function renderEventCard(ev, isInterested) {
     ? start
     : `${start} – ${end}`;
 
+  // Preferuj jawne pole mapLink; dla starych wpisów, gdzie link do mapy
+  // wylądował w polu "Miejsce" (zamiast nazwy), potraktuj go tak samo.
+  const mapLinkUrl = String(ev.mapLink || "").trim() || (isUrlOnly(ev.location) ? String(ev.location || "").trim() : "");
+  const { short: descShort, isTruncated: descTruncated } = truncateText(ev.description, DESC_TRUNCATE_LIMIT);
+
   return `
     <div class="imprezaCard">
       <div class="imprezaCardHead">
@@ -77,8 +93,15 @@ function renderEventCard(ev, isInterested) {
           <span class="imprezaInterestLabel">Interesuje mnie</span>
         </div>
       </div>
-      ${ev.location ? `<div class="imprezaMeta"><strong>Miejsce:</strong> ${formatFreeText(ev.location)}</div>` : ""}
-      ${ev.description ? `<div class="imprezaDesc">${formatFreeText(ev.description)}</div>` : ""}
+      ${ev.location && !isUrlOnly(ev.location) ? `<div class="imprezaMeta"><strong>Miejsce:</strong> ${formatFreeText(ev.location)}</div>` : ""}
+      ${mapLinkUrl ? `<div class="imprezaMeta imprezaMapLink"><a href="${esc(mapLinkUrl)}" target="_blank" rel="noopener noreferrer">📍 Zobacz na mapie</a></div>` : ""}
+      ${ev.description ? `
+        <div class="imprezaDesc">
+          <div class="imprezaDescShort">${formatFreeText(descShort)}${descTruncated ? "…" : ""}</div>
+          ${descTruncated ? `<div class="imprezaDescFull" hidden>${formatFreeText(ev.description)}</div>` : ""}
+          ${descTruncated ? `<button type="button" class="imprezaMoreBtn" data-impreza-more>więcej</button>` : ""}
+        </div>
+      ` : ""}
       <div class="imprezaFooter">
         ${ev.contact ? `<span class="imprezaContact">Kontakt: ${formatFreeText(ev.contact)}</span>` : ""}
         ${ev.link ? `<a class="imprezaLink" href="${esc(ev.link)}" target="_blank" rel="noopener noreferrer">Strona / zgłoszenia →</a>` : ""}
@@ -108,9 +131,25 @@ async function renderListView(innerEl, ctx) {
     innerEl.innerHTML = `<div class="imprezaList">${events.map((ev) => renderEventCard(ev, interestedSet.has(ev.id))).join("")}</div>`;
 
     bindInterestButtons(innerEl, ctx);
+    bindMoreButtons(innerEl);
   } catch (e) {
     innerEl.innerHTML = `<div class="err">${esc(e?.message || "Nie udało się załadować imprez.")}</div>`;
   }
+}
+
+function bindMoreButtons(innerEl) {
+  innerEl.querySelectorAll("[data-impreza-more]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const wrap = btn.closest(".imprezaDesc");
+      if (!wrap) return;
+      const shortEl = wrap.querySelector(".imprezaDescShort");
+      const fullEl = wrap.querySelector(".imprezaDescFull");
+      const expanding = fullEl.hidden;
+      fullEl.hidden = !expanding;
+      shortEl.hidden = expanding;
+      btn.textContent = expanding ? "mniej" : "więcej";
+    });
+  });
 }
 
 function bindInterestButtons(innerEl, ctx) {
@@ -164,7 +203,13 @@ function renderSubmitFormHtml() {
 
         <div class="row">
           <label for="evLocation">Miejsce *</label>
-          <input id="evLocation" type="text" maxlength="200" required />
+          <input id="evLocation" type="text" maxlength="200" placeholder="np. Ostrzyce, zbiornik" required />
+          <div class="hint">Nazwa miejsca, nie link — na link do mapy jest pole niżej.</div>
+        </div>
+
+        <div class="row">
+          <label for="evMapLink">Link do mapy</label>
+          <input id="evMapLink" type="url" maxlength="500" placeholder="https://maps.google.com/…" />
         </div>
 
         <div class="row">
@@ -234,6 +279,7 @@ async function bindSubmitForm(innerEl, ctx) {
     const startDate = getVal("evStartDate");
     const endDate = getVal("evEndDate");
     const location = getVal("evLocation");
+    const mapLink = getVal("evMapLink");
     const description = getVal("evDescription");
     const contact = getVal("evContact");
     const link = getVal("evLink");
@@ -246,6 +292,10 @@ async function bindSubmitForm(innerEl, ctx) {
       setErr("Data od musi być wcześniejsza lub równa dacie do.");
       return;
     }
+    if (isUrlOnly(location)) {
+      setErr("Pole „Miejsce” powinno zawierać nazwę miejsca, nie link. Wklej link do mapy w polu „Link do mapy” poniżej.");
+      return;
+    }
 
     submitBtn.disabled = true;
     submitBtn.textContent = "Wysyłam…";
@@ -254,7 +304,7 @@ async function bindSubmitForm(innerEl, ctx) {
       await apiPostJson({
         url: SUBMIT_URL,
         idToken: ctx.idToken,
-        body: { name, startDate, endDate, location, description, contact, link },
+        body: { name, startDate, endDate, location, description, contact, link, mapLink },
       });
 
       setOk("Zgłoszenie wysłane. Impreza pojawi się po zatwierdzeniu.");

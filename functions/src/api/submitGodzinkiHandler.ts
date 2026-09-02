@@ -84,6 +84,11 @@ export async function handleSubmitGodzinki(req: Request, res: Response, deps: Su
       const grantedAt = norm(body.grantedAt);
       const reason = norm(body.reason);
 
+      // Pobierany zawsze (nie tylko warunkowo) — potrzebny zarówno do walidacji
+      // "too_old", jak i do przekazania frontowi w treści błędu (żeby komunikat
+      // pokazywał aktualną wartość z setupu, nie sztywno wpisaną liczbę dni).
+      const godzinkiVars = await getGodzinkiVars(db);
+
       // Walidacja
       const fields: Record<string, string> = {};
 
@@ -98,20 +103,17 @@ export async function handleSubmitGodzinki(req: Request, res: Response, deps: Su
         const today = new Intl.DateTimeFormat("sv-SE", {timeZone: "Europe/Warsaw"}).format(new Date());
         if (grantedAt > today) {
           fields.grantedAt = "cannot_be_future";
-        } else {
+        } else if (isTooOldGrantedAt(grantedAt, today, godzinkiVars.reportWindowDays)) {
           // Limit zgłaszania wstecz (setup/vars_godzinki.ile_dni_na_zgloszenie_godzinek) —
           // godzinki mają być zgłaszane na bieżąco, nie z pół roku opóźnienia.
-          const godzinkiVars = await getGodzinkiVars(db);
-          if (isTooOldGrantedAt(grantedAt, today, godzinkiVars.reportWindowDays)) {
-            fields.grantedAt = "too_old";
-          }
+          fields.grantedAt = "too_old";
         }
       }
       if (!reason) fields.reason = "required";
       if (reason.length > 500) fields.reason = "too_long";
 
       if (Object.keys(fields).length > 0) {
-        res.status(400).json({ok: false, code: "validation_failed", fields});
+        res.status(400).json({ok: false, code: "validation_failed", fields, details: {reportWindowDays: godzinkiVars.reportWindowDays}});
         return;
       }
 

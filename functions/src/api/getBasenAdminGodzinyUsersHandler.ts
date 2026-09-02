@@ -29,12 +29,18 @@ function isRegistered(u: any): boolean {
   return Boolean(norm(p.firstName) && norm(p.lastName));
 }
 
+// Widoczni są tylko userzy AKTYWNI w ostatnich 4 miesiącach (zapis na basen — dowolna
+// data sesji od cutoff wzwyż, czyli też wszystkie PRZYSZŁE — albo wpis w godziny_ledger
+// od cutoff) — reszta jest w klubie, ale nieaktywna w basenie, więc admin i tak by ich
+// szukał ręcznie; krótsza lista = mniej odczytów users_active (odczytujemy tylko
+// aktywnych, nie całą kolekcję).
+const ACTIVE_WINDOW_MONTHS = 4;
+
 /**
  * GET /api/basen/admin/godziny/users
- * Lista wszystkich zarejestrowanych userów (niezależnie od roli — dowolna rola może
- * mieć basen.enroll) z saldem godzin basenowych. Wyszukiwanie po mailu/nazwisku/ksywce
- * odbywa się po stronie klienta (patrz getAdminMemberDuesHandler.ts — ten sam wzorzec:
- * mały klub, jeden odczyt całej kolekcji jest tańszy niż zapytania OR na Firestore).
+ * Lista AKTYWNYCH (ostatnie 4 miesiące — zapis na basen albo ruch na koncie godzin)
+ * userów z saldem godzin basenowych. Wyszukiwanie po mailu/nazwisku/ksywce odbywa się
+ * po stronie klienta spośród tej listy.
  */
 export async function handleGetBasenAdminGodzinyUsers(req: Request, res: Response, deps: Deps): Promise<void> {
   if (deps.sendPreflight(req, res)) return;
@@ -69,12 +75,20 @@ export async function handleGetBasenAdminGodzinyUsers(req: Request, res: Respons
         return;
       }
 
-      const [usersSnap, ledgerSnap] = await Promise.all([
-        deps.db.collection("users_active").get(),
+      const cutoff = new Date();
+      cutoff.setMonth(cutoff.getMonth() - ACTIVE_WINDOW_MONTHS);
+      const cutoffMs = cutoff.getTime();
+      const cutoffSessionId = cutoff.toISOString().slice(0, 10); // basen_enrollments.sessionId = data sesji (YYYY-MM-DD)
+
+      const [ledgerSnap, recentEnrollSnap] = await Promise.all([
+        // Cała historia — potrzebna do POPRAWNEGO salda (godziny nie wygasają, nie da się
+        // go policzyć tylko z ostatnich 4 miesięcy), ale nie każdy z niej jest "aktywny".
         deps.db.collection("basen_godziny_ledger").get(),
+        deps.db.collection("basen_enrollments").where("sessionId", ">=", cutoffSessionId).get(),
       ]);
 
       const recsByUid = new Map<string, BasenGodzinyRecord[]>();
+      const activeUids = new Set<string>();
       ledgerSnap.forEach((doc) => {
         const r = doc.data() as any;
         const ruid = norm(r.uid);
@@ -82,10 +96,22 @@ export async function handleGetBasenAdminGodzinyUsers(req: Request, res: Respons
         const arr = recsByUid.get(ruid);
         if (arr) arr.push(r as BasenGodzinyRecord);
         else recsByUid.set(ruid, [r as BasenGodzinyRecord]);
+        const createdMs = r.createdAt?.toMillis?.() ?? 0;
+        if (createdMs >= cutoffMs) activeUids.add(ruid);
+      });
+      recentEnrollSnap.forEach((doc) => {
+        const enrollUid = norm((doc.data() as any)?.userUid);
+        if (enrollUid) activeUids.add(enrollUid);
       });
 
-      const rows = usersSnap.docs
-        .filter((d) => isRegistered(d.data()))
+      // Tylko aktywni userzy odczytywani z users_active (nie cała kolekcja) — jeśli ktoś
+      // spoza tej listy potrzebuje zarządzania godzinami, admin szuka go inaczej.
+      const activeUserDocs = await Promise.all(
+        Array.from(activeUids).map((activeUid) => deps.db.collection("users_active").doc(activeUid).get())
+      );
+
+      const rows = activeUserDocs
+        .filter((d) => d.exists && isRegistered(d.data()))
         .map((d) => {
           const u = d.data() as any;
           return {

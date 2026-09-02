@@ -127,7 +127,7 @@ export async function handleBasenEnroll(req: Request, res: Response, deps: Deps)
     } catch (err) {
       const e = err as {message?: string};
       const msg = e?.message || String(err);
-      const clientPatterns = ["pełny", "anulowan", "już zapisany", "nie istnieje", "zajęty", "dostępny", "maksymalną"];
+      const clientPatterns = ["pełny", "anulowan", "już zapisany", "nie istnieje", "zajęty", "dostępny", "maksymalną", "limit", "przypisaną"];
       const status = clientPatterns.some((p) => msg.includes(p)) ? 400 : 500;
       res.status(status).json({error: msg});
     }

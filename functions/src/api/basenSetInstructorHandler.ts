@@ -52,7 +52,7 @@ export async function handleBasenSetInstructor(req: Request, res: Response, deps
     } catch (err) {
       const e = err as {message?: string};
       const msg = e?.message || String(err);
-      const clientErrors = ["nie istnieje", "anulowany", "dostępny", "samego siebie", "sam ze sobą", "maksymalną"];
+      const clientErrors = ["nie istnieje", "anulowany", "dostępny", "samego siebie", "sam ze sobą", "maksymalną", "przypisaną"];
       const isClient = clientErrors.some((s) => msg.includes(s));
       res.status(isClient ? 400 : 500).json({error: msg});
     }

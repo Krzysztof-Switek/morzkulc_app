@@ -8,6 +8,12 @@ import {computeBasenGodzinyBalance, blockBasenGodzinyInTx, refundBasenGodzinyInT
 // jest pojedyncze, więc ten kierunek limitu wymuszony jest już przez model danych).
 const MAX_STUDENTS_PER_INSTRUCTOR = 2;
 
+// Druga osoba u instruktora to WYŁĄCZNIE decyzja instruktora (przez claimWaitingStudent,
+// patrz MAX_STUDENTS_PER_INSTRUCTOR wyżej) — uczestnik samodzielnie wybierający
+// instruktora (przy zapisie albo w "Modyfikuj zapis") może go wybrać tylko, jeśli
+// instruktor nie ma jeszcze NIKOGO. Nigdy nie może sam dopisać się jako druga osoba.
+const SELF_SELECT_INSTRUCTOR_MAX_STUDENTS = 1;
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export type BasenSlotLabel = "H1" | "H2" | "SAUNA";
@@ -70,6 +76,11 @@ export interface BasenEnrollment {
   instructorUid?: string | null; // uid sparowanego instruktora, tylko dla type="training"
   kayakId?: string | null; // id z gear_kayaks lub sentinel "PRIVATE"
   viaReservedPool?: boolean; // true tylko gdy zapis poszedł przez pulę kursancką (reservedSpots.restrictedToKursant)
+  // Czy TEN zapis zablokował 1 godzinę basenową (booking_block) — false dla instruktora
+  // i dla kursanta (kursant nie płaci za basen). Brak pola (starsze rekordy sprzed tej
+  // flagi) traktowany jak true w cancelEnrollment — zachowuje dotychczasowe zachowanie
+  // zwrotu dla zapisów sprzed wprowadzenia tego pola.
+  chargedGodziny?: boolean;
   status: EnrollmentStatus;
   cancelledAt?: any;
   cancelledLate?: boolean; // true jeśli anulowano w oknie <cancellationWindowHours> — ślad dla rozliczeń
@@ -436,17 +447,28 @@ export async function enrollInSlot(
       .where("status", "==", "active") :
     null;
 
+  // Sauna liczy się jak godzina basenowa (ta sama opłata, te same zasady) — limit
+  // dzienny to max. 2 sloty ŁĄCZNIE (baseny H1/H2 + sauna), nigdy wszystkie 3 naraz.
+  // DOTYCZY też trybu "instructor": instruktor przypisany do kursanta na danym slocie
+  // musi tam realnie być, więc fizycznie nie może jednocześnie być np. na saunie —
+  // instruktorowanie zajmuje jeden z 2 dziennych "miejsc" tak samo jak zwykły zapis.
+  const dailyLimitQuery = db.collection("basen_enrollments")
+    .where("sessionId", "==", args.sessionId)
+    .where("userUid", "==", args.uid)
+    .where("status", "==", "active");
+
   const godzinyLedgerRef = db.collection("basen_godziny_ledger").doc();
 
   await db.runTransaction(async (tx) => {
     // ── wszystkie odczyty przed jakimkolwiek zapisem ──
-    const [sessionSnap, existingEnrollSnap, allocationSnap, instructorEnrollSnap, godzinyLedgerSnap, instructorStudentsSnap] = await Promise.all([
+    const [sessionSnap, existingEnrollSnap, allocationSnap, instructorEnrollSnap, godzinyLedgerSnap, instructorStudentsSnap, dailyLimitSnap] = await Promise.all([
       tx.get(sessionRef),
       tx.get(enrollRef),
       allocationRef ? tx.get(allocationRef) : Promise.resolve(null),
       instructorEnrollRef ? tx.get(instructorEnrollRef) : Promise.resolve(null),
       tx.get(db.collection("basen_godziny_ledger").where("uid", "==", args.uid)),
       instructorStudentsQuery ? tx.get(instructorStudentsQuery) : Promise.resolve(null),
+      tx.get(dailyLimitQuery),
     ]);
 
     if (!sessionSnap.exists) throw new Error("Termin nie istnieje.");
@@ -462,15 +484,27 @@ export async function enrollInSlot(
       if (existing.status === "active") throw new Error("Jesteś już zapisany/a na ten slot.");
     }
 
+    if (dailyLimitSnap.docs.length >= 2) {
+      throw new Error("Masz już wykorzystany dzienny limit 2 slotów basenowych (baseny, sauna i instruktorowanie liczą się łącznie) — nie możesz zapisać się na kolejny slot tego dnia.");
+    }
+
     let availability: SlotAvailability | null = null;
+    // Kursant nie płaci za basen TYLKO gdy rezerwuje z WŁASNEJ puli (reservedSpots.
+    // restrictedToKursant, czyli availability.viaReservedPool) — na slocie bez tej puli
+    // kursant ma pełne prawa członka (może się zapisać), ale też pełny obowiązek zapłaty
+    // jak każdy inny, więc musi mieć godziny basenowe tak jak reszta.
+    let isFreeForKursant = false;
     if (args.mode !== "instructor") {
       availability = computeSlotAvailability(slotData, args.isKursant);
       if (availability.isFull) throw new Error("Slot jest już pełny.");
 
-      const godzinyRecords = godzinyLedgerSnap.docs.map((d) => d.data() as any);
-      const balance = computeBasenGodzinyBalance(godzinyRecords);
-      if (balance < 1) {
-        throw new Error("Brak dostępnych godzin basenowych. Skontaktuj się z opiekunem basenu, aby dopisać godziny.");
+      isFreeForKursant = args.isKursant && availability.viaReservedPool === true;
+      if (!isFreeForKursant) {
+        const godzinyRecords = godzinyLedgerSnap.docs.map((d) => d.data() as any);
+        const balance = computeBasenGodzinyBalance(godzinyRecords);
+        if (balance < 1) {
+          throw new Error("Brak dostępnych godzin basenowych. Skontaktuj się z opiekunem basenu, aby dopisać godziny.");
+        }
       }
     }
 
@@ -485,8 +519,10 @@ export async function enrollInSlot(
       if (!instrData || instrData.status !== "active" || instrData.type !== "instructor") {
         throw new Error("Wybrany instruktor nie jest już dostępny na ten slot.");
       }
-      if (instructorStudentsSnap && instructorStudentsSnap.size >= MAX_STUDENTS_PER_INSTRUCTOR) {
-        throw new Error(`Ten instruktor ma już maksymalną liczbę uczestników (${MAX_STUDENTS_PER_INSTRUCTOR}).`);
+      // Samoobsługowy wybór (nie claimWaitingStudent) — instruktor z już przypisaną
+      // osobą jest tu niedostępny, druga osoba to wyłącznie jego decyzja.
+      if (instructorStudentsSnap && instructorStudentsSnap.size >= SELF_SELECT_INSTRUCTOR_MAX_STUDENTS) {
+        throw new Error("Ten instruktor ma już przypisaną osobę — dopisanie kolejnej to decyzja instruktora (może Cię dopisać sam z listy uczestników).");
       }
     }
 
@@ -536,12 +572,16 @@ export async function enrollInSlot(
       instructorUid: args.mode === "training" ? (args.instructorUid || null) : null,
       kayakId: args.kayakId || null,
       viaReservedPool: (args.mode !== "instructor" && availability?.viaReservedPool) === true,
+      // Zapisane na zapisie (nie odtwarzane z bieżącej roli/puli przy anulowaniu) —
+      // rola usera i dostępność puli mogłyby się zmienić między zapisem a anulowaniem,
+      // a refundBasenGodzinyInTx musi wiedzieć, czy TEN konkretny zapis w ogóle zablokował godzinę.
+      chargedGodziny: args.mode !== "instructor" && !isFreeForKursant,
       status: "active",
       createdAt: now,
       updatedAt: now,
     });
 
-    if (args.mode !== "instructor") {
+    if (args.mode !== "instructor" && !isFreeForKursant) {
       blockBasenGodzinyInTx(tx, godzinyLedgerRef, {
         uid: args.uid,
         sessionId: args.sessionId,
@@ -621,7 +661,9 @@ export async function cancelEnrollment(
     // Godzina wraca na saldo tylko gdy anulowano na czas (>=okno) lub slot anulował admin
     // (wasLate zostaje false w tym przypadku — patrz komentarz wyżej). Spóźniona rezygnacja
     // usera → godzina przepada, żaden nowy rekord ledgera nie powstaje (booking_block zostaje).
-    if (enrollment.type !== "instructor" && !wasLate) {
+    // chargedGodziny!==false (a nie ===true!) — brak pola na starszych zapisach sprzed tej
+    // flagi ma nadal zwracać godzinę, tak jak dotychczas; tylko jawne false (kursant) je pomija.
+    if (enrollment.type !== "instructor" && enrollment.chargedGodziny !== false && !wasLate) {
       const godzinyLedgerRef = db.collection("basen_godziny_ledger").doc();
       refundBasenGodzinyInTx(tx, godzinyLedgerRef, {
         uid: args.uid,
@@ -688,9 +730,11 @@ export async function setEnrollmentInstructor(
     if (args.instructorUid) {
       if (args.instructorUid === args.uid) throw new Error("Nie możesz wybrać samego siebie jako instruktora.");
       if (instructorStudentsSnap) {
+        // Samoobsługowy wybór — jak w enrollInSlot, instruktor z już przypisaną osobą
+        // jest tu niedostępny (druga osoba to jego decyzja, przez claimWaitingStudent).
         const currentCount = instructorStudentsSnap.docs.filter((d) => d.id !== eid).length;
-        if (currentCount >= MAX_STUDENTS_PER_INSTRUCTOR) {
-          throw new Error(`Ten instruktor ma już maksymalną liczbę uczestników (${MAX_STUDENTS_PER_INSTRUCTOR}).`);
+        if (currentCount >= SELF_SELECT_INSTRUCTOR_MAX_STUDENTS) {
+          throw new Error("Ten instruktor ma już przypisaną osobę — dopisanie kolejnej to decyzja instruktora (może Cię dopisać sam z listy uczestników).");
         }
       }
       const instrData = instructorEnrollSnap && instructorEnrollSnap.exists ?
@@ -873,6 +917,31 @@ export async function resolveKayakLabel(db: FirebaseFirestore.Firestore, kayakId
   return kayakBaseLabel(snap.data(), kayakId);
 }
 
+// Krótka wersja (model, kolor, nr) — bez marki, bez słowa "Kajak" — do listy
+// uczestników na karcie slotu, gdzie ma się zmieścić w jednym wierszu na mobile
+// (kontener obcina resztę wielokropkiem, patrz .basenOwnKayakTag w basen.css).
+function kayakCompactLabel(k: any, fallbackId: string): string {
+  const model = norm(k?.model);
+  const color = norm(k?.color);
+  const number = norm(k?.number);
+  const parts = [model, color, number ? `nr ${number}` : ""].filter(Boolean);
+  return parts.join(", ") || fallbackId;
+}
+
+// Pełna i krótka etykieta w JEDNYM odczycie dokumentu — używane tam, gdzie oba
+// warianty są potrzebne naraz (getBasenSessionsHandler: pełna w "Moje konto"/modalu
+// edycji, krótka na liście uczestników), żeby nie odpytywać tego samego kajaka dwa razy.
+export async function resolveKayakLabels(
+  db: FirebaseFirestore.Firestore,
+  kayakId: string
+): Promise<{full: string; compact: string}> {
+  if (kayakId === "PRIVATE") return {full: "Kajak prywatny", compact: "Prywatny"};
+  const snap = await db.collection("gear_kayaks").doc(kayakId).get();
+  if (!snap.exists) return {full: `Kajak (nr ${kayakId})`, compact: `Kajak ${kayakId}`};
+  const data = snap.data();
+  return {full: kayakBaseLabel(data, kayakId), compact: kayakCompactLabel(data, kayakId)};
+}
+
 export interface AvailableKayak { id: string; label: string; isPrivate: boolean; ownerContact: string | null }
 
 async function fetchPoolKayaks(db: FirebaseFirestore.Firestore): Promise<any[]> {
@@ -915,14 +984,22 @@ function buildAvailableKayaksList(poolKayaks: any[], allocatedIds: Set<string>):
 export async function listAvailableBasenKayaks(
   db: FirebaseFirestore.Firestore,
   sessionId: string,
-  slot: BasenSlotLabel
+  slot: BasenSlotLabel,
+  // Własna alokacja widza NIE liczy się jako "zajęta" — inaczej modal "Edytuj" nie
+  // mógł pokazać kajaka, który user już ma, select spadał na "Bez kajaka", a zapis
+  // (nawet dotykający tylko instruktora) realnie kasował istniejący wybór kajaka.
+  excludeUid?: string
 ): Promise<AvailableKayak[]> {
   const poolKayaks = await fetchPoolKayaks(db);
   const allocSnap = await db.collection("basen_kayak_allocations")
     .where("sessionId", "==", sessionId)
     .where("slot", "==", slot)
     .get();
-  const allocatedIds = new Set(allocSnap.docs.map((d) => String((d.data() as any)?.kayakId || "")));
+  const allocatedIds = new Set(
+    allocSnap.docs
+      .filter((d) => String((d.data() as any)?.uid || "") !== excludeUid)
+      .map((d) => String((d.data() as any)?.kayakId || ""))
+  );
   return buildAvailableKayaksList(poolKayaks, allocatedIds);
 }
 

@@ -14,12 +14,28 @@ const FIELD_ERROR_MESSAGES = {
   required: "pole wymagane",
   invalid_format: "nieprawidłowy format",
   cannot_be_future: "nie może być w przyszłości",
-  too_old: "zbyt stara data — godzinki trzeba zgłaszać na bieżąco, nie z dużym opóźnieniem",
   must_be_positive: "musi być większe od zera",
   must_be_integer: "musi być liczbą całkowitą",
   too_large: "zbyt duża wartość",
   too_long: "zbyt długi tekst",
 };
+
+const FIELD_LABELS = {
+  amount: "Liczba godzinek",
+  grantedAt: "Data pracy",
+  reason: "Opis pracy",
+};
+
+// "too_old" potrzebuje aktualnej wartości okna zgłoszeniowego (setup/vars_godzinki,
+// może się zmienić) — backend dokłada ją w details.reportWindowDays odpowiedzi błędu.
+function fieldErrorText(code, details) {
+  if (code === "too_old") {
+    const days = Number(details?.reportWindowDays);
+    const windowText = Number.isFinite(days) && days > 0 ? `${days} dni` : "kilku dni";
+    return `zbyt stara data — godzinki zgłasza się maksymalnie do ${windowText} wstecz. Jeśli przegapiłeś/aś ten termin, napisz na zarzad@morzkulc.pl.`;
+  }
+  return FIELD_ERROR_MESSAGES[code] || code;
+}
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -353,23 +369,23 @@ function renderSubmitView(viewEl, ctx) {
     btn.textContent = "Wysyłanie…";
 
     try {
-      const resp = await apiPostJson({
+      await apiPostJson({
         url: SUBMIT_URL,
         idToken: ctx.idToken,
         body: { amount, grantedAt, reason },
       });
 
-      if (resp?.ok) {
-        setOk("Godzinki zgłoszone! Oczekują zatwierdzenia przez zarząd.");
-      } else {
-        const fields = resp?.fields || {};
-        const msgs = Object.entries(fields)
-          .map(([k, v]) => `${k}: ${FIELD_ERROR_MESSAGES[v] || v}`)
-          .join(", ");
-        setErr("Błąd: " + (msgs || resp?.message || "Nieznany błąd"));
-      }
+      setOk("Godzinki zgłoszone! Oczekują zatwierdzenia przez zarząd.");
     } catch (err) {
-      setErr("Błąd wysyłania: " + (err?.message || String(err)));
+      const fields = err?.fields || {};
+      if (Object.keys(fields).length) {
+        const msgs = Object.entries(fields)
+          .map(([k, v]) => `${FIELD_LABELS[k] || k}: ${fieldErrorText(v, err?.details)}`)
+          .join(" · ");
+        setErr(msgs);
+      } else {
+        setErr("Błąd wysyłania: " + (err?.message || String(err)));
+      }
     } finally {
       btn.disabled = false;
       btn.textContent = "Zgłoś godzinki";

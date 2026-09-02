@@ -6,6 +6,15 @@ function norm(s: any): string {
   return String(s || "").trim();
 }
 
+// Pole "Miejsce" ma być nazwą miejsca, nie linkiem — użytkownicy notorycznie
+// wklejają tam cały link do mapy zamiast nazwy, co brzydko wygląda na liście.
+// Do tego celu jest osobne, opcjonalne pole "Link do mapy" (mapLink).
+function isUrlOnly(text: string): boolean {
+  const t = norm(text);
+  if (!t) return false;
+  return /^(https?:\/\/|www\.)\S+$/i.test(t);
+}
+
 export type EventRecord = {
   id: string;
   startDate: string;
@@ -15,6 +24,7 @@ export type EventRecord = {
   description: string;
   contact: string;
   link: string;
+  mapLink: string;
   approved: boolean;
   rejected?: boolean;
   source: "app" | "sheet";
@@ -93,6 +103,7 @@ export async function createEvent(
     description: string;
     contact: string;
     link: string;
+    mapLink: string;
   }
 ): Promise<{ok: true; eventId: string} | {ok: false; code: string; message: string}> {
   if (!isIsoDateYYYYMMDD(args.startDate) || !isIsoDateYYYYMMDD(args.endDate)) {
@@ -107,6 +118,9 @@ export async function createEvent(
   if (!norm(args.location)) {
     return {ok: false, code: "validation_failed", message: "Missing location"};
   }
+  if (isUrlOnly(args.location)) {
+    return {ok: false, code: "validation_failed", message: "Pole „Miejsce” nie może być samym linkiem — wpisz nazwę miejsca, a link do mapy podaj w polu „Link do mapy”."};
+  }
 
   const ref = db.collection(COLLECTION).doc();
   const now = new Date();
@@ -120,6 +134,7 @@ export async function createEvent(
     description: norm(args.description),
     contact: norm(args.contact),
     link: norm(args.link),
+    mapLink: norm(args.mapLink),
     approved: false,
     source: "app",
     userUid: args.uid,

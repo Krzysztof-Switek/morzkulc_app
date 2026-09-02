@@ -150,6 +150,32 @@
   color: var(--accent, #3b82f6);
 }
 
+.imprezaMoreBtn {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent, #3b82f6);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.imprezaMoreBtn:hover {
+  text-decoration: underline;
+}
+
+.imprezaMapLink a {
+  font-weight: 600;
+  color: var(--accent, #3b82f6);
+  text-decoration: none;
+}
+
+.imprezaMapLink a:hover {
+  text-decoration: underline;
+}
+
 .imprezaFooter {
   display: flex;
   gap: 16px;

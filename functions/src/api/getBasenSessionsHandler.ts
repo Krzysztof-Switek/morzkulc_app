@@ -1,5 +1,5 @@
 import type {Request, Response} from "express";
-import {listUpcomingSessions, getUserEnrollments, computeSlotAvailability, resolveKayakLabel, getBasenVars, sessionSlotDatetimeMs, getAttendeesBySessionSlot, getAvailableKayaksBySessionSlot} from "../modules/basen/basen_service";
+import {listUpcomingSessions, getUserEnrollments, computeSlotAvailability, resolveKayakLabels, getBasenVars, sessionSlotDatetimeMs, getAttendeesBySessionSlot, getAvailableKayaksBySessionSlot} from "../modules/basen/basen_service";
 import {getBasenGodzinyRecords, computeBasenGodzinyBalance} from "../modules/basen/basen_godziny_service";
 
 type Deps = {
@@ -49,19 +49,26 @@ export async function handleGetBasenSessions(req: Request, res: Response, deps: 
 
       const enrollmentByKey = new Map(userEnrollments.map((e) => [`${e.sessionId}_${e.slot}`, e]));
 
-      // Nazwa+numer wybranego kajaka zamiast surowego ID (patrz resolveKayakLabel) —
+      // Nazwa+numer wybranego kajaka zamiast surowego ID (patrz resolveKayakLabels) —
       // rozwiązywane raz dla wszystkich unikalnych ID własnych zapisów requestera.
+      // Krótka wersja (bez marki) trafia na listę uczestników — TYLKO własny wiersz,
+      // ma się zmieścić w jednym wierszu na mobile.
       const kayakIds = Array.from(new Set(
         userEnrollments.map((e) => e.kayakId).filter((id): id is string => Boolean(id) && id !== "PRIVATE")
       ));
-      const kayakLabels = new Map<string, string>();
+      const kayakLabels = new Map<string, {full: string; compact: string}>();
       await Promise.all(kayakIds.map(async (id) => {
-        kayakLabels.set(id, await resolveKayakLabel(deps.db, id));
+        kayakLabels.set(id, await resolveKayakLabels(deps.db, id));
       }));
       const resolveOwnKayakLabel = (kayakId: string | null | undefined): string | null => {
         if (!kayakId) return null;
         if (kayakId === "PRIVATE") return "Kajak prywatny";
-        return kayakLabels.get(kayakId) || null;
+        return kayakLabels.get(kayakId)?.full || null;
+      };
+      const resolveOwnKayakCompactLabel = (kayakId: string | null | undefined): string | null => {
+        if (!kayakId) return null;
+        if (kayakId === "PRIVATE") return "Prywatny";
+        return kayakLabels.get(kayakId)?.compact || null;
       };
 
       const sessionsWithStatus = sessions.map((s) => {
@@ -86,6 +93,7 @@ export async function handleGetBasenSessions(req: Request, res: Response, deps: 
             userInstructorUid: enrollment?.instructorUid || null,
             userKayakId: enrollment?.kayakId || null,
             userKayakLabel: resolveOwnKayakLabel(enrollment?.kayakId),
+            userKayakCompactLabel: resolveOwnKayakCompactLabel(enrollment?.kayakId),
             userViaReservedPool: enrollment?.viaReservedPool === true,
             attendees: attendeesByKey.get(`${s.id}_${label}`) || [],
             availableKayaks: kayaksByKey.get(`${s.id}_${label}`) || [],

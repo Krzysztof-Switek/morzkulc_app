@@ -179,22 +179,6 @@
   font-weight: 800;
 }
 
-/* Wiersz basenu (strona główna), na który user jest zapisany — ramka na zielono +
-   tag po prawej, żeby dzień zapisu był widoczny bez wchodzenia w moduł. */
-.startListItem--enrolled {
-  border-color: #22c55e;
-}
-
-.startListEnrolledTag {
-  align-self: center;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: rgba(34, 197, 94, 0.15);
-  color: #22c55e;
-  font-size: 12px;
-  font-weight: 700;
-}
-
 .startStatExpiry {
   font-size: 11px;
   color: var(--text-muted);
