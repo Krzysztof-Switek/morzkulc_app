@@ -1,5 +1,6 @@
 import { apiGetJson, apiPostJson } from "/core/api_client.js";
 import { formatFreeText, isUrlOnly } from "/core/text_format.js";
+import { CLUB_ORGANIZER_KEYS, CLUB_DISPLAY_NAMES, renderClubBadgeHtml } from "/core/club_badges.js";
 
 const EVENTS_URL = "/api/events";
 const SUBMIT_URL = "/api/events/submit";
@@ -81,7 +82,10 @@ function renderEventCard(ev, isInterested) {
   return `
     <div class="imprezaCard">
       <div class="imprezaCardHead">
-        <div class="imprezaName">${esc(ev.name)}</div>
+        <div class="imprezaNameRow">
+          <div class="imprezaName">${esc(ev.name)}</div>
+          ${renderClubBadgeHtml(ev.organizer)}
+        </div>
         <div class="imprezaDates">${esc(dateRange)}</div>
         <div class="imprezaInterest">
           <button type="button"
@@ -190,6 +194,26 @@ function renderSubmitFormHtml() {
           <input id="evName" type="text" maxlength="200" required />
         </div>
 
+        <div class="row">
+          <label for="evOrganizer">Organizator</label>
+          <select id="evOrganizer">
+            <option value="">— brak —</option>
+            ${CLUB_ORGANIZER_KEYS.map((k) => `<option value="${esc(k)}">${esc(CLUB_DISPLAY_NAMES[k])}</option>`).join("")}
+          </select>
+        </div>
+
+        <div class="row hidden" id="evKierownikRow">
+          <label for="evKierownikEmail">Kierownik imprezy klubowej (e-mail) *</label>
+          <input id="evKierownikEmail" type="email" maxlength="200" placeholder="np. jan.kowalski@gmail.com" />
+          <div class="hint">
+            <label style="display:flex;align-items:center;gap:6px;font-weight:normal;">
+              <input type="checkbox" id="evKierownikSelf" /> Ja będę kierownikiem
+            </label>
+            Kierownik może rezerwować dowolną ilość sprzętu bezpłatnie, wyłącznie na tę imprezę —
+            od momentu zatwierdzenia przez zarząd/KR do jej zakończenia.
+          </div>
+        </div>
+
         <div class="imprezaDateRow">
           <div class="row">
             <label for="evStartDate">Data od *</label>
@@ -250,6 +274,10 @@ async function bindSubmitForm(innerEl, ctx) {
   const okEl = innerEl.querySelector("#evOk");
   const submitBtn = innerEl.querySelector("#evSubmitBtn");
   const clearBtn = innerEl.querySelector("#evClearBtn");
+  const organizerEl = innerEl.querySelector("#evOrganizer");
+  const kierownikRowEl = innerEl.querySelector("#evKierownikRow");
+  const kierownikEmailEl = innerEl.querySelector("#evKierownikEmail");
+  const kierownikSelfEl = innerEl.querySelector("#evKierownikSelf");
 
   const setErr = (msg) => {
     errEl.textContent = String(msg || "");
@@ -264,8 +292,31 @@ async function bindSubmitForm(innerEl, ctx) {
 
   const getVal = (id) => String(innerEl.querySelector(`#${id}`)?.value || "").trim();
 
+  const syncKierownikVisibility = () => {
+    const isMorzkulc = organizerEl.value === "morzkulc";
+    kierownikRowEl.classList.toggle("hidden", !isMorzkulc);
+    kierownikEmailEl.required = isMorzkulc;
+    if (!isMorzkulc) {
+      kierownikSelfEl.checked = false;
+      kierownikEmailEl.disabled = false;
+    }
+  };
+  organizerEl.addEventListener("change", syncKierownikVisibility);
+  syncKierownikVisibility();
+
+  kierownikSelfEl.addEventListener("change", () => {
+    if (kierownikSelfEl.checked) {
+      kierownikEmailEl.value = String(ctx?.session?.email || "");
+      kierownikEmailEl.disabled = true;
+    } else {
+      kierownikEmailEl.disabled = false;
+    }
+  });
+
   clearBtn.addEventListener("click", () => {
     form.reset();
+    kierownikEmailEl.disabled = false;
+    syncKierownikVisibility();
     setErr("");
     setOk("");
   });
@@ -283,6 +334,8 @@ async function bindSubmitForm(innerEl, ctx) {
     const description = getVal("evDescription");
     const contact = getVal("evContact");
     const link = getVal("evLink");
+    const organizer = getVal("evOrganizer");
+    const kierownikEmail = getVal("evKierownikEmail");
 
     if (!name || !startDate || !endDate || !location) {
       setErr("Uzupełnij wymagane pola: nazwa, daty, miejsce.");
@@ -296,6 +349,10 @@ async function bindSubmitForm(innerEl, ctx) {
       setErr("Pole „Miejsce” powinno zawierać nazwę miejsca, nie link. Wklej link do mapy w polu „Link do mapy” poniżej.");
       return;
     }
+    if (organizer === "morzkulc" && !kierownikEmail) {
+      setErr("Impreza organizowana przez Morzkulc wymaga podania e-maila kierownika.");
+      return;
+    }
 
     submitBtn.disabled = true;
     submitBtn.textContent = "Wysyłam…";
@@ -304,11 +361,13 @@ async function bindSubmitForm(innerEl, ctx) {
       await apiPostJson({
         url: SUBMIT_URL,
         idToken: ctx.idToken,
-        body: { name, startDate, endDate, location, description, contact, link, mapLink },
+        body: { name, startDate, endDate, location, description, contact, link, mapLink, organizer, kierownikEmail },
       });
 
       setOk("Zgłoszenie wysłane. Impreza pojawi się po zatwierdzeniu.");
       form.reset();
+      kierownikEmailEl.disabled = false;
+      syncKierownikVisibility();
     } catch (e) {
       setErr(e?.message || "Nie udało się wysłać zgłoszenia.");
     } finally {

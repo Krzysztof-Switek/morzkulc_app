@@ -86,8 +86,12 @@ export async function handleGearBundleReservationCreate(
       const starterCategory = norm(body.starterCategory).toLowerCase();
       const starterItemId = norm(body.starterItemId);
       const items = parseItems(body.items);
+      const asClubEvent = body.asClubEvent === true;
 
-      if (!isIsoDateYYYYMMDD(startDate) || !isIsoDateYYYYMMDD(endDate) || startDate > endDate) {
+      // Tryb "impreza klubowa": daty są ustalane serwerowo z terminu imprezy
+      // (createBundleReservation je nadpisuje) — klient nic sensownego tu nie
+      // wysyła, więc walidacja formatu dat jest pomijana w tym trybie.
+      if (!asClubEvent && (!isIsoDateYYYYMMDD(startDate) || !isIsoDateYYYYMMDD(endDate) || startDate > endDate)) {
         res.status(400).json({ok: false, code: "validation_failed", message: "Invalid startDate/endDate"});
         return;
       }
@@ -104,6 +108,8 @@ export async function handleGearBundleReservationCreate(
         items,
         starterCategory: starterCategory || "",
         starterItemId: starterItemId || "",
+        asClubEvent,
+        memberRoleKeys: deps.memberRoleKeys,
       });
 
       if (!out.ok) {

@@ -242,6 +242,13 @@
         }
       },
       {
+        "source": "/api/gear/reservations/update-items",
+        "function": {
+          "functionId": "updateBundleGearReservationItems",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "/api/gear/reservations/cancel",
         "function": {
           "functionId": "cancelGearReservation",

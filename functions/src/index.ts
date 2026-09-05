@@ -14,6 +14,7 @@ import {handleGetGearItems} from "./api/getGearItemsHandler";
 import {handleGearMyReservations} from "./api/gearMyReservationsHandler";
 import {handleGearReservationCreate} from "./api/gearReservationCreateHandler";
 import {handleGearBundleReservationCreate} from "./api/gearBundleReservationCreateHandler";
+import {handleGearBundleReservationUpdateItems} from "./api/gearBundleReservationUpdateItemsHandler";
 import {handleGetGearItemAvailability} from "./api/getGearItemAvailabilityHandler";
 import {handleGearReservationUpdate} from "./api/gearReservationUpdateHandler";
 import {handleGearReservationCancel} from "./api/gearReservationCancelHandler";
@@ -532,6 +533,7 @@ export const registerUser = onRequest({invoker: "private"}, async (req, res) => 
     computeAllowedActions,
     enqueueMemberSheetSync,
     enqueueWorkspaceGroupsRoleSync,
+    memberRoleKeys,
   });
 });
 
@@ -622,6 +624,23 @@ export const createBundleGearReservation = onRequest({invoker: "private"}, async
     corsHandler,
     requireIdToken,
     memberRoleKeys: svcCfg.memberRoleKeys,
+  });
+});
+
+/**
+ * POST /api/gear/reservations/update-items (authenticated)
+ * Kierownik edytuje listę przedmiotów już złożonej rezerwacji na imprezę
+ * klubową (jedyny typ rezerwacji, dla którego to wspierane — patrz
+ * updateBundleReservationItems).
+ */
+export const updateBundleGearReservationItems = onRequest({invoker: "private"}, async (req, res) => {
+  return handleGearBundleReservationUpdateItems(req, res, {
+    db,
+    sendPreflight,
+    requireAllowedHost,
+    setCorsHeaders,
+    corsHandler,
+    requireIdToken,
   });
 });
 
@@ -1625,7 +1644,6 @@ export const getKlubInfo = onRequest({invoker: "private"}, async (req, res) => {
     corsHandler,
     requireIdToken,
     adminRoleKeys,
-    memberRoleKeys,
   });
 });
 

@@ -4,6 +4,7 @@ import {GoogleSheetsProvider, buildLooseRowGetter} from "../providers/googleShee
 import {GoogleCalendarProvider, CalendarEventData} from "../providers/googleCalendarProvider";
 import {getServiceConfig} from "../service_config";
 import {norm} from "../../modules/shared/text_utils";
+import {resolveKierownicyList, kierownikUidsOf, findActiveKierownikConflict, KierownikEntry} from "../../modules/calendar/events_service";
 
 /**
  * Task: events.syncFromSheet
@@ -14,6 +15,8 @@ import {norm} from "../../modules/shared/text_utils";
  *
  * Pole "Zatwierdzona" = TAK ustawia approved=true w Firestore.
  * Pole "ID" to Firestore document ID (upsert).
+ * Pole "Kierownik" dopuszcza kilka e-maili oddzielonych przecinkiem — zarząd
+ * może z poziomu arkusza nadać uprawnienia kierownika kilku osobom naraz.
  *
  * Dodatkowo:
  *  - nowe dokumenty (wiersze dodane bezpośrednio w arkuszu) dostają createdAt —
@@ -81,6 +84,45 @@ export function shouldScrapAbsentEvent(data: any): boolean {
   return src === "sheet" || (src === "app" && syncedIsTimestamp);
 }
 
+// Żadna z 5 nazw klubów nie zawiera polskich znaków diakrytycznych (Morzkulc/
+// Bystrze/Panta Rei/Habazie/Przewrotka) — wystarczy zdjąć wielkość liter i
+// interpunkcję/spacje, bez normalizacji Unicode.
+function normalizeOrganizerToken(v: string): string {
+  return v.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+const ORGANIZER_TOKEN_TO_KEY: Record<string, string> = {
+  morzkulc: "morzkulc",
+  bystrze: "bystrze",
+  pantarei: "panta_rei",
+  habazie: "habazie",
+  przewrotka: "przewrotka",
+};
+
+/**
+ * Tolerancyjne rozpoznanie wartości komórki "Organizator" (wielkość liter/
+ * spacje/interpunkcja bez znaczenia). Nierozpoznana wartość → "" (impreza
+ * po prostu nie dostaje ikonki/kierownika w tym przebiegu, sync nie przerywa
+ * się dla reszty wiersza). Eksport dla testów jednostkowych.
+ */
+export function parseOrganizerFromSheetCell(raw: any): string {
+  const token = normalizeOrganizerToken(norm(raw));
+  if (!token) return "";
+  return ORGANIZER_TOKEN_TO_KEY[token] || "";
+}
+
+/** Etykieta do zapisu w arkuszu (kierunek aplikacja→arkusz). Eksport dla testów. */
+export function organizerKeyToSheetLabel(key: any): string {
+  switch (norm(key)) {
+  case "morzkulc": return "Morzkulc";
+  case "bystrze": return "Bystrze";
+  case "panta_rei": return "Panta Rei";
+  case "habazie": return "Habazie";
+  case "przewrotka": return "Przewrotka";
+  default: return "";
+  }
+}
+
 /**
  * Kolumny ustawiane wyłącznie przy TWORZENIU wiersza w arkuszu.
  * Przy aktualizacji (retry joba, backfill na istniejący wiersz) wartości
@@ -107,6 +149,13 @@ export function buildEventRowPatch(eventId: string, data: any): Record<string, a
     "Zatwierdzona": "NIE",
     "ranking?": "NIE",
     "kursowa?": "NIE",
+    // Organizator/kierownik: NIE create-only (nie ma ich w EVENT_ROW_CREATE_ONLY_COLUMNS)
+    // — w odróżnieniu od pól decyzyjnych wyżej, korekta w arkuszu (zły klub,
+    // literówka w mailu kierownika) ma zawsze przebić się do bazy przy syncu.
+    // "Kierownik" — wszystkie e-maile z `kierownicy` (także nierozwiązane, do
+    // wglądu), oddzielone przecinkiem — round-trip zgłoszenia z aplikacji.
+    "Organizator": organizerKeyToSheetLabel(data?.organizer),
+    "Kierownik": ((data?.kierownicy || []) as KierownikEntry[]).map((k) => k.email).join(", "),
   };
 }
 
@@ -162,6 +211,11 @@ export const eventsSyncFromSheetTask: ServiceTask<Payload> = {
     let errors = 0;
     let calendarSynced = 0;
     let confirmedInSheet = 0;
+    let organizerUnrecognized = 0;
+    let kierownikResolutionFailed = 0;
+    let kierownikConflictsSkipped = 0;
+
+    const memberRoleKeys = cfg.memberRoleKeys;
 
     // ID obecne w arkuszu w tym przebiegu — podstawa reconciliation (usuwania
     // imprez skasowanych z arkusza). Zbierane dla KAŻDEGO wiersza z niepustym ID,
@@ -217,6 +271,39 @@ export const eventsSyncFromSheetTask: ServiceTask<Payload> = {
       const contact = norm(get(row, "kontakt"));
       const link = norm(get(row, "link do strony / zgłoszeń"));
 
+      // Organizator + kierownik — patrz EVENT_ORGANIZER_KEYS w events_service.ts.
+      // Rozpoznawanie organizatora jest tolerancyjne; nierozpoznana wartość NIE
+      // przerywa syncu całego wiersza, zostaje po prostu bez ikonki/kierownika.
+      const organizerRaw = norm(get(row, "Organizator"));
+      const organizer = parseOrganizerFromSheetCell(organizerRaw);
+      if (organizerRaw && !organizer) {
+        ctx.logger.warn("eventsSyncFromSheet: unrecognized organizer value", {sheetId, organizerRaw});
+        organizerUnrecognized++;
+      }
+
+      // Kierownik dotyczy WYŁĄCZNIE organizatora "morzkulc" — dla pozostałych
+      // klubów/pustego wyboru lista zostaje pusta (impreza klubowa to ściśle
+      // organizer==="morzkulc" + co najmniej jeden rozwiązany kierownik, nic
+      // więcej). Kolumna "Kierownik" dopuszcza kilka e-maili oddzielonych
+      // przecinkiem — zarząd nadaje uprawnienia kierownika z poziomu arkusza.
+      let kierownicy: KierownikEntry[] = [];
+
+      if (organizer === "morzkulc") {
+        const kierownikCsvRaw = norm(get(row, "Kierownik"));
+        if (kierownikCsvRaw) {
+          const {entries, failures} = await resolveKierownicyList(ctx.firestore, kierownikCsvRaw, memberRoleKeys);
+          kierownicy = entries;
+          if (failures.length) {
+            for (const f of failures) {
+              ctx.logger.warn("eventsSyncFromSheet: kierownik resolution failed", {
+                sheetId, email: f.email, message: f.message,
+              });
+            }
+            kierownikResolutionFailed += failures.length;
+          }
+        }
+      }
+
       // UWAGA: bez "source" — sync nie może nadpisywać pochodzenia zgłoszenia
       // (Z13: imprezy z aplikacji traciły source="app", co psuło backfill).
       // source ustawiamy tylko dla NOWYCH dokumentów (wiersze dodane w arkuszu).
@@ -264,6 +351,50 @@ export const eventsSyncFromSheetTask: ServiceTask<Payload> = {
           doc.rejectedReason = admin.firestore.FieldValue.delete();
           doc.removedFromSheetAt = admin.firestore.FieldValue.delete();
         }
+
+        // Organizator/kierownik: NIE create-only — korekta w arkuszu zawsze
+        // nadpisuje bazę. Wyjątek: reguła "jeden kierownik naraz" — sprawdzamy
+        // per-kandydat, tylko dla UID-ów NOWO dołączających do aktywnej listy
+        // tej imprezy (staje się zatwierdzona z tym kierownikiem, albo już
+        // zatwierdzona impreza dostaje dodatkowego kierownika). Istniejący,
+        // niezmienieni kierownicy nie są odpytywani ponownie — brak sensu przy
+        // każdym syncu dla stabilnego, już poprawnego przypisania. Konflikt
+        // wyklucza WYŁĄCZNIE tego jednego kandydata — reszta listy (istniejący
+        // + pozostali nowi) syncuje się normalnie.
+        const prevOrganizer = norm(existingData?.organizer);
+        const prevKierownikUids: string[] = Array.isArray(existingData?.kierownikUids) ? existingData.kierownikUids : [];
+        const wasActiveMorzkulc = existingData?.approved === true && prevOrganizer === "morzkulc";
+        const willBeActiveMorzkulc = approved && organizer === "morzkulc";
+
+        const finalKierownicy: KierownikEntry[] = [];
+        for (const entry of kierownicy) {
+          if (!entry.uid) {
+            finalKierownicy.push(entry);
+            continue;
+          }
+          const alreadyActiveHere = wasActiveMorzkulc && prevKierownikUids.includes(entry.uid);
+          if (willBeActiveMorzkulc && !alreadyActiveHere) {
+            const conflict = await findActiveKierownikConflict(ctx.firestore, entry.uid, sheetId);
+            if (conflict) {
+              ctx.logger.warn("eventsSyncFromSheet: kierownik conflict, excluding this kierownik from the row", {
+                sheetId, uid: entry.uid, email: entry.email, conflictEventId: conflict.id, conflictEventName: conflict.name,
+              });
+              kierownikConflictsSkipped++;
+              finalKierownicy.push({email: entry.email, uid: null, displayName: ""});
+              continue;
+            }
+          }
+          finalKierownicy.push(entry);
+        }
+
+        doc.organizer = organizer;
+        doc.kierownicy = finalKierownicy;
+        doc.kierownikUids = kierownikUidsOf(finalKierownicy);
+        // Sprzątanie po starym modelu (pojedynczy kierownik) — pola zastąpione
+        // przez `kierownicy`/`kierownikUids` (patrz runda 9 planu wdrożenia).
+        doc.kierownikEmail = admin.firestore.FieldValue.delete();
+        doc.kierownikUid = admin.firestore.FieldValue.delete();
+        doc.kierownikDisplayName = admin.firestore.FieldValue.delete();
 
         await docRef.set(doc, {merge: true});
 
@@ -431,13 +562,19 @@ export const eventsSyncFromSheetTask: ServiceTask<Payload> = {
       ctx.logger.warn("eventsSyncFromSheet: backfill query failed", {message: e?.message});
     }
 
-    const message = `upserted=${upserted}, skipped=${skipped}, removed=${removed}, backfilled=${backfilled}, confirmedInSheet=${confirmedInSheet}, errors=${errors}, calendarSynced=${calendarSynced}`;
-    ctx.logger.info("eventsSyncFromSheet: done", {upserted, skipped, removed, backfilled, confirmedInSheet, errors, calendarSynced, dryRun});
+    const message = `upserted=${upserted}, skipped=${skipped}, removed=${removed}, backfilled=${backfilled}, confirmedInSheet=${confirmedInSheet}, errors=${errors}, calendarSynced=${calendarSynced}, organizerUnrecognized=${organizerUnrecognized}, kierownikResolutionFailed=${kierownikResolutionFailed}, kierownikConflictsSkipped=${kierownikConflictsSkipped}`;
+    ctx.logger.info("eventsSyncFromSheet: done", {
+      upserted, skipped, removed, backfilled, confirmedInSheet, errors, calendarSynced, dryRun,
+      organizerUnrecognized, kierownikResolutionFailed, kierownikConflictsSkipped,
+    });
 
     return {
       ok: errors === 0,
       message,
-      details: {upserted, skipped, removed, backfilled, confirmedInSheet, errors, calendarSynced, dryRun},
+      details: {
+        upserted, skipped, removed, backfilled, confirmedInSheet, errors, calendarSynced, dryRun,
+        organizerUnrecognized, kierownikResolutionFailed, kierownikConflictsSkipped,
+      },
     };
   },
 };

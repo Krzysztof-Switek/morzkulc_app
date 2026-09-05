@@ -251,6 +251,11 @@ export async function handleGetAdminPending(req: Request, res: Response, deps: G
             endDate: norm(data.endDate),
             userEmail: norm(data.userEmail),
             createdAt: tsToIso(data.createdAt),
+            organizer: norm(data.organizer),
+            // Impreza klubowa może mieć kilku kierowników (arkusz: kolumna
+            // "Kierownik" dopuszcza kilka e-maili) — panel pokazuje wszystkich.
+            kierownikEmails: (Array.isArray(data.kierownicy) ? data.kierownicy : []).map((k: any) => norm(k?.email)).filter(Boolean),
+            kierownikDisplayNames: (Array.isArray(data.kierownicy) ? data.kierownicy : []).map((k: any) => norm(k?.displayName) || norm(k?.email)).filter(Boolean),
           };
         });
 

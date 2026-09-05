@@ -3,6 +3,7 @@ import { canSeeModule } from "/core/access_control.js";
 import { setHash, parseHash } from "/core/router.js";
 import { apiPostJson, apiGetJson } from "/core/api_client.js";
 import { formatFreeText, isUrlOnly } from "/core/text_format.js";
+import { renderClubBadgeHtml } from "/core/club_badges.js";
 
 export function spinnerHtml(text = "Morzkulc myśli") {
   return `<div class="thinking">${escapeHtml(text)}<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></div>`;
@@ -197,6 +198,15 @@ async function renderHomeDashboard({ viewEl, ctx }) {
               <span class="startTile2Title">Sprzęt</span>
             </button>
 
+            ${ctx?.session?.isActiveKierownik ? `
+            <button type="button" class="startTile2 kierownik" data-home-action="club-event-gear"
+              title="Zarezerwuj sprzęt na imprezę klubową (bezpłatnie, bez limitu ilości)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12 C4 8 8 7 12 7 C16 7 20 8 22 12 C20 16 16 17 12 17 C8 17 4 16 2 12 Z"/><ellipse cx="12" cy="11" rx="3.5" ry="1.5"/><line x1="18" y1="4" x2="18" y2="10"/><line x1="15" y1="7" x2="21" y2="7"/></svg>
+              <span class="startTile2Title">Sprzęt na imprezę</span>
+              <span class="startTile2Subtitle">dostęp kierownika</span>
+            </button>
+            ` : ""}
+
             ${!dash.isKursant && !dash.isSympatyk ? `
             <button type="button" class="startTile2" data-home-action="add-hours">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -343,6 +353,12 @@ async function renderHomeDashboard({ viewEl, ctx }) {
   if (reserveBtn) reserveBtn.addEventListener("click", () => {
     const gearTarget = getGearRoute(ctx);
     setHash(gearTarget.moduleId, gearTarget.routeId);
+  });
+
+  const clubEventGearBtn = viewEl.querySelector("[data-home-action='club-event-gear']");
+  if (clubEventGearBtn) clubEventGearBtn.addEventListener("click", () => {
+    const gearTarget = getGearRoute(ctx);
+    setHash(gearTarget.moduleId, "club-event");
   });
 
   viewEl.querySelectorAll("[data-home-action='basen']").forEach((btn) => {
@@ -730,52 +746,13 @@ function safeUrl(u) {
   return /^https?:\/\//i.test(s) ? s : "";
 }
 
-// Numer NRB (26 cyfr) → grupy „2 + 6×4"; nieznany format pokazujemy bez zmian.
-function formatNrb(raw) {
-  const digits = String(raw || "").replace(/\s+/g, "");
-  if (!/^\d{26}$/.test(digits)) return String(raw || "");
-  return digits.slice(0, 2) + " " + (digits.slice(2).match(/.{1,4}/g) || []).join(" ");
-}
-
 function buildKlubBoxHtml(data) {
-  const zarzad = Array.isArray(data?.zarzad) ? data.zarzad : [];
-  const kr = Array.isArray(data?.kr) ? data.kr : [];
-  const konto = String(data?.finanse?.konto || "").trim();
-  const bank = String(data?.finanse?.bank || "").trim();
-  // Stany finansowe przychodzą z serwera TYLKO dla KR/Zarządu (inaczej pola brak).
-  const hasFinance = data?.finanse?.stanKonta !== undefined;
+  // Zarząd/KR/konto klubowe przeniesione do dedykowanego modułu Klub (zakładka
+  // "Kto jest kim" + nagłówek nad zakładkami) — feedback użytkownika 05.09.2026,
+  // patrz klub_module.js. Profil pokazuje już tylko dokumenty/dostęp.
   const linki = data?.linki || {};
 
   const blocks = [];
-
-  if (zarzad.length) {
-    const rows = zarzad.map((z) => {
-      const mail = String(z?.mailbox || "").trim();
-      const mailLink = mail
-        ? ` <a class="klubMail" href="mailto:${escapeAttr(mail)}" title="Napisz: ${escapeAttr(mail)}" aria-label="Napisz e-mail do: ${escapeAttr(mail)}">✉</a>`
-        : "";
-      return `<div class="mentorRow"><span class="mentorRole">${escapeHtml(z?.funkcja || "")}</span><span class="mentorName">${escapeHtml(z?.name || "—")}${mailLink}</span></div>`;
-    }).join("");
-    blocks.push(`<div class="profileBlock"><h3 class="profileBlockTitle">Zarząd</h3>${rows}</div>`);
-  }
-
-  if (kr.length) {
-    const items = kr.map((k) => `<li>${escapeHtml(k?.name || "—")}</li>`).join("");
-    blocks.push(`<div class="profileBlock"><h3 class="profileBlockTitle">Komisja rewizyjna</h3><ul class="klubList">${items}</ul></div>`);
-  }
-
-  if (konto || bank || hasFinance) {
-    const kontoRaw = konto.replace(/\s+/g, "");
-    const line = `${bank ? `<strong>${escapeHtml(bank)}:</strong> ` : ""}${konto ? `<span class="klubKontoNr" id="klubKontoNr">${escapeHtml(formatNrb(konto))}</span>` : ""}`;
-    const kontoLine = (konto || bank) ? `<div class="klubKonto"><span class="klubKontoLine">${line}</span>${
-      konto ? `<button type="button" class="ghost klubCopyBtn" data-klub-copy="${escapeAttr(kontoRaw)}">Kopiuj</button>` : ""
-    }</div>` : "";
-    const finanse = hasFinance ? `<div class="klubFinanse">
-      <div class="klubFinRow"><span>Stan konta:</span> <strong>${escapeHtml(String(data.finanse.stanKonta || "0"))} zł</strong></div>
-      <div class="klubFinRow"><span>Stan gotówki:</span> <strong>${escapeHtml(String(data.finanse.stanGotowki || "0"))} zł</strong></div>
-    </div>` : "";
-    blocks.push(`<div class="profileBlock"><h3 class="profileBlockTitle">Konto klubowe</h3>${kontoLine}${finanse}</div>`);
-  }
 
   const statut = safeUrl(linki.statut);
   const regulamin = safeUrl(linki.regulamin);
@@ -1014,7 +991,10 @@ async function buildHomeEventsSection(ctx) {
         <details class="startEventItem">
           <summary class="startListItem startEventSummary">
             <div class="startListMain">
-              <div class="startListTitle">${escapeHtml(String(ev?.name || "Impreza"))}</div>
+              <div class="imprezaNameRow">
+                <div class="startListTitle">${escapeHtml(String(ev?.name || "Impreza"))}</div>
+                ${renderClubBadgeHtml(ev?.organizer)}
+              </div>
               <div class="startListMeta">${locIsLink ? "" : escapeHtml(loc)}${loc && !locIsLink ? " · " : ""}${escapeHtml(dateRange)}</div>
             </div>
             <div class="startEventSide">

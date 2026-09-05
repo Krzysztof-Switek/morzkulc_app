@@ -16,7 +16,6 @@ export type GetKlubInfoDeps = {
   corsHandler: any;
   requireIdToken: (req: Request) => Promise<TokenCheck>;
   adminRoleKeys: string[]; // role widzące dane finansowe (rola_zarzad, rola_kr)
-  memberRoleKeys: string[]; // role widzące listę kluczy (kandydat/członek/zarząd/KR — jak moduł Klub)
 };
 
 // Funkcje zarządu w kolejności prezentacji. mailbox = domyślna skrzynka funkcyjna
@@ -52,7 +51,7 @@ function financeAmount(v: any): string {
 }
 
 export async function handleGetKlubInfo(req: Request, res: Response, deps: GetKlubInfoDeps) {
-  const {sendPreflight, requireAllowedHost, setCorsHeaders, corsHandler, requireIdToken, db, adminRoleKeys, memberRoleKeys} = deps;
+  const {sendPreflight, requireAllowedHost, setCorsHeaders, corsHandler, requireIdToken, db, adminRoleKeys} = deps;
 
   if (sendPreflight(req, res)) return;
   if (!requireAllowedHost(req, res)) return;
@@ -81,13 +80,16 @@ export async function handleGetKlubInfo(req: Request, res: Response, deps: GetKl
         db.collection("users_active").doc(uid).get(),
       ]);
 
-      // Dane finansowe widzą TYLKO KR i Zarząd — filtrowanie po stronie serwera.
+      // Dane finansowe (stan konta/gotówki) widzą WYŁĄCZNIE KR i Zarząd —
+      // filtrowanie po stronie serwera (pola nieobecne w odpowiedzi, nie tylko
+      // nierenderowane) — świadomie NIE rozluźniać (przypomnienie użytkownika
+      // 05.09.2026: nie pokazywać stanu konta nikomu poza zarządem/KR).
       const roleKey = userSnap.exists ? String((userSnap.data() as any)?.role_key || "") : "";
       const canSeeFinance = adminRoleKeys.includes(roleKey);
-      // Lista kluczy widoczna TYLKO dla ról z dostępem do modułu Klub (kandydat/członek/zarząd/KR) —
-      // /api/klub jest wołane przez box profilu dla WSZYSTKICH zalogowanych, więc bez tej bramki
-      // sympatyk/kursant zobaczyliby listę w samej odpowiedzi sieciowej, mimo że moduł Klub jej nie pokaże.
-      const canSeeKeys = memberRoleKeys.includes(roleKey);
+      // Lista osób z kluczami: widoczna dla KAŻDEGO zalogowanego (feedback
+      // użytkownika 05.09.2026 — poprzednia bramka do samych ról modułu Klub
+      // ukrywała ją też sympatykowi/kursantowi; to nie dane finansowe, sama
+      // "kto ma klucze" nie jest wrażliwa).
 
       const state = (stateSnap.exists ? (stateSnap.data() as any) : null) || {};
       const vars = (varsSnap.exists ? (varsSnap.data() as any)?.vars : null) || {};
@@ -141,6 +143,16 @@ export async function handleGetKlubInfo(req: Request, res: Response, deps: GetKl
         );
       }
 
+      // 4b) Adresy — siedziba klubu + akademik z kluczami (zakładka "Klucze"/nagłówek
+      // modułu Klub). akademik_adres: zmienna JUŻ ISTNIEJĄCA w Vars_CZLONKOWIE
+      // (współdzielona z usersNotifyAkademikAccessChanged.ts — treść maila o
+      // nadaniu/cofnięciu dostępu do akademika). adres_siedziby: nowa, puste
+      // dopóki użytkownik nie doda wiersza w arkuszu.
+      const adresy = {
+        siedziba: String(vars?.adres_siedziby?.value || "").trim(),
+        akademik: String(vars?.akademik_adres?.value || "").trim(),
+      };
+
       // 5) Linki/dokumenty — tylko gdy zmienne istnieją.
       const linki: Record<string, string> = {};
       const statut = String(vars?.statut_url?.value || "").trim();
@@ -150,11 +162,13 @@ export async function handleGetKlubInfo(req: Request, res: Response, deps: GetKl
       if (regulamin) linki.regulamin = regulamin;
       if (klucze) linki.klucze = klucze;
 
-      // 6) Osoby z kluczami do siedziby / dostępem do akademika — tylko dla kandydat/członek/zarząd/KR.
-      // Wyświetlanie: ksywka jeśli jest (inaczej imię+nazwisko); telefon zawsze osobną kolumną
-      // (żeby dało się skontaktować w sprawie odbioru kluczy).
+      // 6) Osoby z kluczami do siedziby / dostępem do akademika — widoczne dla
+      // każdego zalogowanego (patrz komentarz przy canSeeKeys wyżej — usunięty
+      // 05.09.2026). Wyświetlanie: ksywka jeśli jest (inaczej imię+nazwisko);
+      // telefon zawsze osobną kolumną (żeby dało się skontaktować w sprawie
+      // odbioru kluczy).
       let kluczeOsoby: Array<{name: string; phone: string | null; hasClubKeys: boolean; hasAkademikAccess: boolean}> | undefined;
-      if (canSeeKeys) {
+      {
         const [withKeysSnap, withAkademikSnap] = await Promise.all([
           db.collection("users_active").where("admin.hasClubKeys", "==", true).get(),
           db.collection("users_active").where("admin.hasAkademikAccess", "==", true).get(),
@@ -195,6 +209,7 @@ export async function handleGetKlubInfo(req: Request, res: Response, deps: GetKl
         zarzad,
         kr,
         finanse,
+        adresy,
         linki,
         ...(kluczeOsoby ? {kluczeOsoby} : {}),
       });

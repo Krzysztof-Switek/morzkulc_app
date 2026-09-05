@@ -105,6 +105,20 @@
   background: linear-gradient(180deg, rgba(12,18,32,0.02), rgba(12,18,32,0.01));
 }
 
+/* Karta bez zdjęć (rzutki, fartuchy — brak prawdziwych zdjęć, zawsze placeholder,
+   patrz renderGenericGearCard) — kolumna na zdjęcie (76px) znika, treść zajmuje
+   całą szerokość. Wyższa specyficzność (2 klasy) niż bazowa/mobilna reguła
+   .gearCardInner (1 klasa) — wygrywa niezależnie od viewportu. */
+.gearCardNoPhoto .gearCardInner {
+  grid-template-columns: 1fr;
+}
+
+.gearCardNoPhoto .gearHead,
+.gearCardNoPhoto .gearMiniBar,
+.gearCardNoPhoto .gearDetails {
+  grid-column: 1;
+}
+
 .gearCardInner {
   padding: 0;
   gap: 0;
@@ -582,6 +596,29 @@
   place-items: center;
 }
 
+/* Modal rezerwacji/edycji terminu — kalendarz + rosnąca lista dodanego sprzętu
+   potrafi przekroczyć wysokość ekranu także na desktopie (nie tylko mobile, stąd
+   poza @media). Bez własnego scrolla treść stawała się nieosiągalna: modal ma
+   position:fixed i nie rośnie ze stroną, a document.body.style.overflow="hidden"
+   (ustawiane na czas otwarcia modala) blokuje scroll tła jako jedyną alternatywę.
+   display:block nadpisuje domyślne grid+place-items:center z .gearModalBody —
+   przy przewijalnej zawartości wyśrodkowanie w gridzie przycina górę treści
+   niezależnie od pozycji scrolla (znany efekt place-items:center + overflow). */
+#gearBundleModal .gearModalCard,
+#reservationEditModal .gearModalCard {
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#gearBundleModal .gearModalBody,
+#reservationEditModal .gearModalBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: block;
+}
+
 .gearModalBody img {
   width: 100%;
   height: auto;
@@ -677,6 +714,7 @@
   flex-wrap: wrap;
   gap: var(--space-2);
   align-items: center;
+  justify-content: space-between;
   padding: var(--space-3);
   border-top: 1px solid var(--border);
 }
@@ -882,6 +920,19 @@
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+/* Drugi (ostatni) wiersz kart bez zdjęć/bez panelu "Więcej" (rzutki, fartuchy) —
+   pozostałe dane (kolor/uwagi) tekstem, obcięte wielokropkiem gdy za długie,
+   Rezerwuj zawsze po prawej (feedback użytkownika 04.09.2026). */
+.gearMiniMeta {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--text-muted, #888);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .gearMiniStatusIcon {
@@ -1172,6 +1223,101 @@
   color: var(--text-muted, #888);
 }
 
+/* ─── Widok masowego dodawania sprzętu na imprezę klubową ─── */
+
+.clubEventItemList {
+  max-height: 420px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.clubEventItemRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px;
+  border-bottom: 1px dashed rgba(230, 232, 238, 0.12);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.clubEventItemRow input[type="checkbox"] {
+  accent-color: var(--primary, #3b82f6);
+}
+
+:root[data-theme="light"] .clubEventItemRow {
+  border-bottom-color: rgba(12, 18, 32, 0.10);
+}
+
+.clubEventItemRow:last-child {
+  border-bottom: none;
+}
+
+.clubEventItemRowDisabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Pasek "Rezerwuj"/"Anuluj" NA SAMEJ GÓRZE ekranu, przed przewijaną listą
+   kategorii (feedback użytkownika 04.09.2026 — na mobile przycisk na dole,
+   po całej liście, był niewidoczny bez przewinięcia całej strony). Oba
+   przyciski równej szerokości, pełna szerokość na wąskim ekranie. */
+.clubEventActionsTop button {
+  flex: 1 1 0;
+}
+
+@media (max-width: 480px) {
+  .clubEventActionsTop {
+    flex-wrap: nowrap;
+  }
+}
+
+/* Duży, wyśrodkowany przycisk "Usuń rezerwację" — jedyna droga do pełnego
+   skasowania rezerwacji na imprezę (odznaczenie wszystkich pozycji i tak
+   blokuje zapis pustej listy — świadome, patrz komentarz przy no_items).
+   Ukryty dopóki nie ma jeszcze żadnej zapisanej rezerwacji do usunięcia. */
+.clubEventDeleteRow {
+  display: flex;
+  justify-content: center;
+  margin: 10px 0;
+}
+
+.clubEventDeleteRow button {
+  min-width: 220px;
+}
+
+/* Podsumowanie rezerwacji podzielone na kategorie — do wygodnej weryfikacji
+   całej listy na imprezę bez przełączania zakładek (feedback użytkownika
+   04.09.2026). */
+.clubEventSummary {
+  margin: 10px 0 4px;
+}
+
+.clubEventSummaryStatus {
+  font-size: 13px;
+  color: var(--text-muted, #888);
+  margin-bottom: 6px;
+}
+
+.clubEventSummaryBlock {
+  margin-bottom: 8px;
+}
+
+.clubEventSummaryCatTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.clubEventSummaryList {
+  margin: 2px 0 0;
+  padding-left: 20px;
+  font-size: 13px;
+  color: var(--text-muted, #888);
+}
+
 .gearReservSimpleRow {
   padding: 4px 0;
   border-bottom: 1px dashed rgba(230, 232, 238, 0.12);
@@ -1201,5 +1347,256 @@
   font-size: 11px;
   font-weight: 700;
   color: var(--success, #4a4);
+}
+
+/* Znacznik rezerwacji na imprezę klubową — kolor celowo inny niż .gearWaivedTag,
+   żeby nie mylić z tamtym (osobny powód zwolnienia z opłaty). */
+.gearClubEventTag {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent, #3b82f6);
+}
+
+/* ================= KALENDARZ WYBORU TERMINU (public/core/date_range_calendar.js) ================= */
+
+.gearCal {
+  margin: 4px 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.gearCalHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.gearCalTitle {
+  font-size: 15px;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.gearCalNavBtn {
+  padding: 6px 14px;
+}
+
+.gearCalWeekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted, #888);
+  text-align: center;
+}
+
+.gearCalGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.gearCalDay {
+  aspect-ratio: 1 / 1;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+:root[data-theme="light"] .gearCalDay {
+  background: rgba(12, 18, 32, 0.03);
+}
+
+.gearCalDay--blank {
+  visibility: hidden;
+  border: none;
+  background: transparent;
+  cursor: default;
+}
+
+.gearCalDay--past {
+  opacity: 0.35;
+  cursor: not-allowed;
+  background: transparent;
+}
+
+.gearCalDay--available:hover {
+  border-color: var(--primary);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+/* Zajęty dzień — pomarańczowo-bursztynowa obwódka + kłódka, nieklikalny jako granica zakresu */
+.gearCalDay--occupied {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.14);
+  color: #f59e0b;
+  cursor: pointer;
+}
+
+.gearCalDay--occupied:hover {
+  background: rgba(245, 158, 11, 0.22);
+}
+
+.gearCalDay--occupied .gearCalDayNum {
+  color: var(--text);
+}
+
+.gearCalLockIcon {
+  width: 17px;
+  height: 17px;
+}
+
+/* Dzień, który spowodował odrzucenie ostatniego wyboru (konflikt bezpośredni albo
+   przez bufor) — czerwona obwódka na wierzchu zwykłego stanu (najczęściej --occupied),
+   znika przy kolejnym udanym wyborze/nawigacji miesiąca. */
+.gearCalDay--conflict {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 1px #ef4444;
+}
+
+/* Wybrany zakres — zielony, jak "mój termin" w kalendarzu basenowym */
+.gearCalDay--in-range {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.16);
+  font-weight: 700;
+}
+
+.gearCalDay--edge {
+  background: rgba(34, 197, 94, 0.32);
+}
+
+/* Dzień bufora (1 dzień przed/po wybranym zakresie, automatycznie doliczany przez
+   backend — computeBlockIso) — sama zielona obwódka, bez wypełnienia, żeby odróżnić
+   od faktycznie wybranych dni (.gearCalDay--in-range, wypełnione). */
+.gearCalDay--buffer {
+  border-color: #22c55e;
+  border-style: dashed;
+}
+
+.gearCalDayNum {
+  line-height: 1;
+}
+
+.gearCalLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--text-muted, #888);
+}
+
+.gearCalLegendItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gearCalLegendSwatch {
+  width: 13px;
+  height: 13px;
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.gearCalLegendSwatch--occupied {
+  border-color: #f59e0b;
+}
+
+.gearCalLegendSwatch--selected {
+  border-color: #22c55e;
+}
+
+.gearCalLegendSwatch--buffer {
+  border-color: #22c55e;
+  border-style: dashed;
+}
+
+.gearCalHint {
+  font-size: 11.5px;
+  color: var(--text-muted, #888);
+  font-style: italic;
+}
+
+.gearCalSummary {
+  font-size: 12.5px;
+  color: var(--text-muted, #888);
+}
+
+.gearCalSummary--ok {
+  color: var(--text);
+}
+
+.gearCalSummary--warn {
+  color: #f87171;
+  font-weight: 600;
+}
+
+/* Mobile: siatka 7-kolumnowa ma mało miejsca — mniejsza ikonka kłódki (wzorem
+   kalendarza basenowego, public/styles/basen.css, ten sam problem rozjeżdżania). */
+@media (max-width: 720px) {
+  .gearCalLockIcon { width: 14px; height: 14px; }
+  .gearCalDay { font-size: 12px; }
+}
+
+/* ================= LISTA ZAREZERWOWANEGO SPRZĘTU (modal bundlowy) ================= */
+
+.bundleItemRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+:root[data-theme="light"] .bundleItemRow {
+  background: rgba(12, 18, 32, 0.02);
+}
+
+.bundleItemRowText {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.bundleItemRemoveBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #ef4444;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.bundleItemRemoveBtn:hover {
+  background: rgba(239, 68, 68, 0.14);
+  border-color: #ef4444;
 }
 

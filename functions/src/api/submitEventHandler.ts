@@ -110,6 +110,9 @@ export async function handleSubmitEvent(req: Request, res: Response, deps: Submi
         contact: norm(body.contact),
         link: norm(body.link),
         mapLink: norm(body.mapLink),
+        organizer: norm(body.organizer),
+        kierownikEmail: norm(body.kierownikEmail),
+        memberRoleKeys,
       });
 
       if (!out.ok) {

@@ -5,9 +5,10 @@
  * Uruchamianie: npm --prefix functions run test
  */
 import {describe, it, expect} from "vitest";
-import {normDate, isApproved, buildEventRowPatch, findHeaderCaseInsensitive, EVENT_ROW_CREATE_ONLY_COLUMNS, shouldScrapAbsentEvent} from "../src/service/tasks/eventsSyncFromSheet";
+import {normDate, isApproved, buildEventRowPatch, findHeaderCaseInsensitive, EVENT_ROW_CREATE_ONLY_COLUMNS, shouldScrapAbsentEvent, parseOrganizerFromSheetCell, organizerKeyToSheetLabel} from "../src/service/tasks/eventsSyncFromSheet";
 import {buildRowValuesForUpsert, findFirstEmptySlotIndex, canonicalHeader, buildLooseRowGetter} from "../src/service/providers/googleSheetsProvider";
 import {selectNewRecipientUids, buildUpcomingEventEmail, daysUntilIso} from "../src/service/tasks/eventsNotifyUpcoming";
+import {isValidOrganizerKey, EVENT_ORGANIZER_KEYS} from "../src/modules/calendar/events_service";
 
 describe("selectNewRecipientUids — dogonienie spóźnionych subskrybentów (regresja: impreza za 2 dni bez maila)", () => {
   it("nikt jeszcze nie dostał maila → wszyscy uprawnieni są nowi", () => {
@@ -157,6 +158,85 @@ describe("buildEventRowPatch", () => {
 
   it("kolumny decyzyjne są zadeklarowane jako create-only", () => {
     expect(EVENT_ROW_CREATE_ONLY_COLUMNS).toEqual(["Zatwierdzona", "ranking?", "kursowa?"]);
+  });
+
+  it("Organizator/Kierownik NIE są w create-only (korekta w arkuszu ma zawsze przebić się do bazy)", () => {
+    expect(EVENT_ROW_CREATE_ONLY_COLUMNS).not.toContain("Organizator");
+    expect(EVENT_ROW_CREATE_ONLY_COLUMNS).not.toContain("Kierownik");
+  });
+
+  it("dopisuje Organizator/Kierownik z danych imprezy", () => {
+    const row = buildEventRowPatch("ev1", {...data, organizer: "panta_rei", kierownicy: [{email: "jan@example.com", uid: "u1", displayName: "Jan"}]});
+    expect(row["Organizator"]).toBe("Panta Rei");
+    expect(row["Kierownik"]).toBe("jan@example.com");
+  });
+
+  it("dopisuje kilku kierowników oddzielonych przecinkiem", () => {
+    const row = buildEventRowPatch("ev1", {...data, organizer: "morzkulc", kierownicy: [
+      {email: "jan@example.com", uid: "u1", displayName: "Jan"},
+      {email: "ola@example.com", uid: null, displayName: ""},
+    ]});
+    expect(row["Kierownik"]).toBe("jan@example.com, ola@example.com");
+  });
+
+  it("brak organizatora/kierownika → puste komórki (impreza bez klubu)", () => {
+    const row = buildEventRowPatch("ev1", data);
+    expect(row["Organizator"]).toBe("");
+    expect(row["Kierownik"]).toBe("");
+  });
+});
+
+describe("isValidOrganizerKey — zamknięta lista 5 klubów", () => {
+  it("akceptuje dokładnie 5 znanych kluczy", () => {
+    expect(EVENT_ORGANIZER_KEYS).toEqual(["morzkulc", "bystrze", "panta_rei", "habazie", "przewrotka"]);
+    for (const k of EVENT_ORGANIZER_KEYS) {
+      expect(isValidOrganizerKey(k), `klucz: ${k}`).toBe(true);
+    }
+  });
+
+  it("odrzuca puste/nieznane/inny casing (walidacja oczekuje już znormalizowanego klucza)", () => {
+    expect(isValidOrganizerKey("")).toBe(false);
+    expect(isValidOrganizerKey("Morzkulc")).toBe(false);
+    expect(isValidOrganizerKey("inny_klub")).toBe(false);
+  });
+});
+
+describe("parseOrganizerFromSheetCell — rozpoznawanie organizatora z arkusza", () => {
+  it("rozpoznaje wszystkich 5 klubów niezależnie od wielkości liter/spacji", () => {
+    expect(parseOrganizerFromSheetCell("Morzkulc")).toBe("morzkulc");
+    expect(parseOrganizerFromSheetCell("MORZKULC")).toBe("morzkulc");
+    expect(parseOrganizerFromSheetCell("bystrze")).toBe("bystrze");
+    expect(parseOrganizerFromSheetCell("Panta Rei")).toBe("panta_rei");
+    expect(parseOrganizerFromSheetCell("pantarei")).toBe("panta_rei");
+    expect(parseOrganizerFromSheetCell("  Habazie  ")).toBe("habazie");
+    expect(parseOrganizerFromSheetCell("Przewrotka")).toBe("przewrotka");
+  });
+
+  it("puste pole → \"\" (impreza bez organizatora — brak ikonki/informacji)", () => {
+    expect(parseOrganizerFromSheetCell("")).toBe("");
+    expect(parseOrganizerFromSheetCell(null)).toBe("");
+    expect(parseOrganizerFromSheetCell(undefined)).toBe("");
+  });
+
+  it("nierozpoznana wartość → \"\" (nie przerywa syncu wiersza)", () => {
+    expect(parseOrganizerFromSheetCell("Jakiś inny klub")).toBe("");
+    expect(parseOrganizerFromSheetCell("xyz")).toBe("");
+  });
+});
+
+describe("organizerKeyToSheetLabel — etykieta do zapisu w arkuszu (kierunek aplikacja→arkusz)", () => {
+  it("mapuje klucz na czytelną etykietę PL", () => {
+    expect(organizerKeyToSheetLabel("morzkulc")).toBe("Morzkulc");
+    expect(organizerKeyToSheetLabel("bystrze")).toBe("Bystrze");
+    expect(organizerKeyToSheetLabel("panta_rei")).toBe("Panta Rei");
+    expect(organizerKeyToSheetLabel("habazie")).toBe("Habazie");
+    expect(organizerKeyToSheetLabel("przewrotka")).toBe("Przewrotka");
+  });
+
+  it("nieznany/pusty klucz → \"\"", () => {
+    expect(organizerKeyToSheetLabel("")).toBe("");
+    expect(organizerKeyToSheetLabel(undefined)).toBe("");
+    expect(organizerKeyToSheetLabel("nieznany")).toBe("");
   });
 });
 

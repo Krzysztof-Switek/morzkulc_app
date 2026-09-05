@@ -69,3 +69,7 @@ Thumbs.db
 *.seed
 *.tgz
 .dataconnect
+
+# Media źródłowe — duże pliki (np. grafiki/*.mp4) serwowane przez Firebase Storage,
+# nigdy przez Hosting/git (patrz storageFetchKlubVideoUrl w firebase_client.js).
+*.mp4

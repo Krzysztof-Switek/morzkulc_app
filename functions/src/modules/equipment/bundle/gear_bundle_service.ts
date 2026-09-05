@@ -6,6 +6,7 @@ import {getGodzinkiVars} from "../../hours/godzinki_vars";
 import {isUserStatusBlocked} from "../../users/userStatusCheck";
 import {updateReservationDates} from "../kayaks/gear_kayaks_service";
 import {countMyOverlappingItemsByCategory, countItemsByCategory, findCategoryOverLimit} from "../shared/reservation_limits";
+import {findActiveKierownikEvent} from "../../calendar/events_service";
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Types
@@ -530,6 +531,11 @@ export async function createBundleReservation(
     items: BundleItemInput[];
     starterCategory: string;
     starterItemId: string;
+    // Tryb "impreza klubowa" (kierownik rezerwuje bezpłatnie, bez limitu ilości,
+    // wyłącznie na tę imprezę) — patrz blok niżej. memberRoleKeys wymagane tylko
+    // gdy asClubEvent===true (z deps handlera, rola_czlonek/kandydat/zarzad/kr).
+    asClubEvent?: boolean;
+    memberRoleKeys?: string[];
   }
 ) {
   const user = await getUserRole(db, args.uid);
@@ -543,6 +549,33 @@ export async function createBundleReservation(
   if (roleKey === "rola_sympatyk") {
     return {ok: false, code: "forbidden", message: "Role not allowed"} as const;
   }
+
+  // ── Tryb "impreza klubowa" ────────────────────────────────────────────────
+  // Kierownik zatwierdzonej imprezy klubowej rezerwuje DOWOLNĄ ilość sprzętu
+  // bezpłatnie, wyłącznie na tę imprezę. Daty są NADPISANE datami imprezy —
+  // klient ich nie wybiera (chroni przed użyciem przywileju na dowolnie długi
+  // prywatny termin). Limity ilości/horyzontu/długości są pomijane niżej;
+  // konflikt terminów i walidacja przedmiotów (sprawność/basen/zgoda
+  // właściciela) NIGDY nie są pomijane — bez wyjątku dla żadnego trybu.
+  let clubEvent: {id: string; startDate: string; endDate: string} | null = null;
+  if (args.asClubEvent) {
+    const memberRoleKeys = args.memberRoleKeys || [];
+    if (!memberRoleKeys.includes(roleKey)) {
+      return {ok: false, code: "forbidden", message: "Rola nie uprawnia do rezerwacji na imprezę klubową."} as const;
+    }
+    const found = await findActiveKierownikEvent(db, args.uid);
+    if (!found) {
+      return {
+        ok: false,
+        code: "not_a_kierownik",
+        message: "Nie jesteś obecnie kierownikiem żadnej zatwierdzonej imprezy klubowej.",
+      } as const;
+    }
+    clubEvent = {id: found.id, startDate: found.startDate, endDate: found.endDate};
+  }
+
+  const effectiveStartDate = clubEvent ? clubEvent.startDate : args.startDate;
+  const effectiveEndDate = clubEvent ? clubEvent.endDate : args.endDate;
 
   // Zwolnienie z opłaty: tegoroczna szkoleniówka, rezerwacja składana do końca września.
   const now = new Date();
@@ -588,22 +621,28 @@ export async function createBundleReservation(
   // Zwolnienie zarządu/KR z opłaty (niezależne od okna szkoleniówki powyżej) —
   // łączymy oba zwolnienia w jedną flagę używaną od tego miejsca w dół, żeby
   // koszt zawsze trafiał do godzinki_ledger jako widoczny "waived", nigdy
-  // niewidoczny 0.
+  // niewidoczny 0. Impreza klubowa NIE wchodzi w tę flagę — mechanizm
+  // godzinkowy jest dla niej pomijany W CAŁOŚCI (patrz niżej), nie "zwalniany".
   const boardFeeExempt = (roleKey === "rola_zarzad" || roleKey === "rola_kr") && vars.boardDoesNotPay;
   const feeExempt = exempt || boardFeeExempt;
 
-  // Horyzont — jak daleko od dziś można ZACZĄĆ rezerwację
-  const maxStartIso = maxStartIsoByWeeks(maxWeeks);
-  if (args.startDate > maxStartIso) {
-    return {ok: false, code: "max_time_exceeded", message: "Start too far in future", details: {maxWeeks}} as const;
-  }
-  // Długość — maks. liczba dni włącznie (start→end, bez offsetu)
-  const maxLenDays = vars.maxReservationLengthDays;
-  if (maxLenDays > 0 && daysOnWaterInclusive(args.startDate, args.endDate) > maxLenDays) {
-    return {ok: false, code: "max_length_exceeded", message: "Reservation too long", details: {maxDays: maxLenDays}} as const;
+  // Horyzont/długość: POMIJANE dla trybu "impreza klubowa" — jedynym realnym
+  // ograniczeniem terminu jest wtedy sam zakres dat imprezy (już nadpisany
+  // wyżej), nie osobiste limity roli.
+  if (!clubEvent) {
+    // Horyzont — jak daleko od dziś można ZACZĄĆ rezerwację
+    const maxStartIso = maxStartIsoByWeeks(maxWeeks);
+    if (effectiveStartDate > maxStartIso) {
+      return {ok: false, code: "max_time_exceeded", message: "Start too far in future", details: {maxWeeks}} as const;
+    }
+    // Długość — maks. liczba dni włącznie (start→end, bez offsetu)
+    const maxLenDays = vars.maxReservationLengthDays;
+    if (maxLenDays > 0 && daysOnWaterInclusive(effectiveStartDate, effectiveEndDate) > maxLenDays) {
+      return {ok: false, code: "max_length_exceeded", message: "Reservation too long", details: {maxDays: maxLenDays}} as const;
+    }
   }
 
-  const {blockStartIso, blockEndIso} = computeBlockIso(args.startDate, args.endDate, vars.offsetDays);
+  const {blockStartIso, blockEndIso} = computeBlockIso(effectiveStartDate, effectiveEndDate, vars.offsetDays);
 
   // Fetch and validate items from Firestore
   const itemDetailsResult = await fetchItemDetails(db, items);
@@ -618,12 +657,16 @@ export async function createBundleReservation(
   // Composite IDs for conflict detection
   const compositeIds = items.map((i) => compositeId(i.category, i.itemId));
 
-  // Cost: only kayaks are priced
+  // Cost: only kayaks are priced. Impreza klubowa: mechanizm godzinkowy pomijany
+  // W CAŁOŚCI (decyzja użytkownika 05.09.2026) — bez tego kierownik dostawał
+  // mylący wpis "waived" w historii (wyglądał jak realny koszt/zwrot, którego
+  // nigdy nie było) i teoretycznie zależał od stanu pul godzinkowych, których
+  // nie musi w ogóle mieć, żeby zarezerwować sprzęt na imprezę.
   const kayakIds = items.filter((i) => i.category === "kayaks").map((i) => i.itemId);
-  const costHours = quoteKayaksCostHours(vars, roleKey, args.startDate, args.endDate, kayakIds.length);
+  const costHours = clubEvent ? 0 : quoteKayaksCostHours(vars, roleKey, effectiveStartDate, effectiveEndDate, kayakIds.length);
   // Zwolnieni nie płacą — koszt zapisujemy jako "waived" (saldo bez zmian), więc
   // pula godzinek potrzebna jest tylko dla normalnej dedukcji.
-  const godzinkiVars = (!feeExempt && costHours > 0) ? await getGodzinkiVars(db) : null;
+  const godzinkiVars = (!clubEvent && !feeExempt && costHours > 0) ? await getGodzinkiVars(db) : null;
 
   const ref = db.collection("gear_reservations").doc();
 
@@ -637,8 +680,8 @@ export async function createBundleReservation(
     role_key: roleKey,
     status_key: user.statusKey,
 
-    startDate: args.startDate,
-    endDate: args.endDate,
+    startDate: effectiveStartDate,
+    endDate: effectiveEndDate,
     offsetDays: vars.offsetDays,
     blockStartIso,
     blockEndIso,
@@ -661,10 +704,13 @@ export async function createBundleReservation(
     kayakCount: kayakIds.length,
 
     costHours,
-    waived: feeExempt && costHours > 0,
+    waived: !clubEvent && feeExempt && costHours > 0,
     // Rok szkoleniówki uzasadniający zwolnienie — znacznik "zwolnienie kurs RRRR" w Moich rezerwacjach.
-    // Dla zwolnienia zarządu/KR schoolYear jest null → front pokazuje samo "zwolnienie".
-    schoolYear: feeExempt && costHours > 0 ? schoolYear : null,
+    // Dla zwolnienia zarządu/KR schoolYear jest null — front rozróżnia powód
+    // zwolnienia po eventId, nie po schoolYear. Impreza klubowa: costHours=0,
+    // więc oba pola i tak zostają puste/false (patrz komentarz przy costHours).
+    schoolYear: (!clubEvent && feeExempt && costHours > 0) ? schoolYear : null,
+    eventId: clubEvent ? clubEvent.id : null,
     createdAt: now,
     updatedAt: now,
   };
@@ -672,18 +718,20 @@ export async function createBundleReservation(
   // Jedna transakcja: kontrola limitów + konfliktów + dedukcja godzinek + zapis
   // rezerwacji (eliminuje double-booking i okno awarii między set a deduct).
   const txResult = await db.runTransaction(async (tx) => {
-    // Limit PER KATEGORIA: dla każdego rodzaju sprzętu osobno suma sztuk w
-    // nakładających się rezerwacjach nie może przekroczyć maxItems (S2).
-    const already = await countMyOverlappingItemsByCategory(db, args.uid, blockStartIso, blockEndIso, undefined, tx);
-    const requested = countItemsByCategory(items);
-    const over = findCategoryOverLimit(already, requested, maxItems);
-    if (over) {
-      return {
-        ok: false,
-        code: "max_items_exceeded",
-        message: "Max items exceeded",
-        details: {category: over.category, already: over.already, requested: over.requested, maxItems},
-      } as const;
+    // Limit PER KATEGORIA (S2) — POMIJANY dla trybu "impreza klubowa" (dowolna
+    // ilość sprzętu). Konflikt terminów (niżej) NIGDY nie jest pomijany.
+    if (!clubEvent) {
+      const already = await countMyOverlappingItemsByCategory(db, args.uid, blockStartIso, blockEndIso, undefined, tx);
+      const requested = countItemsByCategory(items);
+      const over = findCategoryOverLimit(already, requested, maxItems);
+      if (over) {
+        return {
+          ok: false,
+          code: "max_items_exceeded",
+          message: "Max items exceeded",
+          details: {category: over.category, already: over.already, requested: over.requested, maxItems},
+        } as const;
+      }
     }
 
     // Find conflicts with existing reservations
@@ -697,13 +745,15 @@ export async function createBundleReservation(
       } as const;
     }
 
-    // Godzinki: zwolnieni → neutralny rekord "waived" (przekreślony koszt, saldo bez
-    // zmian); pozostali → normalna dedukcja FIFO w tej samej transakcji.
-    if (costHours > 0) {
+    // Godzinki: impreza klubowa — mechanizm CAŁKOWICIE pomijany, żaden wpis w
+    // godzinki_ledger (patrz komentarz przy costHours powyżej). Zwolnieni
+    // (szkoleniówka/zarząd) → neutralny rekord "waived" (przekreślony koszt,
+    // saldo bez zmian); pozostali → normalna dedukcja FIFO w tej samej transakcji.
+    if (!clubEvent && costHours > 0) {
       if (feeExempt) {
         writeWaivedSpendInTx(tx, db, args.uid, {
           amount: costHours,
-          reason: buildCostReason(itemDetails, args.startDate, args.endDate),
+          reason: buildCostReason(itemDetails, effectiveStartDate, effectiveEndDate),
           reservationId: ref.id,
           schoolYear,
         });
@@ -714,7 +764,7 @@ export async function createBundleReservation(
           args.uid,
           {
             amount: costHours,
-            reason: buildCostReason(itemDetails, args.startDate, args.endDate),
+            reason: buildCostReason(itemDetails, effectiveStartDate, effectiveEndDate),
             reservationId: ref.id,
           },
           godzinkiVars,
@@ -741,12 +791,13 @@ export async function createBundleReservation(
     ok: true,
     reservationId: ref.id,
     costHours,
-    waived: feeExempt && costHours > 0,
+    waived: !clubEvent && feeExempt && costHours > 0,
     reservationKind,
     blockStartIso,
     blockEndIso,
     primaryCategory: primaryItem.category,
     primaryItemId: primaryItem.itemId,
+    eventId: clubEvent ? clubEvent.id : null,
   } as const;
 }
 
@@ -827,6 +878,17 @@ async function updateBundleReservationDates(
     }
     if (norm(r?.status) !== "active") {
       return {ok: false, code: "invalid_state", message: "Not active"} as const;
+    }
+
+    // Rezerwacja na imprezę klubową — terminy są ustalane automatycznie na
+    // podstawie dat imprezy, nie do edycji. Anuluj i zarezerwuj ponownie, jeśli
+    // daty imprezy się zmieniły (cancelReservation działa bez zmian).
+    if (norm(r?.eventId)) {
+      return {
+        ok: false,
+        code: "club_event_reservation_locked",
+        message: "Terminy rezerwacji na imprezę klubową są ustalane automatycznie na podstawie dat imprezy — anuluj i zarezerwuj ponownie, jeśli daty imprezy się zmieniły.",
+      } as const;
     }
 
     const oldStart = norm(r?.startDate);
@@ -1024,6 +1086,137 @@ async function updateBundleReservationDates(
     );
 
     return {ok: true, costHours: newCostHours, waived: feeExempt && newCostHours > 0, blockStartIso, blockEndIso} as const;
+  });
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// PUBLIC: Update item list of an existing club-event reservation
+// ──────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Kierownik może zmieniać potrzeby na imprezę w czasie — ta funkcja podmienia
+ * PEŁNĄ listę przedmiotów istniejącej rezerwacji na imprezę klubową (jedna
+ * trwała, edytowalna rezerwacja per kierownik per impreza, nie kolejne osobne
+ * zapisy). Daty/blockStart/blockEnd NIGDY się tu nie zmieniają (patrz
+ * updateBundleReservationDates — te są zablokowane do edycji z innego powodu).
+ *
+ * Świadomie WYŁĄCZNIE dla rezerwacji z eventId (zwykłe rezerwacje edytują
+ * przedmioty przez anuluj+zarezerwuj ponownie — brak potrzeby dla zwykłego
+ * użytkownika, u kierownika lista realnie zmienia się wielokrotnie w miarę
+ * przygotowań do imprezy). Limit ilości POMIJANY (jak przy tworzeniu), ale
+ * konflikt terminów i sprawność/dostępność przedmiotów NIGDY nie są pomijane —
+ * sprawdzane na NOWO dla całej listy (także pozycji zostawionych bez zmian).
+ */
+export async function updateBundleReservationItems(
+  db: FirebaseFirestore.Firestore,
+  args: {uid: string; reservationId: string; items: BundleItemInput[]}
+) {
+  const rid = norm(args.reservationId);
+  if (!rid) return {ok: false, code: "bad_request", message: "Missing reservationId"} as const;
+
+  const user = await getUserRole(db, args.uid);
+  if (!user) return {ok: false, code: "forbidden", message: "User not registered"} as const;
+  if (await isUserStatusBlocked(db, user.statusKey)) {
+    return {ok: false, code: "forbidden", message: "Access blocked"} as const;
+  }
+
+  const rawItems: BundleItemInput[] = args.items
+    .map((i) => ({itemId: norm(i.itemId), category: norm(i.category).toLowerCase()}))
+    .filter((i) => i.itemId && i.category);
+  const items = uniqBy(rawItems, (i) => compositeId(i.category, i.itemId));
+
+  if (!items.length) {
+    return {
+      ok: false,
+      code: "no_items",
+      message: "Lista nie może być pusta — jeśli rezygnujesz z całego sprzętu na imprezę, anuluj rezerwację w \"Moje rezerwacje\".",
+    } as const;
+  }
+
+  for (const item of items) {
+    if (!isSupportedBundleCategory(item.category)) {
+      return {ok: false, code: "invalid_category", message: `Nieobsługiwana kategoria: ${item.category}`} as const;
+    }
+  }
+
+  const ref = db.collection("gear_reservations").doc(rid);
+
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) return {ok: false, code: "not_found", message: "Not found"} as const;
+    const r = snap.data() as any;
+
+    if (norm(r?.userUid) !== args.uid) return {ok: false, code: "forbidden", message: "Not yours"} as const;
+    if (norm(r?.status) !== "active") return {ok: false, code: "invalid_state", message: "Not active"} as const;
+
+    const eventId = norm(r?.eventId);
+    if (!eventId) {
+      return {
+        ok: false,
+        code: "not_club_event_reservation",
+        message: "Edycja listy przedmiotów jest dostępna tylko dla rezerwacji na imprezę klubową.",
+      } as const;
+    }
+
+    // Musisz nadal być aktywnym kierownikiem TEJ SAMEJ imprezy — jeśli impreza
+    // się skończyła albo zatwierdzenie cofnięto, edycja listy jest zablokowana
+    // (cały czas MOŻNA jeszcze anulować rezerwację, to osobna ścieżka).
+    const activeEvent = await findActiveKierownikEvent(db, args.uid);
+    if (!activeEvent || activeEvent.id !== eventId) {
+      return {
+        ok: false,
+        code: "not_a_kierownik",
+        message: "Nie jesteś już kierownikiem tej imprezy — edycja listy jest niedostępna.",
+      } as const;
+    }
+
+    const blockStartIso = norm(r?.blockStartIso);
+    const blockEndIso = norm(r?.blockEndIso);
+
+    // Sprawność/dostępność/basen/zgoda właściciela — sprawdzane na NOWO dla
+    // całej listy (nawet pozycji niezmienionych), spójnie z tworzeniem.
+    const itemDetailsResult = await fetchItemDetails(db, items);
+    if (!itemDetailsResult.ok) return itemDetailsResult;
+    const itemDetails = itemDetailsResult.items;
+
+    const compositeIds = items.map((i) => compositeId(i.category, i.itemId));
+
+    // Konflikt terminów (z wyłączeniem samej siebie) — NIGDY nie pomijany.
+    const conflicts = await findBundleConflicts(db, compositeIds, blockStartIso, blockEndIso, rid, tx);
+    if (conflicts.length) {
+      return {
+        ok: false,
+        code: "conflict",
+        message: "Wybrane przedmioty nie są dostępne w tym terminie",
+        details: {conflictItemIds: conflicts},
+      } as const;
+    }
+
+    const reservationKind = computeReservationKind(items);
+    const primaryItem = itemDetails.find((i) => i.isPrimary) || itemDetails[0];
+    const kayakIds = items.filter((i) => i.category === "kayaks").map((i) => i.itemId);
+
+    // Impreza klubowa: mechanizm godzinkowy pomijany W CAŁOŚCI (decyzja
+    // użytkownika 05.09.2026, patrz createBundleReservation) — edycja listy
+    // NIGDY nie dotyka godzinki_ledger, niezależnie od liczby kajaków.
+    const now = new Date();
+
+    tx.set(
+      ref,
+      {
+        items: itemDetails,
+        itemIds: compositeIds,
+        reservationKind,
+        primaryCategory: norm(primaryItem.category),
+        primaryItemId: norm(primaryItem.itemId),
+        kayakIds,
+        kayakCount: kayakIds.length,
+        updatedAt: now,
+      },
+      {merge: true}
+    );
+
+    return {ok: true, reservationId: rid, items: itemDetails} as const;
   });
 }
 

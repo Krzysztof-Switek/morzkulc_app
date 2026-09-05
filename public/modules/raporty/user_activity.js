@@ -42,7 +42,7 @@ function renderRecordTable(records) {
       const amountSign = isZero ? "" : isSpend ? "-" : "+";
       const isPending = r.type === "earn" && !r.approved;
       const amountHtml = (isWaived || isRefunded) ? `<s>${amountSign}${esc(String(r.amount))} h</s>` : `${amountSign}${esc(String(r.amount))} h`;
-      return `<tr class="${esc(recordTypeClass(r.type, r.approved))}"><td class="godzinkiDateCell">${esc(formatDate(r.createdAt))}</td><td class="godzinkiAmountCell ${amountClass}">${amountHtml}</td><td><span class="godzinkiReason">${esc(shortenReason(r.reason))}</span>${isWaived ? `<span class="godzinkiWaivedTag">zwolnienie${r.schoolYear ? ` kurs ${esc(String(r.schoolYear))}` : ""}</span>` : ""}${isRefunded ? `<span class="godzinkiRefundedTag">zwrócono${r.refundedAt ? ` ${esc(formatDate(r.refundedAt))}` : ""}</span>` : ""}${isPending ? `<span class="godzinkiPending">oczekuje</span>` : ""}</td></tr>`;
+      return `<tr class="${esc(recordTypeClass(r.type, r.approved))}"><td class="godzinkiDateCell">${esc(formatDate(r.createdAt))}</td><td class="godzinkiAmountCell ${amountClass}">${amountHtml}</td><td><span class="godzinkiReason">${esc(shortenReason(r.reason))}</span>${isWaived ? `<span class="godzinkiWaivedTag">zwolnienie${r.schoolYear ? ` kurs ${esc(String(r.schoolYear))}` : ""}</span>` : ""}${isRefunded ? `<span class="godzinkiRefundedTag">${isWaived ? "anulowano" : "zwrócono"}${r.refundedAt ? ` ${esc(formatDate(r.refundedAt))}` : ""}</span>` : ""}${isPending ? `<span class="godzinkiPending">oczekuje</span>` : ""}</td></tr>`;
     }).join("")
   }</tbody></table>`;
 }

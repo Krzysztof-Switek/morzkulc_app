@@ -1,6 +1,7 @@
 import { apiGetJson, apiPostJson } from "/core/api_client.js";
 import { mapUserFacingApiError } from "/core/user_error_messages.js";
 import { setHash } from "/core/router.js";
+import { createReservationCalendar } from "/core/date_range_calendar.js";
 
 const NAV_BACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`;
 const NAV_HOME_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
@@ -9,6 +10,44 @@ const MY_RESERVATIONS_URL = "/api/gear/my-reservations";
 const KAYAKS_URL = "/api/gear/kayaks";
 const UPDATE_RESERVATION_URL = "/api/gear/reservations/update";
 const CANCEL_RESERVATION_URL = "/api/gear/reservations/cancel";
+const ITEM_RESERVATIONS_URL = "/api/gear/kayak-reservations";
+
+// Element pierwotny rezerwacji (do wyznaczenia zajętości w kalendarzu) — format
+// bundlowy (primaryCategory/primaryItemId) z fallbackiem do legacy kayakIds[0],
+// dokładnie ta sama logika co getReservationKayakTitles() używa do tytułu.
+function getReservationPrimaryItem(rsv) {
+  const primaryItemId = String(rsv?.primaryItemId || "").trim();
+  const primaryCategory = String(rsv?.primaryCategory || "").trim();
+  if (primaryItemId && primaryCategory) return { category: primaryCategory, itemId: primaryItemId };
+  const kayakIds = Array.isArray(rsv?.kayakIds) ? rsv.kayakIds.map(String) : [];
+  if (kayakIds[0]) return { category: "kayaks", itemId: kayakIds[0] };
+  return null;
+}
+
+// Zajęte zakresy dla przedmiotu edytowanej rezerwacji, z wykluczeniem JEJ SAMEJ —
+// żeby własny, aktualny termin nie pokazywał się jako blokujący siebie samego.
+async function loadOccupiedRangesForReservation(rsv, ctx) {
+  const item = getReservationPrimaryItem(rsv);
+  if (!item) return [];
+  try {
+    const resp = await apiGetJson({
+      url: `${ITEM_RESERVATIONS_URL}?category=${encodeURIComponent(item.category)}&itemId=${encodeURIComponent(item.itemId)}&excludeReservationId=${encodeURIComponent(String(rsv?.id || ""))}`,
+      idToken: ctx.idToken,
+    });
+    const reservations = Array.isArray(resp?.reservations) ? resp.reservations : [];
+    return reservations
+      .map((r) => ({
+        startIso: String(r.blockStartIso || r.startDate || ""),
+        endIso: String(r.blockEndIso || r.endDate || ""),
+        label: r.isClubEvent ?
+          (r.eventName ? `Rezerwacja „${r.eventName}”` : "Rezerwacja (impreza klubowa)") :
+          String(r.userDisplayName || ""),
+      }))
+      .filter((r) => r.startIso && r.endIso);
+  } catch {
+    return [];
+  }
+}
 
 export function createMyReservationsModule({ id, type, label, defaultRoute, order, enabled, access }) {
   return {
@@ -77,15 +116,9 @@ export function createMyReservationsModule({ id, type, label, defaultRoute, orde
                   <input id="reservationEditKayak" type="text" readonly />
                 </div>
 
-                <div class="row">
-                  <label for="reservationEditStartDate">Data od</label>
-                  <input id="reservationEditStartDate" type="date" />
-                </div>
-
-                <div class="row">
-                  <label for="reservationEditEndDate">Data do</label>
-                  <input id="reservationEditEndDate" type="date" />
-                </div>
+                <div id="reservationEditCalendar" style="margin-top:10px;"></div>
+                <input id="reservationEditStartDate" type="date" class="hidden" />
+                <input id="reservationEditEndDate" type="date" class="hidden" />
 
                 <div id="reservationEditErr" class="err hidden"></div>
                 <div id="reservationEditOk" class="ok hidden"></div>
@@ -94,7 +127,7 @@ export function createMyReservationsModule({ id, type, label, defaultRoute, orde
 
             <div class="gearModalActions">
               <button id="reservationEditSaveBtn" type="button" class="primary">Zapisz zmiany</button>
-              <button id="reservationEditCancelBtn" type="button" class="ghost" data-edit-modal-close="1">Zamknij</button>
+              <button id="reservationEditCancelBtn" type="button" class="ghost ghostCancel" data-edit-modal-close="1">Anuluj</button>
             </div>
           </div>
         </div>
@@ -113,6 +146,7 @@ export function createMyReservationsModule({ id, type, label, defaultRoute, orde
       const editKayakEl = viewEl.querySelector("#reservationEditKayak");
       const editStartDateEl = viewEl.querySelector("#reservationEditStartDate");
       const editEndDateEl = viewEl.querySelector("#reservationEditEndDate");
+      const editCalendarEl = viewEl.querySelector("#reservationEditCalendar");
       const editErrEl = viewEl.querySelector("#reservationEditErr");
       const editOkEl = viewEl.querySelector("#reservationEditOk");
       const editSaveBtn = viewEl.querySelector("#reservationEditSaveBtn");
@@ -120,6 +154,7 @@ export function createMyReservationsModule({ id, type, label, defaultRoute, orde
       let reservations = [];
       let kayakMap = new Map();
       let editReservation = null;
+      let editCalendar = null;
 
       const setErr = (msg) => {
         errEl.textContent = String(msg || "");
@@ -146,6 +181,8 @@ export function createMyReservationsModule({ id, type, label, defaultRoute, orde
         editModalEl.setAttribute("aria-hidden", "true");
         document.body.style.overflow = "";
         editReservation = null;
+        if (editCalendarEl) editCalendarEl.innerHTML = "";
+        editCalendar = null;
         setEditErr("");
         setEditOk("");
       };
@@ -166,6 +203,22 @@ export function createMyReservationsModule({ id, type, label, defaultRoute, orde
         editEndDateEl.value = String(found?.endDate || "");
         setEditErr("");
         setEditOk("");
+
+        if (editCalendarEl) {
+          editCalendar = createReservationCalendar({
+            containerEl: editCalendarEl,
+            initialStartIso: String(found?.startDate || "") || null,
+            initialEndIso: String(found?.endDate || "") || null,
+            onRangeChange: (startIso, endIso) => {
+              editStartDateEl.value = startIso || "";
+              editEndDateEl.value = endIso || "";
+              editSaveBtn.disabled = !(startIso && endIso);
+            },
+          });
+          loadOccupiedRangesForReservation(found, ctx).then((ranges) => {
+            editCalendar?.setOccupiedRanges(ranges);
+          });
+        }
 
         editModalEl.classList.remove("hidden");
         editModalEl.setAttribute("aria-hidden", "false");
@@ -194,7 +247,8 @@ export function createMyReservationsModule({ id, type, label, defaultRoute, orde
                 : `<span class="badge danger">${escapeHtml(status || "nieaktywna")}</span>`;
 
             const kayakTitles = getReservationKayakTitles(rsv, kayakMap);
-            const canEdit = status === "active";
+            const isClubEvent = Boolean(rsv?.eventId);
+            const canEdit = status === "active" && !isClubEvent;
             const canCancel = status === "active";
 
             return `
@@ -205,10 +259,15 @@ export function createMyReservationsModule({ id, type, label, defaultRoute, orde
                       <div class="gearTitle">${escapeHtml(kayakTitles.join(", ") || "Rezerwacja")}</div>
                       <div class="gearSubtitle">
                         ${escapeHtml(formatShortDate(String(rsv?.blockStartIso || rsv?.startDate || "")))} – ${escapeHtml(formatShortDate(String(rsv?.blockEndIso || rsv?.endDate || "")))} (${escapeHtml(pluralizeDays(countReservationDays(String(rsv?.startDate || ""), String(rsv?.endDate || ""))))})
-                        · ${rsv?.waived
-                            ? `<strong><s>${escapeHtml(String(rsv?.costHours ?? 0))} godz.</s></strong> <span class="gearWaivedTag">zwolnienie${rsv?.schoolYear ? ` kurs ${escapeHtml(String(rsv.schoolYear))}` : ""}</span>`
-                            : `<strong>${escapeHtml(String(rsv?.costHours ?? "—"))} godz.</strong>`}
+                        · ${isClubEvent
+                            // Impreza klubowa: mechanizm godzinkowy pomijany w całości (nie
+                            // "zwolnienie") — bez przekreślonej kwoty, sam koszt nie istnieje.
+                            ? `<span class="gearClubEventTag">Impreza klubowa</span>`
+                            : rsv?.waived
+                              ? `<strong><s>${escapeHtml(String(rsv?.costHours ?? 0))} godz.</s></strong> <span class="gearWaivedTag">zwolnienie${rsv?.schoolYear ? ` kurs ${escapeHtml(String(rsv.schoolYear))}` : ""}</span>`
+                              : `<strong>${escapeHtml(String(rsv?.costHours ?? "—"))} godz.</strong>`}
                       </div>
+                      ${isClubEvent ? `<div class="hint" style="margin-top:2px;">Terminy imprezy klubowej nie można edytować — anuluj i zarezerwuj ponownie, jeśli daty imprezy się zmieniły.</div>` : ""}
                     </div>
                     <div class="gearBadges">
                       ${badge}
@@ -226,7 +285,7 @@ export function createMyReservationsModule({ id, type, label, defaultRoute, orde
 
                     <button
                       type="button"
-                      class="ghost"
+                      class="ghost ghostDanger"
                       data-rsv-cancel="${escapeAttr(String(rsv?.id || ""))}"
                       ${canCancel ? "" : "disabled"}>
                       Anuluj
@@ -423,6 +482,7 @@ async function renderDedicatedEditView({ viewEl, reservationId, ctx }) {
   const todayIso = new Date().toISOString().slice(0, 10);
   const blockStart = String(rsv?.blockStartIso || "");
   const canCancelReservation = blockStart && todayIso < blockStart;
+  const isClubEvent = Boolean(rsv?.eventId);
 
   viewEl.innerHTML = `
     <div class="card center" style="max-width:480px;">
@@ -435,29 +495,31 @@ async function renderDedicatedEditView({ viewEl, reservationId, ctx }) {
       </div>
       <p class="hint" style="margin-bottom:16px;">${escapeHtml(kayakTitles.join(", ") || "—")}</p>
 
-      <div class="row">
-        <label for="dedEditStartDate">Data od</label>
-        <input id="dedEditStartDate" type="date" value="${escapeAttr(String(rsv.startDate || ""))}" />
-      </div>
-
-      <div class="row" style="margin-top:8px;">
-        <label for="dedEditEndDate">Data do</label>
-        <input id="dedEditEndDate" type="date" value="${escapeAttr(String(rsv.endDate || ""))}" />
-      </div>
+      ${isClubEvent ? `
+        <div class="hint" style="margin-bottom:10px;">
+          <span class="gearClubEventTag">Impreza klubowa</span>
+          Termin: ${escapeHtml(formatDatePL(String(rsv.startDate || "")))} – ${escapeHtml(formatDatePL(String(rsv.endDate || "")))}
+          (ustalony automatycznie na podstawie dat imprezy — nie do edycji; anuluj i zarezerwuj ponownie, jeśli daty imprezy się zmieniły).
+        </div>
+      ` : `
+        <div id="dedEditCalendar"></div>
+        <input id="dedEditStartDate" type="date" class="hidden" value="${escapeAttr(String(rsv.startDate || ""))}" />
+        <input id="dedEditEndDate" type="date" class="hidden" value="${escapeAttr(String(rsv.endDate || ""))}" />
+      `}
 
       <div id="dedEditErr" class="err hidden" style="margin-top:8px;"></div>
       <div id="dedEditOk" class="ok hidden" style="margin-top:8px;"></div>
 
       <div class="actions" style="margin-top:16px;">
-        <button id="dedEditSaveBtn" type="button" class="primary">Zapisz zmiany</button>
-        <button id="dedEditCancelBtn" type="button" class="ghost">Anuluj</button>
+        ${isClubEvent ? "" : `<button id="dedEditSaveBtn" type="button" class="primary">Zapisz zmiany</button>`}
+        <button id="dedEditCancelBtn" type="button" class="ghost ghostCancel">Anuluj</button>
       </div>
 
       <hr style="margin:20px 0;border:none;border-top:1px solid var(--border,#e5e7eb);">
 
       <div id="dedCancelRsvErr" class="err hidden" style="margin-bottom:8px;"></div>
 
-      <button id="dedCancelRsvBtn" type="button" class="ghost"${canCancelReservation ? "" : " disabled"}>
+      <button id="dedCancelRsvBtn" type="button" class="ghost ghostDanger"${canCancelReservation ? "" : " disabled"}>
         Anuluj rezerwację
       </button>
       ${!canCancelReservation
@@ -475,8 +537,25 @@ async function renderDedicatedEditView({ viewEl, reservationId, ctx }) {
   const okEl = viewEl.querySelector("#dedEditOk");
   const startDateEl = viewEl.querySelector("#dedEditStartDate");
   const endDateEl = viewEl.querySelector("#dedEditEndDate");
+  const calendarEl = viewEl.querySelector("#dedEditCalendar");
   const cancelRsvBtn = viewEl.querySelector("#dedCancelRsvBtn");
   const cancelRsvErrEl = viewEl.querySelector("#dedCancelRsvErr");
+
+  if (calendarEl) {
+    const dedCalendar = createReservationCalendar({
+      containerEl: calendarEl,
+      initialStartIso: String(rsv.startDate || "") || null,
+      initialEndIso: String(rsv.endDate || "") || null,
+      onRangeChange: (startIso, endIso) => {
+        if (startDateEl) startDateEl.value = startIso || "";
+        if (endDateEl) endDateEl.value = endIso || "";
+        if (saveBtn) saveBtn.disabled = !(startIso && endIso);
+      },
+    });
+    loadOccupiedRangesForReservation(rsv, ctx).then((ranges) => {
+      dedCalendar.setOccupiedRanges(ranges);
+    });
+  }
 
   const setErr = (msg) => {
     errEl.textContent = String(msg || "");
@@ -488,7 +567,7 @@ async function renderDedicatedEditView({ viewEl, reservationId, ctx }) {
     cancelRsvErrEl.classList.toggle("hidden", !cancelRsvErrEl.textContent);
   };
 
-  cancelBtn.addEventListener("click", () => setHash("home", "home"));
+  cancelBtn?.addEventListener("click", () => setHash("home", "home"));
 
   if (cancelRsvBtn && canCancelReservation) {
     cancelRsvBtn.addEventListener("click", async () => {
@@ -509,10 +588,10 @@ async function renderDedicatedEditView({ viewEl, reservationId, ctx }) {
     });
   }
 
-  saveBtn.addEventListener("click", async () => {
+  saveBtn?.addEventListener("click", async () => {
     setErr("");
-    const startDate = String(startDateEl.value || "").trim();
-    const endDate = String(endDateEl.value || "").trim();
+    const startDate = String(startDateEl?.value || "").trim();
+    const endDate = String(endDateEl?.value || "").trim();
 
     if (!startDate || !endDate) {
       setErr("Wybierz datę od i do.");

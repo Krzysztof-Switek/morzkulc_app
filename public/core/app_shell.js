@@ -33,6 +33,14 @@ function updateSwBannerVisibility() {
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/sw.js").then((reg) => {
     swRegistration = reg;
+    // register() na już istniejącej rejestracji NIE gwarantuje natychmiastowego
+    // sprawdzenia sw.js pod kątem nowej wersji — przeglądarka robi to niejawnie
+    // przy nawigacji, ale ten mechanizm bywa opóźniony (zaobserwowane: kilka
+    // minut zamiast od razu, przy koncie nieużywanym od tygodni — zgłoszenie
+    // użytkownika 05.09.2026). update() wymusza sprawdzenie NATYCHMIAST —
+    // /sw.js ma nagłówek no-cache, więc to zawsze realne zapytanie do sieci,
+    // nie zgadywanie z HTTP cache przeglądarki.
+    reg.update().catch(() => { /* brak sieci — nieistotne, visibilitychange/interval spróbują później */ });
   }).catch((err) => {
     // Rejestracja SW nie jest krytyczna — aplikacja działa bez niego
     console.warn("SW registration failed:", err?.message);

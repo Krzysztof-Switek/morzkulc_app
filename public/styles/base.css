@@ -228,6 +228,32 @@ button.ghost {
   background: transparent;
 }
 
+/* Przyciski anulujące BIEŻĄCĄ, niezapisaną jeszcze akcję (zamknij modal bez zapisu,
+   odrzuć formularz) — delikatny czerwony akcent, żeby wizualnie odróżnić od
+   neutralnego .ghost, ale bez sugestii że coś zostaje skasowane/nieodwracalnie
+   zmienione (od tego jest .ghostDanger poniżej). */
+button.ghostCancel {
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.25);
+}
+
+button.ghostCancel:hover {
+  border-color: rgba(248, 113, 113, 0.55);
+  background: rgba(248, 113, 113, 0.08);
+}
+
+/* Przyciski realnie kasujące/anulujące już istniejący, zapisany stan (np. anulowanie
+   aktywnej rezerwacji) — intensywniejszy czerwony, sygnalizujący nieodwracalną akcję. */
+button.ghostDanger {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.45);
+}
+
+button.ghostDanger:hover {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.14);
+}
+
 button.iconBtn {
   width: 42px;
   height: 42px;
@@ -361,6 +387,16 @@ textarea {
   color: var(--text);
   background: var(--input-bg);
   transition: box-shadow 120ms ease, border-color 120ms ease;
+}
+
+/* Powyższe width:100% jest myślane dla pól tekstowych/select — bez tego
+   wyjątku checkbox/radio dziedziczą je też i rozciągają się na całą
+   szerokość wiersza (odkryte na .clubEventItemRow — łatwo przeoczyć przy
+   dodawaniu nowego checkboxa bez własnej klasy). */
+input[type="checkbox"],
+input[type="radio"] {
+  width: auto;
+  flex: none;
 }
 
 input::placeholder,

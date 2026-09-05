@@ -127,8 +127,18 @@ function renderRecordTable(records) {
               <td class="godzinkiAmountCell ${amountClass}">${amountHtml}</td>
               <td>
                 <span class="godzinkiReason">${esc(shortenReason(r.reason))}</span>
-                ${isWaived ? `<span class="godzinkiWaivedTag">zwolnienie${r.schoolYear ? ` kurs ${esc(String(r.schoolYear))}` : ""}</span>` : ""}
-                ${isRefunded ? `<span class="godzinkiRefundedTag">zwrócono${r.refundedAt ? ` ${esc(formatDate(r.refundedAt))}` : ""}</span>` : ""}
+                ${isWaived
+                  ? (r.eventId
+                    ? `<span class="godzinkiClubEventTag">Impreza klubowa</span>`
+                    : `<span class="godzinkiWaivedTag">zwolnienie${r.schoolYear ? ` kurs ${esc(String(r.schoolYear))}` : ""}</span>`)
+                  : ""}
+                ${isRefunded
+                  // "zwrócono" myli, gdy wpis był już zwolniony (isWaived) — nic nie
+                  // było wtedy realnie pobrane, więc "anulowano" (zgłoszenie użytkownika
+                  // 05.09.2026: rezerwacja na imprezę klubową wyglądała jakby oddano
+                  // godzinki, których nigdy nie zabrano).
+                  ? `<span class="godzinkiRefundedTag">${isWaived ? "anulowano" : "zwrócono"}${r.refundedAt ? ` ${esc(formatDate(r.refundedAt))}` : ""}</span>`
+                  : ""}
                 ${isPending ? `<span class="godzinkiPending">oczekuje</span>` : ""}
               </td>
             </tr>

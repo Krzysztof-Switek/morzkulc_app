@@ -45,6 +45,9 @@ export type GodzinkiRecord = {
   waived?: boolean;
   // Rok szkoleniówki uzasadniający zwolnienie (waived) — do znacznika "zwolnienie kurs RRRR".
   schoolYear?: number | null;
+  // Impreza klubowa uzasadniająca zwolnienie (waived) — alternatywa dla schoolYear
+  // powyżej (jedno z dwóch, nigdy oba naraz) — do znacznika "impreza klubowa".
+  eventId?: string | null;
   refundedAt?: FirebaseFirestore.Timestamp | null;
   earnDeductions?: {earnId: string; amount: number}[];
 
@@ -591,7 +594,7 @@ export function writeWaivedSpendInTx(
   tx: FirebaseFirestore.Transaction,
   db: FirebaseFirestore.Firestore,
   uid: string,
-  input: {amount: number; reason: string; reservationId?: string; schoolYear?: number | null}
+  input: {amount: number; reason: string; reservationId?: string; schoolYear?: number | null; eventId?: string | null}
 ): void {
   const amount = Number(input.amount);
   if (!amount || amount <= 0) return;
@@ -607,6 +610,9 @@ export function writeWaivedSpendInTx(
     waived: true,
     // Rok szkoleniówki, z której wynika zwolnienie — front renderuje "zwolnienie kurs RRRR".
     schoolYear: input.schoolYear ?? null,
+    // Impreza klubowa, z której wynika zwolnienie (alternatywa dla schoolYear powyżej —
+    // jedno z dwóch, nigdy oba naraz) — front renderuje "impreza klubowa".
+    eventId: input.eventId ?? null,
     earnDeductions: [],
     reservationId: input.reservationId ? String(input.reservationId) : null,
     refunded: false,

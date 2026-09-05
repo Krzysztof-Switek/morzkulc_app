@@ -32,6 +32,10 @@ CATEGORY_COLLECTIONS = {
     "sprayskirts": "gear_sprayskirts",
 }
 
+# Role uprawnione do bycia kierownikiem imprezy klubowej (rola_kursant/rola_sympatyk
+# WYKLUCZONE — mirror memberRoleKeys z functions/src/service/service_config.ts).
+MEMBER_ROLE_KEYS = ["rola_czlonek", "rola_kandydat", "rola_zarzad", "rola_kr"]
+
 
 def composite_id(category: str, item_id: str) -> str:
     """"{category}/{itemId}" — e.g. "kayaks/K01", "paddles/P01"."""
@@ -255,17 +259,22 @@ class BackendStub:
         "rola_kursant": 1,
     }
 
-    def __init__(self, users: dict, catalog: dict, kurs_wypozycza: bool = False, today: str = None):
+    def __init__(self, users: dict, catalog: dict, kurs_wypozycza: bool = False, today: str = None,
+                 kierownik_events: dict = None):
         """
         users: {uid: {"role_key": ..., "status_key": ..., "email": ..., "school_year": ...}}
         catalog: {composite_id: {"active": True, "operational": True, ...}}
         kurs_wypozycza: globalny przełącznik zarządu (setup/vars_members.vars.kurs_wypożycza).
         today: data ISO używana w oknie szkoleniówki kursanta (None → realne dziś).
+        kierownik_events: {uid: {"id": ..., "startDate": ..., "endDate": ...}} — aktywna
+            impreza klubowa danego uid (mirror findActiveKierownikEvent w events_service.ts).
+            Brak wpisu = uid nie jest aktualnie kierownikiem żadnej imprezy.
         """
         self.users = users
         self.catalog = catalog
         self.kurs_wypozycza = kurs_wypozycza
         self.today = today
+        self.kierownik_events = kierownik_events or {}
         self.reservations = []
         self._next_id = 1
 
@@ -276,9 +285,15 @@ class BackendStub:
 
     def create_bundle_reservation(self, uid: str, start_date: str, end_date: str,
                                    items: list, starter_category: str = "",
-                                   starter_item_id: str = "") -> dict:
+                                   starter_item_id: str = "",
+                                   as_club_event: bool = False) -> dict:
         """
         items: [{"itemId": ..., "category": ...}]
+        as_club_event: tryb "impreza klubowa" — kierownik rezerwuje DOWOLNĄ ilość
+            sprzętu bezpłatnie, wyłącznie na tę imprezę. Daty są NADPISANE datami
+            imprezy (start_date/end_date przekazane przez wołającego są ignorowane),
+            limit ilości per kategoria jest pomijany. Konflikt terminów i walidacja
+            przedmiotów NIGDY nie są pomijane — patrz gear_bundle_service.ts.
         Returns: {"ok": True, "id": ..., "costHours": ...} or {"ok": False, "code": ..., "message": ...}
         """
         # Auth
@@ -290,7 +305,21 @@ class BackendStub:
         if role_key == "rola_sympatyk":
             return {"ok": False, "code": "forbidden", "message": "Rola nie pozwala na rezerwację"}
 
+        club_event = None
+        if as_club_event:
+            if role_key not in MEMBER_ROLE_KEYS:
+                return {"ok": False, "code": "forbidden", "message": "Rola nie uprawnia do rezerwacji na imprezę klubową."}
+            club_event = self.kierownik_events.get(uid)
+            if not club_event:
+                return {
+                    "ok": False, "code": "not_a_kierownik",
+                    "message": "Nie jesteś obecnie kierownikiem żadnej zatwierdzonej imprezy klubowej.",
+                }
+            start_date = club_event["startDate"]
+            end_date = club_event["endDate"]
+
         # Kursant rezerwuje jak kandydat, ale tylko w oknie szkoleniówki + flaga zarządu.
+        # (Nieosiągalne w trybie "impreza klubowa" — kursant nie jest w MEMBER_ROLE_KEYS.)
         if role_key == "rola_kursant":
             from datetime import datetime
             today_iso = self.today or datetime.utcnow().strftime("%Y-%m-%d")
@@ -358,27 +387,34 @@ class BackendStub:
             }
 
         # Item count limit — PER KATEGORIA (S2): każdy rodzaj sprzętu osobno.
-        max_items = self.ROLE_MAX_ITEMS.get(role_key, 1)
-        already = count_overlapping_items_by_category(uid, self.reservations, block_start, block_end)
-        requested = count_items_by_category(items)
-        over = find_category_over_limit(already, requested, max_items)
-        if over:
-            return {
-                "ok": False, "code": "too_many_items",
-                "category": over["category"],
-                "message": (
-                    f"Przekroczono limit {max_items} szt. kategorii {over['category']} "
-                    f"(masz: {over['already']}, dodajesz: {over['requested']})"
-                ),
-            }
+        # POMIJANE dla trybu "impreza klubowa" (dowolna ilość sprzętu).
+        if not club_event:
+            max_items = self.ROLE_MAX_ITEMS.get(role_key, 1)
+            already = count_overlapping_items_by_category(uid, self.reservations, block_start, block_end)
+            requested = count_items_by_category(items)
+            over = find_category_over_limit(already, requested, max_items)
+            if over:
+                return {
+                    "ok": False, "code": "too_many_items",
+                    "category": over["category"],
+                    "message": (
+                        f"Przekroczono limit {max_items} szt. kategorii {over['category']} "
+                        f"(masz: {over['already']}, dodajesz: {over['requested']})"
+                    ),
+                }
 
-        # Cost hours: only for kayak items
-        kayak_count = sum(1 for i in items if i["category"] == "kayaks")
-        from datetime import datetime
-        start_dt = datetime.strptime(start_date, "%Y-%m-%d")
-        end_dt = datetime.strptime(end_date, "%Y-%m-%d")
-        days = (end_dt - start_dt).days + 1
-        cost_hours = kayak_count * days  # simplified: 1h/day/kayak
+        # Cost hours: only for kayak items. Impreza klubowa: mechanizm godzinkowy
+        # pomijany W CAŁOŚCI (decyzja użytkownika 05.09.2026) — zero, żaden wpis
+        # w godzinki_ledger, niezależnie od liczby kajaków.
+        if club_event:
+            cost_hours = 0
+        else:
+            kayak_count = sum(1 for i in items if i["category"] == "kayaks")
+            from datetime import datetime
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+            end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+            days = (end_dt - start_dt).days + 1
+            cost_hours = kayak_count * days  # simplified: 1h/day/kayak
 
         # Reservation kind
         kind = compute_reservation_kind(items)
@@ -418,6 +454,8 @@ class BackendStub:
             "starterCategory": starter_category,
             "starterItemId": starter_item_id,
             "costHours": cost_hours,
+            "eventId": club_event["id"] if club_event else None,
+            "waived": False,
         }
         self.reservations.append(doc)
 
@@ -426,6 +464,8 @@ class BackendStub:
             "id": rid,
             "costHours": cost_hours,
             "reservationKind": kind,
+            "eventId": club_event["id"] if club_event else None,
+            "waived": False,
         }
 
     def cancel_reservation(self, uid: str, reservation_id: str) -> dict:
@@ -436,6 +476,122 @@ class BackendStub:
                 r["status"] = "cancelled"
                 return {"ok": True}
         return {"ok": False, "code": "not_found", "message": "Rezerwacja nie istnieje"}
+
+    def update_bundle_reservation_items(self, uid: str, reservation_id: str, items: list) -> dict:
+        """
+        Kierownik podmienia PEŁNĄ listę przedmiotów istniejącej rezerwacji na
+        imprezę klubową (potrzeby się zmieniają — patrz feedback użytkownika
+        04.09.2026). WYŁĄCZNIE dla rezerwacji z eventId. Limit ilości POMIJANY
+        (jak przy tworzeniu), konflikt terminów i sprawność przedmiotów NIGDY
+        nie są pomijane. Mirror updateBundleReservationItems() w gear_bundle_service.ts.
+        """
+        user = self.users.get(uid)
+        if not user:
+            return {"ok": False, "code": "forbidden", "message": "Użytkownik nie zarejestrowany"}
+
+        if not items:
+            return {
+                "ok": False, "code": "no_items",
+                "message": "Lista nie może być pusta — anuluj rezerwację, jeśli rezygnujesz z całego sprzętu.",
+            }
+
+        # Dedup items by composite ID
+        seen_cids = set()
+        deduped = []
+        for item in items:
+            cid = composite_id(item["category"], item["itemId"])
+            if cid not in seen_cids:
+                seen_cids.add(cid)
+                deduped.append(item)
+        items = deduped
+
+        target = next((r for r in self.reservations if r.get("id") == reservation_id), None)
+        if not target:
+            return {"ok": False, "code": "not_found", "message": "Rezerwacja nie istnieje"}
+        if target.get("userUid") != uid:
+            return {"ok": False, "code": "forbidden", "message": "Nie masz uprawnień"}
+        if target.get("status") != "active":
+            return {"ok": False, "code": "invalid_state", "message": "Rezerwacja nieaktywna"}
+
+        event_id = target.get("eventId")
+        if not event_id:
+            return {
+                "ok": False, "code": "not_club_event_reservation",
+                "message": "Edycja listy przedmiotów jest dostępna tylko dla rezerwacji na imprezę klubową.",
+            }
+
+        active_event = self.kierownik_events.get(uid)
+        if not active_event or active_event["id"] != event_id:
+            return {
+                "ok": False, "code": "not_a_kierownik",
+                "message": "Nie jesteś już kierownikiem tej imprezy — edycja listy jest niedostępna.",
+            }
+
+        # Sprawność/dostępność przedmiotów — sprawdzana na NOWO dla całej listy.
+        for item in items:
+            cid = composite_id(item["category"], item["itemId"])
+            entry = self.catalog.get(cid)
+            if not entry:
+                return {
+                    "ok": False, "code": "item_not_found",
+                    "message": f"Nie znaleziono: {item['itemId']} ({item['category']})"
+                }
+            if not entry.get("active", True):
+                return {
+                    "ok": False, "code": "item_not_found",
+                    "message": f"Przedmiot nieaktywny: {item['itemId']}"
+                }
+            if item["category"] == "kayaks":
+                if not entry.get("operational", True):
+                    return {
+                        "ok": False, "code": "item_not_operational",
+                        "message": f"Kajak niesprawny: {item['itemId']}"
+                    }
+                if entry.get("isPrivate") and not entry.get("isPrivateRentable"):
+                    return {
+                        "ok": False, "code": "item_not_reservable",
+                        "message": f"Kajak prywatny niedostępny: {item['itemId']}"
+                    }
+
+        block_start = target["blockStartIso"]
+        block_end = target["blockEndIso"]
+        composite_ids_list = [composite_id(i["category"], i["itemId"]) for i in items]
+
+        # Konflikt terminów (z wyłączeniem samej siebie) — NIGDY nie pomijany.
+        conflicts = find_bundle_conflicts(composite_ids_list, self.reservations,
+                                          block_start, block_end, exclude_id=reservation_id)
+        if conflicts:
+            return {
+                "ok": False, "code": "conflict",
+                "message": f"Konflikty rezerwacji: {', '.join(conflicts)}",
+                "conflicts": conflicts,
+            }
+
+        kind = compute_reservation_kind(items)
+        stored_items = []
+        primary_idx = compute_primary_item_idx([{"category": i["category"]} for i in items])
+        for idx, item in enumerate(items):
+            entry = self.catalog[composite_id(item["category"], item["itemId"])]
+            stored_items.append({
+                "itemId": item["itemId"],
+                "category": item["category"],
+                "itemNumber": entry.get("number", item["itemId"]),
+                "itemLabel": entry.get("label", item["itemId"]),
+                "isPrimary": idx == primary_idx,
+                "isKayak": item["category"] == "kayaks",
+            })
+
+        kayak_ids = [i["itemId"] for i in items if i["category"] == "kayaks"]
+
+        # Impreza klubowa: mechanizm godzinkowy pomijany W CAŁOŚCI — edycja listy
+        # nigdy nie dotyka costHours/waived (decyzja użytkownika 05.09.2026).
+        target["items"] = stored_items
+        target["itemIds"] = composite_ids_list
+        target["reservationKind"] = kind
+        target["kayakIds"] = kayak_ids
+        target["kayakCount"] = len(kayak_ids)
+
+        return {"ok": True, "id": reservation_id}
 
     def get_items_with_availability(self, category: str, start_date: str, end_date: str) -> list:
         """Returns catalog items with isAvailableForRange flag."""
@@ -1909,6 +2065,326 @@ class TestScenarioKursant(unittest.TestCase):
         )
         self.assertFalse(r["ok"], r)
         self.assertEqual(r["code"], "kursant_no_year")
+
+
+class TestScenarioClubEvent(unittest.TestCase):
+    """
+    Tryb "impreza klubowa" (kierownik rezerwuje dowolną ilość sprzętu bezpłatnie,
+    wyłącznie na tę imprezę). Mirror rozszerzenia createBundleReservation()
+    w gear_bundle_service.ts — patrz komentarze przy as_club_event w BackendStub.
+
+    Reguły pod testem:
+      - limit ilości per kategoria POMIJANY,
+      - daty NADPISANE datami imprezy (klient nie wybiera),
+      - konflikt terminów i walidacja przedmiotów NIGDY nie pomijane,
+      - rola musi być w MEMBER_ROLE_KEYS (rola_kursant/rola_sympatyk odrzucone),
+      - brak aktywnej imprezy dla uid → "not_a_kierownik",
+      - zapisana rezerwacja ma eventId ustawiony, costHours=0, waived=False —
+        mechanizm godzinkowy pomijany W CAŁOŚCI, nie "zwalniany" (decyzja
+        użytkownika 05.09.2026: wpis "waived" mylił, sugerował realny koszt/
+        zwrot, którego nigdy nie było).
+    """
+
+    CATALOG = {
+        "kayaks/K01": {"active": True, "operational": True, "number": "K01", "label": "Kajak K01"},
+        "kayaks/K02": {"active": True, "operational": True, "number": "K02", "label": "Kajak K02"},
+        "kayaks/K03": {"active": True, "operational": True, "number": "K03", "label": "Kajak K03"},
+        "kayaks/K04": {"active": True, "operational": True, "number": "K04", "label": "Kajak K04"},
+        "kayaks/K_BROKEN": {"active": True, "operational": False, "number": "K05", "label": "Kajak K05"},
+        "paddles/P01": {"active": True, "number": "P01", "label": "Wiosło P01"},
+    }
+
+    EVENT = {"id": "EV1", "startDate": "2026-08-01", "endDate": "2026-08-03"}
+
+    def _backend(self, role="rola_kandydat", kierownik_events=None, users_extra=None):
+        users = {"U1": {"role_key": role, "status_key": "status_aktywny"}}
+        if users_extra:
+            users.update(users_extra)
+        return BackendStub(
+            users=users,
+            catalog=self.CATALOG,
+            kierownik_events=kierownik_events if kierownik_events is not None else {"U1": self.EVENT},
+        )
+
+    def test_bypasses_per_category_item_limit(self):
+        """Kandydat (limit 1/kategoria) rezerwuje 4 kajaki naraz jako kierownik → OK."""
+        backend = self._backend(role="rola_kandydat")
+        result = backend.create_bundle_reservation(
+            uid="U1",
+            start_date="2099-01-01",  # ignorowane — nadpisane datami imprezy
+            end_date="2099-01-01",
+            items=[
+                {"itemId": "K01", "category": "kayaks"},
+                {"itemId": "K02", "category": "kayaks"},
+                {"itemId": "K03", "category": "kayaks"},
+                {"itemId": "K04", "category": "kayaks"},
+            ],
+            as_club_event=True,
+        )
+        self.assertTrue(result["ok"], result)
+
+    def test_dates_forced_to_event_dates(self):
+        """Daty przesłane przez klienta są ignorowane — zapisana rezerwacja ma daty imprezy."""
+        backend = self._backend()
+        result = backend.create_bundle_reservation(
+            uid="U1",
+            start_date="2099-01-01",
+            end_date="2099-01-01",
+            items=[{"itemId": "K01", "category": "kayaks"}],
+            as_club_event=True,
+        )
+        self.assertTrue(result["ok"], result)
+        stored = backend.reservations[0]
+        self.assertEqual(stored["startDate"], self.EVENT["startDate"])
+        self.assertEqual(stored["endDate"], self.EVENT["endDate"])
+
+    def test_conflict_still_enforced(self):
+        """Kajak już zajęty w terminie imprezy — konflikt NIE jest pomijany dla trybu klubowego."""
+        backend = self._backend()
+        # Inna osoba ma już aktywną rezerwację K01 nakładającą się na termin imprezy.
+        backend.reservations.append({
+            "id": "OTHER-001",
+            "status": "active",
+            "userUid": "U_OTHER",
+            "startDate": "2026-08-02",
+            "endDate": "2026-08-05",
+            "blockStartIso": "2026-08-01",
+            "blockEndIso": "2026-08-06",
+            "itemIds": ["kayaks/K01"],
+            "kayakIds": ["K01"],
+        })
+        result = backend.create_bundle_reservation(
+            uid="U1", start_date="2099-01-01", end_date="2099-01-01",
+            items=[{"itemId": "K01", "category": "kayaks"}],
+            as_club_event=True,
+        )
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["code"], "conflict")
+
+    def test_item_validity_still_enforced(self):
+        """Niesprawny kajak nadal odrzucony w trybie klubowym."""
+        backend = self._backend()
+        result = backend.create_bundle_reservation(
+            uid="U1", start_date="2099-01-01", end_date="2099-01-01",
+            items=[{"itemId": "K_BROKEN", "category": "kayaks"}],
+            as_club_event=True,
+        )
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["code"], "item_not_operational")
+
+    def test_not_a_kierownik_when_no_active_event(self):
+        """Rola uprawniona (kandydat), ale brak wpisu w kierownik_events → not_a_kierownik."""
+        backend = self._backend(kierownik_events={})
+        result = backend.create_bundle_reservation(
+            uid="U1", start_date="2099-01-01", end_date="2099-01-01",
+            items=[{"itemId": "K01", "category": "kayaks"}],
+            as_club_event=True,
+        )
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["code"], "not_a_kierownik")
+
+    def test_role_not_allowed_kursant(self):
+        """Kursant nie jest w MEMBER_ROLE_KEYS — odrzucony nawet z wpisem w kierownik_events."""
+        backend = self._backend(role="rola_kursant")
+        result = backend.create_bundle_reservation(
+            uid="U1", start_date="2099-01-01", end_date="2099-01-01",
+            items=[{"itemId": "K01", "category": "kayaks"}],
+            as_club_event=True,
+        )
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["code"], "forbidden")
+
+    def test_role_not_allowed_sympatyk(self):
+        """Sympatyk odrzucony już na ogólnej bramce roli (przed sprawdzeniem trybu klubowego)."""
+        backend = self._backend(role="rola_sympatyk")
+        result = backend.create_bundle_reservation(
+            uid="U1", start_date="2099-01-01", end_date="2099-01-01",
+            items=[{"itemId": "K01", "category": "kayaks"}],
+            as_club_event=True,
+        )
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["code"], "forbidden")
+
+    def test_reservation_marked_event_id_no_godzinki_trace(self):
+        """Zapisana rezerwacja niesie eventId, ale zero śladu w mechanizmie godzinkowym —
+        costHours=0 i waived=False niezależnie od liczby kajaków (dyskryminator dla frontu
+        to WYŁĄCZNIE eventId, nigdy waived)."""
+        backend = self._backend()
+        result = backend.create_bundle_reservation(
+            uid="U1", start_date="2099-01-01", end_date="2099-01-01",
+            items=[{"itemId": "K01", "category": "kayaks"}],
+            as_club_event=True,
+        )
+        self.assertTrue(result["ok"], result)
+        self.assertEqual(result["eventId"], self.EVENT["id"])
+        self.assertEqual(result["costHours"], 0)
+        self.assertFalse(result["waived"])
+        stored = backend.reservations[0]
+        self.assertEqual(stored["eventId"], self.EVENT["id"])
+        self.assertEqual(stored["costHours"], 0)
+        self.assertFalse(stored["waived"])
+
+    def test_normal_reservation_unaffected_eventid_none(self):
+        """Zwykła rezerwacja (bez as_club_event) ma eventId=None, waived=False."""
+        backend = self._backend()
+        result = backend.create_bundle_reservation(
+            uid="U1", start_date="2026-09-01", end_date="2026-09-03",
+            items=[{"itemId": "K02", "category": "kayaks"}],
+        )
+        self.assertTrue(result["ok"], result)
+        self.assertIsNone(result["eventId"])
+        self.assertFalse(result["waived"])
+
+    def test_board_role_allowed_as_kierownik(self):
+        """rola_zarzad też może być kierownikiem (w MEMBER_ROLE_KEYS)."""
+        backend = self._backend(role="rola_zarzad")
+        result = backend.create_bundle_reservation(
+            uid="U1", start_date="2099-01-01", end_date="2099-01-01",
+            items=[{"itemId": "K01", "category": "kayaks"}, {"itemId": "P01", "category": "paddles"}],
+            as_club_event=True,
+        )
+        self.assertTrue(result["ok"], result)
+
+
+class TestScenarioClubEventItemsEdit(unittest.TestCase):
+    """
+    Edycja listy przedmiotów już złożonej rezerwacji na imprezę klubową —
+    potrzeby kierownika zmieniają się w miarę przygotowań (feedback użytkownika
+    04.09.2026). Mirror updateBundleReservationItems() w gear_bundle_service.ts.
+
+    Reguły pod testem:
+      - podmienia PEŁNĄ listę (dodane pozycje wchodzą, pominięte znikają),
+      - limit ilości POMIJANY (jak przy tworzeniu),
+      - konflikt terminów (z wyłączeniem samej siebie) i sprawność przedmiotów
+        NIGDY nie są pomijane,
+      - działa WYŁĄCZNIE na rezerwacjach z eventId,
+      - wymaga wciąż być aktywnym kierownikiem TEJ SAMEJ imprezy,
+      - tylko właściciel rezerwacji może ją edytować.
+    """
+
+    CATALOG = {
+        "kayaks/K01": {"active": True, "operational": True, "number": "K01", "label": "Kajak K01"},
+        "kayaks/K02": {"active": True, "operational": True, "number": "K02", "label": "Kajak K02"},
+        "kayaks/K_BROKEN": {"active": True, "operational": False, "number": "K05", "label": "Kajak K05"},
+        "paddles/P01": {"active": True, "number": "P01", "label": "Wiosło P01"},
+    }
+
+    EVENT = {"id": "EV1", "startDate": "2026-08-01", "endDate": "2026-08-03"}
+
+    def _backend(self, kierownik_events=None):
+        return BackendStub(
+            users={
+                "U1": {"role_key": "rola_kandydat", "status_key": "status_aktywny"},
+                "U2": {"role_key": "rola_czlonek", "status_key": "status_aktywny"},
+            },
+            catalog=self.CATALOG,
+            kierownik_events=kierownik_events if kierownik_events is not None else {"U1": self.EVENT},
+        )
+
+    def _create(self, backend, items):
+        result = backend.create_bundle_reservation(
+            uid="U1", start_date="2099-01-01", end_date="2099-01-01",
+            items=items, as_club_event=True,
+        )
+        self.assertTrue(result["ok"], result)
+        return result["id"]
+
+    def test_edit_adds_and_removes_items(self):
+        """Odznaczenie K01 (usuwa) + dodanie K02 i wiosła — pełna lista podmieniona."""
+        backend = self._backend()
+        rid = self._create(backend, [{"itemId": "K01", "category": "kayaks"}])
+        result = backend.update_bundle_reservation_items(
+            uid="U1", reservation_id=rid,
+            items=[{"itemId": "K02", "category": "kayaks"}, {"itemId": "P01", "category": "paddles"}],
+        )
+        self.assertTrue(result["ok"], result)
+        stored = backend.reservations[0]
+        self.assertEqual(sorted(stored["itemIds"]), ["kayaks/K02", "paddles/P01"])
+        self.assertNotIn("kayaks/K01", stored["itemIds"])
+
+    def test_conflict_still_enforced_on_edit(self):
+        """Dodanie kajaka zajętego przez CUDZĄ rezerwację — blokowane."""
+        backend = self._backend()
+        rid = self._create(backend, [{"itemId": "K01", "category": "kayaks"}])
+        backend.reservations.append({
+            "id": "OTHER-001", "status": "active", "userUid": "U_OTHER",
+            "startDate": "2026-08-02", "endDate": "2026-08-05",
+            "blockStartIso": "2026-08-01", "blockEndIso": "2026-08-06",
+            "itemIds": ["kayaks/K02"], "kayakIds": ["K02"],
+        })
+        result = backend.update_bundle_reservation_items(
+            uid="U1", reservation_id=rid,
+            items=[{"itemId": "K01", "category": "kayaks"}, {"itemId": "K02", "category": "kayaks"}],
+        )
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["code"], "conflict")
+
+    def test_self_excluded_from_conflict_check(self):
+        """Resubmisja tej samej listy (bez zmian) NIE koliduje sama ze sobą."""
+        backend = self._backend()
+        rid = self._create(backend, [{"itemId": "K01", "category": "kayaks"}])
+        result = backend.update_bundle_reservation_items(
+            uid="U1", reservation_id=rid,
+            items=[{"itemId": "K01", "category": "kayaks"}],
+        )
+        self.assertTrue(result["ok"], result)
+
+    def test_item_validity_still_enforced_on_edit(self):
+        """Dodanie niesprawnego kajaka do edytowanej listy — odrzucone."""
+        backend = self._backend()
+        rid = self._create(backend, [{"itemId": "K01", "category": "kayaks"}])
+        result = backend.update_bundle_reservation_items(
+            uid="U1", reservation_id=rid,
+            items=[{"itemId": "K01", "category": "kayaks"}, {"itemId": "K_BROKEN", "category": "kayaks"}],
+        )
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["code"], "item_not_operational")
+
+    def test_not_a_kierownik_anymore_blocks_edit(self):
+        """Impreza się skończyła / kierownik zmieniony — edycja listy zablokowana."""
+        backend = self._backend()
+        rid = self._create(backend, [{"itemId": "K01", "category": "kayaks"}])
+        backend.kierownik_events = {}  # impreza już nieaktywna dla U1
+        result = backend.update_bundle_reservation_items(
+            uid="U1", reservation_id=rid,
+            items=[{"itemId": "K02", "category": "kayaks"}],
+        )
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["code"], "not_a_kierownik")
+
+    def test_not_club_event_reservation_blocks_edit(self):
+        """Zwykła (nie-klubowa) rezerwacja nie ma trybu edycji listy."""
+        backend = self._backend()
+        result = backend.create_bundle_reservation(
+            uid="U2", start_date="2026-09-01", end_date="2026-09-03",
+            items=[{"itemId": "K01", "category": "kayaks"}],
+        )
+        self.assertTrue(result["ok"], result)
+        result = backend.update_bundle_reservation_items(
+            uid="U2", reservation_id=result["id"],
+            items=[{"itemId": "K02", "category": "kayaks"}],
+        )
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["code"], "not_club_event_reservation")
+
+    def test_empty_items_blocked(self):
+        """Pusta lista jest odrzucana — pełne zrzeczenie się sprzętu idzie przez anulowanie."""
+        backend = self._backend()
+        rid = self._create(backend, [{"itemId": "K01", "category": "kayaks"}])
+        result = backend.update_bundle_reservation_items(uid="U1", reservation_id=rid, items=[])
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["code"], "no_items")
+
+    def test_forbidden_not_owner(self):
+        """Inny użytkownik nie może edytować cudzej rezerwacji na imprezę."""
+        backend = self._backend()
+        rid = self._create(backend, [{"itemId": "K01", "category": "kayaks"}])
+        result = backend.update_bundle_reservation_items(
+            uid="U2", reservation_id=rid,
+            items=[{"itemId": "K02", "category": "kayaks"}],
+        )
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["code"], "forbidden")
 
 
 if __name__ == "__main__":

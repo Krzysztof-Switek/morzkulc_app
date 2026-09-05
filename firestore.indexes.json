@@ -25,6 +25,15 @@
       ]
     },
     {
+      "collectionGroup": "events",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "kierownikUids", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "approved", "order": "ASCENDING" },
+        { "fieldPath": "endDate", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "godzinki_ledger",
       "queryScope": "COLLECTION",
       "fields": [

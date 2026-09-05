@@ -6,6 +6,7 @@ import {logger} from "firebase-functions/v2";
 import * as admin from "firebase-admin";
 import {processApproval} from "../modules/hours/godzinki_service";
 import {getGodzinkiVars} from "../modules/hours/godzinki_vars";
+import {findActiveKierownikConflict} from "../modules/calendar/events_service";
 
 type TokenCheck =
   | {error: string}
@@ -126,6 +127,32 @@ export async function handleAdminApprove(req: Request, res: Response, deps: Admi
         res.status(404).json({ok: false, code: "not_found", message: "Impreza nie znaleziona"});
         return;
       }
+
+      // Reguła "jeden kierownik naraz": zatwierdzenie imprezy klubowej aktywuje
+      // przywilej darmowej rezerwacji sprzętu dla KAŻDEGO jej kierownika (kolumna
+      // "Kierownik" w arkuszu dopuszcza kilka e-maili) — jeśli którykolwiek z nich
+      // jest już aktywnym kierownikiem innej niezakończonej imprezy klubowej,
+      // odmawiamy zatwierdzenia (zarząd musi zmienić kierownika albo poczekać).
+      const eventData = snap.data() as any;
+      const organizer = norm(eventData?.organizer);
+      const kierownikUids: string[] = Array.isArray(eventData?.kierownikUids) ? eventData.kierownikUids : [];
+      if (organizer === "morzkulc" && kierownikUids.length) {
+        for (const kierownikUid of kierownikUids) {
+          const conflict = await findActiveKierownikConflict(db, kierownikUid, id);
+          if (conflict) {
+            const kierownicy: Array<{uid: string | null; displayName: string; email: string}> = Array.isArray(eventData?.kierownicy) ? eventData.kierownicy : [];
+            const conflictName = kierownicy.find((k) => k.uid === kierownikUid)?.displayName || kierownicy.find((k) => k.uid === kierownikUid)?.email || kierownikUid;
+            res.status(409).json({
+              ok: false,
+              code: "kierownik_already_assigned",
+              message: `Kierownik ${conflictName} jest już kierownikiem innej aktywnej imprezy klubowej ("${conflict.name}", do ${conflict.endDate}). Zmień kierownika lub poczekaj, aż tamta impreza się zakończy.`,
+              details: {conflictEventId: conflict.id, conflictEventName: conflict.name, conflictEventEndDate: conflict.endDate},
+            });
+            return;
+          }
+        }
+      }
+
       await ref.update({
         approved: true,
         approvedAt: admin.firestore.FieldValue.serverTimestamp(),

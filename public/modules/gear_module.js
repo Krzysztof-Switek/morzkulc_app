@@ -1,13 +1,16 @@
 import { apiGetJson, apiPostJson } from "/core/api_client.js";
 import { mapUserFacingApiError } from "/core/user_error_messages.js";
 import { storageFetchKayakCoverUrl, storageFetchKayakGalleryUrls, storageFetchLifejacketUrl, storageFetchHelmetUrl, storageFetchHelmetFrontUrl } from "/core/firebase_client.js";
+import { createReservationCalendar } from "/core/date_range_calendar.js";
 
 const NAV_BACK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`;
 const NAV_HOME_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
 
 const GEAR_URL = "/api/gear/kayaks";
-const CREATE_RESERVATION_URL = "/api/gear/reservations/create";
 const CREATE_BUNDLE_RESERVATION_URL = "/api/gear/reservations/create-bundle";
+const UPDATE_BUNDLE_RESERVATION_ITEMS_URL = "/api/gear/reservations/update-items";
+const CANCEL_RESERVATION_URL = "/api/gear/reservations/cancel";
+const MY_RESERVATIONS_URL = "/api/gear/my-reservations";
 const GEAR_ITEM_AVAILABILITY_URL = "/api/gear/items/availability";
 const GEAR_FAVORITES_URL = "/api/gear/favorites";
 const GEAR_FAVORITES_TOGGLE_URL = "/api/gear/favorites/toggle";
@@ -51,6 +54,15 @@ const GEAR_TABS_SECONDARY = [
 ];
 const GEAR_TABS = [...GEAR_TABS_PRIMARY, ...GEAR_TABS_SECONDARY];
 
+const GEAR_CATEGORY_SINGULAR = {
+  kayaks: "Kajak",
+  paddles: "Wiosło",
+  lifejackets: "Kamizelka",
+  helmets: "Kask",
+  sprayskirts: "Fartuch",
+  throwbags: "Rzutka",
+};
+
 export function createGearModule({ id, type, label, defaultRoute, order, enabled, access }) {
   return {
     id,
@@ -63,6 +75,12 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
 
     async render({ viewEl, routeId, ctx }) {
       const requestedRoute = String(routeId || "").trim() || "kayaks";
+
+      if (requestedRoute === "club-event") {
+        await renderClubEventBulkView({ viewEl, ctx, label });
+        return;
+      }
+
       const activeTab = GEAR_TABS.find((t) => t.id === requestedRoute)?.id || "kayaks";
       const activeTabLabel = GEAR_TABS.find((t) => t.id === activeTab)?.label || "Kajaki";
       const isKayaksView = activeTab === "kayaks";
@@ -259,57 +277,6 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
           </div>
         </div>
 
-        <div id="gearReservationModal" class="gearModal hidden" aria-hidden="true">
-          <div class="gearModalBackdrop" data-gear-reservation-close="1"></div>
-          <div class="gearModalCard" role="dialog" aria-modal="true" aria-label="Rezerwacja kajaka">
-            <div class="gearModalTop">
-              <div class="gearModalTitle" id="gearReservationTitle">Rezerwacja</div>
-              <button class="gearModalClose" type="button" data-gear-reservation-close="1" aria-label="Zamknij">✕</button>
-            </div>
-
-            <div class="gearModalBody">
-              <div style="width:100%; max-width:520px;">
-                <div id="reservationInfo" class="hint" style="margin-bottom:10px;">
-                  Wybierz kajak i kliknij „Rezerwuj”.
-                </div>
-
-                <div id="reservationOk" class="ok hidden" style="margin-bottom:10px;"></div>
-                <div id="reservationErr" class="err hidden" style="margin-bottom:10px;"></div>
-
-                <div class="row" style="margin:0;">
-                  <label for="reservationSelectedKayak">Wybrany kajak</label>
-                  <input id="reservationSelectedKayak" type="text" value="" readonly />
-                </div>
-
-                <div class="row" style="margin-top:10px;">
-                  <label for="reservationStartDate">Data od</label>
-                  <input id="reservationStartDate" type="date" />
-                </div>
-
-                <div class="row" style="margin-top:10px;">
-                  <label for="reservationEndDate">Data do</label>
-                  <input id="reservationEndDate" type="date" />
-                </div>
-
-                <div class="hint" style="margin-top:10px;">
-                  Rezerwacja blokuje sprzęt dla innych użytkowników. Koszt godzinek i konflikty terminów sprawdza backend.
-                </div>
-
-                <div id="reservationExistingSection" class="gearReservModalSection hidden">
-                  <div class="gearReservModalTitle">Kiedy zajęty?</div>
-                  <div id="reservationExistingContent"></div>
-                </div>
-              </div>
-            </div>
-
-            <div class="gearModalActions">
-              <button id="reservationCreateBtn" type="button" class="primary">Zapisz rezerwację</button>
-              <button id="reservationClearBtn" type="button" class="ghost">Wyczyść</button>
-              <button type="button" class="ghost" data-gear-reservation-close="1">Zamknij</button>
-            </div>
-          </div>
-        </div>
-
         <div id="gearBundleModal" class="gearModal hidden" aria-hidden="true">
           <div class="gearModalBackdrop" data-gear-bundle-close="1"></div>
           <div class="gearModalCard" role="dialog" aria-modal="true" aria-label="Rezerwacja sprzętu">
@@ -327,23 +294,20 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
                 <div id="bundleOk" class="ok hidden" style="margin-bottom:10px;"></div>
                 <div id="bundleErr" class="err hidden" style="margin-bottom:10px;"></div>
 
-                <div class="row" style="margin:0;">
-                  <label for="bundleStartDate">Data od</label>
-                  <input id="bundleStartDate" type="date" />
+                <div id="bundleClubEventRow" class="hidden" style="margin-bottom:10px;">
+                  <label style="display:flex; align-items:center; gap:8px; font-weight:600; cursor:pointer;">
+                    <input type="checkbox" id="bundleClubEventToggle" /> Rezerwuję na imprezę klubową
+                  </label>
+                  <div class="hint" id="bundleClubEventHint" style="margin-top:4px;"></div>
                 </div>
 
-                <div class="row" style="margin-top:10px;">
-                  <label for="bundleEndDate">Data do</label>
-                  <input id="bundleEndDate" type="date" />
-                </div>
-
-                <div class="hint" style="margin-top:10px;">
-                  Rezerwacja blokuje sprzęt dla innych użytkowników. Backend sprawdza dostępność i konflikty terminów.
-                </div>
+                <div id="bundleDateCalendar"></div>
+                <input id="bundleStartDate" type="date" class="hidden" />
+                <input id="bundleEndDate" type="date" class="hidden" />
 
                 <div id="bundleItemsSection" style="margin-top:14px;">
                   <div style="font-weight:600; margin-bottom:6px;">Zarezerwowany sprzęt:</div>
-                  <div id="bundleItemsList" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+                  <div id="bundleItemsList" style="display:flex; flex-direction:column; gap:4px;"></div>
                 </div>
 
                 <div id="bundleAddSection" style="margin-top:14px;">
@@ -359,9 +323,8 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
             </div>
 
             <div class="gearModalActions">
-              <button id="bundleCheckBtn" type="button" class="ghost">Sprawdź dostępność</button>
               <button id="bundleCreateBtn" type="button" class="primary">Zapisz rezerwację</button>
-              <button type="button" class="ghost" data-gear-bundle-close="1">Zamknij</button>
+              <button type="button" class="ghost ghostCancel" data-gear-bundle-close="1">Anuluj</button>
             </div>
           </div>
         </div>
@@ -385,7 +348,7 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
             </div>
             <div class="gearModalActions">
               <button id="gearWeightSaveBtn" type="button" class="primary">Zapisz</button>
-              <button type="button" class="ghost" data-gear-weight-close="1">Anuluj</button>
+              <button type="button" class="ghost ghostCancel" data-gear-weight-close="1">Anuluj</button>
             </div>
           </div>
         </div>
@@ -429,19 +392,6 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
       const filterSizeSelectEl = viewEl.querySelector("#filterSizeSelect");
       const filterPaddlePoolSelectEl = viewEl.querySelector("#filterPaddlePoolSelect");
 
-      const reservationModalEl = viewEl.querySelector("#gearReservationModal");
-      const reservationTitleEl = viewEl.querySelector("#gearReservationTitle");
-      const reservationInfoEl = viewEl.querySelector("#reservationInfo");
-      const reservationOkEl = viewEl.querySelector("#reservationOk");
-      const reservationErrEl = viewEl.querySelector("#reservationErr");
-      const reservationSelectedKayakEl = viewEl.querySelector("#reservationSelectedKayak");
-      const reservationStartDateEl = viewEl.querySelector("#reservationStartDate");
-      const reservationEndDateEl = viewEl.querySelector("#reservationEndDate");
-      const reservationCreateBtn = viewEl.querySelector("#reservationCreateBtn");
-      const reservationClearBtn = viewEl.querySelector("#reservationClearBtn");
-      const reservationExistingSectionEl = viewEl.querySelector("#reservationExistingSection");
-      const reservationExistingContentEl = viewEl.querySelector("#reservationExistingContent");
-
       const bundleModalEl = viewEl.querySelector("#gearBundleModal");
       const bundleTitleEl = viewEl.querySelector("#gearBundleTitle");
       const bundleInfoEl = viewEl.querySelector("#bundleInfo");
@@ -449,12 +399,15 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
       const bundleErrEl = viewEl.querySelector("#bundleErr");
       const bundleStartDateEl = viewEl.querySelector("#bundleStartDate");
       const bundleEndDateEl = viewEl.querySelector("#bundleEndDate");
+      const bundleDateCalendarEl = viewEl.querySelector("#bundleDateCalendar");
+      const bundleClubEventRowEl = viewEl.querySelector("#bundleClubEventRow");
+      const bundleClubEventToggleEl = viewEl.querySelector("#bundleClubEventToggle");
+      const bundleClubEventHintEl = viewEl.querySelector("#bundleClubEventHint");
       const bundleItemsListEl = viewEl.querySelector("#bundleItemsList");
       const bundleAddCatBtnsEl = viewEl.querySelector("#bundleAddCatBtns");
       const bundleAvailabilitySectionEl = viewEl.querySelector("#bundleAvailabilitySection");
       const bundleAvailabilityTitleEl = viewEl.querySelector("#bundleAvailabilityTitle");
       const bundleAvailabilityListEl = viewEl.querySelector("#bundleAvailabilityList");
-      const bundleCheckBtn = viewEl.querySelector("#bundleCheckBtn");
       const bundleCreateBtn = viewEl.querySelector("#bundleCreateBtn");
 
       // Bundle state: starter item + accumulated items to reserve
@@ -464,6 +417,8 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
       let bundleAvailabilityCategory = "";
       // Each entry: { itemId, category, label }
       let bundleItems = [];
+      // Uchwyt do bieżącej instancji kalendarza wyboru terminu (jedna na otwarcie modala)
+      let bundleCalendar = null;
 
       const modalEl = viewEl.querySelector("#gearImgModal");
       const modalImgEl = viewEl.querySelector("#gearModalImg");
@@ -476,7 +431,6 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
 
       let all = [];
       let favSet = new Set();
-      let selectedKayak = null;
       let userWeight = null;
       // Per-card photo state for in-list swipe: Map<kayakNumber, { urls: string[], idx: number, loaded: boolean }>
       const photoState = new Map();
@@ -506,67 +460,40 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
         weightModalEl.setAttribute("aria-hidden", "true");
       };
 
-      const setReservationErr = (msg) => {
-        reservationErrEl.textContent = String(msg || "");
-        reservationErrEl.classList.toggle("hidden", !reservationErrEl.textContent);
-      };
-
-      const setReservationOk = (msg) => {
-        reservationOkEl.textContent = String(msg || "");
-        reservationOkEl.classList.toggle("hidden", !reservationOkEl.textContent);
-      };
-
-      const clearReservationMessages = () => {
-        setReservationErr("");
-        setReservationOk("");
-      };
-
-      const syncReservationForm = () => {
-        reservationSelectedKayakEl.value = selectedKayak ? selectedKayak.title : "";
-        reservationInfoEl.textContent = selectedKayak
-          ? `Wybrany kajak: ${selectedKayak.title}`
-          : "Wybierz kajak i kliknij „Rezerwuj”.";
-        reservationTitleEl.textContent = selectedKayak
-          ? `Rezerwacja – ${selectedKayak.title}`
-          : "Rezerwacja";
-      };
-
-      const clearReservationForm = () => {
-        selectedKayak = null;
-        reservationSelectedKayakEl.value = "";
-        reservationStartDateEl.value = "";
-        reservationEndDateEl.value = "";
-        clearReservationMessages();
-        syncReservationForm();
-      };
-
-      const loadAndRenderReservations = async (kayakId, containerEl, withCalendar = false) => {
+      const loadAndRenderReservations = async (kayakId, containerEl, category = "kayaks") => {
         containerEl.innerHTML = `<div class="gearReservNoData">Ładuję...</div>`;
         try {
           const resp = await apiGetJson({
-            url: `${KAYAK_RESERVATIONS_URL}?kayakId=${encodeURIComponent(kayakId)}`,
+            url: `${KAYAK_RESERVATIONS_URL}?kayakId=${encodeURIComponent(kayakId)}&category=${encodeURIComponent(category)}`,
             idToken: ctx.idToken,
           });
           const reservations = Array.isArray(resp?.reservations) ? resp.reservations : [];
-          containerEl.innerHTML = withCalendar
-            ? renderReservationsContent(reservations)
-            : renderReservationsSimple(reservations);
+          containerEl.innerHTML = renderReservationsSimple(reservations);
         } catch {
           containerEl.innerHTML = `<div class="gearReservNoData">Nie udało się załadować.</div>`;
         }
       };
 
-      const openReservationModal = () => {
-        reservationModalEl.classList.remove("hidden");
-        reservationModalEl.setAttribute("aria-hidden", "false");
-        document.body.style.overflow = "hidden";
-      };
-
-      const closeReservationModal = () => {
-        reservationModalEl.classList.add("hidden");
-        reservationModalEl.setAttribute("aria-hidden", "true");
-        document.body.style.overflow = "";
-        clearReservationForm();
+      // Zajęte zakresy dla kalendarza wyboru terminu w modalu bundlowym — jeden fetch
+      // per otwarcie modala (starter item), niezależny od loadAndRenderReservations
+      // powyżej (ta zwraca gotowy HTML, tu potrzebne są surowe zakresy dla kalendarza).
+      const loadOccupiedRanges = async (category, itemId) => {
+        try {
+          const resp = await apiGetJson({
+            url: `${KAYAK_RESERVATIONS_URL}?category=${encodeURIComponent(category)}&itemId=${encodeURIComponent(itemId)}`,
+            idToken: ctx.idToken,
+          });
+          const reservations = Array.isArray(resp?.reservations) ? resp.reservations : [];
+          return reservations.map((r) => ({
+            startIso: String(r.blockStartIso || r.startDate || ""),
+            endIso: String(r.blockEndIso || r.endDate || ""),
+            label: r.isClubEvent ?
+              (r.eventName ? `Rezerwacja „${r.eventName}”` : "Rezerwacja (impreza klubowa)") :
+              String(r.userDisplayName || ""),
+          })).filter((r) => r.startIso && r.endIso);
+        } catch {
+          return [];
+        }
       };
 
       // ── Bundle modal helpers ────────────────────────────────────────────────
@@ -585,9 +512,11 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
 
       function renderBundleItemsList() {
         if (!bundleItemsListEl) return;
-        bundleItemsListEl.innerHTML = bundleItems.map((bi) => `
-          <div class="bundleItemChip">
-            <span>${escapeHtml(bi.label)}</span>
+        bundleItemsListEl.innerHTML = bundleItems.map((bi) => {
+          const catLabel = GEAR_CATEGORY_SINGULAR[bi.category] || bi.category;
+          return `
+          <div class="bundleItemRow">
+            <span class="bundleItemRowText"><strong>${escapeHtml(catLabel)}:</strong> ${escapeHtml(bi.label)}</span>
             <button
               type="button"
               class="bundleItemRemoveBtn"
@@ -596,7 +525,8 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
               aria-label="Usuń ${escapeAttr(bi.label)}"
             >✕</button>
           </div>
-        `).join("") || `<span class="hint">Brak pozycji.</span>`;
+        `;
+        }).join("") || `<span class="hint">Brak pozycji.</span>`;
       }
 
       const clearBundleModal = () => {
@@ -606,6 +536,11 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
         bundleItems = [];
         if (bundleStartDateEl) bundleStartDateEl.value = "";
         if (bundleEndDateEl) bundleEndDateEl.value = "";
+        if (bundleDateCalendarEl) { bundleDateCalendarEl.innerHTML = ""; bundleDateCalendarEl.classList.remove("hidden"); }
+        bundleCalendar = null;
+        if (bundleClubEventToggleEl) bundleClubEventToggleEl.checked = false;
+        if (bundleClubEventHintEl) bundleClubEventHintEl.textContent = "";
+        if (bundleCreateBtn) bundleCreateBtn.disabled = true;
         if (bundleOkEl) { bundleOkEl.textContent = ""; bundleOkEl.classList.add("hidden"); }
         if (bundleErrEl) { bundleErrEl.textContent = ""; bundleErrEl.classList.add("hidden"); }
         if (bundleAvailabilitySectionEl) bundleAvailabilitySectionEl.classList.add("hidden");
@@ -636,11 +571,35 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
         bundleAvailabilityCategory = String(category || "");
         bundleItems = [{ itemId: String(itemId || ""), category: String(category || ""), label: String(label || itemId || "?") }];
         if (bundleTitleEl) bundleTitleEl.textContent = `Rezerwacja – ${label}`;
-        if (bundleInfoEl) bundleInfoEl.textContent = "Wybierz termin i zapisz rezerwację.";
+        if (bundleInfoEl) {
+          bundleInfoEl.textContent = isSympatyk
+            ? "Podgląd: możesz sprawdzić dostępność i zobaczyć jak działa kalendarz (bufory, konflikty terminów). Zapisywanie rezerwacji jest dostępne dla członków klubu."
+            : "Wybierz termin w kalendarzu i zapisz rezerwację.";
+        }
         renderBundleItemsList();
         renderBundleCatButtons();
         openBundleModal();
-        if (bundleStartDateEl) bundleStartDateEl.focus();
+
+        const activeKierownikRange = ctx?.session?.activeKierownikRange;
+        const canReserveAsClubEvent = Boolean(!isSympatyk && ctx?.session?.isActiveKierownik && activeKierownikRange);
+        if (bundleClubEventRowEl) bundleClubEventRowEl.classList.toggle("hidden", !canReserveAsClubEvent);
+        if (bundleClubEventHintEl && canReserveAsClubEvent) {
+          bundleClubEventHintEl.textContent = `Termin: ${formatDatePLFromIso(activeKierownikRange.startDate)} – ${formatDatePLFromIso(activeKierownikRange.endDate)} (daty imprezy, bezpłatnie, bez limitu ilości).`;
+        }
+
+        if (bundleDateCalendarEl) {
+          bundleCalendar = createReservationCalendar({
+            containerEl: bundleDateCalendarEl,
+            onRangeChange: (startIso, endIso) => {
+              if (bundleStartDateEl) bundleStartDateEl.value = startIso || "";
+              if (bundleEndDateEl) bundleEndDateEl.value = endIso || "";
+              if (bundleCreateBtn) bundleCreateBtn.disabled = isSympatyk ? true : !(startIso && endIso);
+            },
+          });
+          loadOccupiedRanges(bundleStarterCategory, bundleStarterItemId).then((ranges) => {
+            bundleCalendar?.setOccupiedRanges(ranges);
+          });
+        }
       };
 
       const checkBundleAvailability = async () => {
@@ -659,7 +618,6 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
         const catLabel = GEAR_TABS.find((t) => t.id === bundleAvailabilityCategory)?.label || bundleAvailabilityCategory;
         if (bundleAvailabilityTitleEl) bundleAvailabilityTitleEl.textContent = `Sprawdzam dostępność (${catLabel})...`;
         if (bundleAvailabilityListEl) bundleAvailabilityListEl.innerHTML = "";
-        if (bundleCheckBtn) bundleCheckBtn.disabled = true;
 
         try {
           const url = `${GEAR_ITEM_AVAILABILITY_URL}?category=${encodeURIComponent(bundleAvailabilityCategory)}&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`;
@@ -670,7 +628,7 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
             const available = it?.isAvailableForRange !== false;
             const alreadySelected = bundleItems.some((bi) => bi.itemId === String(it?.id || "") && bi.category === bundleAvailabilityCategory);
             const chipClass = available ? "bundleAvailChip bundleAvailChipOk" : "bundleAvailChip bundleAvailChipTaken";
-            const label = String(it?.number || it?.id || "?");
+            const label = (bundleAvailabilityCategory === "kayaks" ? buildKayakTitle(it) : buildGenericGearTitle(it)) || String(it?.number || it?.id || "?");
             if (!available) {
               return `<div class="${chipClass}">${escapeHtml(label)} – zajęty</div>`;
             }
@@ -688,8 +646,6 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
         } catch (e) {
           if (bundleAvailabilityTitleEl) bundleAvailabilityTitleEl.textContent = "Błąd sprawdzania dostępności.";
           if (bundleAvailabilityListEl) bundleAvailabilityListEl.innerHTML = `<span class="err">${escapeHtml(mapUserFacingApiError(e, "Nie udało się sprawdzić dostępności."))}</span>`;
-        } finally {
-          if (bundleCheckBtn) bundleCheckBtn.disabled = false;
         }
       };
 
@@ -722,13 +678,16 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
               items: bundleItems.map(({ itemId, category }) => ({ itemId, category })),
               starterCategory: bundleStarterCategory,
               starterItemId: bundleStarterItemId,
+              asClubEvent: !!bundleClubEventToggleEl?.checked,
             }
           });
 
           if (bundleOkEl) {
-            bundleOkEl.textContent = resp?.waived
-              ? "Rezerwacja zapisana. Wypożyczenie bezpłatne (szkoleniówka)."
-              : `Rezerwacja zapisana.${resp?.costHours ? ` Godzinki: ${resp.costHours}` : ""}`;
+            bundleOkEl.textContent = resp?.eventId
+              ? "Rezerwacja zapisana. Zarezerwowano na imprezę klubową (bezpłatnie)."
+              : resp?.waived
+                ? "Rezerwacja zapisana. Wypożyczenie bezpłatne (szkoleniówka)."
+                : `Rezerwacja zapisana.${resp?.costHours ? ` Godzinki: ${resp.costHours}` : ""}`;
             bundleOkEl.classList.remove("hidden");
           }
 
@@ -803,12 +762,25 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
         }
       });
 
-      bundleCheckBtn?.addEventListener("click", async () => {
-        await checkBundleAvailability();
-      });
-
       bundleCreateBtn?.addEventListener("click", async () => {
         await submitBundleReservation();
+      });
+
+      bundleClubEventToggleEl?.addEventListener("change", () => {
+        const checked = bundleClubEventToggleEl.checked;
+        const activeKierownikRange = ctx?.session?.activeKierownikRange;
+        if (checked && activeKierownikRange) {
+          // Termin ustalony przez serwer (daty imprezy) — kalendarz wyboru nie ma
+          // tu zastosowania, chowamy go i wypełniamy ukryte pola bezpośrednio.
+          bundleCalendar?.reset();
+          if (bundleDateCalendarEl) bundleDateCalendarEl.classList.add("hidden");
+          if (bundleStartDateEl) bundleStartDateEl.value = activeKierownikRange.startDate || "";
+          if (bundleEndDateEl) bundleEndDateEl.value = activeKierownikRange.endDate || "";
+          if (bundleCreateBtn) bundleCreateBtn.disabled = bundleItems.length === 0;
+        } else {
+          if (bundleDateCalendarEl) bundleDateCalendarEl.classList.remove("hidden");
+          bundleCalendar?.reset();
+        }
       });
 
       const populateTypeFilter = (items) => {
@@ -855,34 +827,13 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
         }
       };
 
-      const startCreateForKayak = async (kayakId) => {
-        const found = all.find((k) => String(k?.id || "") === String(kayakId || ""));
-        if (!found) {
-          setErr("Nie znaleziono kajaka.");
-          return;
-        }
-
-        selectedKayak = {
-          id: String(found.id || ""),
-          title: buildKayakTitle(found)
-        };
-
-        clearReservationMessages();
-        syncReservationForm();
-        openReservationModal();
-        reservationStartDateEl.focus();
-
-        // Pokaż aktywne rezerwacje w modalu (z kalendarzem)
-        if (reservationExistingSectionEl && reservationExistingContentEl) {
-          reservationExistingSectionEl.classList.remove("hidden");
-          await loadAndRenderReservations(String(found.id || ""), reservationExistingContentEl, true);
-        }
-      };
-
       const isKursant = ctx?.kursPreviewMode || ctx?.session?.role_key === "rola_kursant";
       const isSympatyk = ctx?.session?.role_key === "rola_sympatyk";
-      // Sympatyk przegląda sprzęt, ale nie rezerwuje; kursant tylko w oknie szkoleniówki.
-      const canUserReserve = isKursant ? ctx?.kursWypozycza === true : !isSympatyk;
+      // Sympatyk może otworzyć kalendarz i zobaczyć całą funkcjonalność (dostępność,
+      // bufory, konflikty) — zapisanie rezerwacji zostaje zablokowane dopiero w modalu
+      // (patrz startBundleForItem), nie na poziomie samego przycisku "Rezerwuj".
+      // Kursant nadal tylko w oknie szkoleniówki.
+      const canUserReserve = isKursant ? ctx?.kursWypozycza === true : true;
 
       const render = (items) => {
         if (!items.length) {
@@ -1133,52 +1084,6 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
         }
       };
 
-      const submitCreateReservation = async () => {
-        clearReservationMessages();
-
-        if (!selectedKayak?.id) {
-          setReservationErr("Najpierw wybierz kajak.");
-          return;
-        }
-
-        const startDate = String(reservationStartDateEl.value || "").trim();
-        const endDate = String(reservationEndDateEl.value || "").trim();
-        if (!startDate || !endDate) {
-          setReservationErr("Wybierz datę od i do.");
-          return;
-        }
-
-        reservationCreateBtn.disabled = true;
-
-        try {
-          const resp = await apiPostJson({
-            url: CREATE_RESERVATION_URL,
-            idToken: ctx.idToken,
-            body: {
-              startDate,
-              endDate,
-              kayakIds: [selectedKayak.id],
-            }
-          });
-
-          setReservationOk(
-            resp?.waived
-              ? "Rezerwacja zapisana. Wypożyczenie bezpłatne (szkoleniówka)."
-              : `Rezerwacja zapisana. Godzinki: ${String(resp?.costHours || 0)}`
-          );
-
-          await loadGear("kayaks");
-
-          window.setTimeout(() => {
-            closeReservationModal();
-          }, 700);
-        } catch (e) {
-          setReservationErr(mapUserFacingApiError(e, "Nie udało się zapisać rezerwacji."));
-        } finally {
-          reservationCreateBtn.disabled = false;
-        }
-      };
-
       let allPhotoUrls = [];
       let currentPhotoIdx = 0;
       let currentTitle = "";
@@ -1319,20 +1224,12 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
         }
       });
 
-      reservationModalEl?.addEventListener("click", (ev) => {
-        const t = ev.target;
-        if (t && t.getAttribute && t.getAttribute("data-gear-reservation-close") === "1") {
-          closeReservationModal();
-        }
-      });
-
       // AbortController: listener jest automatycznie usuwany gdy viewEl dostaje nową treść
       // (MutationObserver na firstChild) — zapobiega akumulacji listenerów przy nawigacji
       const keyAbort = new AbortController();
       new MutationObserver(() => keyAbort.abort()).observe(viewEl, { childList: true });
       window.addEventListener("keydown", (ev) => {
         if (ev.key === "Escape" && !modalEl.classList.contains("hidden")) closeModal();
-        if (ev.key === "Escape" && !reservationModalEl.classList.contains("hidden")) closeReservationModal();
         if (ev.key === "Escape" && bundleModalEl && !bundleModalEl.classList.contains("hidden")) closeBundleModal();
         if (!modalEl.classList.contains("hidden")) {
           if (ev.key === "ArrowLeft") { showPhotoAtIdx(currentPhotoIdx - 1); ev.preventDefault(); }
@@ -1464,20 +1361,13 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
           return;
         }
 
-        const reserveBtn = el.closest("[data-gear-reserve]");
-        if (reserveBtn) {
-          const kayakId = String(reserveBtn.getAttribute("data-gear-reserve") || "");
-          await startCreateForKayak(kayakId);
-          return;
-        }
-
         const bundleReserveBtn = el.closest("[data-gear-bundle-reserve]");
         if (bundleReserveBtn) {
           const itemId = String(bundleReserveBtn.getAttribute("data-gear-bundle-reserve") || "");
           const category = String(bundleReserveBtn.getAttribute("data-gear-bundle-category") || "");
           const found = all.find((it) => String(it?.id || "") === itemId);
           const label = found
-            ? (category === "kayaks" ? buildKayakTitle(found) : String(found.number || found.brand || found.model || itemId).trim() || itemId)
+            ? (category === "kayaks" ? buildKayakTitle(found) : buildGenericGearTitle(found))
             : itemId;
           startBundleForItem(itemId, category, label);
           return;
@@ -1528,14 +1418,18 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
             const wasOpen = detailsEl.open;
             detailsEl.open = !wasOpen;
 
-            // Lazy-load rezerwacji przy pierwszym otwarciu karty kajaka
+            // Lazy-load rezerwacji przy pierwszym otwarciu karty
             if (!wasOpen && card) {
               const cardKayakId = String(card.getAttribute("data-gear-card-id") || "");
+              // Kategoria z przycisku "Rezerwuj" tej samej karty — bez tego zapytanie
+              // domyślnie leciało jako "kayaks" dla KAŻDEJ kategorii (bug: podgląd
+              // rezerwacji dla wioseł/kamizelek/kasków/rzutek/fartuchów zawsze pusty).
+              const cardCategory = String(card.querySelector("[data-gear-bundle-category]")?.getAttribute("data-gear-bundle-category") || "kayaks");
               const reservSection = card.querySelector(".gearReservSection");
               const reservContent = card.querySelector(".gearReservSectionContent");
               if (cardKayakId && reservSection && reservContent && !reservSection.getAttribute("data-loaded")) {
                 reservSection.setAttribute("data-loaded", "1");
-                loadAndRenderReservations(cardKayakId, reservContent);
+                loadAndRenderReservations(cardKayakId, reservContent, cardCategory);
               }
             }
           }
@@ -1617,17 +1511,6 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
       if (filterSizeSelectEl) filterSizeSelectEl.addEventListener("change", applyFilter);
       if (filterPaddlePoolSelectEl) filterPaddlePoolSelectEl.addEventListener("change", applyFilter);
 
-      reservationCreateBtn.addEventListener("click", async () => {
-        await submitCreateReservation();
-      });
-
-      reservationClearBtn.addEventListener("click", () => {
-        clearReservationMessages();
-        reservationStartDateEl.value = "";
-        reservationEndDateEl.value = "";
-      });
-
-      syncReservationForm();
       await loadGear(activeTab);
     }
   };
@@ -1911,25 +1794,26 @@ function renderPaddleCard(item, isFav = false, canUserReserve = true) {
   `;
 }
 
+// Rzutki i fartuchy (jedyne kategorie bez dedykowanej funkcji renderowania) —
+// bez prawdziwych zdjęć (zawsze placeholder) i bez na tyle danych, by uzasadnić
+// osobny panel "Więcej" — świadomie BEZ przycisku rozwijania, wszystko widoczne
+// od razu w max dwóch wierszach (feedback użytkownika 04.09.2026): wiersz 1 =
+// tytuł "{producent} {numer}" (np. "HF 14") + ulubione + odznaki (typ/rozmiar/
+// status/basen); wiersz 2 = pozostałe dane tekstem (kolor/uwagi) + Rezerwuj.
 function renderGenericGearCard(item, isFav = false, canUserReserve = true) {
   const number = String(item?.number || "").trim();
   const brand = String(item?.brand || "").trim();
-  const model = String(item?.model || "").trim();
   const color = String(item?.color || "").trim();
   const size = String(item?.size || "").trim();
   const type = String(item?.type || "").trim();
   const status = String(item?.status || "").trim();
+  const notes = String(item?.notes || "").trim();
   const categoryLabel = String(item?.gearCategoryDisplay || item?.gearCategory || "Sprzęt").trim();
-
-  const imgMain = String(item?.images?.main || item?.image || "").trim();
-  const imgSide = String(item?.images?.side || "").trim();
-
-  const primaryImg = imgMain;
-  const secondaryImg = imgSide || "";
+  const category = String(item?.gearCategory || "").trim();
 
   const isPool = toBool(item?.isPoolAllowed);
 
-  const title = buildGenericGearTitle(item);
+  const label = [brand, number].filter(Boolean).join(" ") || categoryLabel;
 
   const typeBadge = type
     ? `<span class="badge soft">${escapeHtml(type)}</span>`
@@ -1945,17 +1829,16 @@ function renderGenericGearCard(item, isFav = false, canUserReserve = true) {
 
   const poolBadge = isPool ? `<span class="badge pool">Basen</span>` : "";
 
+  const metaParts = [color ? `kolor: ${color}` : "", notes].filter(Boolean);
+  const metaText = metaParts.join(" · ");
+
   return `
-    <div class="gearCard gearOk${isPool ? " gearPool" : ""}">
+    <div class="gearCard gearCardNoPhoto gearOk${isPool ? " gearPool" : ""}">
       <div class="gearCardInner">
 
         <div class="gearHead">
           <div class="gearTitleWrap">
-            <div class="gearTitle">${escapeHtml(brand || categoryLabel)}</div>
-            <div class="gearModel">${escapeHtml(model || "-")}</div>
-            <div class="gearInlineMeta gearInlineMetaMain"><strong>Kategoria:</strong> ${escapeHtml(categoryLabel)}</div>
-            <div class="gearInlineMeta gearInlineMetaMain"><strong>Nr:</strong> ${escapeHtml(number || "-")}</div>
-            ${color ? `<div class="gearInlineMeta gearInlineMetaMain"><strong>Kolor:</strong> ${escapeHtml(color)}</div>` : ""}
+            <div class="gearTitle">${escapeHtml(label)}</div>
           </div>
 
           <div class="gearHeadSide">
@@ -1974,44 +1857,16 @@ function renderGenericGearCard(item, isFav = false, canUserReserve = true) {
           </div>
         </div>
 
-        <div class="gearImgs">
-          <button
-            class="gearImgBtn"
-            type="button"
-            data-gear-img="top"
-            data-gear-top="${escapeAttr(primaryImg)}"
-            data-gear-side="${escapeAttr(secondaryImg)}"
-            data-gear-title="${escapeAttr(title)}">
-            <div class="gearImgPh">
-              <img alt="" loading="lazy" src="${escapeAttr(PLACEHOLDER_SVG)}" />
-              <div class="gearImgLabel">Zdjęcie 1</div>
-            </div>
-          </button>
-
-          <button
-            class="gearImgBtn"
-            type="button"
-            data-gear-img="side"
-            data-gear-top="${escapeAttr(primaryImg)}"
-            data-gear-side="${escapeAttr(secondaryImg)}"
-            data-gear-title="${escapeAttr(title)}">
-            <div class="gearImgPh">
-              <img alt="" loading="lazy" src="${escapeAttr(PLACEHOLDER_SVG)}" />
-              <div class="gearImgLabel">Zdjęcie 2</div>
-            </div>
-          </button>
-        </div>
-
-        <div class="actions gearCardActions">
+        <div class="gearMiniBar">
+          <div class="gearMiniMeta">${escapeHtml(metaText)}</div>
           ${isPool
             ? `<span class="badge pool gearPoolActionLabel">Basen</span>`
             : `<button
             type="button"
-            class="primary gearBundleReserveBtn"
+            class="gearMiniReserveBtn gearBundleReserveBtn"
             data-gear-bundle-reserve="${escapeAttr(String(item?.id || ""))}"
-            data-gear-bundle-category="${escapeAttr(String(item?.gearCategory || ""))}"
-            ${canUserReserve ? "" : "disabled"}
-          >Rezerwuj</button>`}
+            data-gear-bundle-category="${escapeAttr(category)}"
+            ${canUserReserve ? "" : "disabled"}>Rezerwuj</button>`}
         </div>
 
       </div>
@@ -2044,45 +1899,6 @@ function buildKayakDetailsRows(k) {
     return `
       <div class="gearMetaRow">
         <div class="gearMetaKey">Informacje:</div>
-        <div class="gearMetaVal">Brak dodatkowych danych</div>
-      </div>
-    `;
-  }
-
-  return rows.join("");
-}
-
-function buildGenericGearDetailsRows(item) {
-  const meta = item?.meta || {};
-
-  const rows = [
-    ["Kategoria", item?.gearCategoryDisplay || item?.gearCategory],
-    ["Typ", item?.type],
-    ["Rozmiar", item?.size],
-    ["Kolor", item?.color],
-    ["Status", item?.status],
-    ["Długość (cm)", meta?.lengthCm],
-    ["Kąt feather", meta?.featherAngle],
-    ["Wyporność", meta?.buoyancy],
-    ["Materiał", meta?.material],
-    ["Rozmiar komina", meta?.tunnelSize],
-    ["Składane?", toBoolOrNull(meta?.isBreakdown) === null ? "" : (toBool(meta?.isBreakdown) ? "tak" : "nie")],
-    ["Basen?", toBoolOrNull(meta?.isPoolAllowed) === null ? "" : (toBool(meta?.isPoolAllowed) ? "tak" : "nie")],
-    ["Nizinne?", toBoolOrNull(meta?.isLowlandAllowed) === null ? "" : (toBool(meta?.isLowlandAllowed) ? "tak" : "nie")],
-    ["Uwagi", item?.notes]
-  ]
-    .filter(([, value]) => String(value ?? "").trim() !== "")
-    .map(([key, value]) => `
-      <div class="gearMetaRow">
-        <div class="gearMetaKey">${escapeHtml(String(key))}:</div>
-        <div class="gearMetaVal">${escapeHtml(String(value))}</div>
-      </div>
-    `);
-
-  if (!rows.length) {
-    return `
-      <div class="gearMetaRow">
-        <div class="gearMetaKey">Informacje</div>
         <div class="gearMetaVal">Brak dodatkowych danych</div>
       </div>
     `;
@@ -2292,17 +2108,16 @@ function renderReservationsSimple(reservations) {
   return reservations.map((r) => {
     const start = formatDatePLFromIso(r.blockStartIso || r.startDate);
     const end = formatDatePLFromIso(r.blockEndIso || r.endDate);
+    const userLine = r.isClubEvent
+      ? (r.eventName ? `Rezerwacja „${escapeHtml(r.eventName)}”` : "Rezerwacja (impreza klubowa)")
+      : `Wypożyczony przez: ${escapeHtml(r.userDisplayName || "—")}`;
     return `
       <div class="gearReservSimpleRow">
         <div class="gearReservSimpleDates">Zajęty: ${escapeHtml(start)} – ${escapeHtml(end)}</div>
-        <div class="gearReservSimpleUser">Wypożyczony przez: ${escapeHtml(r.userDisplayName || "—")}</div>
+        <div class="gearReservSimpleUser">${userLine}</div>
       </div>
     `;
   }).join("");
-}
-
-function renderReservationsContent(reservations) {
-  return renderReservationsSimple(reservations);
 }
 
 function gearTabIcon(id) {
@@ -2331,4 +2146,402 @@ function gearTabIcon(id) {
     default:
       return "";
   }
+}
+
+// ── Widok masowego dodawania sprzętu na imprezę klubową ──────────────────────
+// Osobny ekran (routeId="club-event", z osobnego kafelka na stronie głównej dla
+// aktywnego kierownika) — bez kalendarza (daty = daty imprezy, ustalone serwerowo),
+// bez klikania pojedynczych kart. WSZYSTKIE kategorie (kajaki i drobny sprzęt)
+// obsłużone identycznie: zwarta lista z checkboxami. Trwała, EDYTOWALNA lista
+// (feedback użytkownika 04.09.2026 — potrzeby na imprezę się zmieniają): przy
+// wejściu wczytujemy istniejącą rezerwację na tę imprezę (jeśli już jakaś jest)
+// i preselectujemy jej pozycje; "Rezerwuj" nadpisuje PEŁNĄ listę przedmiotów tej
+// samej rezerwacji (patrz UPDATE_BUNDLE_RESERVATION_ITEMS_URL), zamiast tworzyć
+// kolejną osobną za każdym razem. Przyciski "Rezerwuj"/"Anuluj" na samej górze,
+// przed listą przewijaną — na mobile poprzednia wersja (przycisk na dole, po
+// całej liście) była poza ekranem bez przewinięcia całej strony.
+async function renderClubEventBulkView({ viewEl, ctx, label }) {
+  if (!ctx?.idToken) {
+    viewEl.innerHTML = `<div class="card center"><h2>${escapeHtml(label)}</h2><p>Brak tokenu sesji. Odśwież stronę.</p></div>`;
+    return;
+  }
+
+  const range = ctx?.session?.activeKierownikRange;
+  const isEligible = Boolean(ctx?.session?.isActiveKierownik && range?.startDate && range?.endDate);
+
+  if (!isEligible) {
+    viewEl.innerHTML = `
+      <div class="card center">
+        <h2>Sprzęt na imprezę klubową</h2>
+        <p class="hint">Nie jesteś obecnie kierownikiem żadnej zatwierdzonej imprezy klubowej.</p>
+        <button type="button" class="ghost" id="clubEventBackBtn" style="margin-top:12px;">Wróć</button>
+      </div>
+    `;
+    viewEl.querySelector("#clubEventBackBtn")?.addEventListener("click", () => { window.location.hash = "#home/home"; });
+    return;
+  }
+
+  const eventName = String(range?.name || "").trim();
+  const screenTitle = eventName ? `Sprzęt na „${eventName}”` : "Sprzęt na imprezę klubową";
+
+  viewEl.innerHTML = `
+    <div class="card wide">
+      <div class="moduleHeader">
+        <h2>${escapeHtml(screenTitle)}</h2>
+        <div class="moduleNav">
+          <button type="button" class="moduleNavBtn" data-mod-home title="Strona główna">${NAV_HOME_SVG}</button>
+        </div>
+      </div>
+
+      <div class="actions clubEventActionsTop">
+        <button id="clubEventSaveBtn" type="button" class="primary" disabled>Rezerwuj</button>
+        <button id="clubEventCancelBtn" type="button" class="ghost ghostCancel">Anuluj</button>
+      </div>
+
+      <div class="clubEventDeleteRow">
+        <button id="clubEventDeleteBtn" type="button" class="ghost ghostDanger hidden">Usuń rezerwację</button>
+      </div>
+
+      <div class="hint" style="margin:10px 0;">
+        Termin: <strong>${escapeHtml(formatDatePLFromIso(range.startDate))} – ${escapeHtml(formatDatePLFromIso(range.endDate))}</strong>
+        (daty imprezy, bezpłatnie, bez limitu ilości). Listę można edytować dowolnie — odznacz pozycję, aby ją usunąć z rezerwacji.
+      </div>
+
+      <div id="clubEventOk" class="ok hidden" style="margin-bottom:10px;"></div>
+      <div id="clubEventErr" class="err hidden" style="margin-bottom:10px;"></div>
+
+      <div id="clubEventSummary" class="clubEventSummary"></div>
+
+      <div class="gearTabs" role="tablist" aria-label="Kategorie sprzętu">
+        ${GEAR_TABS.map((tab, idx) => `
+          <button
+            type="button"
+            class="gearTab${idx === 0 ? " active" : ""}"
+            data-clubevent-tab="${escapeAttr(tab.id)}"
+            aria-pressed="${idx === 0 ? "true" : "false"}"
+            title="${escapeAttr(tab.label)}"
+          >
+            <span class="gearTabIcon">${gearTabIcon(tab.id)}</span>
+            <span class="gearTabLabel">${escapeHtml(tab.label)}</span>
+          </button>
+        `).join("")}
+      </div>
+
+      <div id="clubEventCatBody" style="margin-top:12px;"></div>
+    </div>
+  `;
+
+  viewEl.querySelector("[data-mod-home]")?.addEventListener("click", () => { window.location.hash = "#home/home"; });
+
+  const catBodyEl = viewEl.querySelector("#clubEventCatBody");
+  const summaryEl = viewEl.querySelector("#clubEventSummary");
+  const saveBtn = viewEl.querySelector("#clubEventSaveBtn");
+  const cancelBtn = viewEl.querySelector("#clubEventCancelBtn");
+  const deleteBtn = viewEl.querySelector("#clubEventDeleteBtn");
+  const okEl = viewEl.querySelector("#clubEventOk");
+  const errEl = viewEl.querySelector("#clubEventErr");
+
+  const setErr = (msg) => { errEl.textContent = String(msg || ""); errEl.classList.toggle("hidden", !errEl.textContent); };
+  const setOk = (msg) => { okEl.textContent = String(msg || ""); okEl.classList.toggle("hidden", !okEl.textContent); };
+
+  // Stan per kategoria: { loaded, items, selectedIds: Set }
+  const state = new Map(GEAR_TABS.map((t) => [t.id, {
+    loaded: false,
+    items: [],
+    selectedIds: new Set(),
+  }]));
+  let activeCat = GEAR_TABS[0].id;
+
+  // Istniejąca rezerwacja na TĘ imprezę (jeśli kierownik już coś zapisał wcześniej)
+  // — rozpoznana po dacie (identyczna dla każdej rezerwacji tej samej imprezy,
+  // bo daty są zawsze nadpisywane datami imprezy), nie po eventId (front nigdy
+  // nie zna id imprezy — patrz club_badges.js). Od tego momentu "Rezerwuj"
+  // EDYTUJE listę tej rezerwacji zamiast tworzyć kolejną osobną.
+  let existingReservationId = null;
+  let baseline = new Map(GEAR_TABS.map((t) => [t.id, new Set()]));
+
+  const isDirty = () => GEAR_TABS.some((t) => {
+    const cur = state.get(t.id).selectedIds;
+    const base = baseline.get(t.id);
+    if (cur.size !== base.size) return true;
+    for (const id of cur) if (!base.has(id)) return true;
+    return false;
+  });
+
+  const snapshotBaseline = () => {
+    baseline = new Map(GEAR_TABS.map((t) => [t.id, new Set(state.get(t.id).selectedIds)]));
+  };
+
+  // Cache nazw wyświetlanych "Nazwa (nr X)" per pozycja (klucz "{kategoria}/{id}") — zasilany
+  // ZARÓWNO z już zapisanej rezerwacji (itemLabel/itemNumber są w niej zdenormalizowane, więc
+  // podgląd nie wymaga wczytania dostępności każdej kategorii z osobna), JAK I z list
+  // dostępności odwiedzonych zakładek (nowo zaznaczana pozycja zawsze pochodzi z widocznej
+  // listy, więc w chwili zaznaczenia jej etykieta już tu trafia). Dzięki temu podsumowanie
+  // "do wygodnej weryfikacji" (feedback użytkownika 04.09.2026) działa natychmiast, bez
+  // konieczności eager-loadingu wszystkich 6 kategorii na starcie ekranu.
+  const labelCache = new Map();
+  const cacheKey = (cat, id) => `${cat}/${id}`;
+  const formatItemLabelFromParts = (labelRaw, numberRaw, id) => {
+    const number = String(numberRaw || "").trim();
+    const baseLabel = String(labelRaw || "").trim() || number || id;
+    return number && baseLabel !== number ? `${baseLabel} (nr ${number})` : baseLabel;
+  };
+  const formatItemLabel = (cat, id) => {
+    const key = cacheKey(cat, id);
+    if (labelCache.has(key)) return labelCache.get(key);
+    const it = state.get(cat)?.items?.find((x) => String(x?.id || "") === id);
+    if (it) {
+      const lbl = formatItemLabelFromParts(it.label, it.number, id);
+      labelCache.set(key, lbl);
+      return lbl;
+    }
+    return id;
+  };
+
+  const loadExisting = async () => {
+    try {
+      const resp = await apiGetJson({ url: MY_RESERVATIONS_URL, idToken: ctx.idToken });
+      const items = Array.isArray(resp?.items) ? resp.items : [];
+      const mine = items.find((r) => (
+        String(r?.status || "") === "active" &&
+        Boolean(r?.eventId) &&
+        String(r?.startDate || "") === range.startDate &&
+        String(r?.endDate || "") === range.endDate
+      ));
+      if (mine) {
+        existingReservationId = String(mine.id || "");
+        for (const it of Array.isArray(mine.items) ? mine.items : []) {
+          const cat = String(it?.category || "").toLowerCase();
+          const id = String(it?.itemId || "");
+          if (state.has(cat) && id) {
+            state.get(cat).selectedIds.add(id);
+            labelCache.set(cacheKey(cat, id), formatItemLabelFromParts(it?.itemLabel, it?.itemNumber, id));
+          }
+        }
+      }
+    } catch (e) {
+      // Brak podglądu istniejącej rezerwacji nie blokuje utworzenia nowej — cichy fallback.
+    }
+    snapshotBaseline();
+  };
+
+  const resolvedCount = (cat) => state.get(cat)?.selectedIds.size || 0;
+
+  const updateSummaryAndButton = () => {
+    saveBtn.textContent = existingReservationId ? "Edytuj" : "Rezerwuj";
+    deleteBtn.classList.toggle("hidden", !existingReservationId);
+
+    const dirty = isDirty();
+    const catsWithItems = GEAR_TABS
+      .map((t) => ({ tab: t, ids: Array.from(state.get(t.id).selectedIds) }))
+      .filter((x) => x.ids.length > 0);
+
+    let statusLine;
+    if (!catsWithItems.length) {
+      statusLine = "Nic jeszcze nie wybrano.";
+    } else if (existingReservationId && !dirty) {
+      statusLine = "Zapisano na imprezę:";
+    } else if (existingReservationId && dirty) {
+      statusLine = "Niezapisane zmiany (kliknij „Edytuj”, aby zapisać):";
+    } else {
+      statusLine = "Wybrano (kliknij „Rezerwuj”, aby zapisać):";
+    }
+
+    // Podsumowanie podzielone na kategorie — do wygodnej weryfikacji całej listy na
+    // imprezę bez przełączania zakładek (feedback użytkownika 04.09.2026).
+    const blocksHtml = catsWithItems.map(({ tab, ids }) => {
+      const labels = ids.map((id) => formatItemLabel(tab.id, id)).sort((a, b) => a.localeCompare(b, "pl"));
+      return `
+        <div class="clubEventSummaryBlock">
+          <div class="clubEventSummaryCatTitle">${escapeHtml(tab.label)} — ${ids.length} szt.</div>
+          <ul class="clubEventSummaryList">${labels.map((l) => `<li>${escapeHtml(l)}</li>`).join("")}</ul>
+        </div>
+      `;
+    }).join("");
+
+    summaryEl.innerHTML = `<div class="clubEventSummaryStatus">${escapeHtml(statusLine)}</div>${blocksHtml}`;
+
+    const total = GEAR_TABS.reduce((sum, t) => sum + resolvedCount(t.id), 0);
+    saveBtn.disabled = total === 0 || !dirty;
+  };
+
+  const loadCategory = async (cat) => {
+    const s = state.get(cat);
+    if (s.loaded) return;
+    catBodyEl.innerHTML = `<div class="hint">Ładuję dostępność...</div>`;
+    try {
+      const url = `${GEAR_ITEM_AVAILABILITY_URL}?category=${encodeURIComponent(cat)}&startDate=${encodeURIComponent(range.startDate)}&endDate=${encodeURIComponent(range.endDate)}`;
+      const resp = await apiGetJson({ url, idToken: ctx.idToken });
+      s.items = Array.isArray(resp?.items) ? resp.items : [];
+      s.loaded = true;
+    } catch (e) {
+      catBodyEl.innerHTML = `<div class="err">${escapeHtml(mapUserFacingApiError(e, "Nie udało się załadować dostępności."))}</div>`;
+      return;
+    }
+  };
+
+  const renderCategoryBody = (cat) => {
+    const s = state.get(cat);
+
+    if (!s.items.length) {
+      catBodyEl.innerHTML = `<div class="hint">Brak sprzętu w tej kategorii.</div>`;
+      return;
+    }
+
+    // Checkboxy per sztuka, identycznie dla każdej kategorii (kajaki i drobny
+    // sprzęt). Świadomie BEZ skrótu "zaznacz pierwsze N wolnych" — kierownik
+    // ma zawsze wskazać konkretne numery, nie zlecać systemowi dowolny wybór.
+    const rows = s.items.map((it) => {
+      const id = String(it?.id || "");
+      const checked = s.selectedIds.has(id);
+      // "zajęty" oznacza zablokowane przez CUDZĄ rezerwację — jeśli pozycja jest
+      // już zaznaczona (czyli moja, wczytana z istniejącej rezerwacji na tę
+      // imprezę), serwer i tak zgłasza ją jako niedostępną (bo koliduje z... samą
+      // sobą), więc tu świadomie ignorujemy tę flagę, by dało się ją odznaczyć.
+      const isAvail = it?.isAvailableForRange !== false || checked;
+      // Numer inwentarzowy MUSI być widoczny — sprzęt jest fizycznie
+      // identyfikowany po numerze, nie po nazwie modelu (ta bywa taka sama
+      // dla wielu sztuk tego samego typu). Ten sam wzorzec "Nazwa (nr X)"
+      // co buildKayakTitle() w my_reservations_module.js. Świadomie NIC
+      // więcej (bez zakresu wag itp.) — tylko nazwa + numer, dla każdej kategorii.
+      const displayLabel = formatItemLabelFromParts(it?.label, it?.number, id);
+      labelCache.set(cacheKey(cat, id), displayLabel);
+      return `
+        <label class="clubEventItemRow${isAvail ? "" : " clubEventItemRowDisabled"}">
+          <input type="checkbox" data-clubevent-item="${escapeAttr(id)}" ${checked ? "checked" : ""} ${isAvail ? "" : "disabled"} />
+          <span>${escapeHtml(displayLabel)}</span>
+          ${isAvail ? "" : `<span class="badge danger">zajęty</span>`}
+        </label>
+      `;
+    }).join("");
+
+    catBodyEl.innerHTML = `
+      <div class="clubEventItemList">${rows}</div>
+    `;
+
+    catBodyEl.querySelectorAll("[data-clubevent-item]").forEach((el) => {
+      el.addEventListener("change", () => {
+        const id = el.getAttribute("data-clubevent-item");
+        if (el.checked) s.selectedIds.add(id); else s.selectedIds.delete(id);
+        updateSummaryAndButton();
+      });
+    });
+  };
+
+  const showCategory = async (cat) => {
+    activeCat = cat;
+    viewEl.querySelectorAll("[data-clubevent-tab]").forEach((btn) => {
+      const isActive = btn.getAttribute("data-clubevent-tab") === cat;
+      btn.classList.toggle("active", isActive);
+      btn.setAttribute("aria-pressed", isActive ? "true" : "false");
+    });
+    await loadCategory(cat);
+    renderCategoryBody(cat);
+  };
+
+  // Dostępność każdej kategorii jest wczytywana TYLKO RAZ per wizyta na zakładce
+  // (loadCategory ma `if (s.loaded) return`) — świadomie, żeby nie odpytywać API
+  // przy każdym przełączeniu zakładki. Ale to oznacza, że po zapisaniu/edycji/
+  // usunięciu rezerwacji flaga "zajęty" w JUŻ wczytanych kategoriach staje się
+  // NIEAKTUALNA (odzwierciedla stan sprzed zmiany) — bug zgłoszony przez
+  // użytkownika 04.09.2026: rzutka pokazywała się jako zajęta mimo usunięcia jej
+  // z rezerwacji. Naprawa: po KAŻDEJ udanej zmianie (zapis/edycja/usunięcie)
+  // unieważniamy cache wszystkich kategorii i odświeżamy aktualnie widoczną.
+  const invalidateAvailabilityAndRefresh = async () => {
+    for (const s of state.values()) {
+      s.loaded = false;
+      s.items = [];
+    }
+    await loadCategory(activeCat);
+    renderCategoryBody(activeCat);
+  };
+
+  viewEl.querySelectorAll("[data-clubevent-tab]").forEach((btn) => {
+    btn.addEventListener("click", () => showCategory(btn.getAttribute("data-clubevent-tab")));
+  });
+
+  saveBtn.addEventListener("click", async () => {
+    setErr(""); setOk("");
+
+    const items = [];
+    for (const t of GEAR_TABS) {
+      const s = state.get(t.id);
+      for (const id of s.selectedIds) items.push({ itemId: id, category: t.id });
+    }
+
+    if (!items.length) {
+      setErr(existingReservationId ?
+        "Wybierz przynajmniej jedną pozycję albo użyj przycisku „Usuń rezerwację” poniżej, aby zrezygnować z całego sprzętu na imprezę." :
+        "Wybierz przynajmniej jedną pozycję.");
+      return;
+    }
+
+    saveBtn.disabled = true;
+    try {
+      let resp;
+      if (existingReservationId) {
+        resp = await apiPostJson({
+          url: UPDATE_BUNDLE_RESERVATION_ITEMS_URL,
+          idToken: ctx.idToken,
+          body: { reservationId: existingReservationId, items },
+        });
+      } else {
+        resp = await apiPostJson({
+          url: CREATE_BUNDLE_RESERVATION_URL,
+          idToken: ctx.idToken,
+          body: {
+            items,
+            starterCategory: items[0].category,
+            starterItemId: items[0].itemId,
+            asClubEvent: true,
+          },
+        });
+        existingReservationId = String(resp?.reservationId || "") || existingReservationId;
+      }
+      setOk(`Zapisano listę sprzętu na imprezę klubową (bezpłatnie) — liczba pozycji: ${items.length}.`);
+      snapshotBaseline();
+      await invalidateAvailabilityAndRefresh();
+    } catch (e) {
+      setErr(mapUserFacingApiError(e, "Nie udało się zapisać rezerwacji."));
+    } finally {
+      updateSummaryAndButton();
+    }
+  });
+
+  cancelBtn.addEventListener("click", () => {
+    if (isDirty() && !window.confirm("Masz niezapisane zmiany na liście — na pewno wyjść bez zapisywania?")) {
+      return;
+    }
+    window.location.hash = "#home/home";
+  });
+
+  deleteBtn.addEventListener("click", async () => {
+    if (!existingReservationId) return;
+    if (!window.confirm("Na pewno usunąć całą rezerwację sprzętu na tę imprezę? Tej operacji nie można cofnąć.")) {
+      return;
+    }
+    setErr(""); setOk("");
+    deleteBtn.disabled = true;
+    try {
+      await apiPostJson({
+        url: CANCEL_RESERVATION_URL,
+        idToken: ctx.idToken,
+        body: { reservationId: existingReservationId },
+      });
+      existingReservationId = null;
+      for (const s of state.values()) s.selectedIds = new Set();
+      snapshotBaseline();
+      await invalidateAvailabilityAndRefresh();
+      setOk("Rezerwacja usunięta.");
+    } catch (e) {
+      setErr(mapUserFacingApiError(e, "Nie udało się usunąć rezerwacji."));
+    } finally {
+      deleteBtn.disabled = false;
+      updateSummaryAndButton();
+    }
+  });
+
+  await loadExisting();
+  await showCategory(activeCat);
+  updateSummaryAndButton();
 }

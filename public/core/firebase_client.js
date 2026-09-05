@@ -192,3 +192,13 @@ export async function storageFetchLifejacketUrl(number) {
     return null;
   }
 }
+
+// Wideo wprowadzające "Jak działa klub": video/Morzkulc_długi.mp4 (wgrane ręcznie
+// w konsoli Firebase Storage, patrz moduł Klub).
+export async function storageFetchKlubVideoUrl() {
+  try {
+    return await getDownloadURL(ref(storage, "video/Morzkulc_długi.mp4"));
+  } catch {
+    return null;
+  }
+}

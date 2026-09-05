@@ -1,6 +1,6 @@
 # Project Context Map
 
-Generated at: `2026-09-01T11:01:59`
+Generated at: `2026-09-05T09:38:04`
 Project root: `C:\Users\kswitek\Documents\morzkulc_app`
 
 Purpose: this file is a compact project map for Claude Code. It shows which files exist, what functions/classes they contain, and which internal files depend on which other files.
@@ -57,12 +57,12 @@ Excluded sensitive files:
 
 ## Summary
 
-- Total scanned files: `541`
+- Total scanned files: `553`
 - Python files: `42`
-- Script files JS/TS/GS/etc.: `356`
+- Script files JS/TS/GS/etc.: `363`
 - Config files: `22`
-- Markdown files: `92`
-- Internal dependency edges: `597`
+- Markdown files: `97`
+- Internal dependency edges: `620`
 
 ## Project tree
 
@@ -84,6 +84,11 @@ Excluded sensitive files:
     - audyt-ux-skk-morzkulc.md
     - plan-naprawy-skk-morzkulc.md
   - Sessions & TO DOs/
+    - 01.09_audyt_wydajnosci.md
+    - 01.09_nieobsluzone_bledy_audyt.md
+    - 03.09_zmiana_kalendarza_rezerwacji_PLAN.md
+    - 04.09_imprezy_klubowe_rezerwacja_PLAN.md
+    - 04.09_imprezy_klubowe_wdrozenie_podsumowanie.md
     - 10.06_session_summary.md
     - 10.07_audyt_kursant_błąd.md
     - 11.08_blachy_i_brakujące_pola_TO_DO.md
@@ -219,6 +224,7 @@ Excluded sensitive files:
       - checkNicknameAvailabilityHandler.js
       - eventInterestToggleHandler.js
       - gearBundleReservationCreateHandler.js
+      - gearBundleReservationUpdateItemsHandler.js
       - gearFavoriteToggleHandler.js
       - gearKayaksListHandler.js
       - gearMyReservationsHandler.js
@@ -231,6 +237,7 @@ Excluded sensitive files:
       - getAdminMemberDuesHandler.js
       - getAdminPendingHandler.js
       - getAdminUserActivityHandler.js
+      - getBasenAdminGodzinyHistoryHandler.js
       - getBasenAdminGodzinyUsersHandler.js
       - getBasenAttendeesHandler.js
       - getBasenGodzinyHandler.js
@@ -357,6 +364,7 @@ Excluded sensitive files:
     - auditInvoker.js
     - auditInvokerDebug.js
     - backfillEntryFeePaidAt.js
+    - checkBasenDailyLimit.js
     - checkGearReport.js
     - checkKlubFinanceLeak.js
     - checkMemberActivity.js
@@ -402,6 +410,7 @@ Excluded sensitive files:
       - checkNicknameAvailabilityHandler.ts
       - eventInterestToggleHandler.ts
       - gearBundleReservationCreateHandler.ts
+      - gearBundleReservationUpdateItemsHandler.ts
       - gearFavoriteToggleHandler.ts
       - gearKayaksListHandler.ts
       - gearMyReservationsHandler.ts
@@ -414,6 +423,7 @@ Excluded sensitive files:
       - getAdminMemberDuesHandler.ts
       - getAdminPendingHandler.ts
       - getAdminUserActivityHandler.ts
+      - getBasenAdminGodzinyHistoryHandler.ts
       - getBasenAdminGodzinyUsersHandler.ts
       - getBasenAttendeesHandler.ts
       - getBasenKayaksHandler.ts
@@ -553,6 +563,8 @@ Excluded sensitive files:
     - access_control.js
     - api_client.js
     - app_shell.js
+    - club_badges.js
+    - date_range_calendar.js
     - firebase_client.js
     - module_stub.js
     - modules_registry.js
@@ -681,6 +693,7 @@ Excluded sensitive files:
 
 ## Internal dependency map
 
+- `functions/lib/api/adminApprovalHandler.js` -> `functions/lib/modules/calendar/events_service.js`
 - `functions/lib/api/adminApprovalHandler.js` -> `functions/lib/modules/hours/godzinki_service.js`
 - `functions/lib/api/adminApprovalHandler.js` -> `functions/lib/modules/hours/godzinki_vars.js`
 - `functions/lib/api/adminGearReservationCancelHandler.js` -> `functions/lib/modules/equipment/kayaks/gear_kayaks_service.js`
@@ -700,6 +713,7 @@ Excluded sensitive files:
 - `functions/lib/api/gearBundleReservationCreateHandler.js` -> `functions/lib/modules/calendar/calendar_utils.js`
 - `functions/lib/api/gearBundleReservationCreateHandler.js` -> `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
 - `functions/lib/api/gearBundleReservationCreateHandler.js` -> `functions/lib/modules/users/userStatusCheck.js`
+- `functions/lib/api/gearBundleReservationUpdateItemsHandler.js` -> `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
 - `functions/lib/api/gearKayaksListHandler.js` -> `functions/lib/modules/equipment/kayaks/gear_kayaks_service.js`
 - `functions/lib/api/gearMyReservationsHandler.js` -> `functions/lib/modules/equipment/kayaks/gear_kayaks_service.js`
 - `functions/lib/api/gearReservationCancelHandler.js` -> `functions/lib/modules/equipment/kayaks/gear_kayaks_service.js`
@@ -715,6 +729,8 @@ Excluded sensitive files:
 - `functions/lib/api/getAdminPendingHandler.js` -> `functions/lib/modules/hours/godzinki_vars.js`
 - `functions/lib/api/getAdminPendingHandler.js` -> `functions/lib/service/service_config.js`
 - `functions/lib/api/getAdminUserActivityHandler.js` -> `functions/lib/modules/hours/godzinki_service.js`
+- `functions/lib/api/getBasenAdminGodzinyHistoryHandler.js` -> `functions/lib/modules/basen/basen_godziny_service.js`
+- `functions/lib/api/getBasenAdminGodzinyHistoryHandler.js` -> `functions/lib/modules/basen/basen_service.js`
 - `functions/lib/api/getBasenAdminGodzinyUsersHandler.js` -> `functions/lib/modules/basen/basen_godziny_service.js`
 - `functions/lib/api/getBasenAdminGodzinyUsersHandler.js` -> `functions/lib/modules/basen/basen_service.js`
 - `functions/lib/api/getBasenAttendeesHandler.js` -> `functions/lib/modules/basen/basen_service.js`
@@ -731,6 +747,7 @@ Excluded sensitive files:
 - `functions/lib/api/getGearKayaksHandler.js` -> `functions/lib/modules/equipment/shared/gear_catalog_service.js`
 - `functions/lib/api/getGodzinkiHandler.js` -> `functions/lib/modules/hours/godzinki_service.js`
 - `functions/lib/api/getGodzinkiHandler.js` -> `functions/lib/modules/hours/godzinki_vars.js`
+- `functions/lib/api/getKayakReservationsHandler.js` -> `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
 - `functions/lib/api/getKursInfoHandler.js` -> `functions/lib/service/service_config.js`
 - `functions/lib/api/godzinkiPurchaseHandler.js` -> `functions/lib/modules/hours/godzinki_service.js`
 - `functions/lib/api/godzinkiPurchaseHandler.js` -> `functions/lib/modules/hours/godzinki_vars.js`
@@ -743,6 +760,7 @@ Excluded sensitive files:
 - `functions/lib/api/kmPlacesHandler.js` -> `functions/lib/modules/km/km_places_service.js`
 - `functions/lib/api/notificationPrefsHandler.js` -> `functions/lib/modules/setup/events_vars.js`
 - `functions/lib/api/registerUserHandler.js` -> `functions/lib/modules/basen/basen_service.js`
+- `functions/lib/api/registerUserHandler.js` -> `functions/lib/modules/calendar/events_service.js`
 - `functions/lib/api/registerUserHandler.js` -> `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
 - `functions/lib/api/registerUserHandler.js` -> `functions/lib/modules/hours/godzinki_service.js`
 - `functions/lib/api/registerUserHandler.js` -> `functions/lib/modules/hours/godzinki_vars.js`
@@ -769,6 +787,7 @@ Excluded sensitive files:
 - `functions/lib/index.js` -> `functions/lib/api/checkNicknameAvailabilityHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/eventInterestToggleHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/gearBundleReservationCreateHandler.js`
+- `functions/lib/index.js` -> `functions/lib/api/gearBundleReservationUpdateItemsHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/gearFavoriteToggleHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/gearMyReservationsHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/gearReservationCancelHandler.js`
@@ -780,6 +799,7 @@ Excluded sensitive files:
 - `functions/lib/index.js` -> `functions/lib/api/getAdminMemberDuesHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/getAdminPendingHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/getAdminUserActivityHandler.js`
+- `functions/lib/index.js` -> `functions/lib/api/getBasenAdminGodzinyHistoryHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/getBasenAdminGodzinyUsersHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/getBasenAttendeesHandler.js`
 - `functions/lib/index.js` -> `functions/lib/api/getBasenKayaksHandler.js`
@@ -821,7 +841,9 @@ Excluded sensitive files:
 - `functions/lib/modules/basen/basen_service.js` -> `functions/lib/modules/basen/basen_godziny_service.js`
 - `functions/lib/modules/basen/basen_service.js` -> `functions/lib/modules/setup/function_roles_service.js`
 - `functions/lib/modules/calendar/events_service.js` -> `functions/lib/modules/calendar/calendar_utils.js`
+- `functions/lib/modules/calendar/events_service.js` -> `functions/lib/modules/users/userStatusCheck.js`
 - `functions/lib/modules/equipment/bundle/gear_bundle_service.js` -> `functions/lib/modules/calendar/calendar_utils.js`
+- `functions/lib/modules/equipment/bundle/gear_bundle_service.js` -> `functions/lib/modules/calendar/events_service.js`
 - `functions/lib/modules/equipment/bundle/gear_bundle_service.js` -> `functions/lib/modules/equipment/kayaks/gear_kayaks_service.js`
 - `functions/lib/modules/equipment/bundle/gear_bundle_service.js` -> `functions/lib/modules/equipment/shared/reservation_limits.js`
 - `functions/lib/modules/equipment/bundle/gear_bundle_service.js` -> `functions/lib/modules/hours/godzinki_service.js`
@@ -894,6 +916,7 @@ Excluded sensitive files:
 - `functions/lib/service/tasks/eventsNotifyUpcoming.js` -> `functions/lib/modules/shared/text_utils.js`
 - `functions/lib/service/tasks/eventsSyncCalendar.js` -> `functions/lib/service/providers/googleCalendarProvider.js`
 - `functions/lib/service/tasks/eventsSyncCalendar.js` -> `functions/lib/service/service_config.js`
+- `functions/lib/service/tasks/eventsSyncFromSheet.js` -> `functions/lib/modules/calendar/events_service.js`
 - `functions/lib/service/tasks/eventsSyncFromSheet.js` -> `functions/lib/modules/shared/text_utils.js`
 - `functions/lib/service/tasks/eventsSyncFromSheet.js` -> `functions/lib/service/providers/googleCalendarProvider.js`
 - `functions/lib/service/tasks/eventsSyncFromSheet.js` -> `functions/lib/service/providers/googleSheetsProvider.js`
@@ -955,6 +978,7 @@ Excluded sensitive files:
 - `functions/scripts/checkKlubFinanceLeak.js` -> `functions/lib/api/getKlubInfoHandler.js`
 - `functions/scripts/checkMemberActivity.js` -> `functions/lib/api/getAdminMemberActivityHandler.js`
 - `functions/scripts/runReconcileOpeningBalance.js` -> `functions/lib/service/tasks/reconcileOpeningBalance.js`
+- `functions/src/api/adminApprovalHandler.ts` -> `functions/src/modules/calendar/events_service.ts`
 - `functions/src/api/adminApprovalHandler.ts` -> `functions/src/modules/hours/godzinki_service.ts`
 - `functions/src/api/adminApprovalHandler.ts` -> `functions/src/modules/hours/godzinki_vars.ts`
 - `functions/src/api/adminGearReservationCancelHandler.ts` -> `functions/src/modules/equipment/kayaks/gear_kayaks_service.ts`
@@ -972,6 +996,7 @@ Excluded sensitive files:
 - `functions/src/api/gearBundleReservationCreateHandler.ts` -> `functions/src/modules/calendar/calendar_utils.ts`
 - `functions/src/api/gearBundleReservationCreateHandler.ts` -> `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
 - `functions/src/api/gearBundleReservationCreateHandler.ts` -> `functions/src/modules/users/userStatusCheck.ts`
+- `functions/src/api/gearBundleReservationUpdateItemsHandler.ts` -> `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
 - `functions/src/api/gearKayaksListHandler.ts` -> `functions/src/modules/equipment/kayaks/gear_kayaks_service.ts`
 - `functions/src/api/gearMyReservationsHandler.ts` -> `functions/src/modules/equipment/kayaks/gear_kayaks_service.ts`
 - `functions/src/api/gearReservationCancelHandler.ts` -> `functions/src/modules/equipment/kayaks/gear_kayaks_service.ts`
@@ -987,6 +1012,8 @@ Excluded sensitive files:
 - `functions/src/api/getAdminPendingHandler.ts` -> `functions/src/modules/hours/godzinki_vars.ts`
 - `functions/src/api/getAdminPendingHandler.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/api/getAdminUserActivityHandler.ts` -> `functions/src/modules/hours/godzinki_service.ts`
+- `functions/src/api/getBasenAdminGodzinyHistoryHandler.ts` -> `functions/src/modules/basen/basen_godziny_service.ts`
+- `functions/src/api/getBasenAdminGodzinyHistoryHandler.ts` -> `functions/src/modules/basen/basen_service.ts`
 - `functions/src/api/getBasenAdminGodzinyUsersHandler.ts` -> `functions/src/modules/basen/basen_godziny_service.ts`
 - `functions/src/api/getBasenAdminGodzinyUsersHandler.ts` -> `functions/src/modules/basen/basen_service.ts`
 - `functions/src/api/getBasenAttendeesHandler.ts` -> `functions/src/modules/basen/basen_service.ts`
@@ -1000,6 +1027,7 @@ Excluded sensitive files:
 - `functions/src/api/getGearItemsHandler.ts` -> `functions/src/modules/equipment/shared/gear_catalog_service.ts`
 - `functions/src/api/getGodzinkiHandler.ts` -> `functions/src/modules/hours/godzinki_service.ts`
 - `functions/src/api/getGodzinkiHandler.ts` -> `functions/src/modules/hours/godzinki_vars.ts`
+- `functions/src/api/getKayakReservationsHandler.ts` -> `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
 - `functions/src/api/getKursInfoHandler.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/api/godzinkiPurchaseHandler.ts` -> `functions/src/modules/hours/godzinki_service.ts`
 - `functions/src/api/godzinkiPurchaseHandler.ts` -> `functions/src/modules/hours/godzinki_vars.ts`
@@ -1012,6 +1040,7 @@ Excluded sensitive files:
 - `functions/src/api/kmPlacesHandler.ts` -> `functions/src/modules/km/km_places_service.ts`
 - `functions/src/api/notificationPrefsHandler.ts` -> `functions/src/modules/setup/events_vars.ts`
 - `functions/src/api/registerUserHandler.ts` -> `functions/src/modules/basen/basen_service.ts`
+- `functions/src/api/registerUserHandler.ts` -> `functions/src/modules/calendar/events_service.ts`
 - `functions/src/api/registerUserHandler.ts` -> `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
 - `functions/src/api/registerUserHandler.ts` -> `functions/src/modules/hours/godzinki_service.ts`
 - `functions/src/api/registerUserHandler.ts` -> `functions/src/modules/hours/godzinki_vars.ts`
@@ -1038,6 +1067,7 @@ Excluded sensitive files:
 - `functions/src/index.ts` -> `functions/src/api/checkNicknameAvailabilityHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/eventInterestToggleHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/gearBundleReservationCreateHandler.ts`
+- `functions/src/index.ts` -> `functions/src/api/gearBundleReservationUpdateItemsHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/gearFavoriteToggleHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/gearMyReservationsHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/gearReservationCancelHandler.ts`
@@ -1049,6 +1079,7 @@ Excluded sensitive files:
 - `functions/src/index.ts` -> `functions/src/api/getAdminMemberDuesHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/getAdminPendingHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/getAdminUserActivityHandler.ts`
+- `functions/src/index.ts` -> `functions/src/api/getBasenAdminGodzinyHistoryHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/getBasenAdminGodzinyUsersHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/getBasenAttendeesHandler.ts`
 - `functions/src/index.ts` -> `functions/src/api/getBasenKayaksHandler.ts`
@@ -1090,7 +1121,9 @@ Excluded sensitive files:
 - `functions/src/modules/basen/basen_service.ts` -> `functions/src/modules/basen/basen_godziny_service.ts`
 - `functions/src/modules/basen/basen_service.ts` -> `functions/src/modules/setup/function_roles_service.ts`
 - `functions/src/modules/calendar/events_service.ts` -> `functions/src/modules/calendar/calendar_utils.ts`
+- `functions/src/modules/calendar/events_service.ts` -> `functions/src/modules/users/userStatusCheck.ts`
 - `functions/src/modules/equipment/bundle/gear_bundle_service.ts` -> `functions/src/modules/calendar/calendar_utils.ts`
+- `functions/src/modules/equipment/bundle/gear_bundle_service.ts` -> `functions/src/modules/calendar/events_service.ts`
 - `functions/src/modules/equipment/bundle/gear_bundle_service.ts` -> `functions/src/modules/equipment/kayaks/gear_kayaks_service.ts`
 - `functions/src/modules/equipment/bundle/gear_bundle_service.ts` -> `functions/src/modules/equipment/shared/reservation_limits.ts`
 - `functions/src/modules/equipment/bundle/gear_bundle_service.ts` -> `functions/src/modules/hours/godzinki_service.ts`
@@ -1176,6 +1209,7 @@ Excluded sensitive files:
 - `functions/src/service/tasks/eventsSyncCalendar.ts` -> `functions/src/service/providers/googleCalendarProvider.ts`
 - `functions/src/service/tasks/eventsSyncCalendar.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/service/tasks/eventsSyncCalendar.ts` -> `functions/src/service/types.ts`
+- `functions/src/service/tasks/eventsSyncFromSheet.ts` -> `functions/src/modules/calendar/events_service.ts`
 - `functions/src/service/tasks/eventsSyncFromSheet.ts` -> `functions/src/modules/shared/text_utils.ts`
 - `functions/src/service/tasks/eventsSyncFromSheet.ts` -> `functions/src/service/providers/googleCalendarProvider.ts`
 - `functions/src/service/tasks/eventsSyncFromSheet.ts` -> `functions/src/service/providers/googleSheetsProvider.ts`
@@ -1258,6 +1292,7 @@ Excluded sensitive files:
 - `functions/src/service/worker/jobProcessor.ts` -> `functions/src/service/service_config.ts`
 - `functions/src/service/worker/onJobCreatedWorker.ts` -> `functions/src/service/worker/jobProcessor.ts`
 - `functions/src/service/workspaceGroupSync.ts` -> `functions/src/service/providers/googleWorkspaceProvider.ts`
+- `functions/test/events_core.test.ts` -> `functions/src/modules/calendar/events_service.ts`
 - `functions/test/events_core.test.ts` -> `functions/src/service/providers/googleSheetsProvider.ts`
 - `functions/test/events_core.test.ts` -> `functions/src/service/tasks/eventsNotifyUpcoming.ts`
 - `functions/test/events_core.test.ts` -> `functions/src/service/tasks/eventsSyncFromSheet.ts`
@@ -2572,195 +2607,222 @@ Excluded sensitive files:
 
 ### `tests/test_bundle_reservations.py`
 
-- Lines: `1915`
-- Size: `76894` bytes
-- SHA1: `1f60b545f9`
+- Lines: `2391`
+- Size: `99987` bytes
+- SHA1: `816792eb35`
 - Module aliases: `tests.test_bundle_reservations`
 - Imports:
   - `import unittest`
 - Top-level symbols:
   - `CATEGORY_COLLECTIONS`
   - `CATEGORY_PRIORITY`
+  - `MEMBER_ROLE_KEYS`
 - Classes:
-  - class `BackendStub` lines 243-461 — Minimal in-memory stub of the bundle reservation backend.
+  - class `BackendStub` lines 247-617 — Minimal in-memory stub of the bundle reservation backend.
     - methods:
-      - `__init__(self, users: dict, catalog: dict, kurs_wypozycza: bool, today: str)` (function lines 258-270) — users: {uid: {"role_key": ..., "status_key": ..., "email": ..., "school_year": ...}}
-      - `_gen_id(self)` (function lines 272-275)
-      - `create_bundle_reservation(self, uid: str, start_date: str, end_date: str, items: list, starter_category: str, starter_item_id: str)` (function lines 277-429) -> `dict` — items: [{"itemId": ..., "category": ...}]
-      - `cancel_reservation(self, uid: str, reservation_id: str)` (function lines 431-438) -> `dict`
-      - `get_items_with_availability(self, category: str, start_date: str, end_date: str)` (function lines 440-461) -> `list` — Returns catalog items with isAvailableForRange flag.
-  - class `TestCompositeId(unittest.TestCase)` lines 468-482
+      - `__init__(self, users: dict, catalog: dict, kurs_wypozycza: bool, today: str, kierownik_events: dict)` (function lines 262-279) — users: {uid: {"role_key": ..., "status_key": ..., "email": ..., "school_year": ...}}
+      - `_gen_id(self)` (function lines 281-284)
+      - `create_bundle_reservation(self, uid: str, start_date: str, end_date: str, items: list, starter_category: str, starter_item_id: str, as_club_event: bool)` (function lines 286-469) -> `dict` — items: [{"itemId": ..., "category": ...}]
+      - `cancel_reservation(self, uid: str, reservation_id: str)` (function lines 471-478) -> `dict`
+      - `update_bundle_reservation_items(self, uid: str, reservation_id: str, items: list)` (function lines 480-594) -> `dict` — Kierownik podmienia PEŁNĄ listę przedmiotów istniejącej rezerwacji na
+      - `get_items_with_availability(self, category: str, start_date: str, end_date: str)` (function lines 596-617) -> `list` — Returns catalog items with isAvailableForRange flag.
+  - class `TestCompositeId(unittest.TestCase)` lines 624-638
     - methods:
-      - `test_basic_kayak(self)` (function lines 470-471)
-      - `test_basic_paddle(self)` (function lines 473-474)
-      - `test_strips_whitespace(self)` (function lines 476-477)
-      - `test_other_categories(self)` (function lines 479-482)
-  - class `TestComputeReservationKind(unittest.TestCase)` lines 485-510
+      - `test_basic_kayak(self)` (function lines 626-627)
+      - `test_basic_paddle(self)` (function lines 629-630)
+      - `test_strips_whitespace(self)` (function lines 632-633)
+      - `test_other_categories(self)` (function lines 635-638)
+  - class `TestComputeReservationKind(unittest.TestCase)` lines 641-666
     - methods:
-      - `test_single_kayak_is_kayak_bundle(self)` (function lines 487-489)
-      - `test_kayak_plus_paddle_is_kayak_bundle(self)` (function lines 491-496)
-      - `test_only_non_kayak_is_gear_only(self)` (function lines 498-503)
-      - `test_empty_list_is_gear_only(self)` (function lines 505-506)
-      - `test_category_case_insensitive(self)` (function lines 508-510)
-  - class `TestComputePrimaryItemIdx(unittest.TestCase)` lines 513-553
+      - `test_single_kayak_is_kayak_bundle(self)` (function lines 643-645)
+      - `test_kayak_plus_paddle_is_kayak_bundle(self)` (function lines 647-652)
+      - `test_only_non_kayak_is_gear_only(self)` (function lines 654-659)
+      - `test_empty_list_is_gear_only(self)` (function lines 661-662)
+      - `test_category_case_insensitive(self)` (function lines 664-666)
+  - class `TestComputePrimaryItemIdx(unittest.TestCase)` lines 669-709
     - methods:
-      - `test_kayak_wins_over_paddle(self)` (function lines 515-520)
-      - `test_first_kayak_is_primary_when_multiple(self)` (function lines 522-527)
-      - `test_paddle_beats_helmet(self)` (function lines 529-534)
-      - `test_single_item_is_primary(self)` (function lines 536-538)
-      - `test_full_priority_order(self)` (function lines 540-550)
-      - `test_empty_returns_zero(self)` (function lines 552-553)
-  - class `TestOverlapsIso(unittest.TestCase)` lines 556-586
+      - `test_kayak_wins_over_paddle(self)` (function lines 671-676)
+      - `test_first_kayak_is_primary_when_multiple(self)` (function lines 678-683)
+      - `test_paddle_beats_helmet(self)` (function lines 685-690)
+      - `test_single_item_is_primary(self)` (function lines 692-694)
+      - `test_full_priority_order(self)` (function lines 696-706)
+      - `test_empty_returns_zero(self)` (function lines 708-709)
+  - class `TestOverlapsIso(unittest.TestCase)` lines 712-742
     - methods:
-      - `test_exact_overlap(self)` (function lines 558-560)
-      - `test_partial_overlap_start(self)` (function lines 562-564)
-      - `test_partial_overlap_end(self)` (function lines 566-568)
-      - `test_no_overlap_before(self)` (function lines 570-572)
-      - `test_no_overlap_after(self)` (function lines 574-576)
-      - `test_adjacent_no_overlap(self)` (function lines 578-581)
-      - `test_adjacent_overlap_on_same_day(self)` (function lines 583-586)
-  - class `TestFindBundleConflicts(unittest.TestCase)` lines 589-665
+      - `test_exact_overlap(self)` (function lines 714-716)
+      - `test_partial_overlap_start(self)` (function lines 718-720)
+      - `test_partial_overlap_end(self)` (function lines 722-724)
+      - `test_no_overlap_before(self)` (function lines 726-728)
+      - `test_no_overlap_after(self)` (function lines 730-732)
+      - `test_adjacent_no_overlap(self)` (function lines 734-737)
+      - `test_adjacent_overlap_on_same_day(self)` (function lines 739-742)
+  - class `TestFindBundleConflicts(unittest.TestCase)` lines 745-821
     - methods:
-      - `_make_reservation(self, rid, start, end, item_ids, kayak_ids)` (function lines 591-599)
-      - `test_no_conflict_no_reservations(self)` (function lines 601-605)
-      - `test_conflict_with_new_format(self)` (function lines 607-613)
-      - `test_conflict_with_legacy_kayak_ids(self)` (function lines 615-621)
-      - `test_no_conflict_non_kayak_vs_legacy(self)` (function lines 623-630)
-      - `test_no_conflict_different_dates(self)` (function lines 632-638)
-      - `test_excluded_reservation_not_counted(self)` (function lines 640-647)
-      - `test_cancelled_reservation_not_counted(self)` (function lines 649-656)
-      - `test_multiple_conflicts_returned(self)` (function lines 658-665)
-  - class `TestCountOverlappingItems(unittest.TestCase)` lines 668-765
+      - `_make_reservation(self, rid, start, end, item_ids, kayak_ids)` (function lines 747-755)
+      - `test_no_conflict_no_reservations(self)` (function lines 757-761)
+      - `test_conflict_with_new_format(self)` (function lines 763-769)
+      - `test_conflict_with_legacy_kayak_ids(self)` (function lines 771-777)
+      - `test_no_conflict_non_kayak_vs_legacy(self)` (function lines 779-786)
+      - `test_no_conflict_different_dates(self)` (function lines 788-794)
+      - `test_excluded_reservation_not_counted(self)` (function lines 796-803)
+      - `test_cancelled_reservation_not_counted(self)` (function lines 805-812)
+      - `test_multiple_conflicts_returned(self)` (function lines 814-821)
+  - class `TestCountOverlappingItems(unittest.TestCase)` lines 824-921
     - methods:
-      - `_make_reservation(self, rid, uid, start, end, items, kayak_ids)` (function lines 670-682)
-      - `test_no_reservations(self)` (function lines 684-688)
-      - `test_counts_new_bundle_items_by_category(self)` (function lines 690-699)
-      - `test_counts_legacy_kayak_ids_as_kayaks(self)` (function lines 701-709)
-      - `test_missing_category_defaults_to_kayaks(self)` (function lines 711-719)
-      - `test_ignores_other_users(self)` (function lines 721-729)
-      - `test_ignores_non_overlapping(self)` (function lines 731-739)
-      - `test_excludes_reservation_by_id(self)` (function lines 741-750)
-      - `test_prefers_items_over_kayak_ids(self)` (function lines 752-765)
-  - class `TestScenario01_SimplePaddleReservation(unittest.TestCase)` lines 790-826 — Scenario 01: Gear-only reservation of a single paddle.
+      - `_make_reservation(self, rid, uid, start, end, items, kayak_ids)` (function lines 826-838)
+      - `test_no_reservations(self)` (function lines 840-844)
+      - `test_counts_new_bundle_items_by_category(self)` (function lines 846-855)
+      - `test_counts_legacy_kayak_ids_as_kayaks(self)` (function lines 857-865)
+      - `test_missing_category_defaults_to_kayaks(self)` (function lines 867-875)
+      - `test_ignores_other_users(self)` (function lines 877-885)
+      - `test_ignores_non_overlapping(self)` (function lines 887-895)
+      - `test_excludes_reservation_by_id(self)` (function lines 897-906)
+      - `test_prefers_items_over_kayak_ids(self)` (function lines 908-921)
+  - class `TestScenario01_SimplePaddleReservation(unittest.TestCase)` lines 946-982 — Scenario 01: Gear-only reservation of a single paddle.
     - methods:
-      - `setUp(self)` (function lines 793-798)
-      - `test_creates_gear_only_reservation(self)` (function lines 800-809)
-      - `test_reservation_blocks_paddle(self)` (function lines 811-826)
-  - class `TestScenario02_KayakBundleWithExtras(unittest.TestCase)` lines 829-899 — Scenario 02: Bundle with kayak + paddle + lifejacket = kayak_bundle.
+      - `setUp(self)` (function lines 949-954)
+      - `test_creates_gear_only_reservation(self)` (function lines 956-965)
+      - `test_reservation_blocks_paddle(self)` (function lines 967-982)
+  - class `TestScenario02_KayakBundleWithExtras(unittest.TestCase)` lines 985-1055 — Scenario 02: Bundle with kayak + paddle + lifejacket = kayak_bundle.
     - methods:
-      - `setUp(self)` (function lines 832-839)
-      - `test_bundle_kind_is_kayak_bundle(self)` (function lines 841-853)
-      - `test_cost_hours_only_for_kayak(self)` (function lines 855-868)
-      - `test_all_items_blocked_after_reservation(self)` (function lines 870-899)
-  - class `TestScenario03_LegacyKayakCompatibility(unittest.TestCase)` lines 902-942 — Scenario 03: New bundle conflicts with legacy kayak-only reservation.
+      - `setUp(self)` (function lines 988-995)
+      - `test_bundle_kind_is_kayak_bundle(self)` (function lines 997-1009)
+      - `test_cost_hours_only_for_kayak(self)` (function lines 1011-1024)
+      - `test_all_items_blocked_after_reservation(self)` (function lines 1026-1055)
+  - class `TestScenario03_LegacyKayakCompatibility(unittest.TestCase)` lines 1058-1098 — Scenario 03: New bundle conflicts with legacy kayak-only reservation.
     - methods:
-      - `setUp(self)` (function lines 905-922)
-      - `test_new_bundle_detects_conflict_with_legacy(self)` (function lines 924-933)
-      - `test_non_conflicting_dates_pass(self)` (function lines 935-942)
-  - class `TestScenario04_RolePermissions(unittest.TestCase)` lines 945-1001 — Scenario 04: Role-based access control.
+      - `setUp(self)` (function lines 1061-1078)
+      - `test_new_bundle_detects_conflict_with_legacy(self)` (function lines 1080-1089)
+      - `test_non_conflicting_dates_pass(self)` (function lines 1091-1098)
+  - class `TestScenario04_RolePermissions(unittest.TestCase)` lines 1101-1157 — Scenario 04: Role-based access control.
     - methods:
-      - `setUp(self)` (function lines 948-958)
-      - `test_sympatyk_cannot_reserve(self)` (function lines 960-968)
-      - `test_kandydat_limited_to_1_item(self)` (function lines 970-981)
-      - `test_czlonek_can_reserve_up_to_3(self)` (function lines 983-1001)
-  - class `TestScenario05_ItemValidation(unittest.TestCase)` lines 1004-1070 — Scenario 05: Item validation — inactive, non-operational, private.
+      - `setUp(self)` (function lines 1104-1114)
+      - `test_sympatyk_cannot_reserve(self)` (function lines 1116-1124)
+      - `test_kandydat_limited_to_1_item(self)` (function lines 1126-1137)
+      - `test_czlonek_can_reserve_up_to_3(self)` (function lines 1139-1157)
+  - class `TestScenario05_ItemValidation(unittest.TestCase)` lines 1160-1226 — Scenario 05: Item validation — inactive, non-operational, private.
     - methods:
-      - `setUp(self)` (function lines 1007-1021)
-      - `test_non_operational_kayak_rejected(self)` (function lines 1023-1031)
-      - `test_private_non_rentable_kayak_rejected(self)` (function lines 1033-1041)
-      - `test_private_rentable_kayak_allowed(self)` (function lines 1043-1050)
-      - `test_inactive_item_rejected(self)` (function lines 1052-1060)
-      - `test_unknown_item_rejected(self)` (function lines 1062-1070)
-  - class `TestScenario06_AvailabilityCheck(unittest.TestCase)` lines 1073-1114 — Scenario 06: getItemsWithAvailability correctly marks items.
+      - `setUp(self)` (function lines 1163-1177)
+      - `test_non_operational_kayak_rejected(self)` (function lines 1179-1187)
+      - `test_private_non_rentable_kayak_rejected(self)` (function lines 1189-1197)
+      - `test_private_rentable_kayak_allowed(self)` (function lines 1199-1206)
+      - `test_inactive_item_rejected(self)` (function lines 1208-1216)
+      - `test_unknown_item_rejected(self)` (function lines 1218-1226)
+  - class `TestScenario06_AvailabilityCheck(unittest.TestCase)` lines 1229-1270 — Scenario 06: getItemsWithAvailability correctly marks items.
     - methods:
-      - `setUp(self)` (function lines 1076-1083)
-      - `test_all_available_when_no_reservations(self)` (function lines 1085-1088)
-      - `test_reserved_paddle_marked_unavailable(self)` (function lines 1090-1101)
-      - `test_availability_after_reservation_ends(self)` (function lines 1103-1114)
-  - class `TestScenario07_MultipleReservations(unittest.TestCase)` lines 1117-1162 — Scenario 07: Multiple users reserving different items in same period.
+      - `setUp(self)` (function lines 1232-1239)
+      - `test_all_available_when_no_reservations(self)` (function lines 1241-1244)
+      - `test_reserved_paddle_marked_unavailable(self)` (function lines 1246-1257)
+      - `test_availability_after_reservation_ends(self)` (function lines 1259-1270)
+  - class `TestScenario07_MultipleReservations(unittest.TestCase)` lines 1273-1318 — Scenario 07: Multiple users reserving different items in same period.
     - methods:
-      - `setUp(self)` (function lines 1120-1130)
-      - `test_different_items_no_conflict(self)` (function lines 1132-1146)
-      - `test_same_item_conflict_across_users(self)` (function lines 1148-1162)
-  - class `TestScenario08_CancelAndRebook(unittest.TestCase)` lines 1165-1204 — Scenario 08: Cancel a reservation then rebook the same item.
+      - `setUp(self)` (function lines 1276-1286)
+      - `test_different_items_no_conflict(self)` (function lines 1288-1302)
+      - `test_same_item_conflict_across_users(self)` (function lines 1304-1318)
+  - class `TestScenario08_CancelAndRebook(unittest.TestCase)` lines 1321-1360 — Scenario 08: Cancel a reservation then rebook the same item.
     - methods:
-      - `setUp(self)` (function lines 1168-1173)
-      - `test_cancel_and_rebook(self)` (function lines 1175-1204)
-  - class `TestScenario09_DeduplicationOfItems(unittest.TestCase)` lines 1207-1245 — Scenario 09: Duplicate items in request are silently deduplicated.
+      - `setUp(self)` (function lines 1324-1329)
+      - `test_cancel_and_rebook(self)` (function lines 1331-1360)
+  - class `TestScenario09_DeduplicationOfItems(unittest.TestCase)` lines 1363-1401 — Scenario 09: Duplicate items in request are silently deduplicated.
     - methods:
-      - `setUp(self)` (function lines 1210-1215)
-      - `test_dedup_does_not_exceed_limit(self)` (function lines 1217-1230)
-      - `test_dedup_stores_single_item(self)` (function lines 1232-1245)
-  - class `TestScenario10_PrimaryItemSelection(unittest.TestCase)` lines 1248-1307 — Scenario 10: Primary item is the highest-priority category item.
+      - `setUp(self)` (function lines 1366-1371)
+      - `test_dedup_does_not_exceed_limit(self)` (function lines 1373-1386)
+      - `test_dedup_stores_single_item(self)` (function lines 1388-1401)
+  - class `TestScenario10_PrimaryItemSelection(unittest.TestCase)` lines 1404-1463 — Scenario 10: Primary item is the highest-priority category item.
     - methods:
-      - `setUp(self)` (function lines 1251-1258)
-      - `test_kayak_is_primary_when_included(self)` (function lines 1260-1275)
-      - `test_paddle_is_primary_when_no_kayak(self)` (function lines 1277-1291)
-      - `test_only_one_item_is_primary(self)` (function lines 1293-1307)
-  - class `TestCrossFormatConflicts(unittest.TestCase)` lines 1314-1455 — Weryfikuje że findBundleConflicts() poprawnie wykrywa konflikty między
+      - `setUp(self)` (function lines 1407-1414)
+      - `test_kayak_is_primary_when_included(self)` (function lines 1416-1431)
+      - `test_paddle_is_primary_when_no_kayak(self)` (function lines 1433-1447)
+      - `test_only_one_item_is_primary(self)` (function lines 1449-1463)
+  - class `TestCrossFormatConflicts(unittest.TestCase)` lines 1470-1611 — Weryfikuje że findBundleConflicts() poprawnie wykrywa konflikty między
     - methods:
-      - `_make_legacy_reservation(self, kayak_ids: list, block_start: str, block_end: str, status: str, uid: str)` (function lines 1321-1331) -> `dict` — Stara rezerwacja — tylko kayakIds[], bez itemIds[].
-      - `_make_bundle_reservation(self, item_ids: list, block_start: str, block_end: str, status: str, uid: str)` (function lines 1333-1344) -> `dict` — Nowa rezerwacja bundle — itemIds[], kayakIds[] puste.
-      - `test_bundle_conflicts_with_legacy_same_kayak(self)` (function lines 1346-1359) — Stara rezerwacja z kayakIds=["K01"].
-      - `test_bundle_conflicts_with_legacy_different_kayak(self)` (function lines 1361-1372) — Stara rezerwacja z K01 — nowa próba z K02 → brak konfliktu.
-      - `test_bundle_conflicts_with_new_format_same_item(self)` (function lines 1374-1386) — Nowa rezerwacja z itemIds=["kayaks/K01"].
-      - `test_bundle_conflicts_with_new_format_accessory(self)` (function lines 1388-1400) — Nowa rezerwacja ma itemIds=["paddles/P01"].
-      - `test_legacy_cancelled_not_conflicting(self)` (function lines 1402-1411) — Anulowana stara rezerwacja nie blokuje.
-      - `test_legacy_non_overlapping_not_conflicting(self)` (function lines 1413-1422) — Stara rezerwacja nie nakłada się na nowe daty → brak konfliktu.
-      - `test_multiple_items_partial_conflict(self)` (function lines 1424-1440) — Próba rezerwacji K01 + P01 + H01.
-      - `test_exclude_id_skips_own_reservation(self)` (function lines 1442-1455) — Przy aktualizacji rezerwacji (exclude_id) własna rezerwacja nie blokuje samej siebie.
-  - class `TestMaxItemsBundleEnforcement(unittest.TestCase)` lines 1462-1791 — Weryfikuje, że limit max_items jest liczony OSOBNO DLA KAŻDEJ KATEGORII (S2):
+      - `_make_legacy_reservation(self, kayak_ids: list, block_start: str, block_end: str, status: str, uid: str)` (function lines 1477-1487) -> `dict` — Stara rezerwacja — tylko kayakIds[], bez itemIds[].
+      - `_make_bundle_reservation(self, item_ids: list, block_start: str, block_end: str, status: str, uid: str)` (function lines 1489-1500) -> `dict` — Nowa rezerwacja bundle — itemIds[], kayakIds[] puste.
+      - `test_bundle_conflicts_with_legacy_same_kayak(self)` (function lines 1502-1515) — Stara rezerwacja z kayakIds=["K01"].
+      - `test_bundle_conflicts_with_legacy_different_kayak(self)` (function lines 1517-1528) — Stara rezerwacja z K01 — nowa próba z K02 → brak konfliktu.
+      - `test_bundle_conflicts_with_new_format_same_item(self)` (function lines 1530-1542) — Nowa rezerwacja z itemIds=["kayaks/K01"].
+      - `test_bundle_conflicts_with_new_format_accessory(self)` (function lines 1544-1556) — Nowa rezerwacja ma itemIds=["paddles/P01"].
+      - `test_legacy_cancelled_not_conflicting(self)` (function lines 1558-1567) — Anulowana stara rezerwacja nie blokuje.
+      - `test_legacy_non_overlapping_not_conflicting(self)` (function lines 1569-1578) — Stara rezerwacja nie nakłada się na nowe daty → brak konfliktu.
+      - `test_multiple_items_partial_conflict(self)` (function lines 1580-1596) — Próba rezerwacji K01 + P01 + H01.
+      - `test_exclude_id_skips_own_reservation(self)` (function lines 1598-1611) — Przy aktualizacji rezerwacji (exclude_id) własna rezerwacja nie blokuje samej siebie.
+  - class `TestMaxItemsBundleEnforcement(unittest.TestCase)` lines 1618-1947 — Weryfikuje, że limit max_items jest liczony OSOBNO DLA KAŻDEJ KATEGORII (S2):
     - methods:
-      - `_make_backend(self, role: str)` (function lines 1489-1493) -> `BackendStub`
-      - `test_member_kayak_paddle_lifejacket_one_each_ok(self)` (function lines 1495-1508) — Czlonek: kajak + wiosło + kamizelka = po 1 z każdej kategorii ≤ 3 → OK.
-      - `test_member_four_categories_one_each_ok(self)` (function lines 1510-1527) — Czlonek: kajak + wiosło + kask + kamizelka = po 1 z 4 kategorii.
-      - `test_member_four_paddles_blocked(self)` (function lines 1529-1545) — Czlonek: 4 wiosła w jednej rezerwacji > limit 3 dla kategorii → blokada.
-      - `test_candidate_1_kayak_ok(self)` (function lines 1547-1556) — Kandydat: 1 kajak = max_items=1 → OK.
-      - `test_candidate_kayak_plus_paddle_one_each_ok(self)` (function lines 1558-1573) — Kandydat: kajak + wiosło w jednym koszyku = po 1 z każdej kategorii ≤ 1 → OK.
-      - `test_candidate_kayak_then_paddle_separate_reservations_ok(self)` (function lines 1575-1595) — GŁÓWNY scenariusz zgłoszenia: kandydat rezerwuje kajak osobno, a wiosło
-      - `test_candidate_second_kayak_blocked(self)` (function lines 1597-1616) — Kandydat: drugi kajak w nakładającym się terminie > 1 → blokada.
-      - `test_candidate_second_paddle_blocked(self)` (function lines 1618-1637) — Kandydat: drugie wiosło w nakładającym się terminie > 1 → blokada.
-      - `test_board_many_items_ok(self)` (function lines 1639-1653) — Zarząd: limit = 100, 2 kajaki + 2 akcesoria → OK.
-      - `test_cumulative_kayaks_across_overlapping_reservations_ok(self)` (function lines 1655-1679) — Czlonek ma już 2 kajaki w nakładającej się rezerwacji.
-      - `test_cumulative_kayaks_over_limit_blocked(self)` (function lines 1681-1718) — Czlonek ma już 3 kajaki. 4. kajak w nakładającej się rezerwacji → 4 > 3 → blokada.
-      - `test_gear_only_bundle_no_kayak_cost_zero(self)` (function lines 1720-1737) — Bundle bez kajaka → reservationKind=gear_only, costHours=0.
-      - `test_kayak_bundle_cost_only_from_kayaks(self)` (function lines 1739-1758) — Bundle z kajakiem i akcesoriami: costHours = tylko dni × kajaki.
-      - `test_accessories_price_gap_k1_documented(self)` (function lines 1760-1791) — LUKA K1: Akcesoria (wiosło, kask, fartuch) nie mają cennika.
-  - class `TestKursantExemptAndGate(unittest.TestCase)` lines 1798-1830 — Pure-function: zwolnienie z opłaty + bramka rezerwacji kursanta.
+      - `_make_backend(self, role: str)` (function lines 1645-1649) -> `BackendStub`
+      - `test_member_kayak_paddle_lifejacket_one_each_ok(self)` (function lines 1651-1664) — Czlonek: kajak + wiosło + kamizelka = po 1 z każdej kategorii ≤ 3 → OK.
+      - `test_member_four_categories_one_each_ok(self)` (function lines 1666-1683) — Czlonek: kajak + wiosło + kask + kamizelka = po 1 z 4 kategorii.
+      - `test_member_four_paddles_blocked(self)` (function lines 1685-1701) — Czlonek: 4 wiosła w jednej rezerwacji > limit 3 dla kategorii → blokada.
+      - `test_candidate_1_kayak_ok(self)` (function lines 1703-1712) — Kandydat: 1 kajak = max_items=1 → OK.
+      - `test_candidate_kayak_plus_paddle_one_each_ok(self)` (function lines 1714-1729) — Kandydat: kajak + wiosło w jednym koszyku = po 1 z każdej kategorii ≤ 1 → OK.
+      - `test_candidate_kayak_then_paddle_separate_reservations_ok(self)` (function lines 1731-1751) — GŁÓWNY scenariusz zgłoszenia: kandydat rezerwuje kajak osobno, a wiosło
+      - `test_candidate_second_kayak_blocked(self)` (function lines 1753-1772) — Kandydat: drugi kajak w nakładającym się terminie > 1 → blokada.
+      - `test_candidate_second_paddle_blocked(self)` (function lines 1774-1793) — Kandydat: drugie wiosło w nakładającym się terminie > 1 → blokada.
+      - `test_board_many_items_ok(self)` (function lines 1795-1809) — Zarząd: limit = 100, 2 kajaki + 2 akcesoria → OK.
+      - `test_cumulative_kayaks_across_overlapping_reservations_ok(self)` (function lines 1811-1835) — Czlonek ma już 2 kajaki w nakładającej się rezerwacji.
+      - `test_cumulative_kayaks_over_limit_blocked(self)` (function lines 1837-1874) — Czlonek ma już 3 kajaki. 4. kajak w nakładającej się rezerwacji → 4 > 3 → blokada.
+      - `test_gear_only_bundle_no_kayak_cost_zero(self)` (function lines 1876-1893) — Bundle bez kajaka → reservationKind=gear_only, costHours=0.
+      - `test_kayak_bundle_cost_only_from_kayaks(self)` (function lines 1895-1914) — Bundle z kajakiem i akcesoriami: costHours = tylko dni × kajaki.
+      - `test_accessories_price_gap_k1_documented(self)` (function lines 1916-1947) — LUKA K1: Akcesoria (wiosło, kask, fartuch) nie mają cennika.
+  - class `TestKursantExemptAndGate(unittest.TestCase)` lines 1954-1986 — Pure-function: zwolnienie z opłaty + bramka rezerwacji kursanta.
     - methods:
-      - `test_exempt_current_year_before_sep30(self)` (function lines 1801-1802)
-      - `test_exempt_on_sep30_inclusive(self)` (function lines 1804-1805)
-      - `test_not_exempt_after_sep30(self)` (function lines 1807-1808)
-      - `test_not_exempt_wrong_year(self)` (function lines 1810-1811)
-      - `test_not_exempt_no_year(self)` (function lines 1813-1814)
-      - `test_gate_flag_off_forbidden(self)` (function lines 1816-1819)
-      - `test_gate_in_window_allowed(self)` (function lines 1821-1822)
-      - `test_gate_window_closed(self)` (function lines 1824-1826)
-      - `test_gate_no_year(self)` (function lines 1828-1830)
-  - class `TestScenarioKursant(unittest.TestCase)` lines 1833-1911 — Kursant == kandydat W OKNIE (flaga ON, do 30.09 roku kursu); po oknie lub przy
+      - `test_exempt_current_year_before_sep30(self)` (function lines 1957-1958)
+      - `test_exempt_on_sep30_inclusive(self)` (function lines 1960-1961)
+      - `test_not_exempt_after_sep30(self)` (function lines 1963-1964)
+      - `test_not_exempt_wrong_year(self)` (function lines 1966-1967)
+      - `test_not_exempt_no_year(self)` (function lines 1969-1970)
+      - `test_gate_flag_off_forbidden(self)` (function lines 1972-1975)
+      - `test_gate_in_window_allowed(self)` (function lines 1977-1978)
+      - `test_gate_window_closed(self)` (function lines 1980-1982)
+      - `test_gate_no_year(self)` (function lines 1984-1986)
+  - class `TestScenarioKursant(unittest.TestCase)` lines 1989-2067 — Kursant == kandydat W OKNIE (flaga ON, do 30.09 roku kursu); po oknie lub przy
     - methods:
-      - `_catalog(self)` (function lines 1843-1849)
-      - `_backend(self, flag, today, school_year)` (function lines 1851-1853)
-      - `test_in_window_can_reserve_kayak(self)` (function lines 1855-1861)
-      - `test_in_window_can_reserve_non_kayak_categories(self)` (function lines 1863-1870)
-      - `test_in_window_limit_one_per_category_like_candidate(self)` (function lines 1872-1884)
-      - `test_flag_off_forbidden(self)` (function lines 1886-1893)
-      - `test_after_window_blocked(self)` (function lines 1895-1902)
-      - `test_no_school_year_blocked(self)` (function lines 1904-1911)
+      - `_catalog(self)` (function lines 1999-2005)
+      - `_backend(self, flag, today, school_year)` (function lines 2007-2009)
+      - `test_in_window_can_reserve_kayak(self)` (function lines 2011-2017)
+      - `test_in_window_can_reserve_non_kayak_categories(self)` (function lines 2019-2026)
+      - `test_in_window_limit_one_per_category_like_candidate(self)` (function lines 2028-2040)
+      - `test_flag_off_forbidden(self)` (function lines 2042-2049)
+      - `test_after_window_blocked(self)` (function lines 2051-2058)
+      - `test_no_school_year_blocked(self)` (function lines 2060-2067)
+  - class `TestScenarioClubEvent(unittest.TestCase)` lines 2070-2246 — Tryb "impreza klubowa" (kierownik rezerwuje dowolną ilość sprzętu bezpłatnie,
+    - methods:
+      - `_backend(self, role, kierownik_events, users_extra)` (function lines 2099-2107)
+      - `test_bypasses_per_category_item_limit(self)` (function lines 2109-2124) — Kandydat (limit 1/kategoria) rezerwuje 4 kajaki naraz jako kierownik → OK.
+      - `test_dates_forced_to_event_dates(self)` (function lines 2126-2139) — Daty przesłane przez klienta są ignorowane — zapisana rezerwacja ma daty imprezy.
+      - `test_conflict_still_enforced(self)` (function lines 2141-2162) — Kajak już zajęty w terminie imprezy — konflikt NIE jest pomijany dla trybu klubowego.
+      - `test_item_validity_still_enforced(self)` (function lines 2164-2173) — Niesprawny kajak nadal odrzucony w trybie klubowym.
+      - `test_not_a_kierownik_when_no_active_event(self)` (function lines 2175-2184) — Rola uprawniona (kandydat), ale brak wpisu w kierownik_events → not_a_kierownik.
+      - `test_role_not_allowed_kursant(self)` (function lines 2186-2195) — Kursant nie jest w MEMBER_ROLE_KEYS — odrzucony nawet z wpisem w kierownik_events.
+      - `test_role_not_allowed_sympatyk(self)` (function lines 2197-2206) — Sympatyk odrzucony już na ogólnej bramce roli (przed sprawdzeniem trybu klubowego).
+      - `test_reservation_marked_event_id_no_godzinki_trace(self)` (function lines 2208-2225) — Zapisana rezerwacja niesie eventId, ale zero śladu w mechanizmie godzinkowym —
+      - `test_normal_reservation_unaffected_eventid_none(self)` (function lines 2227-2236) — Zwykła rezerwacja (bez as_club_event) ma eventId=None, waived=False.
+      - `test_board_role_allowed_as_kierownik(self)` (function lines 2238-2246) — rola_zarzad też może być kierownikiem (w MEMBER_ROLE_KEYS).
+  - class `TestScenarioClubEventItemsEdit(unittest.TestCase)` lines 2249-2387 — Edycja listy przedmiotów już złożonej rezerwacji na imprezę klubową —
+    - methods:
+      - `_backend(self, kierownik_events)` (function lines 2274-2282)
+      - `_create(self, backend, items)` (function lines 2284-2290)
+      - `test_edit_adds_and_removes_items(self)` (function lines 2292-2303) — Odznaczenie K01 (usuwa) + dodanie K02 i wiosła — pełna lista podmieniona.
+      - `test_conflict_still_enforced_on_edit(self)` (function lines 2305-2320) — Dodanie kajaka zajętego przez CUDZĄ rezerwację — blokowane.
+      - `test_self_excluded_from_conflict_check(self)` (function lines 2322-2330) — Resubmisja tej samej listy (bez zmian) NIE koliduje sama ze sobą.
+      - `test_item_validity_still_enforced_on_edit(self)` (function lines 2332-2341) — Dodanie niesprawnego kajaka do edytowanej listy — odrzucone.
+      - `test_not_a_kierownik_anymore_blocks_edit(self)` (function lines 2343-2353) — Impreza się skończyła / kierownik zmieniony — edycja listy zablokowana.
+      - `test_not_club_event_reservation_blocks_edit(self)` (function lines 2355-2368) — Zwykła (nie-klubowa) rezerwacja nie ma trybu edycji listy.
+      - `test_empty_items_blocked(self)` (function lines 2370-2376) — Pusta lista jest odrzucana — pełne zrzeczenie się sprzętu idzie przez anulowanie.
+      - `test_forbidden_not_owner(self)` (function lines 2378-2387) — Inny użytkownik nie może edytować cudzej rezerwacji na imprezę.
 - Functions:
-  - `composite_id(category: str, item_id: str)` (function lines 36-38) -> `str` — "{category}/{itemId}" — e.g. "kayaks/K01", "paddles/P01".
-  - `compute_reservation_kind(items: list)` (function lines 41-49) -> `str` — "kayak_bundle" if any item is in the "kayaks" category, "gear_only" otherwise.
-  - `compute_primary_item_idx(items: list)` (function lines 52-61) -> `int` — Returns index of the primary item using CATEGORY_PRIORITY.
-  - `overlaps_iso(a_start: str, a_end: str, b_start: str, b_end: str)` (function lines 64-69) -> `bool` — Lexicographic ISO date overlap check (same as overlapsIso in calendar_utils.ts).
-  - `compute_block_iso(start_date: str, end_date: str, offset_days: int)` (function lines 72-82) -> `tuple` — blockStartIso = startDate - offset_days, blockEndIso = endDate + offset_days.
-  - `find_bundle_conflicts(composite_ids: list, reservations: list, block_start: str, block_end: str, exclude_id: str)` (function lines 85-122) -> `list` — Finds conflicting composite IDs.
-  - `count_overlapping_items_by_category(uid: str, reservations: list, block_start: str, block_end: str, exclude_id: str)` (function lines 125-157) -> `dict` — Counts items PER CATEGORY in a user's active, overlapping reservations.
-  - `count_items_by_category(items: list)` (function lines 160-168) -> `dict` — Tally requested items per category. Mirrors countItemsByCategory().
-  - `find_category_over_limit(already: dict, requested: dict, max_items: int)` (function lines 171-180) — First requested category exceeding max_items, or None.
-  - `get_reserved_composite_ids_for_period(reservations: list, block_start: str, block_end: str)` (function lines 183-210) -> `set` — Returns a set of composite IDs that are reserved in the given block period.
-  - `is_free_rental_exempt(school_year, today_iso: str)` (function lines 213-222) -> `bool` — Zwolnienie z opłaty: tegoroczna szkoleniówka i rezerwacja składana do 30.09.
-  - `assert_kursant_rental_allowed(flag_on: bool, exempt: bool, school_year)` (function lines 225-236) — Bramka rezerwacji kursanta. Zwraca dict błędu albo None gdy dozwolone.
-  - `make_catalog(*entries)` (function lines 772-787) — Helper: build catalog from (category, item_id, ...) tuples.
+  - `composite_id(category: str, item_id: str)` (function lines 40-42) -> `str` — "{category}/{itemId}" — e.g. "kayaks/K01", "paddles/P01".
+  - `compute_reservation_kind(items: list)` (function lines 45-53) -> `str` — "kayak_bundle" if any item is in the "kayaks" category, "gear_only" otherwise.
+  - `compute_primary_item_idx(items: list)` (function lines 56-65) -> `int` — Returns index of the primary item using CATEGORY_PRIORITY.
+  - `overlaps_iso(a_start: str, a_end: str, b_start: str, b_end: str)` (function lines 68-73) -> `bool` — Lexicographic ISO date overlap check (same as overlapsIso in calendar_utils.ts).
+  - `compute_block_iso(start_date: str, end_date: str, offset_days: int)` (function lines 76-86) -> `tuple` — blockStartIso = startDate - offset_days, blockEndIso = endDate + offset_days.
+  - `find_bundle_conflicts(composite_ids: list, reservations: list, block_start: str, block_end: str, exclude_id: str)` (function lines 89-126) -> `list` — Finds conflicting composite IDs.
+  - `count_overlapping_items_by_category(uid: str, reservations: list, block_start: str, block_end: str, exclude_id: str)` (function lines 129-161) -> `dict` — Counts items PER CATEGORY in a user's active, overlapping reservations.
+  - `count_items_by_category(items: list)` (function lines 164-172) -> `dict` — Tally requested items per category. Mirrors countItemsByCategory().
+  - `find_category_over_limit(already: dict, requested: dict, max_items: int)` (function lines 175-184) — First requested category exceeding max_items, or None.
+  - `get_reserved_composite_ids_for_period(reservations: list, block_start: str, block_end: str)` (function lines 187-214) -> `set` — Returns a set of composite IDs that are reserved in the given block period.
+  - `is_free_rental_exempt(school_year, today_iso: str)` (function lines 217-226) -> `bool` — Zwolnienie z opłaty: tegoroczna szkoleniówka i rezerwacja składana do 30.09.
+  - `assert_kursant_rental_allowed(flag_on: bool, exempt: bool, school_year)` (function lines 229-240) — Bramka rezerwacji kursanta. Zwraca dict błędu albo None gdy dozwolone.
+  - `make_catalog(*entries)` (function lines 928-943) — Helper: build catalog from (category, item_id, ...) tuples.
 
 ### `tests/test_godzinki.py`
 
@@ -3313,12 +3375,14 @@ Excluded sensitive files:
 
 ### `functions/lib/api/adminApprovalHandler.js`
 
-- Lines: `232`
-- Size: `10802` bytes
+- Lines: `252`
+- Size: `12295` bytes
 - Internal dependencies:
+  - `functions/lib/modules/calendar/events_service.js`
   - `functions/lib/modules/hours/godzinki_service.js`
   - `functions/lib/modules/hours/godzinki_vars.js`
 - Imports:
+  - `import/require ../modules/calendar/events_service`
   - `import/require ../modules/hours/godzinki_service`
   - `import/require ../modules/hours/godzinki_vars`
   - `import/require firebase-admin`
@@ -3446,7 +3510,7 @@ Excluded sensitive files:
 ### `functions/lib/api/basenEnrollHandler.js`
 
 - Lines: `112`
-- Size: `6157` bytes
+- Size: `6181` bytes
 - Internal dependencies:
   - `functions/lib/modules/basen/basen_service.js`
   - `functions/lib/modules/users/userStatusCheck.js`
@@ -3470,7 +3534,7 @@ Excluded sensitive files:
 ### `functions/lib/api/basenSetInstructorHandler.js`
 
 - Lines: `48`
-- Size: `2256` bytes
+- Size: `2271` bytes
 - Internal dependencies:
   - `functions/lib/modules/basen/basen_service.js`
 - Imports:
@@ -3533,8 +3597,8 @@ Excluded sensitive files:
 
 ### `functions/lib/api/gearBundleReservationCreateHandler.js`
 
-- Lines: `96`
-- Size: `4487` bytes
+- Lines: `102`
+- Size: `4898` bytes
 - Internal dependencies:
   - `functions/lib/modules/calendar/calendar_utils.js`
   - `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
@@ -3545,6 +3609,19 @@ Excluded sensitive files:
   - `import/require ../modules/users/userStatusCheck`
 - Functions:
   - `handleGearBundleReservationCreate`
+  - `norm`
+  - `parseItems`
+
+### `functions/lib/api/gearBundleReservationUpdateItemsHandler.js`
+
+- Lines: `68`
+- Size: `2653` bytes
+- Internal dependencies:
+  - `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
+- Imports:
+  - `import/require ../modules/equipment/bundle/gear_bundle_service`
+- Functions:
+  - `handleGearBundleReservationUpdateItems`
   - `norm`
   - `parseItems`
 
@@ -3703,8 +3780,8 @@ Excluded sensitive files:
 
 ### `functions/lib/api/getAdminPendingHandler.js`
 
-- Lines: `395`
-- Size: `24932` bytes
+- Lines: `398`
+- Size: `25123` bytes
 - Internal dependencies:
   - `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
   - `functions/lib/modules/hours/godzinki_service.js`
@@ -3749,10 +3826,23 @@ Excluded sensitive files:
   - `todayWarsawIso`
   - `tsIso`
 
+### `functions/lib/api/getBasenAdminGodzinyHistoryHandler.js`
+
+- Lines: `77`
+- Size: `4074` bytes
+- Internal dependencies:
+  - `functions/lib/modules/basen/basen_godziny_service.js`
+  - `functions/lib/modules/basen/basen_service.js`
+- Imports:
+  - `import/require ../modules/basen/basen_godziny_service`
+  - `import/require ../modules/basen/basen_service`
+- Functions:
+  - `handleGetBasenAdminGodzinyHistory`
+
 ### `functions/lib/api/getBasenAdminGodzinyUsersHandler.js`
 
-- Lines: `98`
-- Size: `4543` bytes
+- Lines: `123`
+- Size: `6369` bytes
 - Internal dependencies:
   - `functions/lib/modules/basen/basen_godziny_service.js`
   - `functions/lib/modules/basen/basen_service.js`
@@ -3801,8 +3891,8 @@ Excluded sensitive files:
 
 ### `functions/lib/api/getBasenKayaksHandler.js`
 
-- Lines: `34`
-- Size: `1465` bytes
+- Lines: `35`
+- Size: `1518` bytes
 - Internal dependencies:
   - `functions/lib/modules/basen/basen_service.js`
 - Imports:
@@ -3823,8 +3913,8 @@ Excluded sensitive files:
 
 ### `functions/lib/api/getBasenSessionsHandler.js`
 
-- Lines: `99`
-- Size: `5560` bytes
+- Lines: `111`
+- Size: `6313` bytes
 - Internal dependencies:
   - `functions/lib/modules/basen/basen_godziny_service.js`
   - `functions/lib/modules/basen/basen_service.js`
@@ -3833,6 +3923,7 @@ Excluded sensitive files:
   - `import/require ../modules/basen/basen_service`
 - Functions:
   - `handleGetBasenSessions`
+  - `resolveOwnKayakCompactLabel`
   - `resolveOwnKayakLabel`
 
 ### `functions/lib/api/getEventInterestsHandler.js`
@@ -3907,8 +3998,8 @@ Excluded sensitive files:
 
 ### `functions/lib/api/getGodzinkiHandler.js`
 
-- Lines: `145`
-- Size: `7631` bytes
+- Lines: `146`
+- Size: `7713` bytes
 - Internal dependencies:
   - `functions/lib/modules/hours/godzinki_service.js`
   - `functions/lib/modules/hours/godzinki_vars.js`
@@ -3921,9 +4012,12 @@ Excluded sensitive files:
 
 ### `functions/lib/api/getKayakReservationsHandler.js`
 
-- Lines: `78`
-- Size: `4306` bytes
+- Lines: `121`
+- Size: `7370` bytes
+- Internal dependencies:
+  - `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
 - Imports:
+  - `import/require ../modules/equipment/bundle/gear_bundle_service`
   - `import/require firebase-functions/v2`
 - Functions:
   - `handleGetKayakReservations`
@@ -3931,8 +4025,8 @@ Excluded sensitive files:
 
 ### `functions/lib/api/getKlubInfoHandler.js`
 
-- Lines: `176`
-- Size: `10909` bytes
+- Lines: `191`
+- Size: `11965` bytes
 - Imports:
   - `import/require firebase-functions/v2`
 - Functions:
@@ -4102,16 +4196,18 @@ Excluded sensitive files:
 
 ### `functions/lib/api/registerUserHandler.js`
 
-- Lines: `730`
-- Size: `39628` bytes
+- Lines: `762`
+- Size: `41545` bytes
 - Internal dependencies:
   - `functions/lib/modules/basen/basen_service.js`
+  - `functions/lib/modules/calendar/events_service.js`
   - `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
   - `functions/lib/modules/hours/godzinki_service.js`
   - `functions/lib/modules/hours/godzinki_vars.js`
   - `functions/lib/modules/hours/opening_balance_fields.js`
 - Imports:
   - `import/require ../modules/basen/basen_service`
+  - `import/require ../modules/calendar/events_service`
   - `import/require ../modules/equipment/bundle/gear_bundle_service`
   - `import/require ../modules/hours/godzinki_service`
   - `import/require ../modules/hours/godzinki_vars`
@@ -4134,6 +4230,7 @@ Excluded sensitive files:
   - `normalizePhoneDigits`
   - `normalizeStr`
   - `readProfileInput`
+  - `resolveKierownikSummary`
   - `resolveKursantEligibility`
   - `resolveSzkoleniowiec`
   - `updateObEmail`
@@ -4141,8 +4238,8 @@ Excluded sensitive files:
 
 ### `functions/lib/api/submitEventHandler.js`
 
-- Lines: `97`
-- Size: `4961` bytes
+- Lines: `101`
+- Size: `5146` bytes
 - Internal dependencies:
   - `functions/lib/modules/calendar/events_service.js`
   - `functions/lib/modules/users/userStatusCheck.js`
@@ -4156,8 +4253,8 @@ Excluded sensitive files:
 
 ### `functions/lib/api/submitGodzinkiHandler.js`
 
-- Lines: `145`
-- Size: `7707` bytes
+- Lines: `146`
+- Size: `7985` bytes
 - Internal dependencies:
   - `functions/lib/modules/calendar/calendar_utils.js`
   - `functions/lib/modules/hours/godzinki_service.js`
@@ -4185,8 +4282,8 @@ Excluded sensitive files:
 
 ### `functions/lib/index.js`
 
-- Lines: `1670`
-- Size: `73033` bytes
+- Lines: `1704`
+- Size: `74543` bytes
 - Internal dependencies:
   - `functions/lib/api/adminApprovalHandler.js`
   - `functions/lib/api/adminEventsSyncCalendarHandler.js`
@@ -4203,6 +4300,7 @@ Excluded sensitive files:
   - `functions/lib/api/checkNicknameAvailabilityHandler.js`
   - `functions/lib/api/eventInterestToggleHandler.js`
   - `functions/lib/api/gearBundleReservationCreateHandler.js`
+  - `functions/lib/api/gearBundleReservationUpdateItemsHandler.js`
   - `functions/lib/api/gearFavoriteToggleHandler.js`
   - `functions/lib/api/gearMyReservationsHandler.js`
   - `functions/lib/api/gearReservationCancelHandler.js`
@@ -4214,6 +4312,7 @@ Excluded sensitive files:
   - `functions/lib/api/getAdminMemberDuesHandler.js`
   - `functions/lib/api/getAdminPendingHandler.js`
   - `functions/lib/api/getAdminUserActivityHandler.js`
+  - `functions/lib/api/getBasenAdminGodzinyHistoryHandler.js`
   - `functions/lib/api/getBasenAdminGodzinyUsersHandler.js`
   - `functions/lib/api/getBasenAttendeesHandler.js`
   - `functions/lib/api/getBasenKayaksHandler.js`
@@ -4268,6 +4367,7 @@ Excluded sensitive files:
   - `import/require ./api/checkNicknameAvailabilityHandler`
   - `import/require ./api/eventInterestToggleHandler`
   - `import/require ./api/gearBundleReservationCreateHandler`
+  - `import/require ./api/gearBundleReservationUpdateItemsHandler`
   - `import/require ./api/gearFavoriteToggleHandler`
   - `import/require ./api/gearMyReservationsHandler`
   - `import/require ./api/gearReservationCancelHandler`
@@ -4279,6 +4379,7 @@ Excluded sensitive files:
   - `import/require ./api/getAdminMemberDuesHandler`
   - `import/require ./api/getAdminPendingHandler`
   - `import/require ./api/getAdminUserActivityHandler`
+  - `import/require ./api/getBasenAdminGodzinyHistoryHandler`
   - `import/require ./api/getBasenAdminGodzinyUsersHandler`
   - `import/require ./api/getBasenAttendeesHandler`
   - `import/require ./api/getBasenKayaksHandler`
@@ -4365,8 +4466,8 @@ Excluded sensitive files:
 
 ### `functions/lib/modules/basen/basen_service.js`
 
-- Lines: `825`
-- Size: `43993` bytes
+- Lines: `890`
+- Size: `48865` bytes
 - Internal dependencies:
   - `functions/lib/modules/basen/basen_godziny_service.js`
   - `functions/lib/modules/setup/function_roles_service.js`
@@ -4392,6 +4493,7 @@ Excluded sensitive files:
   - `getUserEnrollments`
   - `kayakAllocationId`
   - `kayakBaseLabel`
+  - `kayakCompactLabel`
   - `listAvailableBasenKayaks`
   - `listSlotAttendees`
   - `listUpcomingSessions`
@@ -4399,6 +4501,7 @@ Excluded sensitive files:
   - `parseVarValue`
   - `resolveBasenAdminGrant`
   - `resolveKayakLabel`
+  - `resolveKayakLabels`
   - `sessionSlotDatetimeMs`
   - `setEnrollmentInstructor`
   - `setEnrollmentKayak`
@@ -4421,25 +4524,33 @@ Excluded sensitive files:
 
 ### `functions/lib/modules/calendar/events_service.js`
 
-- Lines: `97`
-- Size: `3751` bytes
+- Lines: `229`
+- Size: `9946` bytes
 - Internal dependencies:
   - `functions/lib/modules/calendar/calendar_utils.js`
+  - `functions/lib/modules/users/userStatusCheck.js`
 - Imports:
+  - `import/require ../users/userStatusCheck`
   - `import/require ./calendar_utils`
 - Functions:
   - `createEvent`
+  - `findActiveKierownikConflict`
+  - `findActiveKierownikEvent`
+  - `isUrlOnly`
+  - `isValidOrganizerKey`
   - `listAllEvents`
   - `listRecentEvents`
   - `listUpcomingEvents`
   - `norm`
+  - `resolveKierownikCandidate`
 
 ### `functions/lib/modules/equipment/bundle/gear_bundle_service.js`
 
-- Lines: `951`
-- Size: `50341` bytes
+- Lines: `1117`
+- Size: `60381` bytes
 - Internal dependencies:
   - `functions/lib/modules/calendar/calendar_utils.js`
+  - `functions/lib/modules/calendar/events_service.js`
   - `functions/lib/modules/equipment/kayaks/gear_kayaks_service.js`
   - `functions/lib/modules/equipment/shared/reservation_limits.js`
   - `functions/lib/modules/hours/godzinki_service.js`
@@ -4449,6 +4560,7 @@ Excluded sensitive files:
   - `functions/lib/modules/users/userStatusCheck.js`
 - Imports:
   - `import/require ../../calendar/calendar_utils`
+  - `import/require ../../calendar/events_service`
   - `import/require ../../hours/godzinki_service`
   - `import/require ../../hours/godzinki_vars`
   - `import/require ../../hours/hours_quote`
@@ -4481,6 +4593,7 @@ Excluded sensitive files:
   - `resolveSchoolYear`
   - `uniqBy`
   - `updateBundleReservationDates`
+  - `updateBundleReservationItems`
   - `updateGearReservationDates`
 
 ### `functions/lib/modules/equipment/kayaks/gear_kayaks_service.js`
@@ -4542,8 +4655,8 @@ Excluded sensitive files:
 
 ### `functions/lib/modules/hours/godzinki_service.js`
 
-- Lines: `936`
-- Size: `42904` bytes
+- Lines: `939`
+- Size: `43165` bytes
 - Imports:
   - `import/require firebase-admin`
 - Functions:
@@ -4983,14 +5096,16 @@ Excluded sensitive files:
 
 ### `functions/lib/service/tasks/eventsSyncFromSheet.js`
 
-- Lines: `479`
-- Size: `25575` bytes
+- Lines: `596`
+- Size: `32592` bytes
 - Internal dependencies:
+  - `functions/lib/modules/calendar/events_service.js`
   - `functions/lib/modules/shared/text_utils.js`
   - `functions/lib/service/providers/googleCalendarProvider.js`
   - `functions/lib/service/providers/googleSheetsProvider.js`
   - `functions/lib/service/service_config.js`
 - Imports:
+  - `import/require ../../modules/calendar/events_service`
   - `import/require ../../modules/shared/text_utils`
   - `import/require ../providers/googleCalendarProvider`
   - `import/require ../providers/googleSheetsProvider`
@@ -5001,6 +5116,9 @@ Excluded sensitive files:
   - `findHeaderCaseInsensitive`
   - `isApproved`
   - `normDate`
+  - `normalizeOrganizerToken`
+  - `organizerKeyToSheetLabel`
+  - `parseOrganizerFromSheetCell`
   - `shouldScrapAbsentEvent`
 
 ### `functions/lib/service/tasks/gearNotifyReservationCancelledByAdmin.js`
@@ -5500,6 +5618,15 @@ Excluded sensitive files:
 - Functions:
   - `norm`
 
+### `functions/scripts/checkBasenDailyLimit.js`
+
+- Lines: `59`
+- Size: `1740` bytes
+- Imports:
+  - `import/require firebase-admin`
+- Functions:
+  - `tsToIso`
+
 ### `functions/scripts/checkGearReport.js`
 
 - Lines: `119`
@@ -5765,12 +5892,14 @@ Excluded sensitive files:
 
 ### `functions/src/api/adminApprovalHandler.ts`
 
-- Lines: `222`
-- Size: `8700` bytes
+- Lines: `244`
+- Size: `9924` bytes
 - Internal dependencies:
+  - `functions/src/modules/calendar/events_service.ts`
   - `functions/src/modules/hours/godzinki_service.ts`
   - `functions/src/modules/hours/godzinki_vars.ts`
 - Imports:
+  - `import/require ../modules/calendar/events_service`
   - `import/require ../modules/hours/godzinki_service`
   - `import/require ../modules/hours/godzinki_vars`
   - `import/require express`
@@ -5889,7 +6018,7 @@ Excluded sensitive files:
 ### `functions/src/api/basenEnrollHandler.ts`
 
 - Lines: `136`
-- Size: `5357` bytes
+- Size: `5381` bytes
 - Internal dependencies:
   - `functions/src/modules/basen/basen_service.ts`
   - `functions/src/modules/users/userStatusCheck.ts`
@@ -5903,7 +6032,7 @@ Excluded sensitive files:
 ### `functions/src/api/basenSetInstructorHandler.ts`
 
 - Lines: `61`
-- Size: `2332` bytes
+- Size: `2347` bytes
 - Internal dependencies:
   - `functions/src/modules/basen/basen_service.ts`
 - Imports:
@@ -5947,8 +6076,8 @@ Excluded sensitive files:
 
 ### `functions/src/api/gearBundleReservationCreateHandler.ts`
 
-- Lines: `120`
-- Size: `4212` bytes
+- Lines: `126`
+- Size: `4583` bytes
 - Internal dependencies:
   - `functions/src/modules/calendar/calendar_utils.ts`
   - `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
@@ -5960,6 +6089,20 @@ Excluded sensitive files:
   - `import/require express`
 - Functions:
   - `handleGearBundleReservationCreate`
+  - `norm`
+  - `parseItems`
+
+### `functions/src/api/gearBundleReservationUpdateItemsHandler.ts`
+
+- Lines: `88`
+- Size: `2688` bytes
+- Internal dependencies:
+  - `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
+- Imports:
+  - `import/require ../modules/equipment/bundle/gear_bundle_service`
+  - `import/require express`
+- Functions:
+  - `handleGearBundleReservationUpdateItems`
   - `norm`
   - `parseItems`
 
@@ -6128,8 +6271,8 @@ Excluded sensitive files:
 
 ### `functions/src/api/getAdminPendingHandler.ts`
 
-- Lines: `493`
-- Size: `20140` bytes
+- Lines: `496`
+- Size: `20307` bytes
 - Internal dependencies:
   - `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
   - `functions/src/modules/hours/godzinki_service.ts`
@@ -6174,10 +6317,24 @@ Excluded sensitive files:
   - `todayWarsawIso`
   - `tsIso`
 
+### `functions/src/api/getBasenAdminGodzinyHistoryHandler.ts`
+
+- Lines: `88`
+- Size: `3353` bytes
+- Internal dependencies:
+  - `functions/src/modules/basen/basen_godziny_service.ts`
+  - `functions/src/modules/basen/basen_service.ts`
+- Imports:
+  - `import/require ../modules/basen/basen_godziny_service`
+  - `import/require ../modules/basen/basen_service`
+  - `import/require express`
+- Functions:
+  - `handleGetBasenAdminGodzinyHistory`
+
 ### `functions/src/api/getBasenAdminGodzinyUsersHandler.ts`
 
-- Lines: `110`
-- Size: `4119` bytes
+- Lines: `136`
+- Size: `5596` bytes
 - Internal dependencies:
   - `functions/src/modules/basen/basen_godziny_service.ts`
   - `functions/src/modules/basen/basen_service.ts`
@@ -6206,8 +6363,8 @@ Excluded sensitive files:
 
 ### `functions/src/api/getBasenKayaksHandler.ts`
 
-- Lines: `45`
-- Size: `1640` bytes
+- Lines: `46`
+- Size: `1687` bytes
 - Internal dependencies:
   - `functions/src/modules/basen/basen_service.ts`
 - Imports:
@@ -6230,8 +6387,8 @@ Excluded sensitive files:
 
 ### `functions/src/api/getBasenSessionsHandler.ts`
 
-- Lines: `114`
-- Size: `4828` bytes
+- Lines: `122`
+- Size: `5350` bytes
 - Internal dependencies:
   - `functions/src/modules/basen/basen_godziny_service.ts`
   - `functions/src/modules/basen/basen_service.ts`
@@ -6320,8 +6477,8 @@ Excluded sensitive files:
 
 ### `functions/src/api/getGodzinkiHandler.ts`
 
-- Lines: `166`
-- Size: `6216` bytes
+- Lines: `167`
+- Size: `6253` bytes
 - Internal dependencies:
   - `functions/src/modules/hours/godzinki_service.ts`
   - `functions/src/modules/hours/godzinki_vars.ts`
@@ -6335,9 +6492,12 @@ Excluded sensitive files:
 
 ### `functions/src/api/getKayakReservationsHandler.ts`
 
-- Lines: `114`
-- Size: `3520` bytes
+- Lines: `161`
+- Size: `5941` bytes
+- Internal dependencies:
+  - `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
 - Imports:
+  - `import/require ../modules/equipment/bundle/gear_bundle_service`
   - `import/require express`
   - `import/require firebase-functions/v2`
 - Functions:
@@ -6346,8 +6506,8 @@ Excluded sensitive files:
 
 ### `functions/src/api/getKlubInfoHandler.ts`
 
-- Lines: `207`
-- Size: `9344` bytes
+- Lines: `222`
+- Size: `10005` bytes
 - Imports:
   - `import/require express`
   - `import/require firebase-functions/v2`
@@ -6510,16 +6670,18 @@ Excluded sensitive files:
 
 ### `functions/src/api/registerUserHandler.ts`
 
-- Lines: `916`
-- Size: `36045` bytes
+- Lines: `960`
+- Size: `38104` bytes
 - Internal dependencies:
   - `functions/src/modules/basen/basen_service.ts`
+  - `functions/src/modules/calendar/events_service.ts`
   - `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
   - `functions/src/modules/hours/godzinki_service.ts`
   - `functions/src/modules/hours/godzinki_vars.ts`
   - `functions/src/modules/hours/opening_balance_fields.ts`
 - Imports:
   - `import/require ../modules/basen/basen_service`
+  - `import/require ../modules/calendar/events_service`
   - `import/require ../modules/equipment/bundle/gear_bundle_service`
   - `import/require ../modules/hours/godzinki_service`
   - `import/require ../modules/hours/godzinki_vars`
@@ -6544,6 +6706,7 @@ Excluded sensitive files:
   - `normalizePhoneDigits`
   - `normalizeStr`
   - `readProfileInput`
+  - `resolveKierownikSummary`
   - `resolveKursantEligibility`
   - `resolveSzkoleniowiec`
   - `updateObEmail`
@@ -6551,8 +6714,8 @@ Excluded sensitive files:
 
 ### `functions/src/api/submitEventHandler.ts`
 
-- Lines: `132`
-- Size: `4422` bytes
+- Lines: `136`
+- Size: `4575` bytes
 - Internal dependencies:
   - `functions/src/modules/calendar/events_service.ts`
   - `functions/src/modules/users/userStatusCheck.ts`
@@ -6567,8 +6730,8 @@ Excluded sensitive files:
 
 ### `functions/src/api/submitGodzinkiHandler.ts`
 
-- Lines: `157`
-- Size: `6613` bytes
+- Lines: `159`
+- Size: `6898` bytes
 - Internal dependencies:
   - `functions/src/modules/calendar/calendar_utils.ts`
   - `functions/src/modules/hours/godzinki_service.ts`
@@ -6598,8 +6761,8 @@ Excluded sensitive files:
 
 ### `functions/src/index.ts`
 
-- Lines: `1844`
-- Size: `62216` bytes
+- Lines: `1880`
+- Size: `63466` bytes
 - Internal dependencies:
   - `functions/src/api/adminApprovalHandler.ts`
   - `functions/src/api/adminEventsSyncCalendarHandler.ts`
@@ -6616,6 +6779,7 @@ Excluded sensitive files:
   - `functions/src/api/checkNicknameAvailabilityHandler.ts`
   - `functions/src/api/eventInterestToggleHandler.ts`
   - `functions/src/api/gearBundleReservationCreateHandler.ts`
+  - `functions/src/api/gearBundleReservationUpdateItemsHandler.ts`
   - `functions/src/api/gearFavoriteToggleHandler.ts`
   - `functions/src/api/gearMyReservationsHandler.ts`
   - `functions/src/api/gearReservationCancelHandler.ts`
@@ -6627,6 +6791,7 @@ Excluded sensitive files:
   - `functions/src/api/getAdminMemberDuesHandler.ts`
   - `functions/src/api/getAdminPendingHandler.ts`
   - `functions/src/api/getAdminUserActivityHandler.ts`
+  - `functions/src/api/getBasenAdminGodzinyHistoryHandler.ts`
   - `functions/src/api/getBasenAdminGodzinyUsersHandler.ts`
   - `functions/src/api/getBasenAttendeesHandler.ts`
   - `functions/src/api/getBasenKayaksHandler.ts`
@@ -6681,6 +6846,7 @@ Excluded sensitive files:
   - `import/require ./api/checkNicknameAvailabilityHandler`
   - `import/require ./api/eventInterestToggleHandler`
   - `import/require ./api/gearBundleReservationCreateHandler`
+  - `import/require ./api/gearBundleReservationUpdateItemsHandler`
   - `import/require ./api/gearFavoriteToggleHandler`
   - `import/require ./api/gearMyReservationsHandler`
   - `import/require ./api/gearReservationCancelHandler`
@@ -6692,6 +6858,7 @@ Excluded sensitive files:
   - `import/require ./api/getAdminMemberDuesHandler`
   - `import/require ./api/getAdminPendingHandler`
   - `import/require ./api/getAdminUserActivityHandler`
+  - `import/require ./api/getBasenAdminGodzinyHistoryHandler`
   - `import/require ./api/getBasenAdminGodzinyUsersHandler`
   - `import/require ./api/getBasenAttendeesHandler`
   - `import/require ./api/getBasenKayaksHandler`
@@ -6779,8 +6946,8 @@ Excluded sensitive files:
 
 ### `functions/src/modules/basen/basen_service.ts`
 
-- Lines: `1062`
-- Size: `44870` bytes
+- Lines: `1139`
+- Size: `49824` bytes
 - Internal dependencies:
   - `functions/src/modules/basen/basen_godziny_service.ts`
   - `functions/src/modules/setup/function_roles_service.ts`
@@ -6805,6 +6972,7 @@ Excluded sensitive files:
   - `getUserEnrollments`
   - `kayakAllocationId`
   - `kayakBaseLabel`
+  - `kayakCompactLabel`
   - `listAvailableBasenKayaks`
   - `listSlotAttendees`
   - `listUpcomingSessions`
@@ -6812,6 +6980,7 @@ Excluded sensitive files:
   - `parseVarValue`
   - `resolveBasenAdminGrant`
   - `resolveKayakLabel`
+  - `resolveKayakLabels`
   - `sessionSlotDatetimeMs`
   - `setEnrollmentInstructor`
   - `setEnrollmentKayak`
@@ -6834,25 +7003,33 @@ Excluded sensitive files:
 
 ### `functions/src/modules/calendar/events_service.ts`
 
-- Lines: `139`
-- Size: `4139` bytes
+- Lines: `311`
+- Size: `10758` bytes
 - Internal dependencies:
   - `functions/src/modules/calendar/calendar_utils.ts`
+  - `functions/src/modules/users/userStatusCheck.ts`
 - Imports:
+  - `import/require ../users/userStatusCheck`
   - `import/require ./calendar_utils`
 - Functions:
   - `createEvent`
+  - `findActiveKierownikConflict`
+  - `findActiveKierownikEvent`
+  - `isUrlOnly`
+  - `isValidOrganizerKey`
   - `listAllEvents`
   - `listRecentEvents`
   - `listUpcomingEvents`
   - `norm`
+  - `resolveKierownikCandidate`
 
 ### `functions/src/modules/equipment/bundle/gear_bundle_service.ts`
 
-- Lines: `1129`
-- Size: `45149` bytes
+- Lines: `1322`
+- Size: `54813` bytes
 - Internal dependencies:
   - `functions/src/modules/calendar/calendar_utils.ts`
+  - `functions/src/modules/calendar/events_service.ts`
   - `functions/src/modules/equipment/kayaks/gear_kayaks_service.ts`
   - `functions/src/modules/equipment/shared/reservation_limits.ts`
   - `functions/src/modules/hours/godzinki_service.ts`
@@ -6862,6 +7039,7 @@ Excluded sensitive files:
   - `functions/src/modules/users/userStatusCheck.ts`
 - Imports:
   - `import/require ../../calendar/calendar_utils`
+  - `import/require ../../calendar/events_service`
   - `import/require ../../hours/godzinki_service`
   - `import/require ../../hours/godzinki_vars`
   - `import/require ../../hours/hours_quote`
@@ -6893,6 +7071,7 @@ Excluded sensitive files:
   - `parseSchoolYear`
   - `resolveSchoolYear`
   - `updateBundleReservationDates`
+  - `updateBundleReservationItems`
   - `updateGearReservationDates`
 
 ### `functions/src/modules/equipment/kayaks/gear_kayaks_service.ts`
@@ -6954,8 +7133,8 @@ Excluded sensitive files:
 
 ### `functions/src/modules/hours/godzinki_service.ts`
 
-- Lines: `1154`
-- Size: `42647` bytes
+- Lines: `1160`
+- Size: `43078` bytes
 - Internal dependencies:
   - `functions/src/modules/hours/godzinki_vars.ts`
 - Imports:
@@ -7425,15 +7604,17 @@ Excluded sensitive files:
 
 ### `functions/src/service/tasks/eventsSyncFromSheet.ts`
 
-- Lines: `514`
-- Size: `20668` bytes
+- Lines: `638`
+- Size: `26559` bytes
 - Internal dependencies:
+  - `functions/src/modules/calendar/events_service.ts`
   - `functions/src/modules/shared/text_utils.ts`
   - `functions/src/service/providers/googleCalendarProvider.ts`
   - `functions/src/service/providers/googleSheetsProvider.ts`
   - `functions/src/service/service_config.ts`
   - `functions/src/service/types.ts`
 - Imports:
+  - `import/require ../../modules/calendar/events_service`
   - `import/require ../../modules/shared/text_utils`
   - `import/require ../providers/googleCalendarProvider`
   - `import/require ../providers/googleSheetsProvider`
@@ -7445,6 +7626,9 @@ Excluded sensitive files:
   - `findHeaderCaseInsensitive`
   - `isApproved`
   - `normDate`
+  - `normalizeOrganizerToken`
+  - `organizerKeyToSheetLabel`
+  - `parseOrganizerFromSheetCell`
   - `shouldScrapAbsentEvent`
 
 ### `functions/src/service/tasks/gearNotifyReservationCancelledByAdmin.ts`
@@ -7967,13 +8151,15 @@ Excluded sensitive files:
 
 ### `functions/test/events_core.test.ts`
 
-- Lines: `338`
-- Size: `14843` bytes
+- Lines: `410`
+- Size: `18289` bytes
 - Internal dependencies:
+  - `functions/src/modules/calendar/events_service.ts`
   - `functions/src/service/providers/googleSheetsProvider.ts`
   - `functions/src/service/tasks/eventsNotifyUpcoming.ts`
   - `functions/src/service/tasks/eventsSyncFromSheet.ts`
 - Imports:
+  - `import/require ../src/modules/calendar/events_service`
   - `import/require ../src/service/providers/googleSheetsProvider`
   - `import/require ../src/service/tasks/eventsNotifyUpcoming`
   - `import/require ../src/service/tasks/eventsSyncFromSheet`
@@ -8073,19 +8259,19 @@ Excluded sensitive files:
 
 ### `public/core/api_client.js`
 
-- Lines: `78`
-- Size: `2410` bytes
+- Lines: `94`
+- Size: `3116` bytes
 - Functions:
   - `apiGetJson`
   - `apiPostJson`
-  - `friendlyErrorMessage`
+  - `buildApiError`
   - `resolveToken`
   - `setApiTokenGetter`
 
 ### `public/core/app_shell.js`
 
-- Lines: `292`
-- Size: `9870` bytes
+- Lines: `300`
+- Size: `10524` bytes
 - Imports:
   - `import/require /core/api_client.js`
   - `import/require /core/modules_registry.js`
@@ -8096,10 +8282,43 @@ Excluded sensitive files:
   - `showAuthError`
   - `updateSwBannerVisibility`
 
+### `public/core/club_badges.js`
+
+- Lines: `60`
+- Size: `2142` bytes
+- Functions:
+  - `clubDisplayName`
+  - `clubIconPath`
+  - `escapeHtml`
+  - `renderClubBadgeHtml`
+
+### `public/core/date_range_calendar.js`
+
+- Lines: `294`
+- Size: `11708` bytes
+- Functions:
+  - `addDaysIso`
+  - `bufferedConflictDays`
+  - `createReservationCalendar`
+  - `daysInclusive`
+  - `draw`
+  - `emitChange`
+  - `escapeHtml`
+  - `expandRangeDays`
+  - `formatDatePL`
+  - `handleDayClick`
+  - `isOccupied`
+  - `isoFromParts`
+  - `localTodayIso`
+  - `lockIconSvg`
+  - `occupiedInfoFor`
+  - `pad2`
+  - `summaryHtml`
+
 ### `public/core/firebase_client.js`
 
-- Lines: `195`
-- Size: `6888` bytes
+- Lines: `205`
+- Size: `7197` bytes
 - Imports:
   - `import/require https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js`
 - Functions:
@@ -8116,6 +8335,7 @@ Excluded sensitive files:
   - `storageFetchHelmetUrl`
   - `storageFetchKayakCoverUrl`
   - `storageFetchKayakGalleryUrls`
+  - `storageFetchKlubVideoUrl`
   - `storageFetchLifejacketUrl`
 
 ### `public/core/module_stub.js`
@@ -8148,17 +8368,18 @@ Excluded sensitive files:
 
 ### `public/core/render_shell.js`
 
-- Lines: `1769`
-- Size: `78566` bytes
+- Lines: `1867`
+- Size: `84622` bytes
 - Imports:
   - `import/require /core/access_control.js`
   - `import/require /core/api_client.js`
+  - `import/require /core/club_badges.js`
   - `import/require /core/router.js`
   - `import/require /core/text_format.js`
 - Functions:
-  - `bindHomeBasenRows`
+  - `bindDayClicks`
   - `bindHomeEventInterestButtons`
-  - `buildHomeBasenSection`
+  - `bindNav`
   - `buildHomeEventsSection`
   - `buildHomeHoursCell`
   - `buildHomeKursEventsSection`
@@ -8166,6 +8387,8 @@ Excluded sensitive files:
   - `buildKayakTitle`
   - `buildKlubBoxHtml`
   - `countReservationDays`
+  - `dayInfo`
+  - `draw`
   - `escapeAttr`
   - `escapeHtml`
   - `fieldErrorToPl`
@@ -8173,7 +8396,6 @@ Excluded sensitive files:
   - `formatContribDate`
   - `formatDatePL`
   - `formatEntryFeeValidUntil`
-  - `formatNrb`
   - `formatShortDate`
   - `getDashboardConfig`
   - `getGearRoute`
@@ -8183,13 +8405,21 @@ Excluded sensitive files:
   - `getModuleRouteByType`
   - `getReservationKayakTitles`
   - `goToGodzinki`
+  - `goToSessionCard`
   - `heartSvg`
+  - `homeBasenIsoFromParts`
+  - `homeBasenPad2`
+  - `homeBasenSlotLabel`
+  - `homeBasenTodayIso`
+  - `isActiveSlot`
   - `isIsoDateYYYYMMDD`
+  - `isKursowySlot`
   - `isPhoneValid`
   - `loadAdminPendingBadge`
   - `normalizePhoneDigits`
   - `pluralizeDays`
   - `render`
+  - `renderHomeBasenCalendar`
   - `renderHomeDashboard`
   - `renderHomeProfile`
   - `renderNav`
@@ -8202,10 +8432,10 @@ Excluded sensitive files:
   - `set`
   - `setErr`
   - `setNicknameStatus`
+  - `showDayPreview`
   - `spinnerHtml`
   - `statusKeyToLabel`
   - `submitRegistration`
-  - `tryParseJsonFromHttpError`
   - `updateBadge`
   - `wireHomeReservations`
   - `wireKlubBox`
@@ -8228,11 +8458,12 @@ Excluded sensitive files:
 
 ### `public/core/text_format.js`
 
-- Lines: `53`
-- Size: `2029` bytes
+- Lines: `63`
+- Size: `2517` bytes
 - Functions:
   - `escapeHtml`
   - `formatFreeText`
+  - `isUrlOnly`
   - `normalizeBlankLines`
   - `stripTrailingPunct`
 
@@ -8258,10 +8489,11 @@ Excluded sensitive files:
 
 ### `public/modules/admin_pending_module.js`
 
-- Lines: `517`
-- Size: `28492` bytes
+- Lines: `527`
+- Size: `29034` bytes
 - Imports:
   - `import/require /core/api_client.js`
+  - `import/require /core/club_badges.js`
   - `import/require /core/router.js`
   - `import/require /core/user_error_messages.js`
   - `import/require /modules/raporty/reports_panel.js`
@@ -8275,8 +8507,8 @@ Excluded sensitive files:
 
 ### `public/modules/basen_module.js`
 
-- Lines: `1280`
-- Size: `56331` bytes
+- Lines: `1540`
+- Size: `69862` bytes
 - Imports:
   - `import/require /core/api_client.js`
 - Functions:
@@ -8288,8 +8520,10 @@ Excluded sensitive files:
   - `bindSessionActions`
   - `buildReserved`
   - `buildSessionsByDate`
+  - `closeClaimStudentModal`
   - `closeCreateDayModal`
   - `closeDayDetailModal`
+  - `closeGodzinyHistoryModal`
   - `closeModifyModal`
   - `createBasenModule`
   - `draw`
@@ -8298,10 +8532,11 @@ Excluded sensitive files:
   - `formatGodzinyDate`
   - `isActiveSlot`
   - `isoFromParts`
-  - `kayakLabel`
   - `openAddGodzinyModal`
+  - `openClaimStudentModal`
   - `openCreateDayModal`
   - `openDayDetailModal`
+  - `openGodzinyHistoryModal`
   - `openModifyModal`
   - `pad`
   - `pad2`
@@ -8311,9 +8546,11 @@ Excluded sensitive files:
   - `renderAddGodzinyModalHtml`
   - `renderCalendarShellHtml`
   - `renderCalendarTab`
+  - `renderClaimStudentModalHtml`
   - `renderCreateDayModalHtml`
   - `renderDayDetailModalHtml`
   - `renderDayDetailSlotHtml`
+  - `renderGodzinyHistoryModalHtml`
   - `renderGodzinyLedgerRow`
   - `renderGodzinyRow`
   - `renderList`
@@ -8325,6 +8562,8 @@ Excluded sensitive files:
   - `renderSessionsView`
   - `renderSlotCard`
   - `renderTabsHtml`
+  - `scrollToHomeTarget`
+  - `shortenBasenReason`
   - `spinnerHtml`
   - `sync`
   - `syncReservedSubFields`
@@ -8332,15 +8571,15 @@ Excluded sensitive files:
 
 ### `public/modules/gear_module.js`
 
-- Lines: `2335`
-- Size: `99156` bytes
+- Lines: `2548`
+- Size: `111424` bytes
 - Imports:
   - `import/require /core/api_client.js`
+  - `import/require /core/date_range_calendar.js`
   - `import/require /core/firebase_client.js`
   - `import/require /core/user_error_messages.js`
 - Functions:
   - `applyFilter`
-  - `buildGenericGearDetailsRows`
   - `buildGenericGearTitle`
   - `buildHelmetLine2`
   - `buildHelmetLine3`
@@ -8348,25 +8587,30 @@ Excluded sensitive files:
   - `buildKayakTitle`
   - `buildLifejacketLine2`
   - `buildLifejacketLine3`
+  - `cacheKey`
   - `checkBundleAvailability`
   - `clearBundleModal`
-  - `clearReservationForm`
-  - `clearReservationMessages`
   - `closeBundleModal`
   - `closeModal`
-  - `closeReservationModal`
   - `closeWeightModal`
   - `createGearModule`
   - `dotsIconSvg`
   - `escapeAttr`
   - `escapeHtml`
   - `formatDatePLFromIso`
+  - `formatItemLabel`
+  - `formatItemLabelFromParts`
   - `gearTabIcon`
   - `heartSvg`
+  - `invalidateAvailabilityAndRefresh`
+  - `isDirty`
   - `isWorking`
   - `loadAndRenderReservations`
+  - `loadCategory`
+  - `loadExisting`
   - `loadFavorites`
   - `loadGear`
+  - `loadOccupiedRanges`
   - `loadPhotoWithOverlay`
   - `lockIconSvg`
   - `normalizeSimpleValue`
@@ -8374,7 +8618,6 @@ Excluded sensitive files:
   - `openBundleModal`
   - `openKayakPhotoModal`
   - `openModal`
-  - `openReservationModal`
   - `openWeightModal`
   - `parseWeightRangeMax`
   - `populateSizeFilter`
@@ -8383,36 +8626,38 @@ Excluded sensitive files:
   - `render`
   - `renderBundleCatButtons`
   - `renderBundleItemsList`
+  - `renderCategoryBody`
+  - `renderClubEventBulkView`
   - `renderGenericGearCard`
   - `renderHelmetCard`
   - `renderKayakCard`
   - `renderLifejacketCard`
   - `renderPaddleCard`
-  - `renderReservationsContent`
   - `renderReservationsSimple`
+  - `resolvedCount`
   - `setErr`
-  - `setReservationErr`
-  - `setReservationOk`
+  - `setOk`
   - `setWeightErr`
+  - `showCategory`
   - `showPhotoAtIdx`
+  - `snapshotBaseline`
   - `startBundleForItem`
-  - `startCreateForKayak`
   - `submitBundleReservation`
-  - `submitCreateReservation`
-  - `syncReservationForm`
   - `toBool`
   - `toBoolOrNull`
+  - `updateSummaryAndButton`
   - `workingIconSvg`
 
 ### `public/modules/godzinki_module.js`
 
-- Lines: `443`
-- Size: `17812` bytes
+- Lines: `469`
+- Size: `18948` bytes
 - Imports:
   - `import/require /core/api_client.js`
 - Functions:
   - `createGodzinkiModule`
   - `esc`
+  - `fieldErrorText`
   - `formatBalanceSign`
   - `formatDate`
   - `infoBarHtml`
@@ -8432,13 +8677,15 @@ Excluded sensitive files:
 
 ### `public/modules/impreza_module.js`
 
-- Lines: `336`
-- Size: `12660` bytes
+- Lines: `445`
+- Size: `17673` bytes
 - Imports:
   - `import/require /core/api_client.js`
+  - `import/require /core/club_badges.js`
   - `import/require /core/text_format.js`
 - Functions:
   - `bindInterestButtons`
+  - `bindMoreButtons`
   - `bindSubmitForm`
   - `createImprezaModule`
   - `esc`
@@ -8452,35 +8699,45 @@ Excluded sensitive files:
   - `setErr`
   - `setOk`
   - `spinnerHtml`
+  - `syncKierownikVisibility`
   - `todayIso`
+  - `truncateText`
 
 ### `public/modules/klub_module.js`
 
-- Lines: `77`
-- Size: `3365` bytes
+- Lines: `250`
+- Size: `10933` bytes
 - Imports:
   - `import/require /core/api_client.js`
+  - `import/require /core/firebase_client.js`
   - `import/require /core/router.js`
   - `import/require /core/user_error_messages.js`
 - Functions:
   - `createKlubModule`
+  - `escapeAttr`
   - `escapeHtml`
+  - `formatNrb`
+  - `renderActiveTab`
+  - `renderHeaderInfo`
   - `renderKluczeTable`
-  - `renderKluczeView`
+  - `renderKtoJestKimTab`
+  - `safeUrl`
+  - `wireCopyButtons`
 
 ### `public/modules/km_module.js`
 
-- Lines: `1502`
-- Size: `59427` bytes
+- Lines: `1512`
+- Size: `60177` bytes
 - Imports:
   - `import/require /core/api_client.js`
+  - `import/require /core/text_format.js`
 - Functions:
   - `attachInfoTips`
   - `attachPlacesAutocomplete`
   - `buildPopup`
   - `clearLocationDisplay`
+  - `closeKmActivePopover`
   - `closeModal`
-  - `closePopover`
   - `closeSuggestions`
   - `createKmModule`
   - `esc`
@@ -8534,10 +8791,11 @@ Excluded sensitive files:
 
 ### `public/modules/my_reservations_module.js`
 
-- Lines: `607`
-- Size: `23380` bytes
+- Lines: `686`
+- Size: `27695` bytes
 - Imports:
   - `import/require /core/api_client.js`
+  - `import/require /core/date_range_calendar.js`
   - `import/require /core/router.js`
   - `import/require /core/user_error_messages.js`
 - Functions:
@@ -8550,7 +8808,9 @@ Excluded sensitive files:
   - `formatDatePL`
   - `formatShortDate`
   - `getReservationKayakTitles`
+  - `getReservationPrimaryItem`
   - `loadKayakMap`
+  - `loadOccupiedRangesForReservation`
   - `loadReservations`
   - `openEditModal`
   - `pluralizeDays`
@@ -8659,7 +8919,7 @@ Excluded sensitive files:
 ### `public/modules/raporty/user_activity.js`
 
 - Lines: `136`
-- Size: `7852` bytes
+- Size: `7882` bytes
 - Imports:
   - `import/require /core/api_client.js`
   - `import/require /core/user_error_messages.js`
@@ -8691,8 +8951,8 @@ Excluded sensitive files:
 
 ### `.claude/settings.local.json`
 
-- Lines: `75`
-- Size: `14522` bytes
+- Lines: `76`
+- Size: `14550` bytes
 - Detected top-level keys / sections:
   - `permissions`
 
@@ -8819,8 +9079,8 @@ Excluded sensitive files:
 
 ### `firebase.json`
 
-- Lines: `520`
-- Size: `12982` bytes
+- Lines: `534`
+- Size: `13374` bytes
 - Detected top-level keys / sections:
   - `emulators`
   - `firestore`
@@ -8829,8 +9089,8 @@ Excluded sensitive files:
 
 ### `firestore.indexes.json`
 
-- Lines: `137`
-- Size: `3955` bytes
+- Lines: `146`
+- Size: `4242` bytes
 - Detected top-level keys / sections:
   - `fieldOverrides`
   - `indexes`
@@ -9390,6 +9650,88 @@ Excluded sensitive files:
   - `## L — Język i spójność`
   - `## M — Sesja, PWA, aktualizacje`
   - `## Do rozstrzygnięcia przez Was, zanim cokolwiek ruszy`
+
+### `DOCS/Sessions & TO DOs/01.09_audyt_wydajnosci.md`
+
+- Lines: `44`
+- Size: `14320` bytes
+- Headings:
+  - `# Audyt wydajności — 01.09.2026`
+  - `## Podsumowanie`
+  - `## Tabela główna`
+  - `### Realny efekt przy obecnej skali (dziś)`
+  - `### Ryzyko skalowania — nie problem dziś`
+  - `## Weryfikacje bez wyniku (sprawdzone, potwierdzone jako niebędące problemem)`
+
+### `DOCS/Sessions & TO DOs/01.09_nieobsluzone_bledy_audyt.md`
+
+- Lines: `36`
+- Size: `11815` bytes
+- Headings:
+  - `# Audyt nieobsłużonych błędów — 01.09.2026`
+  - `## Podsumowanie`
+  - `## Tabela główna`
+  - `## `firebase.json` rewrites`
+
+### `DOCS/Sessions & TO DOs/03.09_zmiana_kalendarza_rezerwacji_PLAN.md`
+
+- Lines: `252`
+- Size: `14992` bytes
+- Headings:
+  - `# Kalendarz rezerwacji sprzętu (kajaki + pozostałe kategorie)`
+  - `## Kontekst`
+  - `## Architektura rozwiązania`
+  - `### Nowy współdzielony komponent: `public/core/date_range_calendar.js``
+  - `### CSS`
+  - `## Backend: rozszerzenie endpointu zajętych terminów`
+  - `## Frontend: integracja`
+  - `### `public/modules/gear_module.js` — modal tworzenia (`#gearBundleModal`)`
+  - `### `public/modules/my_reservations_module.js` — edycja terminu`
+  - `## Pliki do zmiany`
+  - `## Weryfikacja`
+
+### `DOCS/Sessions & TO DOs/04.09_imprezy_klubowe_rezerwacja_PLAN.md`
+
+- Lines: `290`
+- Size: `18665` bytes
+- Headings:
+  - `# Kierownik imprezy klubowej — bezpłatne rezerwacje sprzętu na imprezę`
+  - `## Kontekst`
+  - `## 1. Model danych`
+  - `## 2. Backend`
+  - `### `functions/src/modules/calendar/events_service.ts``
+  - `### `functions/src/api/submitEventHandler.ts``
+  - `### `functions/src/service/tasks/eventsSyncFromSheet.ts``
+  - `### `functions/src/api/adminApprovalHandler.ts` (`handleAdminApprove`, kind="event")`
+  - `### `functions/src/api/getAdminPendingHandler.ts``
+  - `### `functions/src/modules/equipment/bundle/gear_bundle_service.ts``
+  - `### `functions/src/api/gearBundleReservationCreateHandler.ts``
+  - `### `functions/src/api/getKayakReservationsHandler.ts``
+  - `### `functions/src/api/registerUserHandler.ts` + `index.ts``
+  - `### `functions/src/modules/hours/godzinki_service.ts` / `getGodzinkiHandler.ts` (opcjonalnie, zalecane)`
+  - `## 3. Frontend`
+  - `## 4. Ikony klubów`
+  - `## 5. Ryzyka i przypadki brzegowe`
+  - `## 6. Do zrobienia operacyjnie (użytkownik)`
+  - `## 7. Weryfikacja`
+
+### `DOCS/Sessions & TO DOs/04.09_imprezy_klubowe_wdrozenie_podsumowanie.md`
+
+- Lines: `230`
+- Size: `16361` bytes
+- Headings:
+  - `# Imprezy klubowe — kierownik rezerwuje sprzęt — podsumowanie wdrożenia`
+  - `## Co działa (zweryfikowane live na prod)`
+  - `## Runda 2 (dzisiejszy feedback) — co zmieniono`
+  - `## DO ZROBIENIA`
+  - `## Efekt uboczny testów na żywo`
+  - `## Runda 3 (dzisiejszy feedback #2) — ergonomia edycji/usuwania`
+  - `## Runda 4 (dzisiejszy feedback #3) — nazwa imprezy widoczna też dla innych użytkowników`
+  - `## Runda 5 (dzisiejszy feedback #4) — uproszczony tekst widoczności`
+  - `## Runda 6 (dzisiejszy feedback #5) — dwa błędy w widoku sprzętu`
+  - `## Runda 7 (dzisiejszy feedback #6) — bez przycisku "Więcej" dla rzutek/fartuchów`
+  - `## Runda 8 (05.09.2026) — mechanizm godzinkowy CAŁKOWICIE pomijany dla imprez klubowych`
+  - `## Pliki zmienione (runda 2)`
 
 ### `DOCS/Sessions & TO DOs/10.06_session_summary.md`
 
@@ -11422,7 +11764,7 @@ Excluded sensitive files:
 
 - `.firebaserc` — 10 lines, 157 bytes
 - `.gitattributes` — 4 lines, 71 bytes
-- `.gitignore` — 72 lines, 1187 bytes
+- `.gitignore` — 76 lines, 1365 bytes
 - `ai_full_audit_report.txt` — 1918 lines, 88991 bytes
 - `appscript/2_Członkowie Godzinki Imprezy/api_router` — 280 lines, 7928 bytes
 - `functions/.gitignore` — 10 lines, 153 bytes
@@ -11436,15 +11778,15 @@ Excluded sensitive files:
 - `public/skrypt_kurs/chapters/ch05.html` — 132 lines, 7205 bytes
 - `public/skrypt_kurs/chapters/ch06.html` — 265 lines, 13264 bytes
 - `public/styles/app.css` — 10 lines, 254 bytes
-- `public/styles/base.css` — 573 lines, 17379 bytes
-- `public/styles/basen.css` — 642 lines, 12156 bytes
+- `public/styles/base.css` — 609 lines, 18607 bytes
+- `public/styles/basen.css` — 815 lines, 17080 bytes
 - `public/styles/dashboard.css` — 162 lines, 2708 bytes
-- `public/styles/events.css` — 206 lines, 3427 bytes
-- `public/styles/gear.css` — 1206 lines, 21669 bytes
-- `public/styles/godzinki.css` — 184 lines, 3538 bytes
+- `public/styles/events.css` — 284 lines, 5064 bytes
+- `public/styles/gear.css` — 1603 lines, 30934 bytes
+- `public/styles/godzinki.css` — 194 lines, 3828 bytes
 - `public/styles/km.css` — 496 lines, 10234 bytes
 - `public/styles/kurs.css` — 430 lines, 7128 bytes
-- `public/styles/start.css` — 324 lines, 11871 bytes
+- `public/styles/start.css` — 335 lines, 12694 bytes
 - `tests/e2e/.gitignore` — 11 lines, 142 bytes
 - `tests/e2e/reports/events_e2e_run.txt` — 110 lines, 8703 bytes
 - `tests/e2e/reports/godzinki_e2e_run.txt` — 57 lines, 5149 bytes
