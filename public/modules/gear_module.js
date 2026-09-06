@@ -298,6 +298,7 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
                   <label style="display:flex; align-items:center; gap:8px; font-weight:600; cursor:pointer;">
                     <input type="checkbox" id="bundleClubEventToggle" /> Rezerwuję na imprezę klubową
                   </label>
+                  <select id="bundleClubEventSelect" class="hidden" style="margin-top:6px; width:100%;"></select>
                   <div class="hint" id="bundleClubEventHint" style="margin-top:4px;"></div>
                 </div>
 
@@ -402,6 +403,7 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
       const bundleDateCalendarEl = viewEl.querySelector("#bundleDateCalendar");
       const bundleClubEventRowEl = viewEl.querySelector("#bundleClubEventRow");
       const bundleClubEventToggleEl = viewEl.querySelector("#bundleClubEventToggle");
+      const bundleClubEventSelectEl = viewEl.querySelector("#bundleClubEventSelect");
       const bundleClubEventHintEl = viewEl.querySelector("#bundleClubEventHint");
       const bundleItemsListEl = viewEl.querySelector("#bundleItemsList");
       const bundleAddCatBtnsEl = viewEl.querySelector("#bundleAddCatBtns");
@@ -419,6 +421,19 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
       let bundleItems = [];
       // Uchwyt do bieżącej instancji kalendarza wyboru terminu (jedna na otwarcie modala)
       let bundleCalendar = null;
+
+      // Imprezy klubowe, których uid jest AKTUALNIE kierownikiem — może być
+      // więcej niż jedna naraz (patrz registerUserHandler.ts::resolveKierownikSummary).
+      // Select widoczny tylko gdy >1, żeby zachowanie przy jednej imprezie
+      // było identyczne jak wcześniej (bez dodatkowego wyboru).
+      const getActiveKierownikEvents = () => Array.isArray(ctx?.session?.activeKierownikEvents) ? ctx.session.activeKierownikEvents : [];
+      const getSelectedClubEvent = () => {
+        const events = getActiveKierownikEvents();
+        if (!events.length) return null;
+        if (events.length === 1) return events[0];
+        const selectedId = bundleClubEventSelectEl?.value || "";
+        return events.find((e) => e.id === selectedId) || events[0];
+      };
 
       const modalEl = viewEl.querySelector("#gearImgModal");
       const modalImgEl = viewEl.querySelector("#gearModalImg");
@@ -539,6 +554,7 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
         if (bundleDateCalendarEl) { bundleDateCalendarEl.innerHTML = ""; bundleDateCalendarEl.classList.remove("hidden"); }
         bundleCalendar = null;
         if (bundleClubEventToggleEl) bundleClubEventToggleEl.checked = false;
+        if (bundleClubEventSelectEl) { bundleClubEventSelectEl.classList.add("hidden"); bundleClubEventSelectEl.innerHTML = ""; }
         if (bundleClubEventHintEl) bundleClubEventHintEl.textContent = "";
         if (bundleCreateBtn) bundleCreateBtn.disabled = true;
         if (bundleOkEl) { bundleOkEl.textContent = ""; bundleOkEl.classList.add("hidden"); }
@@ -580,11 +596,19 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
         renderBundleCatButtons();
         openBundleModal();
 
-        const activeKierownikRange = ctx?.session?.activeKierownikRange;
-        const canReserveAsClubEvent = Boolean(!isSympatyk && ctx?.session?.isActiveKierownik && activeKierownikRange);
+        const kierownikEvents = getActiveKierownikEvents();
+        const canReserveAsClubEvent = Boolean(!isSympatyk && ctx?.session?.isActiveKierownik && kierownikEvents.length);
         if (bundleClubEventRowEl) bundleClubEventRowEl.classList.toggle("hidden", !canReserveAsClubEvent);
+        if (bundleClubEventSelectEl) {
+          const showSelect = canReserveAsClubEvent && kierownikEvents.length > 1;
+          bundleClubEventSelectEl.classList.toggle("hidden", !showSelect);
+          if (showSelect) {
+            bundleClubEventSelectEl.innerHTML = kierownikEvents.map((e) => `<option value="${escapeAttr(e.id)}">${escapeHtml(e.name)} (${escapeHtml(formatDatePLFromIso(e.startDate))} – ${escapeHtml(formatDatePLFromIso(e.endDate))})</option>`).join("");
+          }
+        }
         if (bundleClubEventHintEl && canReserveAsClubEvent) {
-          bundleClubEventHintEl.textContent = `Termin: ${formatDatePLFromIso(activeKierownikRange.startDate)} – ${formatDatePLFromIso(activeKierownikRange.endDate)} (daty imprezy, bezpłatnie, bez limitu ilości).`;
+          const ev = getSelectedClubEvent();
+          bundleClubEventHintEl.textContent = `Termin: ${formatDatePLFromIso(ev.startDate)} – ${formatDatePLFromIso(ev.endDate)} (daty imprezy, bezpłatnie, bez limitu ilości).`;
         }
 
         if (bundleDateCalendarEl) {
@@ -679,6 +703,7 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
               starterCategory: bundleStarterCategory,
               starterItemId: bundleStarterItemId,
               asClubEvent: !!bundleClubEventToggleEl?.checked,
+              eventId: bundleClubEventToggleEl?.checked ? (getSelectedClubEvent()?.id || undefined) : undefined,
             }
           });
 
@@ -766,21 +791,33 @@ export function createGearModule({ id, type, label, defaultRoute, order, enabled
         await submitBundleReservation();
       });
 
+      const applyClubEventDates = () => {
+        const ev = getSelectedClubEvent();
+        if (!ev) return;
+        bundleCalendar?.reset();
+        if (bundleDateCalendarEl) bundleDateCalendarEl.classList.add("hidden");
+        if (bundleStartDateEl) bundleStartDateEl.value = ev.startDate || "";
+        if (bundleEndDateEl) bundleEndDateEl.value = ev.endDate || "";
+        if (bundleClubEventHintEl) {
+          bundleClubEventHintEl.textContent = `Termin: ${formatDatePLFromIso(ev.startDate)} – ${formatDatePLFromIso(ev.endDate)} (daty imprezy, bezpłatnie, bez limitu ilości).`;
+        }
+        if (bundleCreateBtn) bundleCreateBtn.disabled = bundleItems.length === 0;
+      };
+
       bundleClubEventToggleEl?.addEventListener("change", () => {
         const checked = bundleClubEventToggleEl.checked;
-        const activeKierownikRange = ctx?.session?.activeKierownikRange;
-        if (checked && activeKierownikRange) {
+        if (checked && getSelectedClubEvent()) {
           // Termin ustalony przez serwer (daty imprezy) — kalendarz wyboru nie ma
           // tu zastosowania, chowamy go i wypełniamy ukryte pola bezpośrednio.
-          bundleCalendar?.reset();
-          if (bundleDateCalendarEl) bundleDateCalendarEl.classList.add("hidden");
-          if (bundleStartDateEl) bundleStartDateEl.value = activeKierownikRange.startDate || "";
-          if (bundleEndDateEl) bundleEndDateEl.value = activeKierownikRange.endDate || "";
-          if (bundleCreateBtn) bundleCreateBtn.disabled = bundleItems.length === 0;
+          applyClubEventDates();
         } else {
           if (bundleDateCalendarEl) bundleDateCalendarEl.classList.remove("hidden");
           bundleCalendar?.reset();
         }
+      });
+
+      bundleClubEventSelectEl?.addEventListener("change", () => {
+        if (bundleClubEventToggleEl?.checked) applyClubEventDates();
       });
 
       const populateTypeFilter = (items) => {
@@ -2166,8 +2203,8 @@ async function renderClubEventBulkView({ viewEl, ctx, label }) {
     return;
   }
 
-  const range = ctx?.session?.activeKierownikRange;
-  const isEligible = Boolean(ctx?.session?.isActiveKierownik && range?.startDate && range?.endDate);
+  const events = Array.isArray(ctx?.session?.activeKierownikEvents) ? ctx.session.activeKierownikEvents : [];
+  const isEligible = events.length > 0;
 
   if (!isEligible) {
     viewEl.innerHTML = `
@@ -2181,16 +2218,25 @@ async function renderClubEventBulkView({ viewEl, ctx, label }) {
     return;
   }
 
-  const eventName = String(range?.name || "").trim();
-  const screenTitle = eventName ? `Sprzęt na „${eventName}”` : "Sprzęt na imprezę klubową";
+  // Jedna osoba może być kierownikiem kilku imprez klubowych naraz — wybór
+  // widoczny tylko gdy jest więcej niż jedna, żeby przy jednej imprezie
+  // zachowanie zostało identyczne jak wcześniej (bez dropdowna).
+  let selectedEvent = events[0];
 
   viewEl.innerHTML = `
     <div class="card wide">
       <div class="moduleHeader">
-        <h2>${escapeHtml(screenTitle)}</h2>
+        <h2 id="clubEventTitle"></h2>
         <div class="moduleNav">
           <button type="button" class="moduleNavBtn" data-mod-home title="Strona główna">${NAV_HOME_SVG}</button>
         </div>
+      </div>
+
+      <div id="clubEventPicker" class="hidden" style="margin:8px 0;">
+        <label for="clubEventSelect" style="display:block; font-size:13px; color:var(--text-muted,#888); margin-bottom:4px;">Impreza:</label>
+        <select id="clubEventSelect" style="width:100%;">
+          ${events.map((e) => `<option value="${escapeAttr(e.id)}">${escapeHtml(e.name)} (${escapeHtml(formatDatePLFromIso(e.startDate))} – ${escapeHtml(formatDatePLFromIso(e.endDate))})</option>`).join("")}
+        </select>
       </div>
 
       <div class="actions clubEventActionsTop">
@@ -2202,10 +2248,7 @@ async function renderClubEventBulkView({ viewEl, ctx, label }) {
         <button id="clubEventDeleteBtn" type="button" class="ghost ghostDanger hidden">Usuń rezerwację</button>
       </div>
 
-      <div class="hint" style="margin:10px 0;">
-        Termin: <strong>${escapeHtml(formatDatePLFromIso(range.startDate))} – ${escapeHtml(formatDatePLFromIso(range.endDate))}</strong>
-        (daty imprezy, bezpłatnie, bez limitu ilości). Listę można edytować dowolnie — odznacz pozycję, aby ją usunąć z rezerwacji.
-      </div>
+      <div class="hint" id="clubEventTermHint" style="margin:10px 0;"></div>
 
       <div id="clubEventOk" class="ok hidden" style="margin-bottom:10px;"></div>
       <div id="clubEventErr" class="err hidden" style="margin-bottom:10px;"></div>
@@ -2240,9 +2283,22 @@ async function renderClubEventBulkView({ viewEl, ctx, label }) {
   const deleteBtn = viewEl.querySelector("#clubEventDeleteBtn");
   const okEl = viewEl.querySelector("#clubEventOk");
   const errEl = viewEl.querySelector("#clubEventErr");
+  const titleEl = viewEl.querySelector("#clubEventTitle");
+  const termHintEl = viewEl.querySelector("#clubEventTermHint");
+  const pickerEl = viewEl.querySelector("#clubEventPicker");
+  const pickerSelectEl = viewEl.querySelector("#clubEventSelect");
 
   const setErr = (msg) => { errEl.textContent = String(msg || ""); errEl.classList.toggle("hidden", !errEl.textContent); };
   const setOk = (msg) => { okEl.textContent = String(msg || ""); okEl.classList.toggle("hidden", !okEl.textContent); };
+
+  if (events.length > 1) pickerEl.classList.remove("hidden");
+
+  const applySelectedEventToHeader = () => {
+    const eventName = String(selectedEvent?.name || "").trim();
+    titleEl.textContent = eventName ? `Sprzęt na „${eventName}”` : "Sprzęt na imprezę klubową";
+    termHintEl.innerHTML = `Termin: <strong>${escapeHtml(formatDatePLFromIso(selectedEvent.startDate))} – ${escapeHtml(formatDatePLFromIso(selectedEvent.endDate))}</strong> (daty imprezy, bezpłatnie, bez limitu ilości). Listę można edytować dowolnie — odznacz pozycję, aby ją usunąć z rezerwacji.`;
+  };
+  applySelectedEventToHeader();
 
   // Stan per kategoria: { loaded, items, selectedIds: Set }
   const state = new Map(GEAR_TABS.map((t) => [t.id, {
@@ -2252,10 +2308,9 @@ async function renderClubEventBulkView({ viewEl, ctx, label }) {
   }]));
   let activeCat = GEAR_TABS[0].id;
 
-  // Istniejąca rezerwacja na TĘ imprezę (jeśli kierownik już coś zapisał wcześniej)
-  // — rozpoznana po dacie (identyczna dla każdej rezerwacji tej samej imprezy,
-  // bo daty są zawsze nadpisywane datami imprezy), nie po eventId (front nigdy
-  // nie zna id imprezy — patrz club_badges.js). Od tego momentu "Rezerwuj"
+  // Istniejąca rezerwacja na WYBRANĄ imprezę (jeśli kierownik już coś zapisał
+  // wcześniej) — rozpoznana po eventId (MY_RESERVATIONS_URL zwraca surowy
+  // dokument Firestore, eventId już tam jest). Od tego momentu "Rezerwuj"
   // EDYTUJE listę tej rezerwacji zamiast tworzyć kolejną osobną.
   let existingReservationId = null;
   let baseline = new Map(GEAR_TABS.map((t) => [t.id, new Set()]));
@@ -2304,9 +2359,7 @@ async function renderClubEventBulkView({ viewEl, ctx, label }) {
       const items = Array.isArray(resp?.items) ? resp.items : [];
       const mine = items.find((r) => (
         String(r?.status || "") === "active" &&
-        Boolean(r?.eventId) &&
-        String(r?.startDate || "") === range.startDate &&
-        String(r?.endDate || "") === range.endDate
+        String(r?.eventId || "") === selectedEvent.id
       ));
       if (mine) {
         existingReservationId = String(mine.id || "");
@@ -2370,7 +2423,7 @@ async function renderClubEventBulkView({ viewEl, ctx, label }) {
     if (s.loaded) return;
     catBodyEl.innerHTML = `<div class="hint">Ładuję dostępność...</div>`;
     try {
-      const url = `${GEAR_ITEM_AVAILABILITY_URL}?category=${encodeURIComponent(cat)}&startDate=${encodeURIComponent(range.startDate)}&endDate=${encodeURIComponent(range.endDate)}`;
+      const url = `${GEAR_ITEM_AVAILABILITY_URL}?category=${encodeURIComponent(cat)}&startDate=${encodeURIComponent(selectedEvent.startDate)}&endDate=${encodeURIComponent(selectedEvent.endDate)}`;
       const resp = await apiGetJson({ url, idToken: ctx.idToken });
       s.items = Array.isArray(resp?.items) ? resp.items : [];
       s.loaded = true;
@@ -2460,6 +2513,23 @@ async function renderClubEventBulkView({ viewEl, ctx, label }) {
     btn.addEventListener("click", () => showCategory(btn.getAttribute("data-clubevent-tab")));
   });
 
+  // Przełączenie na inną imprezę (gdy kierownik prowadzi kilka naraz) — osobny
+  // termin, osobna (albo brak) istniejąca rezerwacja, dostępność sprzętu do
+  // przeładowania w całości (daty się zmieniły).
+  const switchEvent = async (eventId) => {
+    selectedEvent = events.find((e) => e.id === eventId) || events[0];
+    applySelectedEventToHeader();
+    existingReservationId = null;
+    for (const s of state.values()) { s.loaded = false; s.items = []; s.selectedIds = new Set(); }
+    baseline = new Map(GEAR_TABS.map((t) => [t.id, new Set()]));
+    setErr(""); setOk("");
+    await loadExisting();
+    await showCategory(activeCat);
+    updateSummaryAndButton();
+  };
+
+  pickerSelectEl?.addEventListener("change", () => switchEvent(pickerSelectEl.value));
+
   saveBtn.addEventListener("click", async () => {
     setErr(""); setOk("");
 
@@ -2494,6 +2564,7 @@ async function renderClubEventBulkView({ viewEl, ctx, label }) {
             starterCategory: items[0].category,
             starterItemId: items[0].itemId,
             asClubEvent: true,
+            eventId: selectedEvent.id,
           },
         });
         existingReservationId = String(resp?.reservationId || "") || existingReservationId;

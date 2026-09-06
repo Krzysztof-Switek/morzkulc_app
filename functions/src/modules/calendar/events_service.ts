@@ -219,17 +219,18 @@ export async function resolveKierownicyList(
 }
 
 /**
- * Aktywna impreza klubowa, dla której `uid` jest kierownikiem: zatwierdzona,
- * nieodrzucona, jeszcze niezakończona. Z założenia co najwyżej jedna naraz
- * (wymuszane przy zatwierdzaniu i przy syncu z arkusza) — jeśli mimo to
- * znalazłoby się więcej, zwracana jest ta kończąca się najwcześniej.
+ * Wszystkie aktywne imprezy klubowe, dla których `uid` jest kierownikiem:
+ * zatwierdzone, nieodrzucone, jeszcze niezakończone. Jedna osoba może być
+ * kierownikiem kilku takich imprez naraz (kolumna "Kierownik" w arkuszu
+ * dopuszcza kilka e-maili na imprezę — świadomie brak limitu "jeden
+ * kierownik naraz" per osoba). Posortowane po `endDate` rosnąco.
  */
-export async function findActiveKierownikEvent(
+export async function findActiveKierownikEvents(
   db: FirebaseFirestore.Firestore,
   uid: string,
   todayIso: string = todayIsoUTC()
-): Promise<EventRecord | null> {
-  if (!uid) return null;
+): Promise<EventRecord[]> {
+  if (!uid) return [];
 
   const snap = await db
     .collection(COLLECTION)
@@ -239,28 +240,9 @@ export async function findActiveKierownikEvent(
     .orderBy("endDate", "asc")
     .get();
 
-  const candidates = snap.docs
+  return snap.docs
     .map((d) => d.data() as EventRecord)
     .filter((e) => e.rejected !== true);
-
-  return candidates[0] || null;
-}
-
-/**
- * Zwraca aktywną imprezę klubową danego kierownika (jeśli istnieje), z
- * pominięciem `excludeEventId` — do sprawdzenia reguły "jeden kierownik
- * naraz" przy zatwierdzaniu innej imprezy lub korekcie kierownika w arkuszu.
- */
-export async function findActiveKierownikConflict(
-  db: FirebaseFirestore.Firestore,
-  kierownikUid: string,
-  excludeEventId?: string,
-  todayIso?: string
-): Promise<EventRecord | null> {
-  const found = await findActiveKierownikEvent(db, kierownikUid, todayIso);
-  if (!found) return null;
-  if (excludeEventId && found.id === excludeEventId) return null;
-  return found;
 }
 
 export async function createEvent(

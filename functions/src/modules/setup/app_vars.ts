@@ -32,7 +32,7 @@ export async function getAppVars(db: FirebaseFirestore.Firestore): Promise<AppVa
   const raw = (snap.exists ? (snap.data() as AppVarsDoc) : null) || null;
 
   return {
-    appUrl: toStr(getVar(raw, "link_aplikacji"), "https://morzkulc-e9df7.web.app/"),
+    appUrl: toStr(getVar(raw, "link_aplikacji"), "https://app.morzkulc.pl/"),
     adminNotifyEmail: toStr(getVar(raw, "admin_notify_email"), "zarzad@morzkulc.pl"),
     adminNotifyAgeDays: toNumber(getVar(raw, "admin_notify_dni_progu"), 3),
     adminActionEmail: toStr(getVar(raw, "admin_action_email"), "zarzad@morzkulc.pl"),

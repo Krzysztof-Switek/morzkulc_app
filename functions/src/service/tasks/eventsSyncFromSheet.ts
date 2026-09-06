@@ -4,7 +4,7 @@ import {GoogleSheetsProvider, buildLooseRowGetter} from "../providers/googleShee
 import {GoogleCalendarProvider, CalendarEventData} from "../providers/googleCalendarProvider";
 import {getServiceConfig} from "../service_config";
 import {norm} from "../../modules/shared/text_utils";
-import {resolveKierownicyList, kierownikUidsOf, findActiveKierownikConflict, KierownikEntry} from "../../modules/calendar/events_service";
+import {resolveKierownicyList, kierownikUidsOf, KierownikEntry} from "../../modules/calendar/events_service";
 
 /**
  * Task: events.syncFromSheet
@@ -213,7 +213,6 @@ export const eventsSyncFromSheetTask: ServiceTask<Payload> = {
     let confirmedInSheet = 0;
     let organizerUnrecognized = 0;
     let kierownikResolutionFailed = 0;
-    let kierownikConflictsSkipped = 0;
 
     const memberRoleKeys = cfg.memberRoleKeys;
 
@@ -353,43 +352,13 @@ export const eventsSyncFromSheetTask: ServiceTask<Payload> = {
         }
 
         // Organizator/kierownik: NIE create-only — korekta w arkuszu zawsze
-        // nadpisuje bazę. Wyjątek: reguła "jeden kierownik naraz" — sprawdzamy
-        // per-kandydat, tylko dla UID-ów NOWO dołączających do aktywnej listy
-        // tej imprezy (staje się zatwierdzona z tym kierownikiem, albo już
-        // zatwierdzona impreza dostaje dodatkowego kierownika). Istniejący,
-        // niezmienieni kierownicy nie są odpytywani ponownie — brak sensu przy
-        // każdym syncu dla stabilnego, już poprawnego przypisania. Konflikt
-        // wyklucza WYŁĄCZNIE tego jednego kandydata — reszta listy (istniejący
-        // + pozostali nowi) syncuje się normalnie.
-        const prevOrganizer = norm(existingData?.organizer);
-        const prevKierownikUids: string[] = Array.isArray(existingData?.kierownikUids) ? existingData.kierownikUids : [];
-        const wasActiveMorzkulc = existingData?.approved === true && prevOrganizer === "morzkulc";
-        const willBeActiveMorzkulc = approved && organizer === "morzkulc";
-
-        const finalKierownicy: KierownikEntry[] = [];
-        for (const entry of kierownicy) {
-          if (!entry.uid) {
-            finalKierownicy.push(entry);
-            continue;
-          }
-          const alreadyActiveHere = wasActiveMorzkulc && prevKierownikUids.includes(entry.uid);
-          if (willBeActiveMorzkulc && !alreadyActiveHere) {
-            const conflict = await findActiveKierownikConflict(ctx.firestore, entry.uid, sheetId);
-            if (conflict) {
-              ctx.logger.warn("eventsSyncFromSheet: kierownik conflict, excluding this kierownik from the row", {
-                sheetId, uid: entry.uid, email: entry.email, conflictEventId: conflict.id, conflictEventName: conflict.name,
-              });
-              kierownikConflictsSkipped++;
-              finalKierownicy.push({email: entry.email, uid: null, displayName: ""});
-              continue;
-            }
-          }
-          finalKierownicy.push(entry);
-        }
-
+        // nadpisuje bazę. Bez reguły "jeden kierownik naraz" (usunięta
+        // świadomie 05.09.2026 — ta sama osoba może pomagać przy kilku
+        // imprezach klubowych naraz i ma wtedy prawo rezerwować sprzęt na
+        // każdą z nich, patrz gear_bundle_service.ts::createBundleReservation).
         doc.organizer = organizer;
-        doc.kierownicy = finalKierownicy;
-        doc.kierownikUids = kierownikUidsOf(finalKierownicy);
+        doc.kierownicy = kierownicy;
+        doc.kierownikUids = kierownikUidsOf(kierownicy);
         // Sprzątanie po starym modelu (pojedynczy kierownik) — pola zastąpione
         // przez `kierownicy`/`kierownikUids` (patrz runda 9 planu wdrożenia).
         doc.kierownikEmail = admin.firestore.FieldValue.delete();
@@ -562,10 +531,10 @@ export const eventsSyncFromSheetTask: ServiceTask<Payload> = {
       ctx.logger.warn("eventsSyncFromSheet: backfill query failed", {message: e?.message});
     }
 
-    const message = `upserted=${upserted}, skipped=${skipped}, removed=${removed}, backfilled=${backfilled}, confirmedInSheet=${confirmedInSheet}, errors=${errors}, calendarSynced=${calendarSynced}, organizerUnrecognized=${organizerUnrecognized}, kierownikResolutionFailed=${kierownikResolutionFailed}, kierownikConflictsSkipped=${kierownikConflictsSkipped}`;
+    const message = `upserted=${upserted}, skipped=${skipped}, removed=${removed}, backfilled=${backfilled}, confirmedInSheet=${confirmedInSheet}, errors=${errors}, calendarSynced=${calendarSynced}, organizerUnrecognized=${organizerUnrecognized}, kierownikResolutionFailed=${kierownikResolutionFailed}`;
     ctx.logger.info("eventsSyncFromSheet: done", {
       upserted, skipped, removed, backfilled, confirmedInSheet, errors, calendarSynced, dryRun,
-      organizerUnrecognized, kierownikResolutionFailed, kierownikConflictsSkipped,
+      organizerUnrecognized, kierownikResolutionFailed,
     });
 
     return {
@@ -573,7 +542,7 @@ export const eventsSyncFromSheetTask: ServiceTask<Payload> = {
       message,
       details: {
         upserted, skipped, removed, backfilled, confirmedInSheet, errors, calendarSynced, dryRun,
-        organizerUnrecognized, kierownikResolutionFailed, kierownikConflictsSkipped,
+        organizerUnrecognized, kierownikResolutionFailed,
       },
     };
   },

@@ -414,10 +414,17 @@ async function renderHomeDashboard({ viewEl, ctx }) {
     btn.addEventListener("click", () => {
       const isStandalone = window.matchMedia("(display-mode: standalone)").matches ||
         window.navigator.standalone === true;
+      // ?cb=1 jednorazowo wymusza pominięcie starych, już zapisanych na
+      // urządzeniach kopii /map.html sprzed dodania nagłówka no-store
+      // (05.09.2026 — patrz firebase.json). Sam URL z query stringiem nigdy
+      // wcześniej nie był cache'owany, więc gwarantuje świeże pobranie; nowy
+      // nagłówek no-store i tak już nie pozwala cache'ować niczego dalej,
+      // więc ten parametr nie wymaga w przyszłości podbijania wersji.
+      const mapUrl = "/map.html?cb=1";
       if (isStandalone) {
-        window.location.href = "/map.html";
+        window.location.href = mapUrl;
       } else {
-        window.open("/map.html", "_blank", "noopener");
+        window.open(mapUrl, "_blank", "noopener");
       }
     });
   });

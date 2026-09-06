@@ -6,7 +6,7 @@ import {getGodzinkiVars} from "../../hours/godzinki_vars";
 import {isUserStatusBlocked} from "../../users/userStatusCheck";
 import {updateReservationDates} from "../kayaks/gear_kayaks_service";
 import {countMyOverlappingItemsByCategory, countItemsByCategory, findCategoryOverLimit} from "../shared/reservation_limits";
-import {findActiveKierownikEvent} from "../../calendar/events_service";
+import {findActiveKierownikEvents} from "../../calendar/events_service";
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Types
@@ -535,6 +535,11 @@ export async function createBundleReservation(
     // wyłącznie na tę imprezę) — patrz blok niżej. memberRoleKeys wymagane tylko
     // gdy asClubEvent===true (z deps handlera, rola_czlonek/kandydat/zarzad/kr).
     asClubEvent?: boolean;
+    // Która impreza — wymagane gdy uid jest kierownikiem WIĘCEJ NIŻ JEDNEJ
+    // aktywnej imprezy klubowej naraz (ta sama osoba może pomagać przy kilku).
+    // Przy dokładnie jednej aktywnej imprezie opcjonalne (auto-wybór, zgodność
+    // wsteczna z klientem, który jeszcze go nie wysyła).
+    eventId?: string;
     memberRoleKeys?: string[];
   }
 ) {
@@ -563,12 +568,31 @@ export async function createBundleReservation(
     if (!memberRoleKeys.includes(roleKey)) {
       return {ok: false, code: "forbidden", message: "Rola nie uprawnia do rezerwacji na imprezę klubową."} as const;
     }
-    const found = await findActiveKierownikEvent(db, args.uid);
-    if (!found) {
+    const activeEvents = await findActiveKierownikEvents(db, args.uid);
+    if (!activeEvents.length) {
       return {
         ok: false,
         code: "not_a_kierownik",
         message: "Nie jesteś obecnie kierownikiem żadnej zatwierdzonej imprezy klubowej.",
+      } as const;
+    }
+    let found;
+    if (norm(args.eventId)) {
+      found = activeEvents.find((e) => e.id === norm(args.eventId));
+      if (!found) {
+        return {
+          ok: false,
+          code: "not_a_kierownik",
+          message: "Nie jesteś aktualnie kierownikiem wskazanej imprezy klubowej.",
+        } as const;
+      }
+    } else if (activeEvents.length === 1) {
+      found = activeEvents[0];
+    } else {
+      return {
+        ok: false,
+        code: "event_selection_required",
+        message: "Jesteś kierownikiem kilku imprez klubowych naraz — wskaż, na którą rezerwujesz sprzęt.",
       } as const;
     }
     clubEvent = {id: found.id, startDate: found.startDate, endDate: found.endDate};
@@ -1160,9 +1184,11 @@ export async function updateBundleReservationItems(
 
     // Musisz nadal być aktywnym kierownikiem TEJ SAMEJ imprezy — jeśli impreza
     // się skończyła albo zatwierdzenie cofnięto, edycja listy jest zablokowana
-    // (cały czas MOŻNA jeszcze anulować rezerwację, to osobna ścieżka).
-    const activeEvent = await findActiveKierownikEvent(db, args.uid);
-    if (!activeEvent || activeEvent.id !== eventId) {
+    // (cały czas MOŻNA jeszcze anulować rezerwację, to osobna ścieżka). Osoba
+    // może być kierownikiem kilku imprez naraz — sprawdzamy, czy TA konkretna
+    // jest wśród jej aktywnych, nie tylko "jedynej".
+    const activeEvents = await findActiveKierownikEvents(db, args.uid);
+    if (!activeEvents.some((e) => e.id === eventId)) {
       return {
         ok: false,
         code: "not_a_kierownik",

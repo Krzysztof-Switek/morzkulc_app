@@ -8,7 +8,7 @@ import {getGodzinkiVars} from "../modules/hours/godzinki_vars";
 import {getObHours, buildOpeningBalanceAdminPatch, obValueExact, obEmailKey} from "../modules/hours/opening_balance_fields";
 import {getKursWindowEndSuffix} from "../modules/equipment/bundle/gear_bundle_service";
 import {resolveBasenAdminGrant} from "../modules/basen/basen_service";
-import {findActiveKierownikEvent} from "../modules/calendar/events_service";
+import {findActiveKierownikEvents} from "../modules/calendar/events_service";
 
 type TokenCheck =
   | {error: string}
@@ -490,18 +490,18 @@ async function resolveSzkoleniowiec(db: FirebaseFirestore.Firestore): Promise<Sz
 
 type KierownikSummary = {
   isActiveKierownik: boolean;
-  activeKierownikRange: {startDate: string; endDate: string; name: string} | null;
+  activeKierownikEvents: Array<{id: string; startDate: string; endDate: string; name: string}>;
 };
 
 /**
- * Czy uid jest AKTUALNIE aktywnym kierownikiem imprezy klubowej (zatwierdzona,
- * jeszcze niezakończona) — steruje widocznością checkboxa "Rezerwuję na imprezę
- * klubową" w module Sprzęt. Daty + nazwa imprezy trafiają do sesji, do własnego
- * tytułu ekranu kierownika (patrz gear_module.js). Nazwa imprezy dla INNYCH
- * użytkowników przeglądających sprzęt (np. "Impreza klubowa: {nazwa} —
+ * Imprezy klubowe, dla których uid jest AKTUALNIE aktywnym kierownikiem
+ * (zatwierdzone, jeszcze niezakończone) — steruje widocznością checkboxa
+ * "Rezerwuję na imprezę klubową" w module Sprzęt. Może być więcej niż jedna
+ * naraz (ta sama osoba może pomagać przy kilku imprezach) — front pokazuje
+ * wybór, gdy lista ma >1 pozycję (patrz gear_module.js). Nazwa imprezy dla
+ * INNYCH użytkowników przeglądających sprzęt (np. "Impreza klubowa: {nazwa} —
  * kierownik: X") dociera OSOBNĄ ścieżką — getKayakReservationsHandler.ts batch-
- * fetchuje ją po eventId zapisanym na samej rezerwacji, front nadal nie musi
- * znać eventId tutaj.
+ * fetchuje ją po eventId zapisanym na samej rezerwacji.
  * Wołane TYLKO dla ról z memberRoleKeys (ogranicza odczyty Firestore).
  */
 async function resolveKierownikSummary(
@@ -511,13 +511,13 @@ async function resolveKierownikSummary(
   memberRoleKeys: string[]
 ): Promise<KierownikSummary> {
   if (!memberRoleKeys.includes(roleKey)) {
-    return {isActiveKierownik: false, activeKierownikRange: null};
+    return {isActiveKierownik: false, activeKierownikEvents: []};
   }
-  const event = await findActiveKierownikEvent(db, uid);
-  if (!event) return {isActiveKierownik: false, activeKierownikRange: null};
+  const events = await findActiveKierownikEvents(db, uid);
+  if (!events.length) return {isActiveKierownik: false, activeKierownikEvents: []};
   return {
     isActiveKierownik: true,
-    activeKierownikRange: {startDate: event.startDate, endDate: event.endDate, name: event.name},
+    activeKierownikEvents: events.map((e) => ({id: e.id, startDate: e.startDate, endDate: e.endDate, name: e.name})),
   };
 }
 
@@ -791,7 +791,7 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
           basenInstructor: (data as any).admin?.basenInstructor === true,
           szkoleniowiec,
           isActiveKierownik: kierownikSummary.isActiveKierownik,
-          activeKierownikRange: kierownikSummary.activeKierownikRange,
+          activeKierownikEvents: kierownikSummary.activeKierownikEvents,
           openingNameMatchPendingConfirm,
           obEmail: obEmailForConfirm,
           openingEmailCollision,
@@ -945,9 +945,9 @@ export async function handleRegisterUser(req: Request, res: Response, deps: Regi
         szkoleniowiec,
         // Nowo utworzony users_active nie mógł wcześniej zostać wskazany jako
         // kierownik (resolveKierownikCandidate wymaga istniejącego dokumentu) —
-        // brak dodatkowego odczytu Firestore, zawsze false/null przy pierwszym logowaniu.
+        // brak dodatkowego odczytu Firestore, zawsze false/[] przy pierwszym logowaniu.
         isActiveKierownik: false,
-        activeKierownikRange: null,
+        activeKierownikEvents: [],
         openingNameMatchPendingConfirm,
         obEmail: obEmailForConfirm,
         openingEmailCollision,

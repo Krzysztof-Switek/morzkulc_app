@@ -20,7 +20,6 @@ const KM_MY_STATS_URL = "/api/km/stats";
 const KM_RANKINGS_URL = "/api/km/rankings";
 const KM_PLACES_URL = "/api/km/places";
 const KM_EVENT_STATS_URL = "/api/km/event-stats";
-const KM_MAP_DATA_URL = "/api/km/map-data";
 const EVENTS_URL = "/api/events";
 
 // Klucz sessionStorage, przez który kafelki na stronie głównej (render_shell.js,
@@ -35,10 +34,13 @@ const INFO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
 function openMap() {
   const isStandalone = window.matchMedia("(display-mode: standalone)").matches ||
     window.navigator.standalone === true;
+  // ?cb=1 jednorazowo wymusza pominięcie starych, już zapisanych na urządzeniach
+  // kopii /map.html sprzed dodania nagłówka no-store (05.09.2026, firebase.json).
+  const mapUrl = "/map.html?cb=1";
   if (isStandalone) {
-    window.location.href = "/map.html";
+    window.location.href = mapUrl;
   } else {
-    window.open("/map.html", "_blank", "noopener");
+    window.open(mapUrl, "_blank", "noopener");
   }
 }
 
@@ -621,12 +623,12 @@ function renderFormView(inner, ctx, moduleId) {
   let pickedLng = null;
 
   mapBtn.addEventListener("click", async () => {
-    if (!window.L) {
+    if (!window.maplibregl) {
       mapBtn.disabled = true;
       mapBtn.textContent = "⏳ Ładowanie…";
       await Promise.all([
-        loadCss("https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"),
-        loadScript("https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"),
+        loadCss("https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css"),
+        loadScript("https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"),
       ]).catch(() => {});
       mapBtn.disabled = false;
       mapBtn.textContent = "🗺️ Wybierz na mapie";
@@ -680,26 +682,27 @@ function renderFormView(inner, ctx, moduleId) {
       const centerLng = existLng ?? 19.5;
       const zoom = existLat != null ? 12 : 6;
 
-      pickerMap = window.L.map("kmMapPickerDiv").setView([centerLat, centerLng], zoom);
-      window.L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-        attribution: "© OpenStreetMap © CARTO",
-        subdomains: "abcd",
-        maxZoom: 19,
-      }).addTo(pickerMap);
+      // OpenFreeMap: darmowy, bez klucza API, hostowany w Europie — zamiennik CARTO
+      pickerMap = new window.maplibregl.Map({
+        container: "kmMapPickerDiv",
+        style: "https://tiles.openfreemap.org/styles/positron",
+        center: [centerLng, centerLat],
+        zoom,
+      });
 
       if (existLat != null) {
         pickedLat = existLat;
         pickedLng = existLng;
-        pickerMarker = window.L.marker([pickedLat, pickedLng]).addTo(pickerMap);
+        pickerMarker = new window.maplibregl.Marker().setLngLat([pickedLng, pickedLat]).addTo(pickerMap);
         pickedText.textContent = pickedLat.toFixed(5) + ", " + pickedLng.toFixed(5);
         confirmBtn.disabled = false;
       }
 
       pickerMap.on("click", e => {
-        pickedLat = e.latlng.lat;
-        pickedLng = e.latlng.lng;
-        if (pickerMarker) pickerMap.removeLayer(pickerMarker);
-        pickerMarker = window.L.marker([pickedLat, pickedLng]).addTo(pickerMap);
+        pickedLat = e.lngLat.lat;
+        pickedLng = e.lngLat.lng;
+        if (pickerMarker) pickerMarker.remove();
+        pickerMarker = new window.maplibregl.Marker().setLngLat([pickedLng, pickedLat]).addTo(pickerMap);
         pickedText.textContent = pickedLat.toFixed(5) + ", " + pickedLng.toFixed(5);
         confirmBtn.disabled = false;
       });
@@ -1114,133 +1117,6 @@ async function renderMyLogsView(inner, ctx) {
   `;
 }
 
-// ─── WIDOK: mapa aktywności ───────────────────────────────────────────────────
-
-async function renderMapView(inner, ctx) {
-  inner.innerHTML = `
-    <div class="kmMapSection">
-      <div id="kmMapYearBar" style="display:none;margin-bottom:10px;display:flex;align-items:center;gap:8px;">
-        <label for="kmMapYearFilter" style="font-size:0.85rem;color:var(--text-muted,#888);">Rok:</label>
-        <select id="kmMapYearFilter" style="background:var(--surface-2,#1e1e2e);color:var(--text-primary,#e0e0e0);border:1px solid var(--border,#333);border-radius:6px;padding:3px 8px;font-size:0.85rem;">
-          <option value="">Wszystkie lata</option>
-        </select>
-      </div>
-      <div id="kmMapContainer" style="height:420px;border-radius:12px;overflow:hidden;background:#1a1a2e;"></div>
-      <div id="kmMapStatus" style="margin-top:8px;font-size:0.8rem;color:var(--text-muted,#888);text-align:right;"></div>
-    </div>`;
-
-  const mapEl    = inner.querySelector("#kmMapContainer");
-  const statusEl = inner.querySelector("#kmMapStatus");
-  const yearBar  = inner.querySelector("#kmMapYearBar");
-  const yearSel  = inner.querySelector("#kmMapYearFilter");
-
-  async function loadLeaflet() {
-    if (window.L) return;
-    await new Promise((resolve, reject) => {
-      if (!document.querySelector("#leaflet-css")) {
-        const link = document.createElement("link");
-        link.id = "leaflet-css";
-        link.rel = "stylesheet";
-        link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-        document.head.appendChild(link);
-      }
-      const script = document.createElement("script");
-      script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-      script.onload = resolve;
-      script.onerror = reject;
-      document.head.appendChild(script);
-    });
-  }
-
-  function buildPopup(loc) {
-    const logWord = loc.logCount === 1 ? "wpis" : (loc.logCount < 5 ? "wpisy" : "wpisów");
-    const usersHtml = (loc.topUsers || []).length
-      ? `<br><span style="color:#aaa;font-size:0.82em">${loc.topUsers.map(u => esc(u.name)).join(", ")}</span>`
-      : "";
-    return `<strong>${esc(loc.placeName)}</strong><br>${loc.logCount} ${logWord}${usersHtml}`;
-  }
-
-  function renderMarkers(leafletMap, locations) {
-    leafletMap.eachLayer(l => { if (l instanceof window.L.CircleMarker) leafletMap.removeLayer(l); });
-    const markers = [];
-    for (const loc of locations) {
-      const radius = 4 + Math.sqrt(loc.logCount) * 3;
-      const marker = window.L.circleMarker([loc.lat, loc.lng], {
-        radius,
-        color: "#00bcd4",
-        fillColor: "#00bcd4",
-        fillOpacity: 0.65,
-        weight: 1.5,
-      });
-      marker.bindPopup(buildPopup(loc));
-      marker.addTo(leafletMap);
-      markers.push(marker);
-    }
-    return markers;
-  }
-
-  try {
-    mapEl.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#aaa;font-size:0.9rem;">Ładowanie mapy…</div>`;
-
-    await loadLeaflet();
-
-    const data = await apiGetJson({ url: KM_MAP_DATA_URL, idToken: ctx.idToken });
-
-    const L = window.L;
-    mapEl.innerHTML = "";
-
-    const allLocations = data?.locations || [];
-    const years = data?.years || [];
-
-    if (allLocations.length === 0) {
-      mapEl.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#aaa;font-size:0.9rem;padding:16px;text-align:center;">Brak danych lokalizacji.<br>Mapa aktualizuje się po uruchomieniu zadania z menu w arkuszu.</div>`;
-      return;
-    }
-
-    // Wypełnij dropdown roków
-    if (years.length > 0) {
-      yearBar.style.display = "flex";
-      for (const yr of years) {
-        const opt = document.createElement("option");
-        opt.value = String(yr);
-        opt.textContent = String(yr);
-        yearSel.appendChild(opt);
-      }
-    }
-
-    const leafletMap = L.map(mapEl, { zoomControl: true, attributionControl: true });
-
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-      attribution: "© <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors © <a href='https://carto.com/'>CARTO</a>",
-      subdomains: "abcd",
-      maxZoom: 19,
-    }).addTo(leafletMap);
-
-    let currentMarkers = renderMarkers(leafletMap, allLocations);
-    const group = L.featureGroup(currentMarkers);
-    if (currentMarkers.length) leafletMap.fitBounds(group.getBounds().pad(0.15));
-
-    yearSel.addEventListener("change", () => {
-      const yr = parseInt(yearSel.value, 10);
-      const filtered = isNaN(yr)
-        ? allLocations
-        : allLocations.filter(l => Array.isArray(l.yearsActive) && l.yearsActive.includes(yr));
-      currentMarkers = renderMarkers(leafletMap, filtered);
-      if (currentMarkers.length) {
-        const fg = L.featureGroup(currentMarkers);
-        leafletMap.fitBounds(fg.getBounds().pad(0.15));
-      }
-    });
-
-    if (data.updatedAt) {
-      const d = new Date(data.updatedAt);
-      statusEl.textContent = `Ostatnia aktualizacja mapy: ${d.toLocaleDateString("pl-PL")} ${d.toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}`;
-    }
-  } catch (err) {
-    mapEl.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#f44;padding:16px;text-align:center;">Nie udało się załadować mapy.<br><small>${esc(err?.message || String(err))}</small></div>`;
-  }
-}
-
 // ─── WIDOK: imprezy ────────────────────────────────────────────────────────────
 
 async function renderEventStatsView(inner, ctx) {
@@ -1481,8 +1357,6 @@ async function renderKmView(viewEl, routeId, ctx, moduleId) {
     await renderRankingsView(inner, ctx);
   } else if (activeTab === "events") {
     await renderEventStatsView(inner, ctx);
-  } else if (activeTab === "map") {
-    await renderMapView(inner, ctx);
   } else if (activeTab === "my-stats") {
     await renderMyStatsView(inner, ctx);
   } else if (activeTab === "my-logs") {

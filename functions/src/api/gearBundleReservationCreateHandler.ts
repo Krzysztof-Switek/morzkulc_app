@@ -87,6 +87,7 @@ export async function handleGearBundleReservationCreate(
       const starterItemId = norm(body.starterItemId);
       const items = parseItems(body.items);
       const asClubEvent = body.asClubEvent === true;
+      const eventId = norm(body.eventId);
 
       // Tryb "impreza klubowa": daty są ustalane serwerowo z terminu imprezy
       // (createBundleReservation je nadpisuje) — klient nic sensownego tu nie
@@ -109,6 +110,7 @@ export async function handleGearBundleReservationCreate(
         starterCategory: starterCategory || "",
         starterItemId: starterItemId || "",
         asClubEvent,
+        eventId: eventId || undefined,
         memberRoleKeys: deps.memberRoleKeys,
       });
 

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mapa aktywności — SKK Morzkulc</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" />
   <style>
     :root {
       --bg: #0d1117;
@@ -127,6 +127,10 @@
     }
     #overlay.hidden { display: none; }
 
+    /* Kolor celowo NIEZALEŻNY od --panel-bg/motywu — ma się wyróżniać na tle
+       mapy niezależnie od tego, czy akurat jest jasna czy ciemna (przycisk
+       widoczny tylko w trybie standalone PWA, czyli praktycznie tylko na
+       telefonie — na desktopie mapa i tak otwiera się w nowej karcie). */
     #mapBackBtn {
       display: none;
       position: fixed;
@@ -134,17 +138,16 @@
       left: 50%;
       transform: translateX(-50%);
       z-index: 1100;
-      background: var(--panel-bg, rgba(13,17,23,0.85));
-      color: var(--input-color, #e0e0e0);
-      border: 1px solid var(--panel-border, #333);
+      background: #2563eb;
+      color: #fff;
+      border: none;
       border-radius: 20px;
       padding: 10px 22px;
       font: 600 14px system-ui, sans-serif;
       cursor: pointer;
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
+      box-shadow: 0 4px 16px rgba(37, 99, 235, 0.45);
     }
-    #mapBackBtn:active { opacity: 0.7; }
+    #mapBackBtn:active { opacity: 0.8; }
   </style>
 </head>
 <body>
@@ -184,24 +187,42 @@
   </div>
   <div id="status"></div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
   <script>
-    const TILE_DARK  = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
-    const TILE_LIGHT = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
-    const TILE_ATTR  = "© <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors © <a href='https://carto.com/'>CARTO</a>";
+    // OpenFreeMap: hostowane w Europie, darmowe bez limitu, bez klucza API —
+    // zamiennik CARTO (basemaps.cartocdn.com), który stopniowo wygasza darmowy
+    // dostęp anonimowy na rzecz płatnego API z kluczem.
+    const STYLE_DARK  = "https://tiles.openfreemap.org/styles/dark";
+    const STYLE_LIGHT = "https://tiles.openfreemap.org/styles/positron";
     const MARKER_DARK  = "#00bcd4";
     const MARKER_LIGHT = "#0077cc";
+    const SOURCE_ID = "locations";
+    const LAYER_ID  = "locations-circles";
 
-    let darkMode   = true;
-    let leafletMap = null;
-    let tileLayer  = null;
+    // Ciemna wersja mapy (styl OpenFreeMap "dark") jest na małym ekranie
+    // słabo czytelna (niski kontrast etykiet/dróg na telefonie) — domyślnie
+    // jasny tryb na komórce, ciemny zostaje domyślny na desktopie. Ten sam
+    // próg 720px co reszta aplikacji (base.css, mobile nav).
+    const isMobile = window.matchMedia("(max-width: 720px)").matches;
+    let darkMode   = !isMobile;
+    let map        = null;
     let allLocations = [];
+    let renderedLocations = [];
 
     const overlayEl     = document.getElementById("overlay");
     const yearSel       = document.getElementById("yearFilter");
     const statusEl      = document.getElementById("status");
     const themeBtn      = document.getElementById("themeToggle");
     const legendDots    = document.querySelectorAll(".legend-dot");
+
+    // Zsynchronizuj UI (klasa body, ikonka, kropki legendy) z powyższym
+    // domyślnym trybem PRZED pierwszym renderem mapy — inaczej telefon
+    // startowałby wizualnie w trybie jasnym, ale z ikonką/legendą ciemnego.
+    // (updateLegendDots/markerColor są zdefiniowane niżej jako function
+    // declarations — hoisted, więc dostępne już tutaj.)
+    document.body.classList.toggle("light", !darkMode);
+    themeBtn.textContent = darkMode ? "☀️" : "🌙";
+    updateLegendDots();
 
     function markerColor() { return darkMode ? MARKER_DARK : MARKER_LIGHT; }
 
@@ -230,26 +251,48 @@
         : allLocations.filter(l => Array.isArray(l.yearsActive) && l.yearsActive.includes(yr));
     }
 
+    // Style OpenFreeMap nie noszą naszej warstwy punktów — setStyle() ją czyści,
+    // więc trzeba ją doczepić ponownie po każdym przełączeniu jasny/ciemny.
+    function ensureLocationsLayer() {
+      if (map.getSource(SOURCE_ID)) return;
+      map.addSource(SOURCE_ID, { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+      map.addLayer({
+        id: LAYER_ID,
+        type: "circle",
+        source: SOURCE_ID,
+        paint: {
+          "circle-radius": ["get", "radius"],
+          "circle-color": markerColor(),
+          "circle-opacity": 0.65,
+          "circle-stroke-width": 1.5,
+          "circle-stroke-color": markerColor(),
+        },
+      });
+      map.on("click", LAYER_ID, (e) => {
+        const f = e.features && e.features[0];
+        const loc = f && renderedLocations[f.properties.idx];
+        if (!loc) return;
+        new maplibregl.Popup({ closeButton: true }).setLngLat(e.lngLat).setHTML(buildPopup(loc)).addTo(map);
+      });
+      map.on("mouseenter", LAYER_ID, () => { map.getCanvas().style.cursor = "pointer"; });
+      map.on("mouseleave", LAYER_ID, () => { map.getCanvas().style.cursor = ""; });
+    }
+
     function renderMarkers(locations) {
-      if (!leafletMap) return;
-      leafletMap.eachLayer(l => { if (l instanceof L.CircleMarker) leafletMap.removeLayer(l); });
-      const color = markerColor();
-      const markers = [];
-      for (const loc of locations) {
-        const radius = Math.min(6 + Math.log2(loc.logCount + 1) * 3, 22);
-        const marker = L.circleMarker([loc.lat, loc.lng], {
-          radius,
-          color,
-          fillColor: color,
-          fillOpacity: 0.65,
-          weight: 1.5,
-        });
-        marker.bindPopup(buildPopup(loc));
-        marker.addTo(leafletMap);
-        markers.push(marker);
-      }
-      if (markers.length) {
-        leafletMap.fitBounds(L.featureGroup(markers).getBounds().pad(0.12));
+      if (!map) return;
+      renderedLocations = locations;
+      const features = locations.map((loc, idx) => ({
+        type: "Feature",
+        properties: { idx, radius: Math.min(6 + Math.log2(loc.logCount + 1) * 3, 22) },
+        geometry: { type: "Point", coordinates: [loc.lng, loc.lat] },
+      }));
+      const source = map.getSource(SOURCE_ID);
+      if (source) source.setData({ type: "FeatureCollection", features });
+
+      if (locations.length) {
+        const bounds = new maplibregl.LngLatBounds();
+        for (const loc of locations) bounds.extend([loc.lng, loc.lat]);
+        map.fitBounds(bounds, { padding: 60, maxZoom: 14, duration: 0 });
       }
     }
 
@@ -261,16 +304,17 @@
       themeBtn.textContent = darkMode ? "☀️" : "🌙";
       updateLegendDots();
 
-      if (tileLayer && leafletMap) {
-        leafletMap.removeLayer(tileLayer);
-        tileLayer = L.tileLayer(darkMode ? TILE_DARK : TILE_LIGHT, {
-          attribution: TILE_ATTR,
-          subdomains: "abcd",
-          maxZoom: 19,
-        }).addTo(leafletMap);
+      if (map) {
+        map.once("style.load", () => {
+          ensureLocationsLayer();
+          renderMarkers(currentlyVisible());
+          // Bez tego canvas potrafi zostać na starej klatce (stary styl) mimo
+          // że dane stylu w MapLibre są już poprawne — resize() wymusza pełne
+          // przerysowanie zamiast czekać na najbliższą interakcję (pan/zoom).
+          map.resize();
+        });
+        map.setStyle(darkMode ? STYLE_DARK : STYLE_LIGHT);
       }
-
-      renderMarkers(currentlyVisible());
     });
 
     async function initMap() {
@@ -283,14 +327,6 @@
 
         allLocations = data?.locations || [];
         const years  = data?.years || [];
-
-        leafletMap = L.map("map", { zoomControl: true, attributionControl: true });
-
-        tileLayer = L.tileLayer(TILE_DARK, {
-          attribution: TILE_ATTR,
-          subdomains: "abcd",
-          maxZoom: 19,
-        }).addTo(leafletMap);
 
         if (allLocations.length === 0) {
           document.getElementById("map").innerHTML =
@@ -305,7 +341,17 @@
           yearSel.appendChild(opt);
         }
 
-        renderMarkers(allLocations);
+        map = new maplibregl.Map({
+          container: "map",
+          style: darkMode ? STYLE_DARK : STYLE_LIGHT,
+          center: [19.0, 52.0],
+          zoom: 5.5,
+        });
+        map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-left");
+        map.on("load", () => {
+          ensureLocationsLayer();
+          renderMarkers(allLocations);
+        });
 
         if (data.updatedAt) {
           const d = new Date(data.updatedAt);

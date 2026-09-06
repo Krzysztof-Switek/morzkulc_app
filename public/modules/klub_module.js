@@ -14,9 +14,37 @@ const KLUB_URL = "/api/klub";
 // /api/klub, więc profil nie potrzebuje już własnej kopii (patrz render_shell.js,
 // buildKlubBoxHtml — zostaje tam już tylko blok "Dokumenty i dostęp").
 const KLUB_TABS = [
-  { id: "klucze", label: "Klucze" },
-  { id: "kto-jest-kim", label: "Kto jest kim" },
+  {
+    id: "klucze",
+    label: "Klucze",
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg>`,
+  },
+  {
+    id: "kto-jest-kim",
+    label: "Kto jest kim",
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  },
 ];
+
+// Kafelek "Gdzie pływamy" — duplikat tego z modułu Ranking/km_module.js (tam
+// jako zakładka otwierająca /map.html) — feedback użytkownika 05.09.2026:
+// ten sam skrót ma być dostępny też z sekcji Klub, bez przechodzenia przez ranking.
+const MAP_TILE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>`;
+
+// Ten sam wzorzec otwierania mapy co w render_shell.js (kafelek "mapa" na
+// stronie głównej) i km_module.js::openMap().
+function openMap() {
+  const isStandalone = window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true;
+  // ?cb=1 jednorazowo wymusza pominięcie starych, już zapisanych na urządzeniach
+  // kopii /map.html sprzed dodania nagłówka no-store (05.09.2026, firebase.json).
+  const mapUrl = "/map.html?cb=1";
+  if (isStandalone) {
+    window.location.href = mapUrl;
+  } else {
+    window.open(mapUrl, "_blank", "noopener");
+  }
+}
 
 function escapeHtml(s) {
   return String(s ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
@@ -181,15 +209,17 @@ export function createKlubModule({ id, type, label, defaultRoute, order, enabled
 
           <div id="klubHeaderInfo"><p class="hint">Ładuję…</p></div>
 
-          <div class="klubTabs" role="tablist">
+          <div class="klubTileGrid" role="tablist">
             ${KLUB_TABS.map((tab, idx) => `
               <button
                 type="button"
-                class="klubTab${idx === 0 ? " active" : ""}"
+                class="klubTile${idx === 0 ? " active" : ""}"
                 data-klub-tab="${escapeAttr(tab.id)}"
                 aria-pressed="${idx === 0 ? "true" : "false"}"
-              >${escapeHtml(tab.label)}</button>
+                title="${escapeAttr(tab.label)}"
+              >${tab.icon}<span class="klubTileTitle">${escapeHtml(tab.label)}</span></button>
             `).join("")}
+            <button type="button" class="klubTile" data-klub-action="mapa" title="Gdzie pływamy">${MAP_TILE_ICON}<span class="klubTileTitle">Gdzie pływamy</span></button>
           </div>
 
           <div id="klubTabBody"></div>
@@ -225,6 +255,8 @@ export function createKlubModule({ id, type, label, defaultRoute, order, enabled
           renderActiveTab();
         });
       });
+
+      viewEl.querySelector("[data-klub-action='mapa']")?.addEventListener("click", openMap);
 
       try {
         // storageFetchKlubVideoUrl() nigdy nie odrzuca obietnicy (własny try/catch →

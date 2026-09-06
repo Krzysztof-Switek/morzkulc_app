@@ -313,19 +313,33 @@
 .klubHeaderInfo .profileBlock:first-child { margin-top: 0; padding-top: 0; border-top: none; }
 .klubVideo { width: 100%; display: block; border-radius: 12px; margin-top: 4px; background: #000; }
 
-.klubTabs { display: flex; gap: 6px; margin: 12px 0; flex-wrap: wrap; }
-.klubTab {
-  padding: 8px 18px;
-  border-radius: 10px;
+/* Kafelki z ikonkami zamiast płaskich przycisków-zakładek (feedback użytkownika
+   05.09.2026) — ten sam wzorzec co .startTile2 na stronie głównej, ale mniejsze
+   i ZAWSZE 3 w rzędzie (bez przejścia na 4 kolumny przy szerszym ekranie jak w
+   .startTileGrid) — priorytet ma wygląd na mobile, gdzie ten ekran jest używany
+   najczęściej. */
+.klubTileGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0; }
+.klubTile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0;
+  height: 64px;
+  border-radius: 14px;
   border: 1px solid var(--border);
-  background: transparent;
+  background: rgba(255, 255, 255, 0.04);
   color: var(--text);
-  font-size: 14px;
-  font-weight: 600;
+  text-align: center;
+  overflow: hidden;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, border-color 0.15s;
 }
-.klubTab.active, .klubTab:hover { background: var(--accent, #3b82f6); color: #fff; border-color: transparent; }
+:root[data-theme="light"] .klubTile { background: rgba(12, 18, 32, 0.03); }
+.klubTile svg { flex-shrink: 0; display: block; }
+.klubTile.active, .klubTile:hover { border-color: var(--accent, #3b82f6); background: rgba(59, 130, 246, 0.14); }
+.klubTileTitle { font-size: 10.5px; font-weight: 800; color: var(--text); line-height: 1.1; letter-spacing: 0.01em; }
 
 /* Ikonka „i" przy roli + wyskakująca chmurka z wyjaśnieniem (tylko po kliknięciu) */
 .infoIcon { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; margin-left: 6px; padding: 0; border-radius: 50%; border: 1px solid var(--border); background: transparent; color: var(--text-muted); font-size: 11px; font-weight: 800; font-style: italic; line-height: 1; cursor: pointer; vertical-align: middle; }
