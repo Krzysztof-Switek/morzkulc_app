@@ -19,7 +19,29 @@ let swRegistration = null;
 
 const swUpdateBannerEl = document.getElementById("swUpdateBanner");
 const swUpdateReloadBtn = document.getElementById("swUpdateReloadBtn");
-swUpdateReloadBtn?.addEventListener("click", () => hardReloadApp());
+
+// Watchdog dodatkowy do tego w hardReloadApp() (patrz sw_update.js) — ten tu
+// zabezpiecza inny etap: samo location.reload() nie kończące nawigacji (nie
+// Promise, więc nic po stronie JS tego nie "złapie"). Zaobserwowane na iOS w
+// trybie standalone ("Dodaj do ekranu głównego") — zgłoszenie użytkownika
+// 06.09.2026. Jeśli po FALLBACK_HINT_MS strona wciąż tu jest, znaczy że reload
+// się nie wykonał — pokazujemy jawną instrukcję zamiast zostawiać przycisk
+// bezterminowo w stanie "⏳ ...". Bezpieczne do zaplanowania zawsze: gdy reload
+// się powiedzie, kontekst JS znika i ten timeout po prostu nigdy nie odpali.
+const FALLBACK_HINT_MS = 6000;
+
+function triggerHardReloadWithFeedback(btn, pendingLabel) {
+  btn.textContent = pendingLabel;
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.textContent = "Zamknij i otwórz aplikację ponownie";
+  }, FALLBACK_HINT_MS);
+  hardReloadApp();
+}
+
+swUpdateReloadBtn?.addEventListener("click", () => {
+  triggerHardReloadWithFeedback(swUpdateReloadBtn, "⏳ Aktualizuję…");
+});
 
 // Baner leci w headerze (poza #appRoot) — widoczny na każdym module/route, ale
 // tylko gdy appRoot jest odkryty (user zalogowany). SW_UPDATED może przyjść
@@ -99,8 +121,12 @@ window.__APP_CTX__ = ctx;
 
 loginBtn.addEventListener("click", async () => {
   if (swUpdatePending) {
-    // Jest nowa wersja aplikacji — pełny reset przed logowaniem
-    hardReloadApp();
+    // Jest nowa wersja aplikacji — pełny reset przed logowaniem. Ekran logowania
+    // nie pokazuje #swUpdateBanner (ten żyje tylko wewnątrz zalogowanego appRoot),
+    // więc bez własnego komunikatu kliknięcie "Zaloguj" wyglądało jak nic nie
+    // robi — user widział ciche przeładowanie i wracał na identyczny ekran
+    // (zgłoszenie użytkownika 06.09.2026).
+    triggerHardReloadWithFeedback(loginBtn, "⏳ Aktualizuję aplikację…");
     return;
   }
   await authLoginPopup();
